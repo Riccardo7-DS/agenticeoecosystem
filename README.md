@@ -1,59 +1,69 @@
-# Project Title
 
-Agentic AI Ecosystems
+# Agentic EO Ecosystems
 
-## Description
+This project explores the integration of **EVE (Earth Virtual Expert)**, a Large Language Model specialized in **Earth Observation (EO)** and Earth Sciences, developed under ESA’s **Φ-lab #AI4EO initiative** in collaboration with Pi School.  
 
-Project for benchmarking Agentic AI frameworks and LLMs in Earth Observation
+The primary goal is to enable EVE to connect ESA’s EO platforms and data clusters, creating an **integrated ecosystem for the EO community**. This approach leverages **agentic capabilities**, allowing EVE to dynamically interact with EO tools, databases, and APIs to reason and act autonomously.
 
-## Getting Started
+## Overview
 
-### Dependencies
+To demonstrate this concept, we present a **proof-of-concept use case** where EVE operates within an agentic framework to interact with the **[EO Dashboard](https://eodashboard.org/)** which is a joint initiative by ESA, NASA, and JAXA that provides global indicators and narratives derived from multi-mission EO data.
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+Using the **[MCP protocol](https://modelcontextprotocol.io/)**, this work enables dynamic connectivity between EVE and the Dashboard, allowing the model to:
 
-### Installing
+- Interpret and summarize narratives
+- Extend insights with additional context
+- Facilitate advanced information retrieval across datasets and stories
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+The study also explores **early-stage agentic behaviors**, such as autonomous task chaining, enabling EVE to perform multi-step reasoning. For example, EVE can interpret quantitative trends in dashboard indicators (e.g., air quality changes, greenhouse gas concentrations, land cover dynamics), link these to underlying datasets, and generate scientifically grounded responses.
 
-### Executing program
+This proof-of-concept demonstrates EVE’s potential to **foster interoperability** and **accelerate Earth system science** by improving knowledge accessibility and enabling more effective use of EO data resources.
 
-* How to run the program
-* Step-by-step bullets
+## Workflow
+
+### Requirements
+- Python 3.10+
+- Libraries:
+  - X
+  - Y
+  - Z
+
+### Installation
+Clone the repository:
 ```
-code blocks for commands
+git clone https://gitlab.esa.int/PhiLab/internal/agenticeoecosystem.git
+cd agentic-eo-ecosystems
 ```
 
-## Help
-
-Any advise for common problems or issues.
+#### Option 1: Using uv (recommended)
+Install uv if it is not installed:
+``` 
+pip install uv
 ```
-command to run if program contains helper info
+
+Create a virtual environment and install dependencies:
+```
+uv venv
+uv pip install -r pyproject.toml
 ```
 
-## Authors
+Activate the environment:
+```
+source .venv/bin/activate
+```
 
-Contributors names and contact info
+#### Option 2: Without uv (standard pip)
+Create and activate a virtual environment:
+```
+python -m venv .venv
+source .venv/bin/activate
+```
 
-Riccardo D'Ercole  
-Eva Gmelich Meijling
+Install dependencies:
+```
+pip install .
+```
 
-## Version History
 
-* 0.1
-    * Initial Release
 
-## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)

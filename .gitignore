@@ -1,2 +1,8 @@
 data/
 notebooks/
+models/
+.env
+build/
+*/*.egg-info
+*/pycache__/
+__pycache__/

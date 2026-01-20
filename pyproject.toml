@@ -33,4 +33,5 @@ dependencies = [
     "filelock>=3.20.0",
     "pydwca>=0.5.1",
     "ollama>=0.6.1",
+    "torch>=2.9.1",
 ]

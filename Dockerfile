@@ -1,5 +1,7 @@
-FROM models/eve
+FROM C:\Users\riccardo.dercole\OneDrive - ESA\Desktop\Project\agentic AI\Code\agenticeoecosystem\models\eve
 
 PARAMETER temperature 0.7
 
-SYSTEM "You are a helpful assistant."
+SYSTEM """
+$(cat SYSTEM_PROMPT.tt)
+"""

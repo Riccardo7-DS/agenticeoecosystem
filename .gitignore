@@ -1,2 +1,24 @@
-data/
+data/eodashboard-catalog/
 notebooks/
+
+# Python cache files
+**/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -37,19 +37,18 @@ cd agentic-eo-ecosystems
 
 #### Option 1: Using uv (recommended)
 Install uv if it is not installed:
-``` 
-pip install uv
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Create a virtual environment and install dependencies:
-```
-uv venv
-uv pip install -r pyproject.toml
+Restart shell and verify:
+```bash
+uv --version
 ```
 
-Activate the environment:
-```
-source .venv/bin/activate
+Install project dependencies:
+```bash
+uv sync
 ```
 
 #### Option 2: Without uv (standard pip)

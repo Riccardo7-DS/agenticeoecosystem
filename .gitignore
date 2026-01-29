@@ -22,3 +22,9 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+
+models/
+src/*egg-info/
+data/
+.env

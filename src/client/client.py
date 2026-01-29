@@ -1,9 +1,10 @@
 import asyncio
-
 from langchain.agents import create_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
-
 from langchain_ollama import ChatOllama
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 async def main():
@@ -37,9 +38,9 @@ async def main():
     llm = ChatOllama(model="mistral")
 
     system_prompt = """You are a helpful assistant with access to tools.
-Complete the ENTIRE user request step by step.
-After using tools, always provide a clear summary of what you found.
-If the user asks for multiple things, make sure to do ALL of them before responding."""
+        Complete the ENTIRE user request step by step.
+        After using tools, always provide a clear summary of what you found.
+        If the user asks for multiple things, make sure to do ALL of them before responding."""
 
     agent_executor = create_agent(llm, tools, system_prompt=system_prompt)
 
@@ -49,9 +50,9 @@ If the user asks for multiple things, make sure to do ALL of them before respond
                 (
                     "user",
                     """Find a narrative about agriculture or crops. 
-Then get the collection codes it references. 
-Then search for one of those collections to see its details.
-Finally, try to get 3 data items from that collection.""",
+                    Then get the collection codes it references. 
+                    Then search for one of those collections to see its details.
+                    Finally, try to get 3 data items from that collection.""",
                 )
             ]
         }

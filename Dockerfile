@@ -1,4 +1,4 @@
-FROM C:\Users\riccardo.dercole\OneDrive - ESA\Desktop\Project\agentic AI\Code\agenticeoecosystem\models\eve
+FROM /shared/home/rdercole/Riccardo/projects/agenticeoecosystem/models/eve
 
 PARAMETER temperature 0.7
 

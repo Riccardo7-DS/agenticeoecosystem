@@ -3,6 +3,7 @@ notebooks/
 
 # Python cache files
 **/__pycache__/
+*/pycache__/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -25,6 +26,6 @@ Thumbs.db
 
 
 models/
-src/*egg-info/
+*/*egg-info/
 data/
 .env

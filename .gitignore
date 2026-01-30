@@ -27,3 +27,5 @@ models/
 */*egg-info/
 data/
 .env
+src/agenticeoecosystem/client/client_old.py
+src/agenticeoecosystem/servers/EOdashboard/eodashboard_server_old.py

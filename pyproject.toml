@@ -48,4 +48,5 @@ dependencies = [
     "qdrant-client>=1.16.2",
     "langchain-huggingface>=1.2.0",
     "sentence-transformers>=5.2.2",
+    "json5>=0.13.0",
 ]

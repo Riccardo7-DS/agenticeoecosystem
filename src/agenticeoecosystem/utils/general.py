@@ -4,9 +4,35 @@ import re
 import pandas as pd
 import ollama
 import logging 
+import json
 
 logger = logging.getLogger(__name__)
 
+
+def extract_json_from_text(text: str):
+    """
+    Attempt to extract a JSON object or array from arbitrary LLM output.
+    Returns the JSON as Python object, or None if not found.
+    """
+    # Try to extract the first {...} or [...] block
+    match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
+    if not match:
+        return None
+
+    json_text = match.group(0)
+
+    # Try strict json.loads first
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: remove newlines and backticks
+    json_text_clean = json_text.replace("`", "").replace("\n", " ")
+    try:
+        return json.loads(json_text_clean)
+    except json.JSONDecodeError:
+        return None
 
 def run_gpt(question, model):
     """Run a local GPT chat completion with the given question using Ollama."""

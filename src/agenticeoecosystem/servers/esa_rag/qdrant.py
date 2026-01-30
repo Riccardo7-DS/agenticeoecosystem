@@ -13,7 +13,7 @@ from typing import Literal, Union
 logger = logging.getLogger(__name__)
 
 # Initialize MCP server
-# mcp = FastMCP("ESA_database")
+mcp = FastMCP("ESA_database")
 
 # Format retrieved documents:
 def format_docs(docs):
@@ -38,25 +38,18 @@ class QdrantRetriever():
                  model_name:str= "nasa-impact/nasa-smd-ibm-st-v2",
                  encode_kwargs = {"normalize_embeddings": True}):
         
-        self._initialize_mcp(model_name, encode_kwargs)
+        self._connect_to_qdrant(model_name, encode_kwargs)
         self._client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
         self.collection_name = collection_name
         self.k = k
 
 
-    def _initialize_mcp(self, 
+    def _connect_to_qdrant(self, 
                        model_name:str= "nasa-impact/nasa-smd-ibm-st-v2",
                        encode_kwargs = {"normalize_embeddings": True}):
-        
-        from definitions import ROOT_DIR
-        from pathlib import Path
 
-        env_path = Path(ROOT_DIR) / ".env"
 
-        if not env_path.exists():
-            raise FileNotFoundError(f".env file not found at expected location: {env_path}")
-    
-        load_dotenv(env_path)
+        load_dotenv()
 
         self.qdrant_url = os.environ["QDRANT_URL"]
         self.qdrant_api_key = os.environ["QDRANT_API_KEY"]
@@ -69,9 +62,9 @@ class QdrantRetriever():
     def get_relevant_documents(self, query: str) -> List[Document]:
         query_emb = self.embedding.embed_query(query)
 
-        search_result = self._client.search(
+        search_result = self._client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_emb,
+            query=query_emb,
             limit=self.k,
         )
 
@@ -88,7 +81,7 @@ class QdrantRetriever():
 
         return docs
 
-# @mcp.tool()
+@mcp.tool()
 def rag_search(query: str) -> str:
     """
     Get relevant documents for answering Earth Observation queries.
@@ -111,7 +104,7 @@ def rag_search(query: str) -> str:
     
     
 
-# @mcp.tool()
+@mcp.tool()
 def rag_pipeline(query: str, model: Literal["gpt-oss:20b"] = "gpt-oss:20b"):
     """
     Run a RAG pipeline with a specified LLM model.

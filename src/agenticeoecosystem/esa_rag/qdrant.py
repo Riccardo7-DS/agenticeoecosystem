@@ -88,7 +88,7 @@ class QdrantRetriever():
 
         return docs
 
-@mcp.tool()
+# @mcp.tool()
 def rag_search(query: str) -> str:
     """
     Get relevant documents for answering Earth Observation queries.
@@ -111,7 +111,7 @@ def rag_search(query: str) -> str:
     
     
 
-@mcp.tool()
+# @mcp.tool()
 def rag_pipeline(query: str, model: Literal["gpt-oss:20b"] = "gpt-oss:20b"):
     """
     Run a RAG pipeline with a specified LLM model.
@@ -156,6 +156,3 @@ def rag_pipeline(query: str, model: Literal["gpt-oss:20b"] = "gpt-oss:20b"):
         logger.error(f"Error processing query '{query}': {e}", exc_info=True)
         return "⚠️ An error occurred while processing your query."
 
-if __name__ == "__main__":
-    # Initialize and run the server
-    mcp.run()

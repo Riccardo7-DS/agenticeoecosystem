@@ -136,12 +136,12 @@ async def test_mcp_tools(tools):
         "greet": {"name": "Riccardo"},
         "list_narratives": {"query": "agriculture"},
         "search_narratives": {"query": "crops"},
-        "get_narrative_content": {"narrative_id": "1"},
+        "get_narrative_content": {},
         "list_themes": {},
-        "get_narrative_indicators": {"narrative_id": "1"},
+        "get_narrative_indicators": {},
         "search_collections": {"query": "crops"},
-        "get_collection_items": {"collection_code": "1"},
-        "find_narratives_for_indicator": {"indicator_code": "1"},
+        "get_collection_items": {},
+        "find_narratives_for_indicator": {},
     }
 
     for tool_name, tool in tools.items():
@@ -237,6 +237,8 @@ if __name__ == "__main__":
         temperature=0.3,
     )
 
+    # llm = ChatOllama(model="mistral", temperature=0.3)
+
     user_query = (
         "Find a narrative about agriculture or crops. "
         "Then get the collection codes it references. "
@@ -249,7 +251,7 @@ if __name__ == "__main__":
         tools = await load_mcp_tools()
 
         # Test MCP tools individually
-        await test_mcp_tools(tools)
+        # await test_mcp_tools(tools)
 
         # Run the LLM query with execution loop
         result = await run_mcp_query_with_execution_loop(llm, tools, user_query)

@@ -5,6 +5,13 @@ This project explores the integration of **EVE (Earth Virtual Expert)**, a Large
 
 The primary goal is to enable EVE to connect ESA’s EO platforms and data clusters, creating an **integrated ecosystem for the EO community**. This approach leverages **agentic capabilities**, allowing EVE to dynamically interact with EO tools, databases, and APIs to reason and act autonomously.
 
+## ToDo's
+1. Move definitions.py into agenticeoecosystem package
+2. Use EVE as LLM instead of mistral
+3. Improve system prompt so gives more user-friendly output
+4. Allow for follow up questions in agentic tab 
+5. Make interface more intuitive 
+
 ## Overview
 
 To demonstrate this concept, we present a **proof-of-concept use case** where EVE operates within an agentic framework to interact with the **[EO Dashboard](https://eodashboard.org/)** which is a joint initiative by ESA, NASA, and JAXA that provides global indicators and narratives derived from multi-mission EO data.
@@ -33,6 +40,8 @@ Clone the repository:
 ```
 git clone https://gitlab.esa.int/PhiLab/internal/agenticeoecosystem.git
 cd agentic-eo-ecosystems
+uv sync
+uv pip install -e .
 ```
 
 #### Option 1: Using uv (recommended)

@@ -1,6 +1,6 @@
 """MCP (Model Context Protocol) servers configuration."""
 
-from definitions import ROOT_DIR
+from agenticeoecosystem.definitions import ROOT_DIR
 
 
 MCP_SERVERS = {

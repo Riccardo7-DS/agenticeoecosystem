@@ -5,10 +5,8 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
-
-from definitions import ROOT_DIR
-from agenticeoecosystem import QdrantRetriever, format_docs
-from agenticeoecosystem.client import run_eodashboard_agent
+from agenticeoecosystem import  QdrantRetriever, format_docs, run_eodashboard_agent
+from agenticeoecosystem.definitions import ROOT_DIR
 
 # ------------------------------------------------------------------
 # Setup

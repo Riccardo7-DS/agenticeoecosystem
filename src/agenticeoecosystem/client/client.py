@@ -12,7 +12,6 @@ import logging
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-
 async def run_eodashboard_agent(query: str,
                model:Literal["mistral","eve"] = "mistral", 
                temperature=0.3):
@@ -45,6 +44,9 @@ async def run_eodashboard_agent(query: str,
     system_prompt = """You are a helpful assistant with access to tools.
                         Complete the ENTIRE user request step by step.
                         After using tools, always provide a clear summary of what you found.
+                        If no tool results are returned:
+                        - Do not answer
+                        - State explicitly that no data is available.
                         If the user asks for multiple things, make sure to do ALL of them before responding."""
 
     agent_executor = create_agent(llm, tools, system_prompt=system_prompt)

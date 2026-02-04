@@ -11,6 +11,8 @@ The primary goal is to enable EVE to connect ESA’s EO platforms and data clust
 3. Improve system prompt so gives more user-friendly output
 4. Allow for follow up questions in agentic tab 
 5. Make interface more intuitive 
+6. Make Eve work with Ollama / Vllm
+7. Exploring multi-agent approaches
 
 ## Overview
 

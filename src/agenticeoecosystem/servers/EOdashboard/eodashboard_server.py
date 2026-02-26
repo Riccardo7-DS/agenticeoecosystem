@@ -5,7 +5,7 @@ import pyarrow.parquet as pq
 import pystac
 import requests
 from mcp.server.fastmcp import FastMCP
-
+import logging
 mcp = FastMCP("EODashboard MCP Server")
 
 # Configuration
@@ -16,6 +16,7 @@ STAC_CATALOG_URL = (
     "https://esa-eodashboards.github.io/eodashboard-catalog/trilateral/catalog.json"
 )
 
+logger = logging.getLogger(__name__)
 
 # Cache for narratives and STAC catalog data
 class EODashboardCache:
@@ -105,6 +106,15 @@ class EODashboardCache:
 # Initialize cache
 cache = EODashboardCache()
 
+def get_theme(theme_obj: str | list) -> str:
+    """Get the theme of a narrative by its title"""
+    if type(theme_obj) == str:
+        return theme_obj.lower()
+    elif type(theme_obj) == list:
+        return theme_obj[0].lower()
+    else:
+        logger.warning(f"Unexpected theme format: {type(theme_obj)} for theme_obj: {theme_obj}")
+        return "unknown"
 
 @mcp.tool()
 def list_narratives() -> str:
@@ -116,7 +126,7 @@ def list_narratives() -> str:
     result = f"Found {len(narratives)} narratives:\n\n"
     for narr in narratives[:10]:  # Show first 10
         result += f"- {narr.get('title', 'Untitled')}\n"
-        result += f"  Theme: {narr.get('theme', 'unknown')}\n"
+        result += f"  Theme: {get_theme(narr.get('theme', 'unknown'))}\n"
         result += f"  URL: {narr.get('file', '')}\n\n"
 
     if len(narratives) > 10:
@@ -135,7 +145,7 @@ def search_narratives(keyword: str = "", theme: str = "") -> str:
     filtered = []
     for narr in narratives:
         title = narr.get("title", "").lower()
-        narr_theme = narr.get("theme", "").lower()
+        narr_theme = get_theme(narr.get("theme", ""))
 
         if keyword and keyword.lower() not in title:
             continue
@@ -154,7 +164,7 @@ def search_narratives(keyword: str = "", theme: str = "") -> str:
         indicators = cache.narrative_to_indicators.get(title, {}).get("indicators", [])
 
         result += f"- {title}\n"
-        result += f"  Theme: {narr.get('theme', 'unknown')}\n"
+        result += f"  Theme: {get_theme(narr.get('theme', 'unknown'))}\n"
         result += f"  Tags: {narr.get('tags', 'none')}\n"
         result += f"  Date: {narr.get('date', 'unknown')}\n"
         result += f"  Indicators: {', '.join(indicators) if indicators else 'None'}\n"
@@ -214,12 +224,12 @@ def list_themes() -> str:
     for narr in narratives:
         theme = narr.get("theme", "")
         if theme:
-            themes.add(theme)
+            themes.add(get_theme(theme))
 
     result = f"Available themes ({len(themes)}):\n\n"
     for theme in sorted(themes):
         # Count narratives for this theme
-        count = sum(1 for n in narratives if n.get("theme") == theme)
+        count = sum(1 for n in narratives if get_theme(n.get("theme", "")) == theme)
         result += f"- {theme} ({count} narratives)\n"
 
     return result

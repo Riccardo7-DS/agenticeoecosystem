@@ -35,7 +35,8 @@ load_dotenv()
 
 # this is the output from the orchestrator agent, which decides which worker.
 # Make sure to include the sanitized name of the worker, meaning replace ":" with "_" and so on, to match the safe_worker_agent_names list. 
-next_agent: Literal["phi4_mini_latest", "qwen2_5_coder_7b", "eve", "END"]
+class RoutingOutput(BaseModel):
+    next_agent: Literal["phi4_mini_latest", "qwen2_5_coder_7b", "eve", "END"]
 
 class State(TypedDict):
         """

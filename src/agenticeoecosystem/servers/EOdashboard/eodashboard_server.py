@@ -43,7 +43,7 @@ class EODashboardCache:
         for narrative in self.narratives_index:
             try:
                 content = self._fetch_narrative(narrative["file"])
-                indicators = self._extract_indicator_codes(content)
+                # indicators = self._extract_indicator_codes(content)
 
                 self.narrative_to_indicators[narrative.get("title", "Untitled")] = {
                     "indicators": indicators,
@@ -52,7 +52,7 @@ class EODashboardCache:
                     "url": narrative["file"],
                     "date": narrative.get("date", ""),
                     "official": narrative.get("official", False),
-                    "collections": narrative.get("collections", []),
+                    "indicators": narrative.get("collections", []),
                 }
             except Exception:
                 continue
@@ -98,12 +98,12 @@ class EODashboardCache:
         response.raise_for_status()
         return response.text
 
-    @staticmethod
-    def _extract_indicator_codes(content: str) -> list:
-        """Extract indicator codes from narrative content"""
-        pattern = r"indicator=([A-Za-z0-9_-]+)"
-        matches = re.findall(pattern, content)
-        return list(set(matches))
+    # @staticmethod
+    # def _extract_indicator_codes(content: str) -> list:
+    #     """Extract indicator codes from narrative content"""
+    #     pattern = r"indicator=([A-Za-z0-9_-]+)"
+    #     matches = re.findall(pattern, content)
+    #     return list(set(matches))
 
 
 # Initialize cache
@@ -189,9 +189,12 @@ def search_narratives(keyword: str = "", theme: str = "") -> str:
         title = narr.get("title", "").lower()
         narr_theme = get_theme(narr.get("theme", ""))
 
-        if keyword and keyword.lower() not in title:
-            continue
-        if theme and theme.lower() not in narr_theme:
+        # if keyword and keyword.lower() not in title:
+        #     continue
+        # if theme and theme.lower() not in narr_theme:
+        #     continue
+        check_element = keyword if keyword else theme
+        if check_element.lower() not in title and check_element.lower() not in narr_theme:
             continue
 
         filtered.append(narr)

@@ -45,8 +45,8 @@ class EODashboardCache:
                 content = self._fetch_narrative(narrative["file"])
                 # indicators = self._extract_indicator_codes(content)
 
-                self.narrative_to_indicators[narrative.get("title", "Untitled")] = {
-                    "indicators": indicators,
+                self.narrative_to_indicators[narrative.get("title", "Untitled").lower().strip()] = {
+                    # "indicators": indicators,
                     "theme": narrative.get("theme", "unknown"),
                     "tags": narrative.get("tags", ""),
                     "url": narrative["file"],
@@ -162,6 +162,8 @@ def list_narratives() -> str:
     - The user wants narratives related to a specific topic.
     - The user mentions a theme (e.g., oceans, ice, atmosphere).
     - The user searches by title or content keyword.
+    - You want to find relevant narratives before fetching full content.
+    - You want to get the stac collections (indicators) related to a narrative.
 
     Parameters:
     - keyword (string, optional): Case-insensitive substring match against narrative titles.
@@ -213,7 +215,7 @@ def search_narratives(keyword: str = "", theme: str = "") -> str:
         result += f"  Tags: {narr.get('tags', 'none')}\n"
         result += f"  Date: {narr.get('date', 'unknown')}\n"
         result += f"  Indicators: {', '.join(indicators) if indicators else 'None'}\n"
-        result += f"  URL: {narr.get('file', '')}\n\n"
+        result += f"  URL: {narr.get('file', '')}\n"
         result += f"  STAC Collection codes: [{', '.join(narr.get('collections', [])) if narr.get('collections') else 'None'}]\n\n"
 
     if len(filtered) > 15:
@@ -286,6 +288,7 @@ def get_narrative_content(url: str) -> str:
     - The user wants to know what themes are available in the narratives.
     - The user is browsing or exploring the content.
     - Use this tool to discover themes before searching for narratives by theme.
+    - You couldn't find narratives for a theme and want to check the correct theme names.
 
     Returns a formatted list of all unique themes found in the narratives,
     along with counts of how many narratives belong to each theme.
@@ -338,12 +341,12 @@ def get_narrative_indicators(narrative_title: str) -> str:
     cache.load_narratives()
     cache.load_catalog()
 
-    narrative_info = cache.narrative_to_indicators.get(narrative_title)
-
+    narrative_info = cache.narrative_to_indicators.get(narrative_title.lower().strip())
+    print(f"Exact match for '{narrative_title}': {narrative_info}")
     if not narrative_info:
         # Try fuzzy match
         for nar_title in cache.narrative_to_indicators.keys():
-            if narrative_title.lower() in nar_title.lower():
+            if narrative_title.lower().strip() in nar_title.lower().strip():
                 narrative_info = cache.narrative_to_indicators[nar_title]
                 narrative_title = nar_title
                 break
@@ -478,6 +481,7 @@ def get_collection_items(collection_code: str, limit: int = 10) -> str:
 
     # Try exact match first, then uppercase
     collection = cache.code_to_collection.get(collection_code)
+    # print(f"Exact match for collection code '{collection_code}': {collection}")
     if not collection:
         collection = cache.code_to_collection.get(collection_code.upper())
 
@@ -487,20 +491,24 @@ def get_collection_items(collection_code: str, limit: int = 10) -> str:
     try:
         # Load the collection from STAC
         pystac_collection = pystac.Collection.from_file(collection["self_href"])
+        #Go to children
+        child_link = [link for link in pystac_collection.links if link.rel == "child"]
 
-        # Check for parquet asset
+        # Some might go multiple levels deep, so we keep going until we find a collection with a geoparquet asset or no more children
+        while child_link:
+            child_href = child_link[0].target
+            child_href = urljoin(collection["self_href"], child_href)
+            pystac_collection = pystac.Collection.from_file(child_href)
+            child_link = [link for link in pystac_collection.links if link.rel == "child"]
+        
         geoparquet_link = None
-
-        for link in pystac_collection.links:
-            if link.rel == "geoparquet":
-                geoparquet_link = link.target
-                break
+        if pystac_collection:
+            geoparquet_link = pystac_collection.assets.get("geoparquet", {}).href
+            print(f"Found child collection with geoparquet link: {geoparquet_link}")
 
         if geoparquet_link:
-            # Resolve relative URL
-            if not geoparquet_link.startswith("http"):
-                base_url = collection["self_href"].rsplit("/", 1)[0]
-                geoparquet_link = f"{base_url}/{geoparquet_link}"
+            geoparquet_link = urljoin(child_href, geoparquet_link)
+            print(f"Resolved geoparquet link: {geoparquet_link}")
 
             response = requests.get(geoparquet_link)
             response.raise_for_status()
@@ -520,10 +528,10 @@ def get_collection_items(collection_code: str, limit: int = 10) -> str:
                 response_text += f"Item {idx + 1}:\n"
                 response_text += f"  Properties: {dict(row)}\n\n"
 
-            return response_text
+            return response_text, 1
 
         else:
-            return f"Collection '{collection['code']}' does not have a geoparquet asset. Items may be in a different format."
+            return f"Collection '{collection['code']}' does not have a geoparquet asset. Items may be in a different format.", 0
 
     except Exception as e:
         return f"Error retrieving items for collection '{collection['code']}': {str(e)}"
@@ -582,5 +590,6 @@ def find_narratives_for_indicator(indicator_code: str) -> str:
 
 if __name__ == "__main__":
     mcp.run() 
-    # result = search_narratives('atmosphere')
+    # result = get_collection_items(collection_code="N1_NO2")
+
     # print(result)

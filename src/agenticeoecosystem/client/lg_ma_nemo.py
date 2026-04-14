@@ -119,6 +119,7 @@ gee_agent = create_agent(
     )
 )
 
+# rag agent = create_agent(
 @tool
 async def get_eo_stac_data(request: str) -> str:
     """Get data from EO Dashboard and STAC catalogs.

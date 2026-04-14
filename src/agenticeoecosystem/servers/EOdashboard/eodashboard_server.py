@@ -120,21 +120,21 @@ def get_theme(theme_obj: str | list) -> str:
         return "unknown"
 
 @mcp.tool(
-    description="""
-    Retrieve a list of all available EO Dashboard narratives.
+    # description="""
+    # Retrieve a list of all available EO Dashboard narratives.
 
-    Use this tool when the user asks:
-    - What narratives are available?
-    - To browse or explore narratives.
-    - To find narrative titles or URLs.
+    # Use this tool when the user asks:
+    # - What narratives are available?
+    # - To browse or explore narratives.
+    # - To find narrative titles or URLs.
 
-    Returns a formatted summary including:
-    - Title
-    - Theme
-    - URL
+    # Returns a formatted summary including:
+    # - Title
+    # - Theme
+    # - URL
 
-    The result may be truncated if many narratives exist.
-    """
+    # The result may be truncated if many narratives exist.
+    # """
 )
 def list_narratives() -> str:
     """Get a list of all available EODashboard narratives"""
@@ -155,28 +155,28 @@ def list_narratives() -> str:
 
 
 @mcp.tool(
-    description="""
-    Search EO Dashboard narratives by keyword and/or theme.
+    # description="""
+    # Search EO Dashboard narratives by keyword and/or theme.
 
-    Use this tool when:
-    - The user wants narratives related to a specific topic.
-    - The user mentions a theme (e.g., oceans, ice, atmosphere).
-    - The user searches by title or content keyword.
-    - You want to find relevant narratives before fetching full content.
-    - You want to get the stac collections (indicators) related to a narrative.
+    # Use this tool when:
+    # - The user wants narratives related to a specific topic.
+    # - The user mentions a theme (e.g., oceans, ice, atmosphere).
+    # - The user searches by title or content keyword.
+    # - You want to find relevant narratives before fetching full content.
+    # - You want to get the stac collections (indicators) related to a narrative.
 
-    Parameters:
-    - keyword (string, optional): Case-insensitive substring match against narrative titles.
-    - theme (string, optional): Case-insensitive match against narrative theme name.
+    # Parameters:
+    # - keyword (string, optional): Case-insensitive substring match against narrative titles.
+    # - theme (string, optional): Case-insensitive match against narrative theme name.
 
-    At least one of 'keyword' or 'theme' should be provided.
+    # At least one of 'keyword' or 'theme' should be provided.
 
-    Returns:
-    A formatted list of matching narratives including title, theme, tags,
-    date, indicators, URL, and STAC collection codes.
-     If no matches are found, returns a message
-    indicating no results.
-    """
+    # Returns:
+    # A formatted list of matching narratives including title, theme, tags,
+    # date, indicators, URL, and STAC collection codes.
+    #  If no matches are found, returns a message
+    # indicating no results.
+    # """
 )
 def search_narratives(keyword: str = "", theme: str = "") -> str:
     """Search narratives by keyword in title or by theme (e.g., 'oceans', 'ice', 'atmosphere')"""
@@ -225,24 +225,24 @@ def search_narratives(keyword: str = "", theme: str = "") -> str:
 
 
 @mcp.tool(
-    description="""
-    Retrieve the full content of a specific EO Dashboard narrative by URL.
+    # description="""
+    # Retrieve the full content of a specific EO Dashboard narrative by URL.
 
-    Use this tool when:
-    - The user wants detailed information about a specific narrative.
-    - The user asks to read, summarize, analyze, or extract information
-      from a particular narrative.
-    - You have already obtained the narrative URL from list_narratives
-      or search_narratives.
+    # Use this tool when:
+    # - The user wants detailed information about a specific narrative.
+    # - The user asks to read, summarize, analyze, or extract information
+    #   from a particular narrative.
+    # - You have already obtained the narrative URL from list_narratives
+    #   or search_narratives.
 
-    Parameters:
-    - url (string, required): The direct URL to the narrative markdown file.
+    # Parameters:
+    # - url (string, required): The direct URL to the narrative markdown file.
 
-    Returns:
-    - The narrative frontmatter (metadata) and body content.
-    - Content may be truncated to avoid exceeding context limits.
-    - Returns an error message if fetching fails.
-    """
+    # Returns:
+    # - The narrative frontmatter (metadata) and body content.
+    # - Content may be truncated to avoid exceeding context limits.
+    # - Returns an error message if fetching fails.
+    # """
 )
 def get_narrative_content(url: str) -> str:
     """Get the full content of a specific narrative by its URL"""
@@ -281,18 +281,18 @@ def get_narrative_content(url: str) -> str:
 
 
 @mcp.tool(
-    description="""
-    List all available themes in the EO Dashboard.
+    # description="""
+    # List all available themes in the EO Dashboard.
 
-    Use this tool when:
-    - The user wants to know what themes are available in the narratives.
-    - The user is browsing or exploring the content.
-    - Use this tool to discover themes before searching for narratives by theme.
-    - You couldn't find narratives for a theme and want to check the correct theme names.
+    # Use this tool when:
+    # - The user wants to know what themes are available in the narratives.
+    # - The user is browsing or exploring the content.
+    # - Use this tool to discover themes before searching for narratives by theme.
+    # - You couldn't find narratives for a theme and want to check the correct theme names.
 
-    Returns a formatted list of all unique themes found in the narratives,
-    along with counts of how many narratives belong to each theme.
-    """
+    # Returns a formatted list of all unique themes found in the narratives,
+    # along with counts of how many narratives belong to each theme.
+    # """
 )
 def list_themes() -> str:
     """Get all available themes from narratives"""
@@ -316,25 +316,25 @@ def list_themes() -> str:
 
 
 @mcp.tool(
-    description="""
-    Retrieve the STAC collection indicator codes referenced by a specific
-    EO Dashboard narrative.
+    # description="""
+    # Retrieve the STAC collection indicator codes referenced by a specific
+    # EO Dashboard narrative.
 
-    Use this tool when:
-    - The user wants to know which datasets or collections support a narrative.
-    - You need the collection codes to perform STAC searches.
-    - The user asks about data sources behind a narrative.
+    # Use this tool when:
+    # - The user wants to know which datasets or collections support a narrative.
+    # - You need the collection codes to perform STAC searches.
+    # - The user asks about data sources behind a narrative.
 
-    Parameters:
-    - narrative_title (string, required):
-      The exact or partial title of a narrative.
-      If unsure of the exact title, first use search_narratives.
+    # Parameters:
+    # - narrative_title (string, required):
+    #   The exact or partial title of a narrative.
+    #   If unsure of the exact title, first use search_narratives.
 
-    Returns:
-    - A formatted list of collection indicator codes referenced by the narrative.
-    - Includes collection metadata such as title, themes, satellite, and URL.
-    - Returns an error message if the narrative is not found.
-    """
+    # Returns:
+    # - A formatted list of collection indicator codes referenced by the narrative.
+    # - Includes collection metadata such as title, themes, satellite, and URL.
+    # - Returns an error message if the narrative is not found.
+    # """
 )
 def get_narrative_indicators(narrative_title: str) -> str:
     """Get the collection indicator codes referenced in a narrative. Returns the list of STAC collection codes that provide data for this story."""
@@ -380,25 +380,25 @@ def get_narrative_indicators(narrative_title: str) -> str:
 
 
 @mcp.tool(
-    description="""
-    Search EO Dashboard STAC collections (datasets) in the catalog.
+    # description="""
+    # Search EO Dashboard STAC collections (datasets) in the catalog.
 
-    Use this tool when:
-    - The user wants to discover datasets directly.
-    - You need collection metadata before performing a STAC item search.
-    - The user asks about datasets by code, theme, satellite, or keyword.
+    # Use this tool when:
+    # - The user wants to discover datasets directly.
+    # - You need collection metadata before performing a STAC item search.
+    # - The user asks about datasets by code, theme, satellite, or keyword.
 
-    Parameters (all optional, at least one should be provided):
-    - code (string): Exact STAC collection code (case-insensitive).
-    - theme (string): Theme name (e.g., oceans, ice, atmosphere).
-    - keyword (string): Case-insensitive keyword match against
-      collection title or description.
+    # Parameters (all optional, at least one should be provided):
+    # - code (string): Exact STAC collection code (case-insensitive).
+    # - theme (string): Theme name (e.g., oceans, ice, atmosphere).
+    # - keyword (string): Case-insensitive keyword match against
+    #   collection title or description.
 
-    Returns:
-    - A list of matching collections including code, title, themes,
-      satellite, sensor, and URL.
-    - Returns a message if no matches are found.
-    """
+    # Returns:
+    # - A list of matching collections including code, title, themes,
+    #   satellite, sensor, and URL.
+    # - Returns a message if no matches are found.
+    # """
 )
 def search_collections(code: str = "", theme: str = "", keyword: str = "") -> str:
     """Search STAC collections (datasets) in the EODashboard catalog. Filter by collection code, theme, or keyword in titles/descriptions."""
@@ -451,29 +451,29 @@ def search_collections(code: str = "", theme: str = "", keyword: str = "") -> st
 
 
 @mcp.tool(
-    description="""
-    Retrieve data items (observations or time slices) from a specific
-    EO Dashboard STAC collection.
+    # description="""
+    # Retrieve data items (observations or time slices) from a specific
+    # EO Dashboard STAC collection.
 
-    Use this tool when:
-    - The user wants actual dataset records.
-    - You need temporal or observation-level data from a collection.
-    - A valid collection code has already been identified
-      (e.g., from search_collections or get_narrative_indicators).
+    # Use this tool when:
+    # - The user wants actual dataset records.
+    # - You need temporal or observation-level data from a collection.
+    # - A valid collection code has already been identified
+    #   (e.g., from search_collections or get_narrative_indicators).
 
-    Parameters:
-    - collection_code (string, required): Exact STAC collection code.
-    - limit (integer, optional): Maximum number of items to return (default 10).
+    # Parameters:
+    # - collection_code (string, required): Exact STAC collection code.
+    # - limit (integer, optional): Maximum number of items to return (default 10).
 
-    Returns:
-    - A sample of item-level properties from the collection.
-    - Only the first `limit` items are returned to prevent large outputs.
-    - Returns an error message if collection is not found or retrieval fails.
+    # Returns:
+    # - A sample of item-level properties from the collection.
+    # - Only the first `limit` items are returned to prevent large outputs.
+    # - Returns an error message if collection is not found or retrieval fails.
 
-    Important:
-    - Use this tool only after confirming a valid collection code.
-    - Do not call this tool speculatively.
-    """
+    # Important:
+    # - Use this tool only after confirming a valid collection code.
+    # - Do not call this tool speculatively.
+    # """
 )
 def get_collection_items(collection_code: str, limit: int = 10) -> str:
     """Get data items from a specific STAC collection. Items represent individual observations or time slices. Returns temporal data points with properties and geometries."""
@@ -528,32 +528,32 @@ def get_collection_items(collection_code: str, limit: int = 10) -> str:
                 response_text += f"Item {idx + 1}:\n"
                 response_text += f"  Properties: {dict(row)}\n\n"
 
-            return response_text, 1
+            return response_text
 
         else:
-            return f"Collection '{collection['code']}' does not have a geoparquet asset. Items may be in a different format.", 0
+            return f"Collection '{collection['code']}' does not have a geoparquet asset. Items may be in a different format."
 
     except Exception as e:
         return f"Error retrieving items for collection '{collection['code']}': {str(e)}"
 
 
 @mcp.tool(
-    description="""
-    Find EO Dashboard narratives that reference a specific STAC collection indicator.
+    # description="""
+    # Find EO Dashboard narratives that reference a specific STAC collection indicator.
 
-    Use this tool when:
-    - The user wants to know which narratives use a particular dataset.
-    - You need to reverse-map collection codes to stories.
-    - The user asks "Which stories use dataset X?" or "Which narratives reference indicator Y?"
+    # Use this tool when:
+    # - The user wants to know which narratives use a particular dataset.
+    # - You need to reverse-map collection codes to stories.
+    # - The user asks "Which stories use dataset X?" or "Which narratives reference indicator Y?"
 
-    Parameters:
-    - indicator_code (string, required): The STAC collection code or indicator code.
+    # Parameters:
+    # - indicator_code (string, required): The STAC collection code or indicator code.
 
-    Returns:
-    - A list of narratives referencing this indicator.
-    - Each narrative includes title, theme, tags, and URL.
-    - Returns a message if no narratives are found.
-    """
+    # Returns:
+    # - A list of narratives referencing this indicator.
+    # - Each narrative includes title, theme, tags, and URL.
+    # - Returns a message if no narratives are found.
+    # """
 )
 def find_narratives_for_indicator(indicator_code: str) -> str:
     """Reverse lookup: find all narratives that reference a specific collection code. Useful to discover stories related to a particular dataset."""

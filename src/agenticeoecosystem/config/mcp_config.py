@@ -18,4 +18,10 @@ MCP_SERVERS = {
             f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
         ],
     },
+    "gee-mcp": {
+      "transport": "stdio",
+      "command": "python",
+      "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
+      "env": {}
+    },
 }

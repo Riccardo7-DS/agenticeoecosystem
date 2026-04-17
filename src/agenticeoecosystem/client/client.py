@@ -52,7 +52,7 @@ def load_llm(eve=False):
             "Authorization": f"Basic {credentials}"
         })
     else:
-        llm = init_chat_model('nemotron-cascade-2:30b', model_provider="ollama", temperature=0)
+        llm = init_chat_model('nemotron-cascade-2:latest', model_provider="ollama", temperature=0)
         return llm
 
 model = load_llm()
@@ -102,7 +102,7 @@ eo_stac_agent = create_agent(
 
 gee_agent = create_agent(
     model,
-    tools=mcp_tools[8:],
+    tools=mcp_tools[8:9],
     system_prompt=(
         """You are an expert GEE assistant responsible for translating user requests into precise tool calls.
 	Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.
@@ -119,7 +119,7 @@ gee_agent = create_agent(
     )
 )
 
-# rag agent = create_agent(
+
 @tool
 async def get_eo_stac_data(request: str) -> str:
     """Get data from EO Dashboard and STAC catalogs.

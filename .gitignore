@@ -3,7 +3,6 @@ notebooks/
 models/
 output/
 data/
-output/
 .env
 *.sh
 

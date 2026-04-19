@@ -1,8 +1,17 @@
 data/eodashboard-catalog/
 notebooks/
+models/
+output/
+data/
+.env
+*.sh
+
+
 **/__pycache__/
 */pycache__/
 __pycache__/
+**/*.egg-info/
+**/*.pyc
 *.py[cod]
 *$py.class
 *.pyc
@@ -22,11 +31,6 @@ env/
 .DS_Store
 Thumbs.db
 
-
-models/
-*/*egg-info/
-data/
-.env
 src/agenticeoecosystem/client/client_old.py
 src/agenticeoecosystem/servers/EOdashboard/eodashboard_server_old.py
 test_eve_retrieval_mcp.py
@@ -36,3 +40,6 @@ test_eve_auth.py
 
 logs/
 *.sif
+.claude/
+
+

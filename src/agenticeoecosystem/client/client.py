@@ -44,9 +44,9 @@ def load_llm(eve=False):
     # Declare the LLM with the EVE model and credentials
     if eve:
         return ChatOpenAI(
-            base_url="https://phi-gateway.tce.ples.dedyn.io/neohpc-eve-internal/18000/v1",
+            base_url=os.getenv("EVE_ENDPOINT"),
             api_key="EMPTY",
-            model="eve_v0.4",
+            model=os.getenv("MAIN_MODEL_NAME"),
                     temperature=0,
                     default_headers={
             "Authorization": f"Basic {credentials}"

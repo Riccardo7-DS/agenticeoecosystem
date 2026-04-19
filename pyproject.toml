@@ -54,4 +54,5 @@ dependencies = [
     "safetensors>=0.7.0",
     "torch-c-dlpack-ext>=0.1.5",
     "qdrant-client>=1.16.1",
+    "mkdocs>=1.6.1",
 ]

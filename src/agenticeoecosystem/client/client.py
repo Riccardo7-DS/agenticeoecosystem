@@ -69,12 +69,13 @@ def load_llm(eve=True):
     logger.info("Initializing LLM (eve=%s)", eve)
     if eve:
         return _EVEChatOpenAI(
-            base_url="https://phi-gateway.tce.ples.dedyn.io/neohpc-eve-internal/18000/v1",
+            base_url=os.getenv("EVE_ENDPOINT"),
             api_key="EMPTY",
-            model="EVE-Instruct",
-            temperature=0,
-            default_headers={"Authorization": f"Basic {credentials}"},
-        )
+            model=os.getenv("MAIN_MODEL_NAME"),
+                    temperature=0,
+                    default_headers={
+            "Authorization": f"Basic {credentials}"
+        })
     else:
         llm = init_chat_model(
             "mistral",

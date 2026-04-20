@@ -3,6 +3,7 @@ notebooks/
 models/
 output/
 data/
+output/
 .env
 *.sh
 
@@ -17,6 +18,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.log
 
 # Virtual environments
 .venv/

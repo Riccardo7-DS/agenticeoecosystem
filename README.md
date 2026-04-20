@@ -58,6 +58,12 @@ Install project dependencies:
 uv sync
 ```
 
+Install agenticecosystem package with pip:
+```bash
+uv pip install -e . --no-deps
+```
+
+
 #### Option 2: Without uv (standard pip)
 Create and activate a virtual environment:
 ```
@@ -80,6 +86,29 @@ Install dependencies:
 ```
 pip install -e .
 ```
+
+## Running the Client
+
+The main entry point is `src/agenticeoecosystem/client/client.py`. Note that startup takes a few minutes — the MCP servers need to initialise and tool discovery runs at import time. Subsequent queries in the same session are fast.
+
+```bash
+cd agenticeoecosystem
+python src/agenticeoecosystem/client/client.py
+```
+
+By default the client uses **Ollama/Mistral** as the LLM backend. To use **EVE** instead, pass the `--llm eve` flag:
+
+```bash
+python src/agenticeoecosystem/client/client.py --llm eve
+```
+
+Once loaded, the client enters an interactive loop. Type your query and press Enter. Type `quit` to exit.
+
+```
+Query (or 'quit' to exit): Is there a narrative about COVID-19?
+```
+
+Each session writes a timestamped log file to `logs/client_YYYYMMDD_HHMMSS.log`.
 
 ## Workflow
 
@@ -120,6 +149,43 @@ graph TD
 ```
 
 The workflow is a multi-layer approach with the first layer between the supervisor and the agents it is connected to, and the second layer is the tools connected to the respective agents. 
+
+## MCP Servers
+
+The client connects to three MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
+
+### EO Dashboard
+
+No setup required. The server fetches data from public ESA EO Dashboard endpoints and exposes tools for browsing narratives, themes, and STAC collections.
+
+### Google Earth Engine (GEE)
+
+Enables satellite image downloads via the [Earth Engine Python API](https://developers.google.com/earth-engine/guides/python_install). The following one-time setup is required:
+
+1. **Create a Google account** and sign up for [Google Earth Engine](https://earthengine.google.com/). Academic/research access is free.
+2. **Create a Google Cloud project** at [console.cloud.google.com](https://console.cloud.google.com) and note the **Project ID**.
+3. **Enable the Earth Engine API**: APIs & Services → Enable APIs → search for *Earth Engine API*.
+4. **Create a service account**: IAM & Admin → Service Accounts → Create. Assign the role *Earth Engine Resource Writer* (or *Editor*).
+5. **Register the service account with Earth Engine**: go to [code.earthengine.google.com/register](https://code.earthengine.google.com/register), select your Cloud project, and complete registration.
+6. **Download a JSON key**: Service Accounts → your account → Keys → Add Key → JSON. Save the file somewhere accessible.
+7. **Set the following in `.env`**:
+
+```env
+GEE_PROJECT=your-gcp-project-id
+GEE_SERVICE_ACCOUNT=your-service-account@your-project.iam.gserviceaccount.com
+GEE_PRIVATE_KEY_PATH=/absolute/path/to/your-key.json
+```
+
+### EVE Knowledge Retrieval
+
+Provides retrieval-augmented access to the EVE knowledge base. Requires OAuth2 credentials from the EVE platform:
+
+```env
+EVE_RETRIEVAL_CLIENT_ID=your-client-id
+EVE_RETRIEVAL_CLIENT_SECRET=your-client-secret
+```
+
+Contact the EVE platform team to obtain these credentials. If they are not set the server is skipped and the `get_eve_knowledge` tool will be unavailable.
 
 ## Adding Custom sub-agents
 

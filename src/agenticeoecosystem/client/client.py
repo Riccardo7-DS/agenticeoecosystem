@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import base64
+import logging
 import os
 from pathlib import Path
 
@@ -15,7 +16,8 @@ from langchain_openai import ChatOpenAI
 from agenticeoecosystem.config.mcp_config import get_mcp_servers
 from agenticeoecosystem.utils import setup_logging
 
-logger = setup_logging("client")
+setup_logging("client")
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 logger.info("Loading .env from %s", PROJECT_ROOT / ".env")
@@ -96,9 +98,14 @@ if __name__ == "__main__":
     model = load_llm(eve=use_eve)
     logger.info("LLM initialization complete")
 
+    _EO_STAC_TOOLS = {
+        "list_narratives", "search_narratives", "get_narrative_content",
+        "list_themes", "get_narrative_indicators", "search_collections",
+        "get_collection_items", "find_narratives_for_indicator",
+    }
     eo_stac_agent = create_agent(
         model,
-        tools=mcp_tools[:8],
+        tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOLS],
         system_prompt=(
             "You are a EO Dashboard assistant. "
             "Parse natural language queries (e.g., 'Find narrative about Covid-19') "
@@ -167,6 +174,16 @@ if __name__ == "__main__":
         ),
     )
 
+    rag_agent = create_agent(
+        model,
+        tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"],
+        system_prompt=(
+            "You are a retrieval assistant for ESA Earth Observation Science Strategy. "
+            "Use the hybrid_rag_retrieve tool to fetch relevant document chunks and "
+            "knowledge graph context, then return the raw context to the caller."
+        ),
+    )
+
     @tool
     async def get_eo_stac_data(request: str) -> str:
         """Get data from EO Dashboard and STAC catalogs.
@@ -180,7 +197,7 @@ if __name__ == "__main__":
         text_output = result["messages"][-1].text
         if isinstance(text_output, tuple):
             text_output = " ".join(str(t) for t in text_output)
-        logger.info("[TOOL RESULT] %s", text_output)
+        # logger.info("[TOOL RESULT] %s", text_output)
         return str(text_output)
 
     @tool
@@ -220,15 +237,45 @@ if __name__ == "__main__":
             text_output = " ".join(str(t) for t in text_output)
         return str(text_output)
 
+    @tool
+    async def get_hybrid_rag_context(request: str) -> str:
+        """Retrieve relevant context from the ESA EO Science Strategy knowledge base.
+
+        Uses hybrid retrieval (semantic vector search + ESA knowledge graph) over
+        PDF documents. Use for questions about science themes, science questions,
+        strategic objectives, enabling tools, tipping points, treaties, and other
+        ESA EO domain topics.
+        """
+        logger.info("[TOOL CALL] get_hybrid_rag_context: %s", request)
+        result = await rag_agent.ainvoke(
+            {"messages": [{"role": "user", "content": request}]}
+        )
+        for msg in result["messages"]:
+            for tc in getattr(msg, "tool_calls", []):
+                logger.info("[rag_agent -> hybrid_rag_retrieve] question: %s", tc.get("args", {}))
+            if getattr(msg, "type", None) == "tool":
+                content = msg.content
+                if isinstance(content, list):
+                    content = "\n".join(c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content)
+                logger.info("[hybrid_rag_retrieve raw output]\n%s", content)
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        # logger.info("[TOOL RESULT] %s", text_output)
+        return str(text_output)
+
     supervisor_agent = create_agent(
         model,
-        tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge],
+        tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context],
         system_prompt=(
             "You are a routing agent. "
             "You can get data from EO Dashboards, Google Earth Engine, "
-            "and the EVE knowledge base for ESA/EO background information. "
+            "the EVE knowledge base for ESA/EO background information, "
+            "and the ESA EO Science Strategy knowledge base (hybrid RAG). "
             "Break down user requests into appropriate tool calls and coordinate the results. "
-            "When a request involves multiple actions, use multiple tools in sequence."
+            "When a request involves multiple actions, use multiple tools in sequence. "
+            "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
+            "Do not add introductions, summaries, or commentary around tool results. "
         ),
     )
 
@@ -250,8 +297,10 @@ if __name__ == "__main__":
                 for update in step.values():
                     for message in update.get("messages", []):
                         if message.type == "tool":
-                            continue
-                        elif message.type == "ai":
+                            print(message.content)
+                            logger.info("Tool result: %s", message.content)
+                        elif message.type == "ai" and message.content:
                             message.pretty_print()
+                            logger.info("Final response: %s", message.content)
 
     asyncio.run(run())

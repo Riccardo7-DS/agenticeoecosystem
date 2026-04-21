@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "agenticeoecosystem"
 version = "0.1.0"
@@ -51,4 +55,6 @@ dependencies = [
     "json5>=0.13.0",
     "langchain-openai>=1.1.7",
     "earthengine-api>=1.7.22",
+    "neo4j>=5.0.0",
+    "neo4j-graphrag>=0.6.0",
 ]

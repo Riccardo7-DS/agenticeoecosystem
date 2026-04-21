@@ -29,6 +29,10 @@ data/
 .env
 src/agenticeoecosystem/client/client_old.py
 src/agenticeoecosystem/servers/EOdashboard/eodashboard_server_old.py
+test_eve_retrieval_mcp.py
 
 test_eve.py
 test_eve_auth.py    
+
+logs/
+*.sif

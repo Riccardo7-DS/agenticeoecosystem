@@ -61,12 +61,6 @@ Install dependencies and the local package in one step:
 uv sync
 ```
 
-Install agenticecosystem package with pip:
-```bash
-uv pip install -e . --no-deps
-```
-
-
 #### Option 2: Without uv (standard pip)
 Create and activate a virtual environment:
 ```bash
@@ -271,7 +265,7 @@ Once the indexes are built the server starts automatically with the client. If Q
 
 ## MCP Servers
 
-The client connects to three MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
+The client connects to four MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
 
 ### EO Dashboard
 
@@ -305,6 +299,33 @@ EVE_RETRIEVAL_CLIENT_SECRET=your-client-secret
 ```
 
 Contact the EVE platform team to obtain these credentials. If they are not set the server is skipped and the `get_eve_knowledge` tool will be unavailable.
+
+### EO Science Strategy (Hybrid RAG)
+
+Provides hybrid retrieval over the **ESA Earth Observation Science Strategy** documents — combining semantic vector search (Qdrant) with a Neo4j knowledge graph that links document chunks to domain concepts (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties).
+
+The RAG pipeline lives in `../hybridrag_pipeline/` (sibling directory, separate repo). Its `.env` must contain:
+
+```env
+QDRANT_URL=https://...
+QDRANT_KEY=your-qdrant-api-key
+QDRANT_COLLECTION=hybridrag_chunks   # optional, this is the default
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your-neo4j-password
+```
+
+**One-time index build** (run from `hybridrag_pipeline/`):
+
+```bash
+# 1. Ingest PDFs into Qdrant
+python build_qdrant.py
+
+# 2. Build the Neo4j knowledge graph
+python build_neo4j.py
+```
+
+Once the indexes are built the server starts automatically with the client. If Qdrant or Neo4j are unreachable the tool returns an error string rather than crashing the client.
 
 ## Adding Custom sub-agents
 

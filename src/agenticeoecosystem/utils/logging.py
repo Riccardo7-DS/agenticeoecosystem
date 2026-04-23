@@ -1,13 +1,14 @@
 import logging
+import os
 
 
 # ---------------------------------------------------------------------------
 # ANSI codes
 # ---------------------------------------------------------------------------
 
-_R  = "\033[0m"    # reset
-_B  = "\033[1m"    # bold
-_DIM = "\033[2m"   # dim
+_R   = "\033[0m"
+_B   = "\033[1m"
+_DIM = "\033[2m"
 
 _RED    = "\033[91m"
 _YELLOW = "\033[93m"
@@ -33,27 +34,21 @@ _LEVEL_COLOR = {
 
 def _msg_color(msg: str) -> str:
     """Pick a highlight color based on message content."""
-    # Run-comparison banners  (╔══  ╚══  ┌──  └──)
     if any(c in msg for c in ("╔", "╚", "╠")):
         return _CYAN + _B
     if any(c in msg for c in ("┌", "└", "═" * 3)):
         return _CYAN
-    # Phase headers
     if "Phase 1/2" in msg or "Phase 2/2" in msg:
         return _BLUE + _B
-    # Summary / accuracy lines
     if "Summary" in msg or "accuracy" in msg or "complete" in msg.lower():
         return _GREEN + _B
-    # Positive milestones
     if any(k in msg for k in ("ready", "saved", "Done", "done")):
         return _GREEN
-    # Cleanup / teardown
     if any(k in msg for k in ("Terminat", "Killing", "Killed", "free")):
         return _DIM + _YELLOW
-    # Warnings embedded in INFO (port in use, GPU memory)
     if any(k in msg for k in ("already in use", "GPU memory", "OOM")):
         return _YELLOW
-    return ""   # use level default
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -63,54 +58,51 @@ def _msg_color(msg: str) -> str:
 class ColoredFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         base = super().format(record)
-
         level_color = _LEVEL_COLOR.get(record.levelno, "")
-
         if record.levelno == logging.INFO:
             content_color = _msg_color(record.getMessage())
             color = content_color if content_color else level_color
         else:
             color = level_color
-
         return f"{color}{base}{_R}" if color else base
 
 
 # ---------------------------------------------------------------------------
-# Public helpers
+# Public helper
 # ---------------------------------------------------------------------------
 
-def setup_logging(level: int = logging.INFO) -> None:
+def setup_logging(
+    level: int = logging.INFO,
+    log_file: str = None,
+    verbose: bool = False,
+) -> None:
+    """Configure root logger with colored, timestamped output.
+
+    Args:
+        level    : Base log level (overridden to DEBUG when verbose=True).
+        log_file : Optional path to write a plain-text log file alongside stdout.
+        verbose  : Shorthand to set level=DEBUG.
     """
-    Configure root logger with colored, timestamped output to stdout.
-    Call once at the top of your script or notebook before running anything.
-    """
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColoredFormatter(
+    if verbose:
+        level = logging.DEBUG
+
+    fmt = ColoredFormatter(
         fmt="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
         datefmt="%H:%M:%S",
-    ))
+    )
+
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    if log_file:
+        log_dir = os.path.dirname(log_file)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        handlers.append(logging.FileHandler(log_file, "w"))
+
+    for h in handlers:
+        h.setFormatter(fmt)
+
     root = logging.getLogger()
     root.setLevel(level)
     root.handlers.clear()
-    root.addHandler(handler)
-
-
-def init_logging(log_file: str = None, verbose: bool = False) -> logging.Logger:
-    import os
-    level = logging.DEBUG if verbose else logging.INFO
-
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColoredFormatter(
-        fmt="%(asctime)s : %(levelname)s : [%(filename)s:%(lineno)s - %(funcName)s()] : %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    ))
-
-    handlers: list[logging.Handler] = [handler]
-    if log_file:
-        log_dir = os.path.dirname(log_file)
-        if log_dir and not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-        handlers.append(logging.FileHandler(log_file, "w"))
-
-    logging.basicConfig(level=level, handlers=handlers, force=True)
-    return logging.getLogger()
+    for h in handlers:
+        root.addHandler(h)

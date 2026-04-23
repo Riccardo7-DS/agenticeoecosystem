@@ -1,0 +1,33 @@
+Bootstrap: docker
+From: python:3.12-slim
+
+%labels
+    project agenticeoecosystem
+
+%post
+    # Minimal system deps — geospatial packages (rasterio, pyproj, shapely, netcdf4)
+    # ship as binary wheels with bundled native libs, so no -dev packages needed.
+    apt-get update -qq && apt-get install -y --no-install-recommends \
+        gcc g++ \
+        git \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Install uv via pip (no special permissions needed)
+    pip install uv
+
+    # Install pinned dependencies from lock file
+    cd /build
+    uv sync --frozen --no-dev --no-install-project
+
+%files
+    pyproject.toml /build/pyproject.toml
+    uv.lock /build/uv.lock
+    README.md /build/README.md
+
+%environment
+    export PATH="/build/.venv/bin:$PATH"
+    export VIRTUAL_ENV=/build/.venv
+    export PYTHONPATH="/project/src:$PYTHONPATH"
+
+%runscript
+    exec python "$@"

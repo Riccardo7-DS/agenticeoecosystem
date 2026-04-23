@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "agenticeoecosystem"
 version = "0.1.0"
@@ -58,4 +62,6 @@ dependencies = [
     "nest-asyncio>=1.6.0",
     "earthengine-api>=1.7.22",
     "fastmcp>=2.14.0",
+    "neo4j>=5.0.0",
+    "neo4j-graphrag>=0.6.0",
 ]

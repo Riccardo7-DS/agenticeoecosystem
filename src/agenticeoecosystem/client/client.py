@@ -3,19 +3,21 @@ import logging
 import os
 
 from dotenv import load_dotenv
+
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
 
+from agenticeoecosystem.config.mcp_config import get_mcp_servers
 from agenticeoecosystem.config.credentials import get_langchain_chat_openai
-from agenticeoecosystem.config.mcp_config import MCP_SERVERS
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Step log — populated by get_eo_stac_data / get_gee_data during a pipeline run
+# Step log — populated during a pipeline run
 # ---------------------------------------------------------------------------
 
 _step_log: list[dict] = []
@@ -23,14 +25,12 @@ _token_counts: dict[str, int] = {"input": 0, "output": 0}
 
 
 def reset_step_log() -> None:
-    """Clear step log and token counters before a new pipeline run."""
     _step_log.clear()
     _token_counts["input"] = 0
     _token_counts["output"] = 0
 
 
 def _extract_steps_from_messages(messages: list) -> None:
-    """Parse LangChain message list and append MCP tool calls to _step_log."""
     for msg in messages:
         if hasattr(msg, "usage_metadata") and msg.usage_metadata:
             _token_counts["input"] += msg.usage_metadata.get("input_tokens", 0)
@@ -40,21 +40,52 @@ def _extract_steps_from_messages(messages: list) -> None:
                 _step_log.append({"function_name": tc["name"], "arguments": tc["args"]})
 
 
-async def load_tools_from_mcp():
+class _EVEChatOpenAI(ChatOpenAI):
+    """ChatOpenAI variant that normalises tool-message content to plain strings.
 
-    mcp_client = MultiServerMCPClient(MCP_SERVERS)
+    The EVE API rejects list-typed content and extra fields in tool messages.
+    """
+
+    def _get_request_payload(self, input_, *, stop=None, **kwargs):
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        for msg in payload.get("messages", []):
+            if msg.get("role") == "tool" and isinstance(msg.get("content"), list):
+                msg["content"] = " ".join(
+                    item.get("text", str(item)) if isinstance(item, dict) else str(item)
+                    for item in msg["content"]
+                )
+        return payload
+
+
+async def _load_tools_from_mcp():
+    logger.info("Building MCP server configuration")
+    mcp_servers = get_mcp_servers()
+    logger.info("MCP servers configured: %s", list(mcp_servers.keys()))
+    mcp_client = MultiServerMCPClient(mcp_servers)
+    logger.info("Requesting tools from MCP servers")
     tools = await mcp_client.get_tools()
-    logger.info(f"Loaded {len(tools)} tools from MCP servers")
-    for tool in tools:
-        logger.info(f"  - {tool.name}: {tool.description}")
+    logger.info("MCP tool discovery complete: %d tools", len(tools))
+    for t in tools:
+        logger.debug("  - %s: %s", t.name, t.description)
     return tools
+
 
 import nest_asyncio
 nest_asyncio.apply()
-mcp_tools = asyncio.get_event_loop().run_until_complete(load_tools_from_mcp())
+mcp_tools = asyncio.get_event_loop().run_until_complete(_load_tools_from_mcp())
 
 # ---------------------------------------------------------------------------
-# System prompts (extracted so rebuild_agents can reuse them)
+# Tool name sets
+# ---------------------------------------------------------------------------
+
+_EO_STAC_TOOL_NAMES = {
+    "list_narratives", "search_narratives", "get_narrative_content",
+    "list_themes", "get_narrative_indicators", "search_collections",
+    "get_collection_items", "find_narratives_for_indicator",
+}
+
+# ---------------------------------------------------------------------------
+# System prompts
 # ---------------------------------------------------------------------------
 
 _EO_STAC_SYSTEM_PROMPT = (
@@ -110,11 +141,26 @@ _GEE_SYSTEM_PROMPT = (
     "Extract all other parameters like dates, cloud cover, and image count from the query."
 )
 
+_EVE_RETRIEVAL_SYSTEM_PROMPT = (
+    "You are a knowledge retrieval assistant for Earth Observation and ESA topics. "
+    "Use the retrieve tool to find relevant information and answer the user's question."
+)
+
+_RAG_SYSTEM_PROMPT = (
+    "You are a retrieval assistant for ESA Earth Observation Science Strategy. "
+    "Use the hybrid_rag_retrieve tool to fetch relevant document chunks and "
+    "knowledge graph context, then return the raw context to the caller."
+)
+
 _SUPERVISOR_SYSTEM_PROMPT = (
     "You are a routing agent. "
-    "You can get data from EO Dashboards and also Google Earth Engine. "
+    "You can get data from EO Dashboards, Google Earth Engine, "
+    "the EVE knowledge base for ESA/EO background information, "
+    "and the ESA EO Science Strategy knowledge base (hybrid RAG). "
     "Break down user requests into appropriate tool calls and coordinate the results. "
-    "When a request involves multiple actions, use multiple tools in sequence."
+    "When a request involves multiple actions, use multiple tools in sequence. "
+    "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
+    "Do not add introductions, summaries, or commentary around tool results."
 )
 
 # ---------------------------------------------------------------------------
@@ -122,8 +168,7 @@ _SUPERVISOR_SYSTEM_PROMPT = (
 # ---------------------------------------------------------------------------
 
 def load_llm(model_name: str, provider: str = "eve", temperature: float = 0.0):
-    """
-    Build a LangChain chat model.
+    """Build a LangChain chat model.
 
     provider options:
       "eve"    — EVE OpenAI-compatible endpoint with Basic Auth (default)
@@ -139,11 +184,9 @@ def load_llm(model_name: str, provider: str = "eve", temperature: float = 0.0):
         from agenticeoecosystem.utils.registry import get_vllm_langchain_model, MODEL_REGISTRY
         host = os.getenv("VLLM_HOST", "127.0.0.1")
         port = int(os.getenv("VLLM_PORT", "8000"))
-        # model_name can be a registry key ("qwen2.5-14b") or a raw HF model ID
         key = model_name if model_name in MODEL_REGISTRY else None
         if key:
             return get_vllm_langchain_model(key, host=host, port=port, temperature=temperature)
-        from langchain_openai import ChatOpenAI
         return ChatOpenAI(
             base_url=f"http://{host}:{port}/v1",
             api_key="EMPTY",
@@ -154,7 +197,7 @@ def load_llm(model_name: str, provider: str = "eve", temperature: float = 0.0):
 
 
 # ---------------------------------------------------------------------------
-# Agent builder — call rebuild_agents() to switch models without restarting
+# Agent initialization
 # ---------------------------------------------------------------------------
 
 _DEFAULT_MODEL: str = os.getenv("MAIN_MODEL_NAME", "EVE-Instruct")
@@ -162,92 +205,146 @@ _DEFAULT_PROVIDER: str = os.getenv("MODEL_PROVIDER", "eve")
 
 model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 
-eo_stac_agent = create_agent(model, tools=mcp_tools[:8], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-gee_agent     = create_agent(model, tools=mcp_tools[8:9], system_prompt=_GEE_SYSTEM_PROMPT)
+eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
+gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
+eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
+rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
 
 
 @tool
 async def get_eo_stac_data(request: str) -> str:
     """Get data from EO Dashboard and STAC catalogs.
-    This handles cross platform functionalities, for examlple if the query is fetch the stac collection data about any narrative, it will first
-    search for narrative, pick one and parse the collection code, use the code to get the stac collection items.
-    """
-    print(f"[TOOL CALL] get_eo_stac_data with request: {request}")
 
-    result = await eo_stac_agent.ainvoke({
-        "messages": [{"role": "user", "content": request}]
-    })
+    Handles cross-platform queries: e.g. fetch STAC collection data for a narrative
+    by searching narratives, picking one, parsing the collection code, then getting items.
+    """
+    logger.info("[TOOL CALL] get_eo_stac_data: %s", request)
+    result = await eo_stac_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
     _extract_steps_from_messages(result["messages"])
     text_output = result["messages"][-1].text
     if isinstance(text_output, tuple):
         text_output = " ".join(str(t) for t in text_output)
-    print(f"[TOOL RESULT] {text_output}")
     return str(text_output)
+
 
 @tool
 async def get_gee_data(request: str) -> str:
-    """Phrase your request in the following way :
-     Please download the satellite image for a bounding box defined by the coordinates 
-    [52.526831501, 24.130796795, 52.578119029, 24.181873633]. The desired date range is 2020-01-01 to 2021-01-31.
-    The scale is 10 meters. Split the region into smaller tiles if necessary but download maximum 3 images.
-    Select the bands B4, B3, B2, B8, B11.
-    Filter for less than 20% cloud cover and download 3 image
-    REQUIRED FORMAT RULES:
-- start_date: string (YYYY-MM-DD)
-- end_date: string (YYYY-MM-DD)
-- bounding_box: [min_lon, min_lat, max_lon, max_lat]
-- bands: MUST be a comma-separated string (e.g., "B4,B3,B2,B8,B11") — NOT a list
-- scale: integer
-- image_count: integer
-- max_cloud_cover: integer
+    """Download satellite imagery from Google Earth Engine.
+
+    Phrase your request like:
+    "Download a Sentinel-2 image for bbox [min_lon, min_lat, max_lon, max_lat],
+    date range YYYY-MM-DD to YYYY-MM-DD, bands B4,B3,B2, scale 10m, max 20% cloud cover."
     """
-    print(f"[TOOL CALL] get_eo_stac_data with request: {request}")
-    result = await gee_agent.ainvoke({
-        "messages": [{"role": "user", "content": request}]
-    })
+    logger.info("[TOOL CALL] get_gee_data: %s", request)
+    result = await gee_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
     _extract_steps_from_messages(result["messages"])
     text_output = result["messages"][-1].text
     if isinstance(text_output, tuple):
         text_output = " ".join(str(t) for t in text_output)
     return str(text_output)
 
-supervisor_agent = create_agent(model, tools=[get_eo_stac_data, get_gee_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
 
+@tool
+async def get_eve_knowledge(request: str) -> str:
+    """Retrieve knowledge about ESA and Earth Observation from the EVE knowledge base."""
+    logger.info("[TOOL CALL] get_eve_knowledge: %s", request)
+    result = await eve_retrieval_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+    _extract_steps_from_messages(result["messages"])
+    text_output = result["messages"][-1].text
+    if isinstance(text_output, tuple):
+        text_output = " ".join(str(t) for t in text_output)
+    return str(text_output)
+
+
+@tool
+async def get_hybrid_rag_context(request: str) -> str:
+    """Retrieve relevant context from the ESA EO Science Strategy knowledge base.
+
+    Uses hybrid retrieval (semantic vector search + ESA knowledge graph) over PDF documents.
+    Use for questions about science themes, strategic objectives, enabling tools, and other ESA EO topics.
+    """
+    logger.info("[TOOL CALL] get_hybrid_rag_context: %s", request)
+    result = await rag_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+    _extract_steps_from_messages(result["messages"])
+    for msg in result["messages"]:
+        for tc in getattr(msg, "tool_calls", []):
+            logger.debug("[rag_agent -> hybrid_rag_retrieve] args: %s", tc.get("args", {}))
+        if getattr(msg, "type", None) == "tool":
+            content = msg.content
+            if isinstance(content, list):
+                content = "\n".join(
+                    c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content
+                )
+            logger.debug("[hybrid_rag_retrieve raw output]\n%s", content)
+    text_output = result["messages"][-1].text
+    if isinstance(text_output, tuple):
+        text_output = " ".join(str(t) for t in text_output)
+    return str(text_output)
+
+
+supervisor_agent = create_agent(
+    model,
+    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context],
+    system_prompt=_SUPERVISOR_SYSTEM_PROMPT,
+)
+
+
+# ---------------------------------------------------------------------------
+# Hot-swap agents without restarting (used by evaluation pipeline)
+# ---------------------------------------------------------------------------
 
 def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
-    """Recreate all agents with a new model without restarting the process.
+    """Recreate all agents with a new model. MCP tools are reused."""
+    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, rag_agent, supervisor_agent
+    model               = load_llm(model_name, provider, temperature)
+    eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
+    gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
+    eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
+    rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
 
-    MCP tools are reused (loaded once at import). Only the LangChain agents
-    are rebuilt, which is cheap.
 
-    Args:
-        model_name  : Model identifier (e.g. "nemotron-cascade-2:latest", "claude-sonnet-4-6").
-        provider    : LangChain model provider (e.g. "ollama", "anthropic") or "eve".
-        temperature : Sampling temperature.
-    """
-    global model, eo_stac_agent, gee_agent, supervisor_agent
-    model         = load_llm(model_name, provider, temperature)
-    eo_stac_agent = create_agent(model, tools=mcp_tools[:8],  system_prompt=_EO_STAC_SYSTEM_PROMPT)
-    gee_agent     = create_agent(model, tools=mcp_tools[8:9], system_prompt=_GEE_SYSTEM_PROMPT)
-    supervisor_agent = create_agent(model, tools=[get_eo_stac_data, get_gee_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
-    logger.info("Agents rebuilt with model=%s provider=%s temperature=%s", model_name, provider, temperature)
+# ---------------------------------------------------------------------------
+# Interactive CLI
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    async def run():
-        user_request = (
-            "Find any narrative about the atmosphere, pick one and get an image from the GEE of the location related to the narrative"
-        )
-        print("User Request:", user_request)
-        print("\n" + "="*80 + "\n")
+    import argparse
+    from agenticeoecosystem.utils.logging import setup_logging
 
-        async for step in supervisor_agent.astream(
-            {"messages": [{"role": "user", "content": user_request}]}
-        ):
-            for update in step.values():
-                for message in update.get("messages", []):
-                    # print(f"Message type : {message.type}")
-                    if message.type == "tool":
-                        continue
-                    elif message.type == "ai":
-                        message.pretty_print()
+    setup_logging()
+
+    parser = argparse.ArgumentParser(description="AgenticEO client")
+    parser.add_argument("--model",       default=_DEFAULT_MODEL,    help="Model name")
+    parser.add_argument("--provider",    default=_DEFAULT_PROVIDER, help="Model provider")
+    parser.add_argument("--temperature", type=float, default=0.0,   help="Sampling temperature")
+    args = parser.parse_args()
+
+    if args.model != _DEFAULT_MODEL or args.provider != _DEFAULT_PROVIDER or args.temperature != 0.0:
+        rebuild_agents(args.model, args.provider, args.temperature)
+
+    logger.info("All agents ready")
+
+    async def run():
+        logger.info("Entering interactive loop")
+        while True:
+            user_request = input("\nQuery (or 'quit' to exit): ").strip()
+            if not user_request:
+                continue
+            if user_request.lower() in ("quit", "exit", "q"):
+                break
+            logger.info("User query: %s", user_request)
+            print("=" * 80)
+            async for step in supervisor_agent.astream(
+                {"messages": [{"role": "user", "content": user_request}]}
+            ):
+                for update in step.values():
+                    for message in update.get("messages", []):
+                        if message.type == "tool":
+                            print(message.content)
+                            logger.debug("Tool result: %s", message.content)
+                        elif message.type == "ai" and message.content:
+                            message.pretty_print()
+
     asyncio.run(run())

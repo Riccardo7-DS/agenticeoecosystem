@@ -1,14 +1,14 @@
-from mcp.server.fastmcp import FastMCP
-from langchain_core.documents import Document
-from qdrant_client import QdrantClient
-from typing import List
-import ollama
 import json
-import os
-from dotenv import load_dotenv
-from langchain_huggingface import HuggingFaceEmbeddings
 import logging
-from typing import Literal, Union
+import os
+from typing import List
+
+import ollama
+from dotenv import load_dotenv
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
+from mcp.server.fastmcp import FastMCP
+from qdrant_client import QdrantClient
 
 logger = logging.getLogger(__name__)
 

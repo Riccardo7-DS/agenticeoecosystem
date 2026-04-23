@@ -5,7 +5,9 @@ Mirrors GeoBenchX evaluation.py. Adapt the prompts and scoring rules
 to your domain before use.
 """
 
+import logging
 import re
+import time
 from typing import Optional
 
 from tqdm import tqdm
@@ -13,6 +15,8 @@ from tqdm import tqdm
 from .constants import MODEL_CLAUDE_SONNET, ScoreValues
 from .dataclasses import Task, TaskSet
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -144,6 +148,7 @@ def score_task_solution(
     task: Task,
     model: str = MODEL_CLAUDE_SONNET,
     temperature: float = 0.0,
+    evaluator_label: Optional[str] = None,
 ) -> Task:
     """
     Ask an LLM to score `task.generated_solution` against `task.reference_solutions`.
@@ -158,7 +163,7 @@ def score_task_solution(
         The same Task object with LLM score fields populated.
     """
     if task.generated_solution is None:
-        print(f"  Task {task.task_ID}: no generated solution — skipping evaluation.")
+        logger.info("Task %s: no generated solution — skipping evaluation.", task.task_ID)
         return task
 
     prompt = EVALUATION_PROMPT_TEMPLATE.format(
@@ -171,24 +176,42 @@ def score_task_solution(
         candidate_solution=str(task.generated_solution),
     )
 
-    # TODO: replace with your preferred LLM client
-    # Example using the Anthropic SDK:
-    # import anthropic
-    # client = anthropic.Anthropic()
-    # message = client.messages.create(
-    #     model=model,
-    #     max_tokens=1024,
-    #     messages=[{"role": "user", "content": prompt}],
-    # )
-    # response_text = message.content[0].text
+    # ---------------------------------------------------------------------------
+    # Active: OpenAI-compatible endpoint via shared credentials helper.
+    # provider controls which backend is used (set EVALUATOR_PROVIDER in .env).
+    #
+    #   "eve"    — EVE endpoint with Basic Auth (EVE_ENDPOINT, EVE_USERNAME, EVE_PASSWORD)
+    #   "openai" — standard OpenAI API       (OPENAI_API_KEY)
+    #   "custom" — any OpenAI-compatible URL  (OPENAI_ENDPOINT, OPENAI_API_KEY)
+    #   "ollama" — local Ollama               (no credentials needed)
+    # ---------------------------------------------------------------------------
+    import os
+    from agenticeoecosystem.config.credentials import get_openai_client
+    from langchain.chat_models import init_chat_model
 
-    raise NotImplementedError(
-        "Plug in your LLM client here and assign the response text to `response_text`."
-    )
+    _provider = os.getenv("EVALUATOR_PROVIDER", "eve")
 
-    reasoning, score = _parse_score(response_text)  # noqa: F821
-    task.match_reasoning_LLM = reasoning
-    task.match_score_LLM = score
+    if _provider == "ollama":
+        llm = init_chat_model(model, model_provider="ollama", temperature=temperature)
+        response_text = llm.invoke(prompt).content
+    else:
+        _oai = get_openai_client(provider=_provider)
+        resp = _oai.chat.completions.create(
+            model=model,
+            temperature=temperature,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        response_text = resp.choices[0].message.content
+
+    reasoning, score = _parse_score(response_text)
+    if evaluator_label:
+        task.evaluator_scores[evaluator_label] = int(score) if score is not None else None
+        task.evaluator_reasoning[evaluator_label] = reasoning
+    else:
+        task.match_reasoning_LLM = reasoning
+        task.match_score_LLM = score
+    logger.info("  → Score: %s | Reasoning: %s", score, (reasoning or "")[:120])
     return task
 
 
@@ -202,6 +225,7 @@ def evaluate_solutions(
     temperature: float = 0.0,
     output_filename: Optional[str] = None,
     skip_evaluated: bool = True,
+    evaluator_label: Optional[str] = None,
 ) -> TaskSet:
     """
     Run the LLM evaluator over all tasks that have a generated solution.
@@ -216,15 +240,42 @@ def evaluate_solutions(
     Returns:
         TaskSet with match_score_LLM / match_reasoning_LLM fields populated.
     """
-    for task in tqdm(tasks, desc="Evaluating solutions"):
+    n_total = len(tasks)
+    already_scored = (
+        lambda t: t.evaluator_scores.get(evaluator_label) is not None
+        if evaluator_label else t.match_score_LLM is not None
+    )
+    n_skip = sum(1 for t in tasks if already_scored(t) and skip_evaluated)
+    n_no_solution = sum(1 for t in tasks if t.generated_solution is None)
+    logger.info(
+        "Evaluation phase — model=%s  label=%s  %d task(s) total, %d skipped (already scored), %d have no solution",
+        model, evaluator_label or "default", n_total, n_skip, n_no_solution,
+    )
+
+    for i, task in enumerate(tqdm(tasks, desc=f"Evaluating [{evaluator_label or model}]"), 1):
         if task.generated_solution is None:
             continue
-        if task.match_score_LLM is not None and skip_evaluated:
+        if already_scored(task) and skip_evaluated:
+            logger.info("[%d/%d] Task %s: skipped (already scored by %s)", i, n_total, task.task_ID, evaluator_label or "LLM")
             continue
 
-        score_task_solution(task, model=model, temperature=temperature)
+        logger.info("[%d/%d] Task %s: %s", i, n_total, task.task_ID, task.task_text[:80])
+        t0 = time.time()
+        score_task_solution(task, model=model, temperature=temperature, evaluator_label=evaluator_label)
+        logger.info("  → Scored in %.1fs", time.time() - t0)
 
         if output_filename:
             tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)
+            logger.debug("  → Intermediate results saved to %s", output_filename)
 
+    summary = (
+        tasks.score_summary_for_evaluator(evaluator_label)
+        if evaluator_label else tasks.score_summary().get("LLM", {})
+    )
+    if summary.get("n", 0):
+        logger.info(
+            "Evaluation complete — match: %d  partial: %d  no_match: %d  accuracy: %.1f%%",
+            summary.get("match", 0), summary.get("partial", 0), summary.get("no_match", 0),
+            summary.get("accuracy_full", 0.0) * 100,
+        )
     return tasks

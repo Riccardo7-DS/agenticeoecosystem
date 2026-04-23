@@ -45,12 +45,11 @@ class ScoreValues(IntEnum):
 # Task labels — edit these to reflect the categories in your benchmark.
 # ---------------------------------------------------------------------------
 class TaskLabels(str, Enum):
-    # TODO: replace / extend with your own categories
-    CATEGORY_A = "Category A"
-    CATEGORY_B = "Category B"
-    CATEGORY_C = "Category C"
-    HARD = "Hard"
-    CONTROL = "Control question"
+    TOOL_GROUNDING      = "Tool Grounding"         # Can the model identify and call the right tool?
+    SEQUENTIAL_REASONING = "Sequential Reasoning"  # Can it chain outputs across steps?
+    CROSS_AGENT_SYNTHESIS = "Cross-agent Synthesis" # Can it coordinate across MCPs?
+    SCOPE_AWARENESS     = "Scope Awareness"        # Does it know when not to act?
+    PLACEHOLDER         = "Placeholder"            # Not yet implemented (rag / mooc MCPs)
 
 
 NO_LABEL = "<NO_LABEL>"

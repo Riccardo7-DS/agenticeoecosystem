@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 # Root directory of the project
@@ -9,5 +8,5 @@ MODEL_DIR = ROOT_DIR / "models"
 # ---------------------------------------------------------------------------
 # Folder paths
 # ---------------------------------------------------------------------------
-TASKS_FOLDER = DATA_DIR/ "tasks"        # Where task JSON files live
-GEOBENCH_RESULTS = ROOT_DIR/ "output" / "geobenchX"    # Where output JSON and HTML reports are written
+TASKS_FOLDER = DATA_DIR / "tasks"
+GEOBENCH_RESULTS = ROOT_DIR / "output" / "geobenchX"

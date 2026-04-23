@@ -1,45 +1,58 @@
 """
 pipeline_runner.py — Runs your agentic pipeline on a TaskSet and records results.
-
-Replace the `run_pipeline` stub with your actual pipeline call.
 """
 
+import asyncio
+import logging
 import time
-from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from tqdm import tqdm
 
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS
-from .dataclasses import Solution, TaskSet
+from .dataclasses import Solution, Step, TaskSet
 
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# TODO: implement this function to call your pipeline
-# ---------------------------------------------------------------------------
 
 def run_pipeline(task_text: str) -> tuple[Solution, int, int]:
     """
-    Run your agentic pipeline on a single task.
+    Run the supervisor agent on a single task and return the MCP-level tool steps.
 
     Args:
         task_text: The natural-language task prompt.
 
     Returns:
-        solution         : Solution object with the agent's steps
-        input_tokens     : Tokens consumed in the prompt
-        output_tokens    : Tokens generated in the response
+        solution         : Solution with one Step per MCP tool call made
+        input_tokens     : Total input tokens across all agents
+        output_tokens    : Total output tokens across all agents
     """
-    raise NotImplementedError(
-        "Replace this stub with a call to your actual pipeline.\n"
-        "Return (Solution, input_token_count, output_token_count)."
-    )
+    import nest_asyncio
+    nest_asyncio.apply()
 
-    # Example skeleton:
-    # response = my_agent.run(task_text)
-    # steps = [Step(function_name=a.tool, arguments=a.args) for a in response.actions]
-    # return Solution(steps=steps), response.usage.input, response.usage.output
+    # Lazy import — connecting to MCP servers happens on first call, not at import time
+    import agenticeoecosystem.client.client as _client
+    _client.reset_step_log()
+
+    async def _run() -> tuple[int, int]:
+        async for chunk in _client.supervisor_agent.astream(
+            {"messages": [{"role": "user", "content": task_text}]}
+        ):
+            for update in chunk.values():
+                for msg in update.get("messages", []):
+                    if hasattr(msg, "usage_metadata") and msg.usage_metadata:
+                        _client._token_counts["input"] += msg.usage_metadata.get("input_tokens", 0)
+                        _client._token_counts["output"] += msg.usage_metadata.get("output_tokens", 0)
+        return _client._token_counts["input"], _client._token_counts["output"]
+
+    loop = asyncio.get_event_loop()
+    in_tok, out_tok = loop.run_until_complete(_run())
+
+    steps = [
+        Step(function_name=s["function_name"], arguments=s["arguments"])
+        for s in _client._step_log
+    ]
+    return Solution(steps=steps), in_tok, out_tok
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +63,7 @@ def generate_solutions(
     tasks: TaskSet,
     model: str,
     temperature: float,
+    model_provider: str = "ollama",
     output_filename: Optional[str] = None,
     skip_solved: bool = True,
     wait_between_tasks: float = 0.0,
@@ -59,8 +73,9 @@ def generate_solutions(
 
     Args:
         tasks            : TaskSet to process.
-        model            : Model identifier (stored in metadata).
-        temperature      : Sampling temperature (stored in metadata).
+        model            : Model identifier (e.g. "nemotron-cascade-2:latest").
+        temperature      : Sampling temperature.
+        model_provider   : LangChain provider string (e.g. "ollama", "anthropic") or "eve".
         output_filename  : If set, save intermediate results after every task.
         skip_solved      : Skip tasks that already have a generated_solution.
         wait_between_tasks: Seconds to wait between API calls (rate-limit guard).
@@ -70,34 +85,49 @@ def generate_solutions(
         total_input      : Sum of input tokens across all tasks.
         total_output     : Sum of output tokens across all tasks.
     """
+    import nest_asyncio
+    nest_asyncio.apply()
+    import agenticeoecosystem.client.client as _client
+
+    logger.info("Rebuilding agents — model=%s  provider=%s  temperature=%s", model, model_provider, temperature)
+    _client.rebuild_agents(model, provider=model_provider, temperature=temperature)
+
     tasks.metadata["model"] = model
     tasks.metadata["temperature"] = temperature
+
+    n_total = len(tasks)
+    n_skip = sum(1 for t in tasks if t.generated_solution is not None and skip_solved)
+    logger.info("Generation phase — %d task(s) total, %d will be skipped (already solved)", n_total, n_skip)
 
     total_input = 0
     total_output = 0
 
-    for task in tqdm(tasks, desc="Generating solutions"):
-        print(f"\nTask {task.task_ID}: {task.task_text}")
+    for i, task in enumerate(tqdm(tasks, desc="Generating solutions"), 1):
+        logger.info("[%d/%d] Task %s: %s", i, n_total, task.task_ID, task.task_text[:80])
 
         if task.generated_solution is not None and skip_solved:
-            print("  → Skipping (already solved).")
+            logger.info("  → Skipped (already solved, %d steps)", len(task.generated_solution))
             continue
 
+        t0 = time.time()
         try:
             solution, inp_tok, out_tok = run_pipeline(task.task_text)
+            elapsed = time.time() - t0
             task.generated_solution = solution
             task.generated_solution_input_tokens = inp_tok
             task.generated_solution_output_tokens = out_tok
             total_input += inp_tok
             total_output += out_tok
-            print(f"  → Done. Tokens: {inp_tok} in / {out_tok} out")
-            print(str(solution))
-
+            logger.info(
+                "  → Done in %.1fs — %d step(s)  tokens: %d in / %d out\n%s",
+                elapsed, len(solution), inp_tok, out_tok, str(solution),
+            )
         except Exception as e:
-            print(f"  → ERROR: {e}")
+            logger.error("  → ERROR on task %s: %s", task.task_ID, e, exc_info=True)
 
         if output_filename:
             tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)
+            logger.debug("  → Intermediate results saved to %s", output_filename)
 
         if wait_between_tasks:
             time.sleep(wait_between_tasks)
@@ -108,5 +138,9 @@ def generate_solutions(
     if output_filename:
         tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)
 
-    print(f"\nDone. Total tokens — input: {total_input}, output: {total_output}")
+    logger.info(
+        "Generation complete — solved %d/%d  total tokens: %d in / %d out",
+        sum(1 for t in tasks if t.generated_solution is not None),
+        n_total, total_input, total_output,
+    )
     return tasks, total_input, total_output

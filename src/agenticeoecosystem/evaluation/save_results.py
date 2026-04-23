@@ -56,16 +56,35 @@ def _encode_image(path: str) -> str:
 
 
 def conversation_turn_to_html(turn: Any) -> str:
-    """
-    Convert a single conversation turn to an HTML block.
+    """Convert a single conversation turn to an HTML block.
 
-    TODO: adapt this to match the shape of your pipeline's conversation history.
-    Currently handles simple dict turns with keys: role, content.
+    Handles LangChain BaseMessage objects (AIMessage, HumanMessage, ToolMessage)
+    as well as plain dicts with a "role" key.
     """
-    # Example: turn = {"role": "user"|"assistant"|"tool", "content": "..."}
+    try:
+        from langchain_core.messages import BaseMessage
+        _lc_available = True
+    except ImportError:
+        _lc_available = False
+
+    if _lc_available:
+        from langchain_core.messages import BaseMessage
+        if isinstance(turn, BaseMessage):
+            role = turn.type  # "human", "ai", "tool"
+            content = turn.content if isinstance(turn.content, str) else str(turn.content)
+            if hasattr(turn, "tool_calls") and turn.tool_calls:
+                calls = "\n".join(
+                    f"  {tc['name']}({tc['args']})" for tc in turn.tool_calls
+                )
+                content += f"\n\nTool calls:\n{calls}"
+            css_class = {"human": "user", "ai": "assistant", "tool": "tool"}.get(role, "meta")
+            label = role.upper()
+            return f'<div class="{css_class}"><strong>{label}</strong><pre>{content}</pre></div>\n'
+
+    # Fallback: plain dict {"role": ..., "content": ...}
     role = turn.get("role", "unknown")
     content = turn.get("content", "")
-    css_class = role if role in ("user", "assistant", "tool") else "meta"
+    css_class = {"user": "user", "assistant": "assistant", "tool": "tool"}.get(role, "meta")
     label = role.upper()
     return f'<div class="{css_class}"><strong>{label}</strong><pre>{content}</pre></div>\n'
 

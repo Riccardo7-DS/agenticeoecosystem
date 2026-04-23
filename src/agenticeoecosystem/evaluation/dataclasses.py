@@ -93,9 +93,13 @@ class Task(BaseModel):
     generated_solution_input_tokens: Optional[int] = None
     generated_solution_output_tokens: Optional[int] = None
 
-    # LLM-as-judge evaluation
+    # LLM-as-judge evaluation (single evaluator, kept for backward compat)
     match_reasoning_LLM: Optional[str] = None
     match_score_LLM: Optional[ScoreValues] = None
+
+    # Multi-evaluator scores — keyed by evaluator label
+    evaluator_scores: Dict[str, Optional[int]] = Field(default_factory=dict)
+    evaluator_reasoning: Dict[str, Optional[str]] = Field(default_factory=dict)
 
     # Human evaluation
     match_reasoning_Human: Optional[str] = None
@@ -207,6 +211,60 @@ class TaskSet(BaseModel):
         else:
             filtered = [t for t in self.tasks if any(l in label_set for l in t.task_labels)]
         return TaskSet(metadata=self.metadata, tasks=filtered)
+
+    def select_by_ids(self, task_ids: List[str]) -> "TaskSet":
+        """Return a TaskSet containing only the tasks whose task_ID is in `task_ids`."""
+        id_set = set(task_ids)
+        filtered = [t for t in self.tasks if t.task_ID in id_set]
+        return TaskSet(metadata=self.metadata, tasks=filtered)
+
+    def subset(
+        self,
+        label: Union[str, "TaskLabels"],
+        n: Optional[int] = None,
+    ) -> "TaskSet":
+        """
+        Return a TaskSet filtered to a single category, optionally capped at n tasks.
+
+        Args:
+            label : A TaskLabels enum value or its string value (e.g. "Tool Grounding").
+            n     : Maximum number of tasks to return.  None means no limit.
+
+        Example:
+            smoke = tasks.subset(TaskLabels.TOOL_GROUNDING, n=2)
+            smoke = tasks.subset("Tool Grounding", n=3)
+        """
+        label_str = label.value if isinstance(label, TaskLabels) else label
+        filtered = [
+            t for t in self.tasks
+            if any(
+                (l.value if isinstance(l, TaskLabels) else l) == label_str
+                for l in (t.task_labels or [])
+            )
+        ]
+        if n is not None:
+            filtered = filtered[:n]
+        return TaskSet(metadata=self.metadata, tasks=filtered)
+
+    def score_summary_for_evaluator(self, evaluator_label: str) -> Dict[str, Any]:
+        """Accuracy stats for a specific evaluator stored in evaluator_scores."""
+        scores = [
+            t.evaluator_scores.get(evaluator_label)
+            for t in self.tasks
+            if t.evaluator_scores.get(evaluator_label) is not None
+        ]
+        if not scores:
+            return {"n": 0}
+        return {
+            "n": len(scores),
+            "match": sum(1 for s in scores if s == ScoreValues.MATCH),
+            "partial": sum(1 for s in scores if s == ScoreValues.PARTIAL_MATCH),
+            "no_match": sum(1 for s in scores if s == ScoreValues.NO_MATCH),
+            "accuracy_full": sum(1 for s in scores if s == ScoreValues.MATCH) / len(scores),
+            "accuracy_partial_or_full": sum(
+                1 for s in scores if s >= ScoreValues.PARTIAL_MATCH
+            ) / len(scores),
+        }
 
     def score_summary(self) -> Dict[str, Any]:
         """

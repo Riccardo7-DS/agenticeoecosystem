@@ -1,15 +1,13 @@
-import os
 import json
-import tempfile
 import logging
-from typing import Optional, List, Dict, Any
+import os
+from typing import Any, Dict, List, Optional
+
+import ee
+import requests
 from dotenv import load_dotenv
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field, model_validator
-import ee
-import requests
-import time
-from typing import Optional, List, Dict, Any
 
 
 class DownloadParams(BaseModel):

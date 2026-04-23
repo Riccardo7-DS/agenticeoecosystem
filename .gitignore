@@ -4,7 +4,7 @@ models/
 data/
 .env
 *.sh
-
+output/
 
 **/__pycache__/
 */pycache__/
@@ -33,4 +33,4 @@ Thumbs.db
 src/agenticeoecosystem/client/client_old.py
 src/agenticeoecosystem/servers/EOdashboard/eodashboard_server_old.py
 
-
+.claude/

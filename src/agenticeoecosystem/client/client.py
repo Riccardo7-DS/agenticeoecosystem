@@ -1,34 +1,45 @@
-from langchain_openai import ChatOpenAI
-import base64
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from agenticeoecosystem.config.mcp_config import MCP_SERVERS
 import asyncio
 import logging
+import os
+
 from dotenv import load_dotenv
-from typing import List, Optional, Literal
-from langchain_core.language_models.chat_models import BaseChatModel
-from typing_extensions import TypedDict
-
-from langgraph.graph import StateGraph, MessagesState, START, END
-from langgraph.types import Command
-from langchain_core.messages import HumanMessage, trim_messages, AIMessage
-
-# from langchain_core.messages import HumanMessage
-from langgraph.prebuilt import create_react_agent
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
-import os
-username = os.getenv("EVE_USERNAME")
-password = os.getenv("EVE_PASSWORD")
-credentials = base64.b64encode(f"{username}:{password}".encode()).decode() 
+from agenticeoecosystem.config.credentials import get_langchain_chat_openai
+from agenticeoecosystem.config.mcp_config import MCP_SERVERS
 
-
-
-
-logger = logging.getLogger(__name__)
 load_dotenv()
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Step log — populated by get_eo_stac_data / get_gee_data during a pipeline run
+# ---------------------------------------------------------------------------
+
+_step_log: list[dict] = []
+_token_counts: dict[str, int] = {"input": 0, "output": 0}
+
+
+def reset_step_log() -> None:
+    """Clear step log and token counters before a new pipeline run."""
+    _step_log.clear()
+    _token_counts["input"] = 0
+    _token_counts["output"] = 0
+
+
+def _extract_steps_from_messages(messages: list) -> None:
+    """Parse LangChain message list and append MCP tool calls to _step_log."""
+    for msg in messages:
+        if hasattr(msg, "usage_metadata") and msg.usage_metadata:
+            _token_counts["input"] += msg.usage_metadata.get("input_tokens", 0)
+            _token_counts["output"] += msg.usage_metadata.get("output_tokens", 0)
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            for tc in msg.tool_calls:
+                _step_log.append({"function_name": tc["name"], "arguments": tc["args"]})
+
+
 async def load_tools_from_mcp():
 
     mcp_client = MultiServerMCPClient(MCP_SERVERS)
@@ -38,86 +49,121 @@ async def load_tools_from_mcp():
         logger.info(f"  - {tool.name}: {tool.description}")
     return tools
 
-mcp_tools = asyncio.run(load_tools_from_mcp())
+import nest_asyncio
+nest_asyncio.apply()
+mcp_tools = asyncio.get_event_loop().run_until_complete(load_tools_from_mcp())
 
-def load_llm(eve=False):
-    # Declare the LLM with the EVE model and credentials
-    if eve:
+# ---------------------------------------------------------------------------
+# System prompts (extracted so rebuild_agents can reuse them)
+# ---------------------------------------------------------------------------
+
+_EO_STAC_SYSTEM_PROMPT = (
+    "You are a EO Dashboard assistant. "
+    "Parse natural language queries (e.g., 'Find narrative about Covid-19') "
+    "and look for values that can be used as inputs to the tools you've at your disposal. "
+    """
+    EO Dashboard MCP Tools Usage Instructions:
+
+    1. Listing and Exploring Narratives:
+    - Use list_narratives to retrieve all available narratives.
+    - Use list_themes to see what themes exist before filtering or searching.
+    - Use search_narratives with a keyword or theme to find specific narratives.
+    - Always confirm how many narratives were found and include their titles, themes, and URLs.
+
+    2. Accessing Narrative Content:
+    - Use get_narrative_content with the narrative URL to fetch full content.
+    - Limit your processing to the first few thousand characters if the content is very long.
+    - Include both frontmatter and body content when summarizing or analyzing narratives.
+
+    3. Working with Narrative Indicators:
+    - Use get_narrative_indicators to see which STAC collections (datasets) a narrative references.
+    - If no indicators are found, clearly state that.
+    - Use find_narratives_for_indicator to reverse lookup narratives for a specific dataset.
+    - Always confirm the narrative titles, themes, and URLs when returning results.
+
+    4. Searching and Accessing STAC Collections:
+    - Use search_collections to find collections by code, theme, or keyword.
+    - Use get_collection_items to retrieve sample items (observations) from a collection.
+    - Always check that the collection exists before retrieving items.
+    - Limit the number of items returned to avoid overwhelming output.
+    - If a collection has no geoparquet asset or items cannot be retrieved, report clearly.
+
+    5. General Workflow Guidance:
+    - Always load and cache narratives/catalog first with EODashboardCache methods.
+    - Make sure to chain the tools and remember to parse the output from one tool to get input to another tool.
+    - Present all results clearly: titles, themes, tags, dates, URLs, and indicators/collections where applicable.
+    - If a search returns no results, explicitly confirm unavailability instead of returning empty data.
+    """
+)
+
+_GEE_SYSTEM_PROMPT = (
+    "You are an expert GEE assistant responsible for translating user requests into precise tool calls.\n"
+    "Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.\n"
+    "REQUIRED FORMAT RULES:\n"
+    "- start_date: string (YYYY-MM-DD)\n"
+    "- end_date: string (YYYY-MM-DD)\n"
+    "- bounding_box: [min_lon, min_lat, max_lon, max_lat]\n"
+    "- bands: MUST be a comma-separated string (e.g., \"B4,B3,B2,B8,B11\") — NOT a list\n"
+    "- scale: integer\n"
+    "- image_count: integer\n"
+    "- max_cloud_cover: integer\n"
+    "Extract all other parameters like dates, cloud cover, and image count from the query."
+)
+
+_SUPERVISOR_SYSTEM_PROMPT = (
+    "You are a routing agent. "
+    "You can get data from EO Dashboards and also Google Earth Engine. "
+    "Break down user requests into appropriate tool calls and coordinate the results. "
+    "When a request involves multiple actions, use multiple tools in sequence."
+)
+
+# ---------------------------------------------------------------------------
+# LLM factory
+# ---------------------------------------------------------------------------
+
+def load_llm(model_name: str, provider: str = "eve", temperature: float = 0.0):
+    """
+    Build a LangChain chat model.
+
+    provider options:
+      "eve"    — EVE OpenAI-compatible endpoint with Basic Auth (default)
+      "openai" — standard OpenAI API (requires OPENAI_API_KEY in .env)
+      "custom" — any OpenAI-compatible endpoint (requires OPENAI_ENDPOINT + OPENAI_API_KEY)
+      "vllm"   — local vLLM server (requires VLLM_HOST / VLLM_PORT in .env, defaults 127.0.0.1:8000)
+      "ollama" — local Ollama instance
+      any other string is passed directly to LangChain's init_chat_model as model_provider
+    """
+    if provider in ("eve", "openai", "custom"):
+        return get_langchain_chat_openai(model_name, temperature=temperature, provider=provider)
+    if provider == "vllm":
+        from agenticeoecosystem.utils.registry import get_vllm_langchain_model, MODEL_REGISTRY
+        host = os.getenv("VLLM_HOST", "127.0.0.1")
+        port = int(os.getenv("VLLM_PORT", "8000"))
+        # model_name can be a registry key ("qwen2.5-14b") or a raw HF model ID
+        key = model_name if model_name in MODEL_REGISTRY else None
+        if key:
+            return get_vllm_langchain_model(key, host=host, port=port, temperature=temperature)
+        from langchain_openai import ChatOpenAI
         return ChatOpenAI(
-            base_url=os.getenv("EVE_ENDPOINT"),
+            base_url=f"http://{host}:{port}/v1",
             api_key="EMPTY",
-            model=os.getenv("MAIN_MODEL_NAME"),
-                    temperature=0,
-                    default_headers={
-            "Authorization": f"Basic {credentials}"
-        })
-    else:
-        llm = init_chat_model('nemotron-cascade-2:latest', model_provider="ollama", temperature=0)
-        return llm
+            model=model_name,
+            temperature=temperature,
+        )
+    return init_chat_model(model_name, model_provider=provider, temperature=temperature)
 
-model = load_llm()
 
-eo_stac_agent = create_agent(
-    model,
-    tools=mcp_tools[:8],
-    system_prompt=(
-        "You are a EO Dashboard assistant. "
-        "Parse natural language queries (e.g., 'Find narrative about Covid-19') "
-        "and look for values that can be used as inputs to the tools you've at your disposal. "
-        """
-        EO Dashboard MCP Tools Usage Instructions:
+# ---------------------------------------------------------------------------
+# Agent builder — call rebuild_agents() to switch models without restarting
+# ---------------------------------------------------------------------------
 
-        1. Listing and Exploring Narratives:
-        - Use list_narratives to retrieve all available narratives.
-        - Use list_themes to see what themes exist before filtering or searching.
-        - Use search_narratives with a keyword or theme to find specific narratives.
-        - Always confirm how many narratives were found and include their titles, themes, and URLs.
+_DEFAULT_MODEL: str = os.getenv("MAIN_MODEL_NAME", "EVE-Instruct")
+_DEFAULT_PROVIDER: str = os.getenv("MODEL_PROVIDER", "eve")
 
-        2. Accessing Narrative Content:
-        - Use get_narrative_content with the narrative URL to fetch full content.
-        - Limit your processing to the first few thousand characters if the content is very long.
-        - Include both frontmatter and body content when summarizing or analyzing narratives.
+model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 
-        3. Working with Narrative Indicators:
-        - Use get_narrative_indicators to see which STAC collections (datasets) a narrative references.
-        - If no indicators are found, clearly state that.
-        - Use find_narratives_for_indicator to reverse lookup narratives for a specific dataset.
-        - Always confirm the narrative titles, themes, and URLs when returning results.
-
-        4. Searching and Accessing STAC Collections:
-        - Use search_collections to find collections by code, theme, or keyword.
-        - Use get_collection_items to retrieve sample items (observations) from a collection.
-        - Always check that the collection exists before retrieving items.
-        - Limit the number of items returned to avoid overwhelming output.
-        - If a collection has no geoparquet asset or items cannot be retrieved, report clearly.
-
-        5. General Workflow Guidance:
-        - Always load and cache narratives/catalog first with EODashboardCache methods.
-        - Make sure to chain the tools and remember to parse the output from one tool to get input to another tool.
-        - Present all results clearly: titles, themes, tags, dates, URLs, and indicators/collections where applicable.
-        - If a search returns no results, explicitly confirm unavailability instead of returning empty data.
-        """
-    )
-)
-
-gee_agent = create_agent(
-    model,
-    tools=mcp_tools[8:9],
-    system_prompt=(
-        """You are an expert GEE assistant responsible for translating user requests into precise tool calls.
-	Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.
-    REQUIRED FORMAT RULES:
-    - start_date: string (YYYY-MM-DD)
-    - end_date: string (YYYY-MM-DD)
-    - bounding_box: [min_lon, min_lat, max_lon, max_lat]
-    - bands: MUST be a comma-separated string (e.g., "B4,B3,B2,B8,B11") — NOT a list
-    - scale: integer
-    - image_count: integer
-    - max_cloud_cover: integer
-
-	Extract all other parameters like dates, cloud cover, and image count from the query."""
-    )
-)
+eo_stac_agent = create_agent(model, tools=mcp_tools[:8], system_prompt=_EO_STAC_SYSTEM_PROMPT)
+gee_agent     = create_agent(model, tools=mcp_tools[8:9], system_prompt=_GEE_SYSTEM_PROMPT)
 
 
 @tool
@@ -131,12 +177,11 @@ async def get_eo_stac_data(request: str) -> str:
     result = await eo_stac_agent.ainvoke({
         "messages": [{"role": "user", "content": request}]
     })
-    # return result["messages"][-1].text
+    _extract_steps_from_messages(result["messages"])
     text_output = result["messages"][-1].text
     if isinstance(text_output, tuple):
         text_output = " ".join(str(t) for t in text_output)
     print(f"[TOOL RESULT] {text_output}")
-    # logger.info(result)
     return str(text_output)
 
 @tool
@@ -160,34 +205,35 @@ async def get_gee_data(request: str) -> str:
     result = await gee_agent.ainvoke({
         "messages": [{"role": "user", "content": request}]
     })
+    _extract_steps_from_messages(result["messages"])
     text_output = result["messages"][-1].text
     if isinstance(text_output, tuple):
         text_output = " ".join(str(t) for t in text_output)
     return str(text_output)
-    # return result["messages"][-1].text
 
-supervisor_agent = create_agent(
-    model,
-    tools=[get_eo_stac_data, get_gee_data],
-    system_prompt=(
-        "You are a routing agent. "
-        "You can get data from EO Dashboards and also Google Earth Engine. "
-        "Break down user requests into appropriate tool calls and coordinate the results. "
-        "When a request involves multiple actions, use multiple tools in sequence."
-    )
-)
+supervisor_agent = create_agent(model, tools=[get_eo_stac_data, get_gee_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+
+
+def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
+    """Recreate all agents with a new model without restarting the process.
+
+    MCP tools are reused (loaded once at import). Only the LangChain agents
+    are rebuilt, which is cheap.
+
+    Args:
+        model_name  : Model identifier (e.g. "nemotron-cascade-2:latest", "claude-sonnet-4-6").
+        provider    : LangChain model provider (e.g. "ollama", "anthropic") or "eve".
+        temperature : Sampling temperature.
+    """
+    global model, eo_stac_agent, gee_agent, supervisor_agent
+    model         = load_llm(model_name, provider, temperature)
+    eo_stac_agent = create_agent(model, tools=mcp_tools[:8],  system_prompt=_EO_STAC_SYSTEM_PROMPT)
+    gee_agent     = create_agent(model, tools=mcp_tools[8:9], system_prompt=_GEE_SYSTEM_PROMPT)
+    supervisor_agent = create_agent(model, tools=[get_eo_stac_data, get_gee_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    logger.info("Agents rebuilt with model=%s provider=%s temperature=%s", model_name, provider, temperature)
 
 if __name__ == "__main__":
-    # Example: User request requiring both calendar and email coordination
     async def run():
-        # user_request = (
-        #     "Fetch the stac collection items for any narrative related to covid-19. ."
-        # )
-
-        # user_request = (
-        #     "Find the narrative about covid-19 impact on automobile industry and fetch its stac collection items.​"
-        # )
-
         user_request = (
             "Find any narrative about the atmosphere, pick one and get an image from the GEE of the location related to the narrative"
         )

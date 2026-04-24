@@ -17,6 +17,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.log
 
 # Virtual environments
 .venv/
@@ -40,6 +41,4 @@ test_eve_auth.py
 
 logs/
 *.sif
-.claude/
-
 .claude/

@@ -263,6 +263,70 @@ python build_neo4j.py
 
 Once the indexes are built the server starts automatically with the client. If Qdrant or Neo4j are unreachable the tool returns an error string rather than crashing the client.
 
+## MCP Servers
+
+The client connects to four MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
+
+### EO Dashboard
+
+No setup required. The server fetches data from public ESA EO Dashboard endpoints and exposes tools for browsing narratives, themes, and STAC collections.
+
+### Google Earth Engine (GEE)
+
+Enables satellite image downloads via the [Earth Engine Python API](https://developers.google.com/earth-engine/guides/python_install). The following one-time setup is required:
+
+1. **Create a Google account** and sign up for [Google Earth Engine](https://earthengine.google.com/). Academic/research access is free.
+2. **Create a Google Cloud project** at [console.cloud.google.com](https://console.cloud.google.com) and note the **Project ID**.
+3. **Enable the Earth Engine API**: APIs & Services → Enable APIs → search for *Earth Engine API*.
+4. **Create a service account**: IAM & Admin → Service Accounts → Create. Assign the role *Earth Engine Resource Writer* (or *Editor*).
+5. **Register the service account with Earth Engine**: go to [code.earthengine.google.com/register](https://code.earthengine.google.com/register), select your Cloud project, and complete registration.
+6. **Download a JSON key**: Service Accounts → your account → Keys → Add Key → JSON. Save the file somewhere accessible.
+7. **Set the following in `.env`**:
+
+```env
+GEE_PROJECT=your-gcp-project-id
+GEE_SERVICE_ACCOUNT=your-service-account@your-project.iam.gserviceaccount.com
+GEE_PRIVATE_KEY_PATH=/absolute/path/to/your-key.json
+```
+
+### EVE Knowledge Retrieval
+
+Provides retrieval-augmented access to the EVE knowledge base. Requires OAuth2 credentials from the EVE platform:
+
+```env
+EVE_RETRIEVAL_CLIENT_ID=your-client-id
+EVE_RETRIEVAL_CLIENT_SECRET=your-client-secret
+```
+
+Contact the EVE platform team to obtain these credentials. If they are not set the server is skipped and the `get_eve_knowledge` tool will be unavailable.
+
+### EO Science Strategy (Hybrid RAG)
+
+Provides hybrid retrieval over the **ESA Earth Observation Science Strategy** documents — combining semantic vector search (Qdrant) with a Neo4j knowledge graph that links document chunks to domain concepts (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties).
+
+The RAG pipeline lives in `../hybridrag_pipeline/` (sibling directory, separate repo). Its `.env` must contain:
+
+```env
+QDRANT_URL=https://...
+QDRANT_KEY=your-qdrant-api-key
+QDRANT_COLLECTION=hybridrag_chunks   # optional, this is the default
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your-neo4j-password
+```
+
+**One-time index build** (run from `hybridrag_pipeline/`):
+
+```bash
+# 1. Ingest PDFs into Qdrant
+python build_qdrant.py
+
+# 2. Build the Neo4j knowledge graph
+python build_neo4j.py
+```
+
+Once the indexes are built the server starts automatically with the client. If Qdrant or Neo4j are unreachable the tool returns an error string rather than crashing the client.
+
 ## Adding Custom sub-agents
 
 ### Creating the MCP tools

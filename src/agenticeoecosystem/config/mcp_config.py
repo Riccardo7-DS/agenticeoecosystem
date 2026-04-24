@@ -48,7 +48,7 @@ def _get_eve_retrieval_token() -> str:
 
     print("[mcp_config] Requesting EVE retrieval access token...", flush=True)
     resp = requests.post(
-        url= "https://eu-west-1xu6esehdg.auth.eu-west-1.amazoncognito.com/oauth2/token",
+        url=os.getenv("EVE_RETRIEVAL_TOKEN_URL"),
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         data={
             "grant_type": "client_credentials",

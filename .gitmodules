@@ -1,0 +1,3 @@
+[submodule "src/hybridrag_pipeline"]
+	path = src/hybridrag_pipeline
+	url = https://github.com/Evameijling/EOPSSrag.git

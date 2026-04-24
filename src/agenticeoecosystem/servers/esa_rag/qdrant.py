@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import List
+from typing import List, Literal
 
 import ollama
 from dotenv import load_dotenv

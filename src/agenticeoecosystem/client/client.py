@@ -165,6 +165,17 @@ if __name__ == "__main__":
 	Extract all other parameters like dates, cloud cover, and image count from the query."""
         ),
     )
+    arxiv_tools = ["search_papers", "download_paper", "list_papers", "read_paper", "get_abstract", "semantic_search", "reindex", "citation_graph", "watch_topic", "check_alerts"]
+    arxiv_agent = create_agent(
+        model,
+        tools=[t for t in mcp_tools if t.name in arxiv_tools],
+        system_prompt=(
+            "You are an assistant for querying and retrieving scientific papers from an ArXiv MCP server. "
+            "Use the available tools to search for papers, retrieve abstracts, download full texts, and perform semantic searches. "
+            "When a user asks a question, determine which tool(s) to use and extract the necessary parameters from the query. "
+            "For example, if a user asks 'Find recent papers on climate change and get their abstracts', you might use 'search_papers' with the keyword 'climate change' and a recent date filter, and proper category, then use 'get_abstract' for each relevant paper found."
+        ),
+    )
 
     eve_retrieval_agent = create_agent(
         model,
@@ -193,6 +204,19 @@ if __name__ == "__main__":
         """
         logger.info("[TOOL CALL] get_eo_stac_data: %s", request)
         result = await eo_stac_agent.ainvoke(
+            {"messages": [{"role": "user", "content": request}]}
+        )
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        # logger.info("[TOOL RESULT] %s", text_output)
+        return str(text_output)
+    
+    @tool
+    async def get_arxiv_data(request: str) -> str:
+        """Get data from ArXiv MCP server."""
+        logger.info("[TOOL CALL] get_arxiv_data: %s", request)
+        result = await arxiv_agent.ainvoke(
             {"messages": [{"role": "user", "content": request}]}
         )
         text_output = result["messages"][-1].text
@@ -267,12 +291,13 @@ if __name__ == "__main__":
 
     supervisor_agent = create_agent(
         model,
-        tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context],
+        tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data],
         system_prompt=(
             "You are a routing agent. "
             "You can get data from EO Dashboards, Google Earth Engine, "
             "the EVE knowledge base for ESA/EO background information, "
-            "and the ESA EO Science Strategy knowledge base (hybrid RAG). "
+            "the ESA EO Science Strategy knowledge base (hybrid RAG), "
+            "and the ArXiv MCP server for scientific papers. "
             "Break down user requests into appropriate tool calls and coordinate the results. "
             "When a request involves multiple actions, use multiple tools in sequence. "
             "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
@@ -284,6 +309,7 @@ if __name__ == "__main__":
 
     async def run():
         logger.info("Entering interactive loop")
+        conversation_history = []
         while True:
             user_request = input("\nQuery (or 'quit' to exit): ").strip()
             if not user_request:
@@ -291,7 +317,9 @@ if __name__ == "__main__":
             if user_request.lower() in ("quit", "exit", "q"):
                 break
             logger.info("User query: %s", user_request)
+            conversation_history.append({"role": "user", "content": user_request})
             print("=" * 80)
+            final_ai_content = None
             async for step in supervisor_agent.astream(
                 {"messages": [{"role": "user", "content": user_request}]}
             ):
@@ -303,5 +331,7 @@ if __name__ == "__main__":
                         elif message.type == "ai" and message.content:
                             message.pretty_print()
                             logger.info("Final response: %s", message.content)
-
+                            final_ai_content = message.content
+            if final_ai_content:
+                conversation_history.append({"role": "assistant", "content": final_ai_content})
     asyncio.run(run())

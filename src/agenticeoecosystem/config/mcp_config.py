@@ -6,18 +6,23 @@ import os
 import requests
 from dotenv import load_dotenv
 
-from agenticeoecosystem.definitions import ROOT_DIR
+from agenticeoecosystem.definitions import ROOT_DIR, HYBRIDRAG_ROOT
 
 load_dotenv(dotenv_path=ROOT_DIR / ".env")
 
 logger = logging.getLogger(__name__)
 
-_HYBRIDRAG_ROOT = ROOT_DIR.parent / "hybridrag_pipeline"
+
+def _try_register(servers: dict, key: str, build_fn) -> None:
+    try:
+        servers[key] = build_fn()
+    except Exception as exc:
+        logger.warning("%s MCP disabled: %s", key, exc)
 
 
 def _check_hybridrag_env() -> None:
     """Raise RuntimeError if required hybridrag env vars are missing."""
-    load_dotenv(_HYBRIDRAG_ROOT / ".env")
+    load_dotenv(HYBRIDRAG_ROOT / ".env")
     missing = [
         v for v in ("QDRANT_URL", "QDRANT_KEY", "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD")
         if not os.getenv(v)
@@ -65,37 +70,28 @@ def get_mcp_servers() -> dict:
         "eodashboard": {
             "transport": "stdio",
             "command": "python",
-            "args": [
-                f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
-            ],
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"],
         },
         "gee-mcp": {
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
-            "env": {},
         },
     }
 
-    try:
-        token = _get_eve_retrieval_token()
-        servers["eve_retrieval"] = {
-            "transport": "streamable_http",
-            "url": _EVE_RETRIEVAL_URL,
-            "headers": {"Authorization": f"Bearer {token}"},
-        }
-    except Exception as exc:
-        logger.warning("eve_retrieval MCP disabled: %s", exc)
+    _try_register(servers, "eve_retrieval", lambda: {
+        "transport": "streamable_http",
+        "url": _EVE_RETRIEVAL_URL,
+        "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
+    })
 
-    try:
-        _check_hybridrag_env()
-        servers["hybridrag"] = {
+    _try_register(servers, "hybridrag", lambda: (
+        _check_hybridrag_env() or {
             "transport": "stdio",
             "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
+            "args": [f"{HYBRIDRAG_ROOT}/server.py"],
         }
-    except Exception as exc:
-        logger.warning("hybridrag MCP disabled: %s", exc)
+    ))
 
     logger.info("Final MCP servers: %s", list(servers.keys()))
     return servers

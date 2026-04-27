@@ -11,6 +11,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
 
 load_dotenv()
@@ -82,6 +83,24 @@ def get_openai_client(
     )
 
 
+class _EVEChatOpenAI(ChatOpenAI):
+    """ChatOpenAI that normalises tool-message content to plain strings.
+
+    The EVE API rejects list-typed content and LangChain's internal lc_* id
+    fields in tool messages.
+    """
+
+    def _get_request_payload(self, input_, *, stop=None, **kwargs):
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        for msg in payload.get("messages", []):
+            if msg.get("role") == "tool" and isinstance(msg.get("content"), list):
+                msg["content"] = " ".join(
+                    item.get("text", str(item)) if isinstance(item, dict) else str(item)
+                    for item in msg["content"]
+                )
+        return payload
+
+
 def get_langchain_chat_openai(
     model_name: str,
     temperature: float = 0.0,
@@ -100,8 +119,6 @@ def get_langchain_chat_openai(
     Returns:
         langchain_openai.ChatOpenAI instance.
     """
-    from langchain_openai import ChatOpenAI
-
     if provider == "openai":
         return ChatOpenAI(
             model=model_name,
@@ -117,8 +134,8 @@ def get_langchain_chat_openai(
             temperature=temperature,
         )
 
-    # Default: EVE with Basic Auth
-    return ChatOpenAI(
+    # EVE: use subclass that strips list content / extra fields from tool messages
+    return _EVEChatOpenAI(
         base_url=os.getenv(base_url_env),
         api_key="EMPTY",
         model=model_name,

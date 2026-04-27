@@ -10,3 +10,4 @@ MODEL_DIR = ROOT_DIR / "models"
 # ---------------------------------------------------------------------------
 TASKS_FOLDER = DATA_DIR / "tasks"
 GEOBENCH_RESULTS = ROOT_DIR / "output" / "geobenchX"
+HYBRIDRAG_ROOT = ROOT_DIR / "src" / "hybridrag_pipeline"

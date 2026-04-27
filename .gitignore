@@ -1,5 +1,6 @@
 data/eodashboard-catalog/
 notebooks/
+docs/
 models/
 data/
 .env

@@ -83,7 +83,7 @@ class ModelRun:
 
 
 # ---------------------------------------------------------------------------
-# Single-model runner
+# vLLM helpers
 # ---------------------------------------------------------------------------
 
 def _launch_vllm_for_run(run: ModelRun, label: str, role: str) -> Optional[subprocess.Popen]:
@@ -101,36 +101,49 @@ def _launch_vllm_for_run(run: ModelRun, label: str, role: str) -> Optional[subpr
 def _terminate(proc: Optional[subprocess.Popen], label: str, role: str) -> None:
     if proc is None:
         return
-    logger.info("[%s] Terminating %s vLLM process", label, role)
-    proc.terminate()
-    proc.wait(timeout=30)
+    import signal
+    logger.info("[%s] Terminating %s vLLM process group", label, role)
+    try:
+        pgid = os.getpgid(proc.pid)
+        os.killpg(pgid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        pass
+    try:
+        proc.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        # Workers didn't exit on SIGTERM — force-kill the whole group
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+        proc.wait(timeout=10)
 
 
-def _run_one(
+# ---------------------------------------------------------------------------
+# Phase 1: generation
+# ---------------------------------------------------------------------------
+
+def _generate_one(
     run: ModelRun,
     tasks: TaskSet,
-    evaluators: list,   # list[ModelRun]
     output_dir: Path,
     skip_solved: bool,
-    skip_evaluated: bool,
-) -> dict:
-    """Run generate then evaluate with every evaluator for one ModelRun."""
-    label = run.label
-    sep = "=" * 60
-    logger.info("%s", sep)
-    logger.info("MODEL RUN: %s  (provider=%s  model=%s  temp=%.1f)", label, run.provider, run.model, run.temperature)
-    logger.info("%s", sep)
+) -> tuple[TaskSet, dict]:
+    """
+    Run the agent pipeline for one ModelRun and return the populated TaskSet
+    plus a metadata dict that _evaluate_one needs.
 
+    Raises on any error — caller catches and records it.
+    """
+    label = run.label
     task_copy = copy.deepcopy(tasks)
     t_run_start = time.time()
     proc_gen: Optional[subprocess.Popen] = None
 
     try:
-        # --- Phase 1: Generate ---
         proc_gen = _launch_vllm_for_run(run, label, "generator")
         output_filename = f"results_{label.replace(' ', '_')}.json"
-        logger.info("[%s] ── Phase 1/%d: Generating solutions ──────────────────",
-                    label, 1 + len(evaluators))
+        logger.info("[%s] ── Generating solutions …", label)
         t0 = time.time()
         task_copy, in_tok, out_tok = generate_solutions(
             task_copy,
@@ -138,55 +151,79 @@ def _run_one(
             temperature=run.temperature,
             model_provider=run.provider,
             output_filename=output_filename,
+            output_folder=str(output_dir),
             skip_solved=skip_solved,
         )
         logger.info("[%s] Generation done in %.1fs", label, time.time() - t0)
-
-        # Terminate generator before evaluators to free GPU/port
+    finally:
         _terminate(proc_gen, label, "generator")
-        proc_gen = None
         if run.launch_vllm:
             time.sleep(3)
 
-        # --- Phase 2+: Evaluate with each evaluator ---
-        for eval_idx, eval_run in enumerate(evaluators, 2):
-            proc_eval: Optional[subprocess.Popen] = None
-            try:
-                logger.info("[%s] ── Phase %d/%d: Evaluating with %s (%s) ──────────────",
-                            label, eval_idx, 1 + len(evaluators), eval_run.label, eval_run.provider)
-                proc_eval = _launch_vllm_for_run(eval_run, label, f"evaluator[{eval_run.label}]")
+    return task_copy, {
+        "output_filename": output_filename,
+        "in_tok": in_tok,
+        "out_tok": out_tok,
+        "t_run_start": t_run_start,
+    }
 
-                if eval_run.launch_vllm:
-                    from agenticeoecosystem.utils.registry import get_vllm_model_name
-                    model_id = get_vllm_model_name(port=eval_run.vllm_port)
-                    logger.info("[%s] Evaluator vLLM serving model as: %s", label, model_id)
-                else:
-                    model_id = eval_run.model
 
-                os.environ["EVALUATOR_PROVIDER"] = eval_run.provider
-                t0 = time.time()
-                task_copy = evaluate_solutions(
-                    task_copy,
-                    model=model_id,
-                    output_filename=output_filename,
-                    skip_evaluated=skip_evaluated,
-                    evaluator_label=eval_run.label,
-                )
-                logger.info("[%s] Evaluation with %s done in %.1fs", label, eval_run.label, time.time() - t0)
+# ---------------------------------------------------------------------------
+# Phase 2: evaluation
+# ---------------------------------------------------------------------------
 
-            finally:
-                _terminate(proc_eval, label, f"evaluator[{eval_run.label}]")
-                if eval_run.launch_vllm:
-                    time.sleep(3)
+def _evaluate_one(
+    run: ModelRun,
+    task_copy: TaskSet,
+    gen_meta: dict,
+    evaluators: list,
+    output_dir: Path,
+    skip_evaluated: bool,
+) -> dict:
+    """
+    Score a generated TaskSet with every evaluator and return a complete result row.
 
-        # --- Save ---
-        task_copy.save_to_file(output_filename, folder=str(output_dir))
-        logger.info("[%s] Results saved → %s/%s", label, output_dir, output_filename)
+    Raises on any error — caller catches and records it.
+    """
+    label = run.label
+    output_filename = gen_meta["output_filename"]
+    in_tok = gen_meta["in_tok"]
+    out_tok = gen_meta["out_tok"]
+    t_run_start = gen_meta["t_run_start"]
 
-    finally:
-        _terminate(proc_gen, label, "generator")
+    for eval_run in evaluators:
+        proc_eval: Optional[subprocess.Popen] = None
+        try:
+            logger.info("[%s] ── Evaluating with %s (%s) …", label, eval_run.label, eval_run.provider)
+            proc_eval = _launch_vllm_for_run(eval_run, label, f"evaluator[{eval_run.label}]")
 
-    # --- Extract metrics ---
+            if eval_run.launch_vllm:
+                from agenticeoecosystem.utils.registry import get_vllm_model_name
+                model_id = get_vllm_model_name(port=eval_run.vllm_port)
+                logger.info("[%s] Evaluator vLLM serving model as: %s", label, model_id)
+            else:
+                model_id = eval_run.model
+
+            os.environ["EVALUATOR_PROVIDER"] = eval_run.provider
+            t0 = time.time()
+            task_copy = evaluate_solutions(
+                task_copy,
+                model=model_id,
+                output_filename=output_filename,
+                skip_evaluated=skip_evaluated,
+                evaluator_label=eval_run.label,
+            )
+            logger.info("[%s] Evaluation with %s done in %.1fs", label, eval_run.label, time.time() - t0)
+
+        finally:
+            _terminate(proc_eval, label, f"evaluator[{eval_run.label}]")
+            if eval_run.launch_vllm:
+                time.sleep(3)
+
+    task_copy.save_to_file(output_filename, folder=str(output_dir))
+    logger.info("[%s] Results saved → %s/%s", label, output_dir, output_filename)
+
+    # Build result row
     solved = sum(1 for t in task_copy if t.generated_solution is not None)
     n_steps_list = [len(t.generated_solution) for t in task_copy if t.generated_solution]
     avg_steps = sum(n_steps_list) / len(n_steps_list) if n_steps_list else 0.0
@@ -201,7 +238,6 @@ def _run_one(
         "elapsed_s": round(time.time() - t_run_start, 1),
     }
 
-    # Per-evaluator accuracy columns
     for eval_run in evaluators:
         ev = task_copy.score_summary_for_evaluator(eval_run.label)
         elabel = eval_run.label
@@ -241,6 +277,9 @@ def run_comparison(
     """
     Run the full eval pipeline for every generator ModelRun, scoring each with
     every evaluator ModelRun.  Returns a DataFrame with per-evaluator columns.
+
+    Generation and evaluation are run in two separate passes: all generators
+    complete before any evaluation begins, so results are not mixed across phases.
 
     Args:
         runs               : Generator models to benchmark.
@@ -284,30 +323,47 @@ def run_comparison(
     logger.info("║  tasks      : %d  |  output → %s", len(tasks), output_dir)
     logger.info("╚════════════════════════════════════════════════════════════")
 
-    rows = []
-    errors = []
+    errors: list[dict] = []
     t_total_start = time.time()
 
+    # ── Phase 1: generate solutions for every model ──────────────────────────
+    logger.info("━━ Phase 1/2: Generating solutions (%d model(s)) ━━━━━━━━━━━━", len(runs))
+    gen_results: dict[str, tuple[TaskSet, dict]] = {}
+
     for idx, run in enumerate(runs, 1):
-        logger.info("┌── Run %d/%d: %s", idx, len(runs), run.label)
+        logger.info("┌── [Generate] %d/%d: %s", idx, len(runs), run.label)
         try:
-            row = _run_one(
-                run=run,
-                tasks=tasks,
-                evaluators=evaluators,
-                output_dir=output_dir,
-                skip_solved=skip_solved,
-                skip_evaluated=skip_evaluated,
-            )
-            rows.append(row)
-            logger.info("└── Run %d/%d complete  elapsed=%.1fs", idx, len(runs), row["elapsed_s"])
+            task_copy, gen_meta = _generate_one(run, tasks, output_dir, skip_solved)
+            gen_results[run.label] = (task_copy, gen_meta)
+            logger.info("└── [Generate] %d/%d complete", idx, len(runs))
         except Exception as exc:
-            logger.error("└── Run %d/%d FAILED (%s): %s", idx, len(runs), run.label, exc, exc_info=True)
-            errors.append({"model": run.label, "error": str(exc)})
+            logger.error(
+                "└── [Generate] %d/%d FAILED (%s): %s", idx, len(runs), run.label, exc,
+                exc_info=True,
+            )
+            errors.append({"model": run.label, "phase": "generate", "error": str(exc)})
 
-    import pandas as pd
+    # ── Phase 2: evaluate all generated solutions ─────────────────────────────
+    succeeded = [r for r in runs if r.label in gen_results]
+    logger.info("━━ Phase 2/2: Evaluating solutions (%d model(s)) ━━━━━━━━━━━━", len(succeeded))
+    rows: list[dict] = []
+
+    for idx, run in enumerate(succeeded, 1):
+        task_copy, gen_meta = gen_results[run.label]
+        logger.info("┌── [Evaluate] %d/%d: %s", idx, len(succeeded), run.label)
+        try:
+            row = _evaluate_one(run, task_copy, gen_meta, evaluators, output_dir, skip_evaluated)
+            rows.append(row)
+            logger.info("└── [Evaluate] %d/%d complete  elapsed=%.1fs", idx, len(succeeded), row["elapsed_s"])
+        except Exception as exc:
+            logger.error(
+                "└── [Evaluate] %d/%d FAILED (%s): %s", idx, len(succeeded), run.label, exc,
+                exc_info=True,
+            )
+            errors.append({"model": run.label, "phase": "evaluate", "error": str(exc)})
+
+    # ── Save comparison table ─────────────────────────────────────────────────
     df = pd.DataFrame(rows)
-
     csv_path = output_dir / f"{table_filename}.csv"
     html_path = output_dir / f"{table_filename}.html"
     df.to_csv(csv_path, index=False)

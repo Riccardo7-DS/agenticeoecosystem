@@ -1,5 +1,7 @@
 import logging
 import os
+from datetime import datetime
+from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
@@ -71,35 +73,45 @@ class ColoredFormatter(logging.Formatter):
 # Public helper
 # ---------------------------------------------------------------------------
 
+_FILE_FMT = logging.Formatter(
+    fmt="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
 def setup_logging(
     level: int = logging.INFO,
-    log_file: str = None,
+    log_file: str | None = None,
     verbose: bool = False,
 ) -> None:
     """Configure root logger with colored, timestamped output.
 
     Args:
         level    : Base log level (overridden to DEBUG when verbose=True).
-        log_file : Optional path to write a plain-text log file alongside stdout.
+        log_file : Script name (no extension). When set, writes a plain-text
+                   log to logs/<name>_<YYYYMMDD_HHMMSS>.log in the CWD.
         verbose  : Shorthand to set level=DEBUG.
     """
     if verbose:
         level = logging.DEBUG
 
-    fmt = ColoredFormatter(
+    console_fmt = ColoredFormatter(
         fmt="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
         datefmt="%H:%M:%S",
     )
 
-    handlers: list[logging.Handler] = [logging.StreamHandler()]
-    if log_file:
-        log_dir = os.path.dirname(log_file)
-        if log_dir:
-            os.makedirs(log_dir, exist_ok=True)
-        handlers.append(logging.FileHandler(log_file, "w"))
+    console = logging.StreamHandler()
+    console.setFormatter(console_fmt)
+    handlers: list[logging.Handler] = [console]
 
-    for h in handlers:
-        h.setFormatter(fmt)
+    if log_file:
+        logs_dir = Path.cwd() / "logs"
+        logs_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_path = logs_dir / f"{log_file}_{timestamp}.log"
+        file_handler = logging.FileHandler(log_path, "w")
+        file_handler.setFormatter(_FILE_FMT)
+        handlers.append(file_handler)
 
     root = logging.getLogger()
     root.setLevel(level)

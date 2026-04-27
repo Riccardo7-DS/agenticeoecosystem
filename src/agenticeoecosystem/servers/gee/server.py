@@ -56,6 +56,25 @@ class DownloadParams(BaseModel):
 
 # Define GEE limitations
 MAX_PIXELS_PER_DOWNLOAD = 4e7  # Reduced for safety, well under the ~50M byte limit
+MAX_AOI_PIXELS = 4e7           # Pre-flight rejection threshold (same value)
+
+
+def _estimate_pixels(bbox: List[float], scale_m: int) -> float:
+    """Rough pixel-count estimate for a lat/lon bounding box at the given scale."""
+    import math
+    min_lon, min_lat, max_lon, max_lat = bbox
+    lat_c = (min_lat + max_lat) / 2
+    width_m  = (max_lon - min_lon) * 111_000 * math.cos(math.radians(lat_c))
+    height_m = (max_lat - min_lat) * 111_000
+    return (width_m / scale_m) * (height_m / scale_m)
+
+
+def _min_safe_scale(bbox: List[float], step: int = 10) -> int:
+    """Return the smallest scale (in metres, multiple of `step`) that keeps the AOI under the limit."""
+    for s in range(step, 1001, step):
+        if _estimate_pixels(bbox, s) <= MAX_AOI_PIXELS:
+            return s
+    return 1000
 
 # Configure logging to write to a file and stderr
 log_file_path = os.path.join(os.path.dirname(__file__), "server.log")
@@ -109,7 +128,8 @@ def setup_gee() -> None:
 	try:
 		ee.Initialize(project=gee_project)
 		logging.info("Authenticated to GEE using default user credentials.")
-	except Exception:
+	except Exception as default_cred_error:
+		logging.warning("Default credential initialization failed: %s", default_cred_error)
 		try:
 			logging.info("Attempting interactive GEE authentication...")
 			auth_mode = os.getenv("GEE_AUTH_MODE", "gcloud")
@@ -244,13 +264,46 @@ def _download_with_fallback(selected_bands: ee.Image, region: ee.Geometry, scale
 
 app = FastMCP("gee-mcp")
 
+_gee_initialized = False
+
+
+def _ensure_gee() -> None:
+    """Call setup_gee() once, redirecting stdout at the fd level so any gcloud
+    subprocess output doesn't reach the MCP JSON-RPC channel on fd 1."""
+    global _gee_initialized
+    if _gee_initialized:
+        return
+    import os as _os
+    import sys as _sys
+    _saved_fd1 = _os.dup(1)
+    _os.dup2(2, 1)
+    _sys.stdout = _sys.stderr
+    try:
+        setup_gee()
+        _gee_initialized = True
+    finally:
+        _os.dup2(_saved_fd1, 1)
+        _os.close(_saved_fd1)
+        _sys.stdout = _os.fdopen(1, "w", buffering=1)
+
 
 @app.tool()
 def download_satellite_image(args: DownloadParams) -> Dict[str, Any]:
 	"""Download satellite images from GEE and return a dictionary with file paths and a status message.
 	Arguments include coordinates, date range, dataset, bands, scale, buffer, cloud cover, and image count.
 	"""
-	
+	# Pre-flight AOI size check — reject immediately if the request would take forever.
+	if args.bounding_box:
+		estimated = _estimate_pixels(args.bounding_box, args.scale)
+		if estimated > MAX_AOI_PIXELS:
+			min_scale = _min_safe_scale(args.bounding_box)
+			raise ValueError(
+				f"AOI too large: ~{estimated / 1e6:.0f}M pixels at scale={args.scale}m "
+				f"(limit is {MAX_AOI_PIXELS / 1e6:.0f}M). "
+				f"Retry with scale>={min_scale}m or reduce the bounding box."
+			)
+
+	_ensure_gee()
 	# Determine the region of interest from either GeoJSON, a bounding box, or a point
 	if args.region_geojson:
 		try:
@@ -378,8 +431,5 @@ def get_llm_prompt(query: str) -> str:
 
 
 if __name__ == "__main__":
-	# Initialize GEE once before starting the server
-	setup_gee()
-	# Run MCP server (stdio by default)
-	app.run(transport="stdio")
+    app.run(transport="stdio")
 

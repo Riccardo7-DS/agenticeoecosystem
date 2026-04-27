@@ -36,7 +36,8 @@ def run_pipeline(task_text: str) -> tuple[Solution, int, int]:
 
     async def _run() -> tuple[int, int]:
         async for chunk in _client.supervisor_agent.astream(
-            {"messages": [{"role": "user", "content": task_text}]}
+            {"messages": [{"role": "user", "content": task_text}]},
+            config={"recursion_limit": 50},
         ):
             for update in chunk.values():
                 for msg in update.get("messages", []):
@@ -65,6 +66,7 @@ def generate_solutions(
     temperature: float,
     model_provider: str = "ollama",
     output_filename: Optional[str] = None,
+    output_folder: Optional[str] = None,
     skip_solved: bool = True,
     wait_between_tasks: float = 0.0,
 ) -> tuple[TaskSet, int, int]:
@@ -77,6 +79,7 @@ def generate_solutions(
         temperature      : Sampling temperature.
         model_provider   : LangChain provider string (e.g. "ollama", "anthropic") or "eve".
         output_filename  : If set, save intermediate results after every task.
+        output_folder    : Directory for intermediate saves (default: GEOBENCH_RESULTS).
         skip_solved      : Skip tasks that already have a generated_solution.
         wait_between_tasks: Seconds to wait between API calls (rate-limit guard).
 
@@ -85,6 +88,7 @@ def generate_solutions(
         total_input      : Sum of input tokens across all tasks.
         total_output     : Sum of output tokens across all tasks.
     """
+    _save_folder = output_folder or GEOBENCH_RESULTS
     import nest_asyncio
     nest_asyncio.apply()
     import agenticeoecosystem.client.client as _client
@@ -126,7 +130,7 @@ def generate_solutions(
             logger.error("  → ERROR on task %s: %s", task.task_ID, e, exc_info=True)
 
         if output_filename:
-            tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)
+            tasks.save_to_file(output_filename, folder=_save_folder)
             logger.debug("  → Intermediate results saved to %s", output_filename)
 
         if wait_between_tasks:
@@ -136,7 +140,7 @@ def generate_solutions(
     tasks.metadata["total_output_tokens"] = total_output
 
     if output_filename:
-        tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)
+        tasks.save_to_file(output_filename, folder=_save_folder)
 
     logger.info(
         "Generation complete — solved %d/%d  total tokens: %d in / %d out",

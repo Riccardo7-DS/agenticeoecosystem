@@ -40,23 +40,6 @@ def _extract_steps_from_messages(messages: list) -> None:
                 _step_log.append({"function_name": tc["name"], "arguments": tc["args"]})
 
 
-class _EVEChatOpenAI(ChatOpenAI):
-    """ChatOpenAI variant that normalises tool-message content to plain strings.
-
-    The EVE API rejects list-typed content and extra fields in tool messages.
-    """
-
-    def _get_request_payload(self, input_, *, stop=None, **kwargs):
-        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
-        for msg in payload.get("messages", []):
-            if msg.get("role") == "tool" and isinstance(msg.get("content"), list):
-                msg["content"] = " ".join(
-                    item.get("text", str(item)) if isinstance(item, dict) else str(item)
-                    for item in msg["content"]
-                )
-        return payload
-
-
 async def _load_tools_from_mcp():
     logger.info("Building MCP server configuration")
     mcp_servers = get_mcp_servers()
@@ -208,7 +191,7 @@ model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
 gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
 
 
 @tool
@@ -219,12 +202,16 @@ async def get_eo_stac_data(request: str) -> str:
     by searching narratives, picking one, parsing the collection code, then getting items.
     """
     logger.info("[TOOL CALL] get_eo_stac_data: %s", request)
-    result = await eo_stac_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
-    _extract_steps_from_messages(result["messages"])
-    text_output = result["messages"][-1].text
-    if isinstance(text_output, tuple):
-        text_output = " ".join(str(t) for t in text_output)
-    return str(text_output)
+    try:
+        result = await eo_stac_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_eo_stac_data: %s", e)
+        return f"Error: {e}"
 
 
 @tool
@@ -236,24 +223,32 @@ async def get_gee_data(request: str) -> str:
     date range YYYY-MM-DD to YYYY-MM-DD, bands B4,B3,B2, scale 10m, max 20% cloud cover."
     """
     logger.info("[TOOL CALL] get_gee_data: %s", request)
-    result = await gee_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
-    _extract_steps_from_messages(result["messages"])
-    text_output = result["messages"][-1].text
-    if isinstance(text_output, tuple):
-        text_output = " ".join(str(t) for t in text_output)
-    return str(text_output)
+    try:
+        result = await gee_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_gee_data: %s", e)
+        return f"Error: {e}"
 
 
 @tool
 async def get_eve_knowledge(request: str) -> str:
     """Retrieve knowledge about ESA and Earth Observation from the EVE knowledge base."""
     logger.info("[TOOL CALL] get_eve_knowledge: %s", request)
-    result = await eve_retrieval_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
-    _extract_steps_from_messages(result["messages"])
-    text_output = result["messages"][-1].text
-    if isinstance(text_output, tuple):
-        text_output = " ".join(str(t) for t in text_output)
-    return str(text_output)
+    try:
+        result = await eve_retrieval_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_eve_knowledge: %s", e)
+        return f"Error: {e}"
 
 
 @tool
@@ -264,22 +259,26 @@ async def get_hybrid_rag_context(request: str) -> str:
     Use for questions about science themes, strategic objectives, enabling tools, and other ESA EO topics.
     """
     logger.info("[TOOL CALL] get_hybrid_rag_context: %s", request)
-    result = await rag_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
-    _extract_steps_from_messages(result["messages"])
-    for msg in result["messages"]:
-        for tc in getattr(msg, "tool_calls", []):
-            logger.debug("[rag_agent -> hybrid_rag_retrieve] args: %s", tc.get("args", {}))
-        if getattr(msg, "type", None) == "tool":
-            content = msg.content
-            if isinstance(content, list):
-                content = "\n".join(
-                    c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content
-                )
-            logger.debug("[hybrid_rag_retrieve raw output]\n%s", content)
-    text_output = result["messages"][-1].text
-    if isinstance(text_output, tuple):
-        text_output = " ".join(str(t) for t in text_output)
-    return str(text_output)
+    try:
+        result = await eoss_rag_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        for msg in result["messages"]:
+            for tc in getattr(msg, "tool_calls", []):
+                logger.debug("[eoss_rag_agent -> hybrid_rag_retrieve] args: %s", tc.get("args", {}))
+            if getattr(msg, "type", None) == "tool":
+                content = msg.content
+                if isinstance(content, list):
+                    content = "\n".join(
+                        c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content
+                    )
+                logger.debug("[hybrid_rag_retrieve raw output]\n%s", content)
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_hybrid_rag_context: %s", e)
+        return f"Error: {e}"
 
 
 supervisor_agent = create_agent(
@@ -295,12 +294,12 @@ supervisor_agent = create_agent(
 
 def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
     """Recreate all agents with a new model. MCP tools are reused."""
-    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, rag_agent, supervisor_agent
+    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, supervisor_agent
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-    rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    eoss_rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
     supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
     logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
 

@@ -30,8 +30,9 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
     "mistral-small-24b": ModelConfig(
         model_id="mistralai/Mistral-Small-3.1-24B-Instruct-2503",
         tool_call_parser="mistral",
-        chat_template="examples/tool_chat_template_mistral_parallel.jinja",
         gated=True,   # accept licence at huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct
+        # INT8 quantization: model weights ~44 GiB exceed A6000 (44.42 GiB); bitsandbytes halves to ~22 GiB
+        extra_args=["--quantization", "bitsandbytes"],
     ),
     # Qwen family — free, no token needed
     "qwen3-14b": ModelConfig(
@@ -51,13 +52,11 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
     "llama3.1-8b": ModelConfig(
         model_id="meta-llama/Llama-3.1-8B-Instruct",
         tool_call_parser="llama3_json",
-        chat_template="examples/tool_chat_template_llama3.1_json.jinja",
         gated=True,
     ),
     "llama3.2-3b": ModelConfig(
         model_id="meta-llama/Llama-3.2-3B-Instruct",
         tool_call_parser="llama3_json",
-        chat_template="examples/tool_chat_template_llama3.1_json.jinja",
         gated=True,
     ),
     # Gemma — gated: accept licence at huggingface.co/google/gemma-3-12b-it
@@ -123,6 +122,21 @@ def _wait_for_server(base_url: str, timeout: int = _STARTUP_TIMEOUT) -> bool:
     return False
 
 
+def _is_vllm_serving(model_id: str, host: str, port: int) -> bool:
+    """Return True if a healthy vLLM server on host:port is already serving model_id."""
+    import socket, urllib.request, json
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _s:
+        if _s.connect_ex((host, port)) != 0:
+            return False
+    try:
+        urllib.request.urlopen(f"http://{host}:{port}/health", timeout=3)
+        with urllib.request.urlopen(f"http://{host}:{port}/v1/models", timeout=3) as resp:
+            data = json.loads(resp.read())
+        return data["data"][0]["id"] == model_id
+    except Exception:
+        return False
+
+
 def launch_vllm(
     model_key: str,
     host: str = _DEFAULT_HOST,
@@ -131,9 +145,12 @@ def launch_vllm(
     extra_env: dict[str, str] | None = None,
     startup_timeout: int = _STARTUP_TIMEOUT,
     log_dir: str | None = None,
-) -> subprocess.Popen:
+) -> subprocess.Popen | None:
     """
     Start a vLLM OpenAI-compatible server for the given model key.
+
+    If a healthy vLLM server is already serving the correct model on host:port,
+    the launch is skipped and None is returned (the caller should not terminate it).
 
     Args:
         model_key       : Key into MODEL_REGISTRY.
@@ -146,13 +163,18 @@ def launch_vllm(
                           Tail this file to see startup errors if launch fails.
 
     Returns:
-        The running subprocess.Popen object. Call .terminate() to stop it.
+        The running subprocess.Popen object, or None if the server was already ready.
 
     Raises:
         KeyError     : Unknown model_key.
         RuntimeError : Server did not become healthy within startup_timeout seconds.
     """
     cfg = MODEL_REGISTRY[model_key]
+
+    if _is_vllm_serving(cfg.model_id, host, port):
+        logger.info("vLLM already serving %s at http://%s:%d — skipping launch.", cfg.model_id, host, port)
+        return None
+
     cmd = _vllm_cmd(cfg, host, port)
 
     env = os.environ.copy()
@@ -187,8 +209,8 @@ def launch_vllm(
             for pid in gpu_pids:
                 try:
                     os.kill(pid, 9)
-                except ProcessLookupError:
-                    pass
+                except (ProcessLookupError, PermissionError) as e:
+                    logger.warning("Could not kill GPU process %d: %s", pid, e)
             time.sleep(3)  # wait for GPU memory to be released
     except FileNotFoundError:
         pass  # nvidia-smi not available
@@ -197,12 +219,16 @@ def launch_vllm(
     log_file = open(log_path, "w")
     logger.info("Launching vLLM: %s", " ".join(cmd))
     logger.info("vLLM logs → %s", log_path)
-    proc = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file)
+    proc = subprocess.Popen(cmd, env=env, stdout=log_file, stderr=log_file, start_new_session=True)
 
     base_url = f"http://{host}:{port}/v1"
     logger.info("Waiting up to %ds for vLLM to be ready at %s …", startup_timeout, base_url)
     if not _wait_for_server(f"http://{host}:{port}", timeout=startup_timeout):
-        proc.terminate()
+        import signal as _signal
+        try:
+            os.killpg(os.getpgid(proc.pid), _signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
         log_file.flush()
         # Surface the last 30 lines of the log so the error is visible immediately
         try:

@@ -39,6 +39,12 @@ _EVE_RETRIEVAL_URL = (
     "runtime%2Feve_retrieval-GgFENBBHN0/invocations?qualifier=DEFAULT"
 )
 
+def _check_gee_mcp_env() -> None:
+    """Raise RuntimeError if GEE creds are missing."""
+    cred_path = ROOT_DIR / "src/agenticeoecosystem/servers/gee/gee-key.json"
+    if not cred_path.exists():
+        raise RuntimeError("GEE credentials file not found.")
+
 
 def _get_eve_retrieval_token() -> str:
     client_id = os.getenv("EVE_RETRIEVAL_CLIENT_ID")
@@ -72,12 +78,27 @@ def get_mcp_servers() -> dict:
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"],
         },
-        "gee-mcp": {
+        "arxiv-mcp-server": {
+            "transport": "stdio",
+            "command": "uv",
+            "args": [
+                "tool",
+                "run",
+                "arxiv-mcp-server",
+                "--storage-path", "{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
+            ]
+        }
+    }
+    try:
+        _check_gee_mcp_env()
+        servers["gee-mcp"] = {
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
-        },
-    }
+            "env": {},
+        }
+    except Exception as exc:
+        print(f"Warning: GEE MCP disabled: {exc}")
 
     _try_register(servers, "eve_retrieval", lambda: {
         "transport": "streamable_http",

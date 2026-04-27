@@ -67,6 +67,12 @@ _EO_STAC_TOOL_NAMES = {
     "get_collection_items", "find_narratives_for_indicator",
 }
 
+_ARXIV_TOOL_NAMES = {
+    "search_papers", "download_paper", "list_papers", "read_paper",
+    "get_abstract", "semantic_search", "reindex", "citation_graph",
+    "watch_topic", "check_alerts",
+}
+
 # ---------------------------------------------------------------------------
 # System prompts
 # ---------------------------------------------------------------------------
@@ -135,11 +141,21 @@ _RAG_SYSTEM_PROMPT = (
     "knowledge graph context, then return the raw context to the caller."
 )
 
+_ARXIV_SYSTEM_PROMPT = (
+    "You are an assistant for querying and retrieving scientific papers from an ArXiv MCP server. "
+    "Use the available tools to search for papers, retrieve abstracts, download full texts, and perform semantic searches. "
+    "When a user asks a question, determine which tool(s) to use and extract the necessary parameters from the query. "
+    "For example, if a user asks 'Find recent papers on climate change and get their abstracts', you might use "
+    "'search_papers' with the keyword 'climate change' and a recent date filter, and proper category, "
+    "then use 'get_abstract' for each relevant paper found."
+)
+
 _SUPERVISOR_SYSTEM_PROMPT = (
     "You are a routing agent. "
     "You can get data from EO Dashboards, Google Earth Engine, "
     "the EVE knowledge base for ESA/EO background information, "
-    "and the ESA EO Science Strategy knowledge base (hybrid RAG). "
+    "the ESA EO Science Strategy knowledge base (hybrid RAG), "
+    "and the ArXiv MCP server for scientific papers. "
     "Break down user requests into appropriate tool calls and coordinate the results. "
     "When a request involves multiple actions, use multiple tools in sequence. "
     "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
@@ -192,6 +208,7 @@ eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name 
 gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
 eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
 
 
 @tool
@@ -211,6 +228,22 @@ async def get_eo_stac_data(request: str) -> str:
         return str(text_output)
     except Exception as e:
         logger.error("[TOOL ERROR] get_eo_stac_data: %s", e)
+        return f"Error: {e}"
+
+
+@tool
+async def get_arxiv_data(request: str) -> str:
+    """Get scientific papers and abstracts from ArXiv."""
+    logger.info("[TOOL CALL] get_arxiv_data: %s", request)
+    try:
+        result = await arxiv_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_arxiv_data: %s", e)
         return f"Error: {e}"
 
 
@@ -283,7 +316,7 @@ async def get_hybrid_rag_context(request: str) -> str:
 
 supervisor_agent = create_agent(
     model,
-    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context],
+    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data],
     system_prompt=_SUPERVISOR_SYSTEM_PROMPT,
 )
 
@@ -294,13 +327,14 @@ supervisor_agent = create_agent(
 
 def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
     """Recreate all agents with a new model. MCP tools are reused."""
-    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, supervisor_agent
+    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, arxiv_agent, supervisor_agent
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-    eoss_rag_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
-    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
     logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
 
 
@@ -327,6 +361,7 @@ if __name__ == "__main__":
 
     async def run():
         logger.info("Entering interactive loop")
+        conversation_history = []
         while True:
             user_request = input("\nQuery (or 'quit' to exit): ").strip()
             if not user_request:
@@ -334,7 +369,9 @@ if __name__ == "__main__":
             if user_request.lower() in ("quit", "exit", "q"):
                 break
             logger.info("User query: %s", user_request)
+            conversation_history.append({"role": "user", "content": user_request})
             print("=" * 80)
+            final_ai_content = None
             async for step in supervisor_agent.astream(
                 {"messages": [{"role": "user", "content": user_request}]}
             ):
@@ -345,5 +382,8 @@ if __name__ == "__main__":
                             logger.debug("Tool result: %s", message.content)
                         elif message.type == "ai" and message.content:
                             message.pretty_print()
-
+                            logger.info("Final response: %s", message.content)
+                            final_ai_content = message.content
+            if final_ai_content:
+                conversation_history.append({"role": "assistant", "content": final_ai_content})
     asyncio.run(run())

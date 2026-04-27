@@ -1,12 +1,12 @@
 import io
-import re
+import logging
+from urllib.parse import urljoin
 
 import pyarrow.parquet as pq
 import pystac
 import requests
 from mcp.server.fastmcp import FastMCP
-import logging
-from urllib.parse import urljoin
+
 mcp = FastMCP("EODashboard MCP Server")
 
 # Configuration
@@ -43,10 +43,7 @@ class EODashboardCache:
         for narrative in self.narratives_index:
             try:
                 content = self._fetch_narrative(narrative["file"])
-                # indicators = self._extract_indicator_codes(content)
-
                 self.narrative_to_indicators[narrative.get("title", "Untitled").lower().strip()] = {
-                    # "indicators": indicators,
                     "theme": narrative.get("theme", "unknown"),
                     "tags": narrative.get("tags", ""),
                     "url": narrative["file"],
@@ -88,7 +85,6 @@ class EODashboardCache:
                         "satellite": link.extra_fields.get("satellite"),
                         "sensor": link.extra_fields.get("sensor"),
                         "description": link.extra_fields.get("description", ""),
-                        # "stories": link.extra_fields.get("eodash", []),
                     }
 
     @staticmethod
@@ -97,13 +93,6 @@ class EODashboardCache:
         response = requests.get(url)
         response.raise_for_status()
         return response.text
-
-    # @staticmethod
-    # def _extract_indicator_codes(content: str) -> list:
-    #     """Extract indicator codes from narrative content"""
-    #     pattern = r"indicator=([A-Za-z0-9_-]+)"
-    #     matches = re.findall(pattern, content)
-    #     return list(set(matches))
 
 
 # Initialize cache
@@ -139,31 +128,24 @@ def list_narratives() -> str:
 
 
 @mcp.tool()
-def search_narratives(keyword: str = "", theme: str = "") -> str:
-    """Search narratives by keyword in title or by theme (e.g., 'oceans', 'ice', 'atmosphere')"""
-    if not keyword and not theme:
-        return "You must provide either a keyword or a theme."
+def search_narratives(keyword: str) -> str:
+    """Search narratives by keyword. Matches against both narrative titles and themes
+    (e.g., use 'wildfire', 'oceans', 'ice', 'atmosphere', 'flood', etc.)."""
+    if not keyword:
+        return "You must provide a keyword to search."
     cache.load_narratives()
     narratives = cache.narratives_index
 
-    # Filter narratives
     filtered = []
     for narr in narratives:
         title = narr.get("title", "").lower()
         narr_theme = get_theme(narr.get("theme", ""))
-
-        # if keyword and keyword.lower() not in title:
-        #     continue
-        # if theme and theme.lower() not in narr_theme:
-        #     continue
-        check_element = keyword if keyword else theme
-        if check_element.lower() not in title and check_element.lower() not in narr_theme:
+        if keyword.lower() not in title and keyword.lower() not in narr_theme:
             continue
-
         filtered.append(narr)
 
     if not filtered:
-        return f"No narratives found matching keyword='{keyword}' theme='{theme}'"
+        return f"No narratives found matching keyword='{keyword}'"
 
     # Format results with indicators
     result = f"Found {len(filtered)} matching narrative(s):\n\n"

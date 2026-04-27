@@ -1,11 +1,11 @@
 data/eodashboard-catalog/
 notebooks/
+docs/
 models/
-output/
 data/
 .env
 *.sh
-
+output/
 
 **/__pycache__/
 */pycache__/

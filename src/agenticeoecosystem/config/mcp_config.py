@@ -1,21 +1,28 @@
 """MCP (Model Context Protocol) servers configuration."""
 
+import logging
 import os
-from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
 
-from agenticeoecosystem.definitions import ROOT_DIR
+from agenticeoecosystem.definitions import ROOT_DIR, HYBRIDRAG_ROOT
 
 load_dotenv(dotenv_path=ROOT_DIR / ".env")
 
-_HYBRIDRAG_ROOT = ROOT_DIR.parent / "hybridrag_pipeline"
+logger = logging.getLogger(__name__)
+
+
+def _try_register(servers: dict, key: str, build_fn) -> None:
+    try:
+        servers[key] = build_fn()
+    except Exception as exc:
+        logger.warning("%s MCP disabled: %s", key, exc)
 
 
 def _check_hybridrag_env() -> None:
     """Raise RuntimeError if required hybridrag env vars are missing."""
-    load_dotenv(_HYBRIDRAG_ROOT / ".env")
+    load_dotenv(HYBRIDRAG_ROOT / ".env")
     missing = [
         v for v in ("QDRANT_URL", "QDRANT_KEY", "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD")
         if not os.getenv(v)
@@ -24,6 +31,7 @@ def _check_hybridrag_env() -> None:
         raise RuntimeError(
             f"hybridrag env vars not set: {', '.join(missing)} (check hybridrag_pipeline/.env)"
         )
+
 
 _EVE_RETRIEVAL_URL = (
     "https://bedrock-agentcore.eu-west-1.amazonaws.com/runtimes/"
@@ -46,7 +54,7 @@ def _get_eve_retrieval_token() -> str:
             "EVE retrieval credentials are missing. Set EVE_RETRIEVAL_CLIENT_ID and EVE_RETRIEVAL_CLIENT_SECRET."
         )
 
-    print("[mcp_config] Requesting EVE retrieval access token...", flush=True)
+    logger.info("Requesting EVE retrieval access token")
     resp = requests.post(
         url=os.getenv("EVE_RETRIEVAL_TOKEN_URL"),
         headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -58,20 +66,17 @@ def _get_eve_retrieval_token() -> str:
         timeout=20,
     )
     resp.raise_for_status()
-    access_token = resp.json()["access_token"]
-    print("[mcp_config] EVE retrieval token acquired.", flush=True)
-    return access_token
+    logger.info("EVE retrieval token acquired")
+    return resp.json()["access_token"]
 
 
 def get_mcp_servers() -> dict:
-    print("[mcp_config] Building MCP server list...", flush=True)
+    logger.info("Building MCP server list")
     servers = {
         "eodashboard": {
             "transport": "stdio",
             "command": "python",
-            "args": [
-                f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
-            ],
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"],
         },
         "arxiv-mcp-server": {
             "transport": "stdio",
@@ -95,53 +100,19 @@ def get_mcp_servers() -> dict:
     except Exception as exc:
         print(f"Warning: GEE MCP disabled: {exc}")
 
-    # Do not block startup if token retrieval is unavailable.
-    try:
-        token = _get_eve_retrieval_token()
-        servers["eve_retrieval"] = {
-            "transport": "streamable_http",
-            "url": _EVE_RETRIEVAL_URL,
-            "headers": {"Authorization": f"Bearer {token}"},
-        }
-    except Exception as exc:
-        print(f"Warning: eve_retrieval MCP disabled: {exc}")
+    _try_register(servers, "eve_retrieval", lambda: {
+        "transport": "streamable_http",
+        "url": _EVE_RETRIEVAL_URL,
+        "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
+    })
 
-    # Do not block startup if Qdrant/Neo4j are unavailable.
-    try:
-        _check_hybridrag_env()
-        servers["get_hybrid_rag_context "] = {
+    _try_register(servers, "hybridrag", lambda: (
+        _check_hybridrag_env() or {
             "transport": "stdio",
             "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
+            "args": [f"{HYBRIDRAG_ROOT}/server.py"],
         }
-    except Exception as exc:
-        print(f"Warning: hybridrag MCP disabled: {exc}")
+    ))
 
-    print(f"[mcp_config] Final MCP servers: {list(servers.keys())}", flush=True)
+    logger.info("Final MCP servers: %s", list(servers.keys()))
     return servers
-
-
-# # Keep MCP_SERVERS for backwards compatibility — callers that don't need
-# # eve_retrieval can still import this without a network call.
-# MCP_SERVERS = {
-#     # "example": {
-#     #     "transport": "stdio",
-#     #     "command": "python",
-#     #     "args": [
-#     #         f"{ROOT_DIR}/src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py"
-#     #     ],
-#     # },
-#     "eodashboard": {
-#         "transport": "stdio",
-#         "command": "python",
-#         "args": [
-#             f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
-#         ],
-#     },
-#     "gee-mcp": {
-#         "transport": "stdio",
-#         "command": "python",
-#         "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
-#         "env": {},
-#     },
-# }

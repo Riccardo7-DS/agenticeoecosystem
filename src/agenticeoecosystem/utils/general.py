@@ -1,10 +1,7 @@
-import json
 import ast
-import re
-import pandas as pd
-import ollama
-import logging 
 import json
+import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +33,7 @@ def extract_json_from_text(text: str):
 
 def run_gpt(question, model):
     """Run a local GPT chat completion with the given question using Ollama."""
+    import ollama
     result = ollama.generate(model=model, prompt=question)
     if not result or 'response' not in result:
         raise ValueError("GPT response is None or invalid")
@@ -51,6 +49,7 @@ class OllamaQuery():
 
     def save_response_to_csv(self, response, file_name):
         """Save the response to a CSV file."""
+        import pandas as pd
         df = pd.DataFrame({"Response": [response]})
         df.to_csv(file_name, index=False)
 

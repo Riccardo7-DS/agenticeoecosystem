@@ -1,7 +1,7 @@
 
 # Agentic EO Ecosystems
 
-This project explores the integration of **EVE (Earth Virtual Expert)**, a Large Language Model specialised in **Earth Observation (EO)** and Earth Sciences, developed under ESA's **Φ-lab #AI4EO initiative** in collaboration with Pi School.
+This project explores the integration of **EVE (Earth Virtual Expert)**, a Large Language Model specialised in **Earth Observation (EO)** and Earth Sciences, developed by Pi School in collaboration with ESA.
 
 The primary goal is to enable EVE to connect ESA's EO platforms and data clusters, creating an **integrated ecosystem for the EO community**. This approach leverages **agentic capabilities**, allowing EVE to dynamically interact with EO tools, databases, and APIs to reason and act autonomously.
 
@@ -28,8 +28,10 @@ This project implements a **multi-agent supervisor architecture** in which a sup
 - **GEE agent** — downloads satellite images via the Google Earth Engine Python API
 - **EVE retrieval agent** — retrieves knowledge from the EVE knowledge base (AWS Bedrock)
 - **EOSS RAG agent** — retrieves from the ESA EO Science Strategy via semantic vector search (Qdrant) and a Neo4j knowledge graph
+- **ArXiv agent** — searches and retrieves scientific papers from ArXiv (semantic search, abstracts, full-text download)
+- **GIS agent** — performs spatial analysis, raster processing, coordinate transforms, map visualization, and geospatial data downloads (ESA WorldCover, Sentinel-2 NDVI, OSM street networks, GADM boundaries)
 
-Using the **[MCP protocol](https://modelcontextprotocol.io/)**, agents can perform multi-step reasoning: for example, searching for a narrative, linking it to a STAC collection, and retrieving satellite data for the relevant indicator.
+Using the **[MCP protocol](https://modelcontextprotocol.io/)**, agents can perform multi-step reasoning: for example, searching for a narrative, linking it to a STAC collection, retrieving satellite data for the relevant indicator, and computing NDVI over the area of interest.
 
 ```mermaid
 graph TD
@@ -43,6 +45,8 @@ graph TD
     Supervisor --> GEE[gee_agent]
     Supervisor --> EVE[eve_retrieval_agent]
     Supervisor --> RAG[eoss_rag_agent]
+    Supervisor --> ArXiv[arxiv_agent]
+    Supervisor --> GIS[gis_agent]
 
     EO_STAC --> EO_MCP["EO Dashboard MCP\n(narratives, themes, STAC collections)"]
     EO_MCP --> EO_STAC
@@ -56,10 +60,18 @@ graph TD
     RAG --> HYBRIDRAG_MCP["EO Science Strategy MCP\n(Qdrant vector search + Neo4j knowledge graph)"]
     HYBRIDRAG_MCP --> RAG
 
+    ArXiv --> ARXIV_MCP["ArXiv MCP\n(papers, abstracts, semantic search)"]
+    ARXIV_MCP --> ArXiv
+
+    GIS --> GIS_MCP["GIS MCP\n(geometry, raster, visualization, data downloads)"]
+    GIS_MCP --> GIS
+
     EO_STAC --> Supervisor
     GEE --> Supervisor
     EVE --> Supervisor
     RAG --> Supervisor
+    ArXiv --> Supervisor
+    GIS --> Supervisor
 
     Supervisor --> End
 ```
@@ -203,7 +215,7 @@ apptainer build agenticeoecosystem.sif container.def
 
 ## MCP Servers
 
-The client connects to four MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
+The client connects to six MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
 
 ### EO Dashboard
 
@@ -270,6 +282,34 @@ uv run python build_qdrant.py --use-cache
 
 Once the indexes are built the server starts automatically with the client.
 
+### ArXiv
+
+Provides access to scientific papers via the [arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server). No API key required. The server runs in an isolated uv tool environment.
+
+Pre-install (one-time, speeds up the first connection):
+```bash
+uv tool install arxiv-mcp-server
+```
+
+Papers fetched during a session are cached in `src/agenticeoecosystem/servers/arxiv_papers/`. Available tools include `search_papers`, `get_abstract`, `download_paper`, `semantic_search`, `citation_graph`, and `watch_topic`.
+
+### GIS Analysis
+
+Provides 90+ spatial tools via [gis-mcp](https://github.com/mahdin75/gis-mcp): geometry operations (Shapely), vector file processing (GeoPandas), raster analysis (Rasterio), spatial statistics (PySAL), map visualisation (Folium), and geospatial data downloads (ESA WorldCover, Sentinel-2 NDVI via Planetary Computer, OSM street networks, GADM administrative boundaries).
+
+The server runs in an isolated uv tool environment to avoid numpy version conflicts with other dependencies. Install once:
+```bash
+uv tool install "gis-mcp[visualize]"
+```
+
+Optional extras (install separately if needed):
+```bash
+uv tool install "gis-mcp[administrative-boundaries]"   # GADM boundary downloads
+uv tool install "gis-mcp[climate]"                     # ERA5 climate data (requires Copernicus account)
+```
+
+No additional `.env` variables are required for the core tools.
+
 ---
 
 ## Benchmarking
@@ -317,6 +357,7 @@ Generator and evaluator models are defined in [`src/agenticeoecosystem/utils/reg
 | `qwen3-14b` | Qwen/Qwen3-14B | free |
 | `qwen2.5-14b` | Qwen/Qwen2.5-14B-Instruct | free |
 | `qwen3-30b-moe` | Qwen/Qwen3-30B-A3B | free |
+| `deepseek-r1-14b` | deepseek-ai/DeepSeek-R1-Distill-Qwen-14B | free |
 | `phi4-mini` | microsoft/Phi-4-mini-instruct | free |
 | `nemotron-2-12b` | nvidia/NVIDIA-Nemotron-Nano-12B-v2 | free |
 | `gemma3-12b` | google/gemma-3-12b-it | gated |
@@ -390,13 +431,32 @@ python tests/benchmarking.py
 
 ### Outputs
 
+Each full `benchmark.sh` run writes to a timestamped subdirectory so results from different runs never overwrite each other:
+
 | File | Description |
 |---|---|
-| `output/geobenchX/results_<Label>.json` | Per-model task results with scores |
-| `output/geobenchX/model_comparison.csv` | Summary table across all generator models |
-| `output/geobenchX/model_comparison.html` | Same table as HTML |
-| `output/geobenchX/model_comparison_errors.json` | Models that failed (if any) |
+| `output/geobenchX/run_YYYYMMDD_HHMMSS/results_<Label>.json` | Per-model task results with scores |
+| `output/geobenchX/run_YYYYMMDD_HHMMSS/model_comparison.csv` | Summary table (generators × evaluators) |
+| `output/geobenchX/run_YYYYMMDD_HHMMSS/model_comparison.html` | Same table as HTML |
 | `logs/benchmarking_YYYYMMDD_HHMMSS.log` | Full run log |
+
+To regenerate the comparison table from any archived run:
+```bash
+python scripts/build_table.py --output-dir output/geobenchX/run_YYYYMMDD_HHMMSS
+```
+
+### Multi-model bash orchestration
+
+For full multi-model runs with per-process GPU isolation (required on a single GPU to avoid vLLM CUDA memory leaks), use the bash orchestrator:
+
+```bash
+bash scripts/benchmark.sh            # all runnable task categories (default)
+bash scripts/benchmark.sh --subset   # curated 9-task subset only
+```
+
+Each generator model runs in its own Python subprocess. Between runs, any orphaned vLLM workers are hard-killed via `pkill`. Evaluator models (Nemotron-2-12B, Gemma3-12B, Qwen3-14B) score every generator's results afterwards.
+
+Edit `scripts/benchmark.sh` to add or remove generator and evaluator models.
 
 ### Smoke test
 
@@ -461,11 +521,16 @@ Register it with the supervisor:
 ```python
 supervisor_agent = create_agent(
     model,
-    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, my_agent_as_tool],
+    tools=[
+        get_eo_stac_data, get_gee_data, get_eve_knowledge,
+        get_hybrid_rag_context, get_arxiv_data, get_gis_analysis,
+        my_agent_as_tool,
+    ],
     system_prompt=(
         "You are a routing agent. "
         "You can get data from EO Dashboards, Google Earth Engine, "
         "the EVE knowledge base, the ESA EO Science Strategy knowledge base, "
+        "ArXiv scientific papers, the GIS analysis server, "
         "and <describe your custom agent here>. "
         "Break down user requests into appropriate tool calls and coordinate the results. "
         "Return tool results directly to the user without summarising."

@@ -44,13 +44,20 @@ async def _load_tools_from_mcp():
     logger.info("Building MCP server configuration")
     mcp_servers = get_mcp_servers()
     logger.info("MCP servers configured: %s", list(mcp_servers.keys()))
-    mcp_client = MultiServerMCPClient(mcp_servers)
-    logger.info("Requesting tools from MCP servers")
-    tools = await mcp_client.get_tools()
-    logger.info("MCP tool discovery complete: %d tools", len(tools))
-    for t in tools:
+
+    all_tools: list = []
+    for server_name, server_config in mcp_servers.items():
+        try:
+            tools = await MultiServerMCPClient({server_name: server_config}).get_tools()
+            all_tools.extend(tools)
+            logger.info("  [%s] %d tool(s) loaded", server_name, len(tools))
+        except Exception as exc:
+            logger.warning("  [%s] skipped — failed to load tools: %s", server_name, exc)
+
+    logger.info("MCP tool discovery complete: %d tools", len(all_tools))
+    for t in all_tools:
         logger.debug("  - %s: %s", t.name, t.description)
-    return tools
+    return all_tools
 
 
 import nest_asyncio
@@ -71,6 +78,43 @@ _ARXIV_TOOL_NAMES = {
     "search_papers", "download_paper", "list_papers", "read_paper",
     "get_abstract", "semantic_search", "reindex", "citation_graph",
     "watch_topic", "check_alerts",
+}
+
+_GIS_TOOL_NAMES = {
+    # Shapely geometry
+    "buffer", "intersection", "union", "difference", "symmetric_difference",
+    "convex_hull", "envelope", "minimum_rotated_rectangle", "centroid",
+    "bounds", "coordinates", "geometry_type", "rotate", "scale", "translate",
+    "triangulate", "voronoi", "unary_union", "length", "area",
+    "is_valid", "make_valid", "simplify", "snap", "nearest_point",
+    "normalize", "geometry_to_geojson", "geojson_to_geometry",
+    # PyProj coordinate transforms
+    "transform_coordinates", "project_geometry",
+    "get_crs_info", "get_available_crs", "get_utm_zone", "get_utm_crs", "get_geocentric_crs",
+    "get_geod_info", "calculate_geodetic_distance", "calculate_geodetic_point", "calculate_geodetic_area",
+    # GeoPandas vector
+    "read_file_gpd", "write_file_gpd", "append_gpd", "merge_gpd",
+    "overlay_gpd", "dissolve_gpd", "explode_gpd", "clip_vector",
+    "sjoin_gpd", "sjoin_nearest_gpd", "point_in_polygon",
+    # Rasterio raster
+    "metadata_raster", "get_raster_crs", "extract_band", "raster_band_statistics",
+    "raster_histogram", "clip_raster_with_shapefile", "resample_raster",
+    "reproject_raster", "tile_raster", "compute_ndvi", "raster_algebra",
+    "concat_bands", "weighted_band_sum", "zonal_statistics",
+    "reclassify_raster", "focal_statistics", "hillshade", "write_raster",
+    # PySAL spatial statistics
+    "morans_i", "gearys_c", "gamma_statistic", "getis_ord_g",
+    "moran_local", "getis_ord_g_local", "join_counts_local", "adbscan",
+    "weights_from_shapefile", "distance_band_weights", "knn_weights",
+    "build_transform_and_save_weights", "ols_with_spatial_diagnostics_safe",
+    "build_and_transform_weights", "spatial_markov", "dynamic_lisa", "gm_lag",
+    # Visualization
+    "create_map", "create_web_map",
+    # Data downloads
+    "download_boundaries", "download_climate_data",
+    "get_species_info", "download_species_occurrences",
+    "download_street_network", "calculate_shortest_path",
+    "download_worldcover", "compute_s2_ndvi", "download_satellite_imagery",
 }
 
 # ---------------------------------------------------------------------------
@@ -127,7 +171,11 @@ _GEE_SYSTEM_PROMPT = (
     "- scale: integer\n"
     "- image_count: integer\n"
     "- max_cloud_cover: integer\n"
-    "Extract all other parameters like dates, cloud cover, and image count from the query."
+    "Extract all other parameters like dates, cloud cover, and image count from the query.\n"
+    "CRITICAL: After the tool returns, your final response MUST include the exact absolute file path(s) "
+    "from the 'files' list in the tool result. Format them clearly, e.g.: "
+    "'Downloaded files: [\"/path/to/gee_image_20230615_t1_n1.tif\"]'. "
+    "Never omit the file paths — they are required for downstream GIS processing."
 )
 
 _EVE_RETRIEVAL_SYSTEM_PROMPT = (
@@ -147,7 +195,29 @@ _ARXIV_SYSTEM_PROMPT = (
     "When a user asks a question, determine which tool(s) to use and extract the necessary parameters from the query. "
     "For example, if a user asks 'Find recent papers on climate change and get their abstracts', you might use "
     "'search_papers' with the keyword 'climate change' and a recent date filter, and proper category, "
-    "then use 'get_abstract' for each relevant paper found."
+    "then use 'get_abstract' for each relevant paper found.\n"
+    "IMPORTANT CONSTRAINTS:\n"
+    "- Prefer 'get_abstract' over 'download_paper' unless the user explicitly requests the full text. "
+    "  Abstracts contain enough information for most questions and avoid context overflows.\n"
+    "- NEVER call 'download_paper' for more than one paper in a single task — full PDFs are very large "
+    "  and will exceed the model's context window.\n"
+    "- If asked to summarise or analyse multiple papers, use 'get_abstract' for all of them."
+)
+
+_GIS_SYSTEM_PROMPT = (
+    "You are a GIS analysis assistant. Use the available tools to perform spatial operations, "
+    "raster analysis, coordinate transformations, spatial statistics, map visualization, and geospatial data downloads. "
+    "Available capabilities include:\n"
+    "- Geometry operations (buffer, intersect, union, centroid, simplify, etc.) via Shapely\n"
+    "- Vector file operations (read/write/clip/merge shapefiles and GeoJSON) via GeoPandas\n"
+    "- Raster analysis (NDVI, zonal statistics, clip, reproject, hillshade) via Rasterio\n"
+    "- Coordinate transforms and geodetic calculations via PyProj\n"
+    "- Spatial statistics (Moran's I, LISA, spatial regression) via PySAL\n"
+    "- Map creation (static PNG/PDF via create_map, interactive HTML via create_web_map)\n"
+    "- Data downloads (GADM boundaries, ESA WorldCover, ERA5 climate, OSM street networks, "
+    "Sentinel-2 NDVI via Planetary Computer)\n"
+    "Extract all parameters from the user's request and chain tools as needed. "
+    "Return file paths for saved outputs (maps, rasters, vectors)."
 )
 
 _SUPERVISOR_SYSTEM_PROMPT = (
@@ -155,11 +225,16 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "You can get data from EO Dashboards, Google Earth Engine, "
     "the EVE knowledge base for ESA/EO background information, "
     "the ESA EO Science Strategy knowledge base (hybrid RAG), "
-    "and the ArXiv MCP server for scientific papers. "
+    "the ArXiv MCP server for scientific papers, "
+    "and the GIS analysis server for spatial operations, raster analysis, visualization, and geospatial data downloads. "
     "Break down user requests into appropriate tool calls and coordinate the results. "
     "When a request involves multiple actions, use multiple tools in sequence. "
     "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
-    "Do not add introductions, summaries, or commentary around tool results."
+    "Do not add introductions, summaries, or commentary around tool results.\n"
+    "SCOPE RULE: If a request is clearly unrelated to Earth Observation, satellite data, GIS analysis, "
+    "scientific literature, or ESA/space topics (e.g. restaurant recommendations, financial trading, "
+    "general cooking, sports scores), do NOT call any tools. "
+    "Instead respond: 'This question is outside the scope of the EO/GIS assistant.'"
 )
 
 # ---------------------------------------------------------------------------
@@ -209,6 +284,7 @@ gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name 
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
 eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
+gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
 
 
 @tool
@@ -254,6 +330,9 @@ async def get_gee_data(request: str) -> str:
     Phrase your request like:
     "Download a Sentinel-2 image for bbox [min_lon, min_lat, max_lon, max_lat],
     date range YYYY-MM-DD to YYYY-MM-DD, bands B4,B3,B2, scale 10m, max 20% cloud cover."
+
+    The response will include the absolute path(s) of the downloaded GeoTIFF file(s).
+    Pass those paths verbatim to get_gis_analysis when further raster processing is needed.
     """
     logger.info("[TOOL CALL] get_gee_data: %s", request)
     try:
@@ -314,9 +393,34 @@ async def get_hybrid_rag_context(request: str) -> str:
         return f"Error: {e}"
 
 
+@tool
+async def get_gis_analysis(request: str) -> str:
+    """Perform GIS analysis: spatial operations, raster processing, coordinate transforms,
+    spatial statistics, map visualization, and geospatial data downloads.
+
+    Examples:
+    - "Compute NDVI from a GeoTIFF raster at /path/to/image.tif"
+    - "Buffer the polygon in /path/to/area.geojson by 5000 metres"
+    - "Download ESA WorldCover land cover for bbox [12.4, 41.8, 12.6, 42.0]"
+    - "Create a static map from /path/to/boundaries.shp and save as map.png"
+    - "Calculate Moran's I for the column 'income' in /path/to/data.shp"
+    """
+    logger.info("[TOOL CALL] get_gis_analysis: %s", request)
+    try:
+        result = await gis_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_gis_analysis: %s", e)
+        return f"Error: {e}"
+
+
 supervisor_agent = create_agent(
     model,
-    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data],
+    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data, get_gis_analysis],
     system_prompt=_SUPERVISOR_SYSTEM_PROMPT,
 )
 
@@ -327,14 +431,15 @@ supervisor_agent = create_agent(
 
 def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
     """Recreate all agents with a new model. MCP tools are reused."""
-    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, arxiv_agent, supervisor_agent
+    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, arxiv_agent, gis_agent, supervisor_agent
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
     eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
     arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
-    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
     logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
 
 

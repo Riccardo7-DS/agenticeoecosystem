@@ -167,42 +167,77 @@ def search_narratives(keyword: str) -> str:
     return result
 
 
+# @mcp.tool()
+# def get_narrative_content(url: str) -> str:
+#     """Get the full content of a specific narrative by its URL"""
+#     try:
+#         response = requests.get(url)
+#         response.raise_for_status()
+#         content = response.text
+
+#         # Parse frontmatter and body
+#         if content.startswith("---"):
+#             parts = content.split("---", 2)
+#             if len(parts) >= 3:
+#                 frontmatter = parts[1].strip()
+#                 body = parts[2].strip()
+
+#                 # Limit content length
+#                 if len(body) > 4000:
+#                     body = (
+#                         body[:4000]
+#                         + "\n\n... (content truncated, showing first 4000 chars)"
+#                     )
+
+#                 result = f"FRONTMATTER:\n{frontmatter}\n\n"
+#                 result += f"CONTENT:\n{body}"
+#                 return result
+
+#         # Limit content length for context
+#         if len(content) > 5000:
+#             content = (
+#                 content[:5000] + "\n\n... (content truncated, showing first 5000 chars)"
+#             )
+
+#         return content
+#     except Exception as e:
+#         return f"Error fetching narrative: {str(e)}"
 @mcp.tool()
 def get_narrative_content(url: str) -> str:
-    """Get the full content of a specific narrative by its URL"""
+    """Download a narrative and save it to a local file."""
+    import os
+    import re
+    import requests
+    from urllib.parse import urlparse
+
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()
         content = response.text
 
-        # Parse frontmatter and body
-        if content.startswith("---"):
-            parts = content.split("---", 2)
-            if len(parts) >= 3:
-                frontmatter = parts[1].strip()
-                body = parts[2].strip()
+        # Create output directory
+        output_dir = "narratives"
+        os.makedirs(output_dir, exist_ok=True)
 
-                # Limit content length
-                if len(body) > 4000:
-                    body = (
-                        body[:4000]
-                        + "\n\n... (content truncated, showing first 4000 chars)"
-                    )
+        # Generate a safe filename from the URL
+        parsed = urlparse(url)
+        filename = os.path.basename(parsed.path) or "narrative"
+        filename = re.sub(r"[^\w\-_\.]", "_", filename)
 
-                result = f"FRONTMATTER:\n{frontmatter}\n\n"
-                result += f"CONTENT:\n{body}"
-                return result
+        # Ensure .md extension
+        if not filename.endswith(".md"):
+            filename += ".md"
 
-        # Limit content length for context
-        if len(content) > 5000:
-            content = (
-                content[:5000] + "\n\n... (content truncated, showing first 5000 chars)"
-            )
+        filepath = os.path.join(output_dir, filename)
 
-        return content
+        # Save content
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return f"Narrative saved successfully: {filepath}"
+
     except Exception as e:
         return f"Error fetching narrative: {str(e)}"
-
 
 @mcp.tool()
 def list_themes() -> str:

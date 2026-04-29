@@ -1,0 +1,254 @@
+EO BENCHMARK: WHAT IT IS, HOW IT WORKS, AND WHAT MAKES IT NOVEL
+================================================================
+
+1. PURPOSE AND HIGH-LEVEL GOAL
+-------------------------------
+This benchmark evaluates how well Large Language Models can operate as autonomous agents
+inside an Earth Observation (EO) ecosystem built on the Model Context Protocol (MCP). The
+primary subject of evaluation is EVE-Instruct — a domain-specialized LLM for Earth
+Observation developed under ESA's Phi-lab #AI4EO initiative — compared against a panel of
+general-purpose open-source models. The core research question is: can an EO-specialized
+model outperform general-purpose models when the task requires calling real EO tools in the
+right sequence?
+
+
+2. RELATION TO GEOBENCHX
+--------------------------
+The framework is structurally derived from GeoBenchX, a benchmark for geospatial reasoning
+that evaluates whether LLMs can correctly identify and chain tool calls for geographic tasks.
+The following elements are inherited directly:
+
+- Data model: Task, Solution, Step, TaskSet (Pydantic schemas) — each task carries a
+  natural-language query, one or more reference solutions (sequences of tool calls with typed
+  arguments), and fields to record generated solutions and evaluator scores.
+
+- Scoring taxonomy: 0 = no match, 1 = partial match, 2 = full match — assessed by an LLM
+  judge comparing generated vs reference tool-call sequences.
+
+- LLM-as-judge evaluation loop: an evaluator model is given the task, the reference
+  solution(s), and the candidate solution in a structured XML-tagged prompt, and returns a
+  score with reasoning.
+
+- Task selection helpers: select_by_ids, select_by_labels, sample_stratified, subset — all
+  inherited from the GeoBenchX TaskSet API.
+
+- Output format: results_<model>.json per generator model, plus a summary CSV/HTML table.
+
+
+3. WHAT IS DIFFERENT
+---------------------
+
+3.1 The pipeline is an agentic multi-agent system, not a single inference call
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In GeoBenchX, a model is prompted directly and asked to produce a tool-call sequence. Here,
+each task runs through a LangGraph supervisor that routes to one or more specialized
+sub-agents, each backed by a live MCP server:
+
+  Sub-agent             | MCP server              | What it does
+  ----------------------|-------------------------|------------------------------------------
+  eo_stac_agent         | EO Dashboard (stdio)    | Browses ESA/NASA/JAXA narratives, themes,
+                        |                         | STAC collections
+  gee_agent             | GEE (stdio)             | Downloads satellite imagery via Google
+                        |                         | Earth Engine Python API
+  eve_retrieval_agent   | EVE retrieval (HTTP)    | Retrieves from EVE's knowledge base on
+                        |                         | AWS Bedrock AgentCore
+  eoss_rag_agent        | HybridRAG (stdio)       | Semantic search over ESA EO Science
+                        |                         | Strategy via Qdrant + Neo4j graph
+
+The generated solution is not a hypothetical sequence the model says it would call — it is
+the actual sequence of MCP tool calls the agent dispatched during a live run, recorded from
+the LangGraph message trace.
+
+
+3.2 The task taxonomy is EO-specific
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GeoBenchX uses geographic reasoning categories. This benchmark uses four operative categories
+designed around MCP tool behavior:
+
+  Label                    | What it tests
+  -------------------------|------------------------------------------------------------
+  Tool Grounding           | Can the model identify and call the single correct MCP tool
+                           | with the right arguments? (e.g. a pure HybridRAG query, or
+                           | a direct GEE download)
+  Sequential Reasoning     | Can it chain outputs across steps — e.g. search a narrative,
+                           | extract a location, then download the matching satellite image?
+  Cross-agent Synthesis    | Can it coordinate across multiple MCP agents in a single task
+                           | — e.g. find a narrative (EODashboard), download imagery (GEE),
+                           | and contextualize with the Science Strategy (HybridRAG)?
+  Scope Awareness          | Does it know when to stop and not hallucinate tool calls for
+                           | tasks outside the ecosystem's scope?
+
+A fifth category, Placeholder, marks tasks whose required MCP servers are not yet
+implemented (MOOC server). These tasks are excluded from all runs.
+
+
+3.3 Multiple LLM judges on the same solutions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GeoBenchX typically uses a single evaluator. Here, each generated solution is scored
+independently by three separate LLM judges (Nemotron-2-12B, Gemma3-12B, Qwen3-14B), each
+running as a separate vLLM process. All judge scores accumulate in
+task.evaluator_scores[label] within the same results_<model>.json file. The comparison table
+reports accuracy for each generator x evaluator combination — this allows cross-checking for
+evaluator bias.
+
+
+3.4 Execution architecture: bash orchestration with per-process GPU isolation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GeoBenchX runs all models in a single Python process. Here, each generator and each evaluator
+runs in its own Python subprocess, launched by scripts/benchmark.sh. Between runs,
+"pkill -9 -f vllm.entrypoints" hard-kills any orphaned vLLM workers. This is necessary
+because vLLM's CUDA memory is not reliably freed when the Python object is deleted — process
+isolation prevents GPU memory from leaking across model runs (critical on a single A6000 with
+44 GiB).
+
+
+3.5 Timestamped run directories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Each full benchmark.sh execution writes to output/geobenchX/run_YYYYMMDD_HHMMSS/. EVE
+verification runs accumulate in the shared output/geobenchX/ directory with skip_solved=True
+(existing solutions are never overwritten). The build_table.py script can be pointed at any
+run subdirectory to reproduce the comparison table.
+
+
+4. NOVELTIES AND PECULIARITIES
+--------------------------------
+
+EVE as a domain-specialized generator.
+EVE-Instruct is not a general-purpose model — it is pre-trained and fine-tuned on EO
+scientific literature, satellite data documentation, and ESA domain knowledge. The benchmark
+is designed in part to validate whether this specialization translates into better MCP
+tool-call accuracy on EO tasks.
+
+HybridRAG: vector search + knowledge graph.
+The HybridRAG MCP server is not a standard RAG. It combines dense retrieval over ESA EO
+Science Strategy PDF chunks (Qdrant) with a Neo4j knowledge graph that maps document
+fragments to structured concepts: science themes, strategic objectives, enabling tools,
+tipping points, and international treaties. A single hybrid_rag_retrieve(question) call
+triggers both pipelines and returns a synthesized context.
+
+EVE retrieval over AWS Bedrock AgentCore.
+The EVE retrieval MCP uses AWS Bedrock's AgentCore runtime via a streamable_http transport
+(not stdio), requiring OAuth2 token refresh before each session. This is the only MCP server
+that uses HTTP transport; the others use stdio subprocesses.
+
+The generated solution is the trace, not a prediction.
+Because the agent actually calls the tools, a "generated solution" either contains real tool
+invocations with real arguments the model chose (possibly correct, partially correct, or
+wrong), or it is empty (the model failed to call any tool). This is a harder and more
+realistic evaluation than asking a model to predict what it would do.
+
+Cross-agent synthesis tasks require three agents to cooperate.
+The hardest category (Cross-agent Synthesis) requires the supervisor to delegate to EO
+Dashboard, GEE, and HybridRAG agents in sequence, passing intermediate results (a narrative
+location, a STAC collection ID, a thematic question) between agents as context. Failure at
+any link in the chain produces a partial or no-match score.
+
+Scope Awareness as a negative test.
+Tasks labeled Scope Awareness intentionally ask questions the ecosystem cannot answer (e.g. a
+question requiring a tool that does not exist, or an out-of-domain query). A correct response
+is to not call any tool, or to call the most relevant tool and return a "not found" result.
+This tests over-triggering — a known failure mode in agentic systems.
+
+INT8 quantization for Mistral-Small-24B.
+The 24B-parameter Mistral model at BF16 precision requires ~44 GiB, exceeding the A6000 VRAM
+by ~1 GiB. It is served with bitsandbytes INT8 quantization (--quantization bitsandbytes in
+the vLLM config), halving the weight footprint to ~22 GiB while preserving evaluation
+quality.
+
+Pre-flight AOI guard in the GEE server.
+The GEE download_satellite_image tool includes an upfront pixel-count estimate before any API
+call. If the requested bounding box exceeds 40 million pixels at the given scale, the tool
+immediately raises a ValueError with the minimum safe scale, allowing the agent to retry
+rather than hanging indefinitely while the recursive tile-splitting algorithm runs.
+
+
+5. DIFFERENTIATION FROM PRIOR LITERATURE
+-----------------------------------------
+
+5.1 Tool-use benchmarks
+~~~~~~~~~~~~~~~~~~~~~~~~
+ToolBench / ToolEval (Qin et al., 2023) and API-Bank (Li et al., 2023) are the closest
+general-purpose antecedents: they expose large catalogs of real-world APIs and measure
+whether LLMs can plan and execute multi-step API calls. However, both evaluate a single model
+issuing calls to a mock or sandboxed API backend; there is no multi-agent routing, no
+domain-specialized generator model, and no requirement to synthesize outputs across
+heterogeneous services (e.g. a retrieval system + a geospatial download + a raster processing
+pipeline). GAIA (Mialon et al., 2023) similarly evaluates general AI assistants with tool
+access (web search, code execution) but targets breadth across all domains rather than depth
+in a specialized scientific one.
+
+This benchmark differs in three ways: (i) tool calls are dispatched to live MCP servers
+running real domain services (GEE Python API, Qdrant, Neo4j), not stubs or sandboxes;
+(ii) the most challenging task category requires coordinating multiple specialized sub-agents
+in sequence, each backed by a different server; and (iii) the generator under primary
+evaluation (EVE-Instruct) is domain-specialized rather than general-purpose, allowing a
+controlled comparison of specialization benefit.
+
+5.2 Geospatial and EO benchmarks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Existing geospatial benchmarks focus primarily on spatial reasoning, geographic question
+answering (GeoQA, GeoText), or remote sensing visual question answering (EarthVQA,
+RSVQAxBEN, SpaceNet). None of these evaluate an agent's ability to call geospatial
+processing tools in the correct sequence. GeoBenchX is the most structurally similar work
+and is the direct methodological ancestor of this benchmark (see Section 2); this work
+extends it from a single-model prompt-and-score paradigm to a live multi-agent execution
+environment with domain-specific servers. To our knowledge, this is the first benchmark
+that evaluates LLM agents on real EO MCP tool orchestration, including remote sensing data
+download, raster analysis (NDVI, zonal statistics, coordinate transforms), and ESA
+Science Strategy retrieval.
+
+5.3 Multi-agent benchmarks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AgentBench (Liu et al., 2023) and WebArena (Zhou et al., 2023) evaluate agents across
+multiple environments (web navigation, database queries, OS commands) but treat each
+environment as an independent task: there is no cross-environment synthesis within a single
+task. This benchmark's Cross-agent Synthesis category specifically tests whether a supervisor
+can chain outputs across heterogeneous agents — a retrieval context from HybridRAG feeding
+into a GEE download feeding into a GIS NDVI pipeline — within a single query. This reflects
+a realistic deployment scenario for scientific AI assistants that has not been systematically
+benchmarked.
+
+5.4 Scientific domain agents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Domain-specialized agents such as ChemCrow (Bran et al., 2023) and BioPlanner (O'Donoghue
+et al., 2023) demonstrate that tool-augmented LLMs can outperform general models in chemistry
+and biology. This benchmark applies the same hypothesis to the Earth Observation domain,
+using EVE-Instruct as the domain-specialized model. Unlike those works, which report
+qualitative or human-evaluated results on bespoke tasks, this benchmark provides a
+reproducible, automatically scored evaluation suite with a panel of three independent LLM
+judges and a structured scoring taxonomy, enabling direct numerical comparisons across models
+and evaluator configurations.
+
+
+6. DATASET SUMMARY
+-------------------
+The benchmark dataset (eo_benchmark_tasks.json) contains 77 tasks across five categories:
+
+  Category                | Count                          | Runnable
+  ------------------------|--------------------------------|----------
+  Tool Grounding          | 26 (20 original + 6 re-labeled)| Yes
+  Sequential Reasoning    | 10                             | Yes
+  Cross-agent Synthesis   | 8 (7 original + 1 re-labeled)  | Yes
+  Scope Awareness         | 20                             | Yes
+  Placeholder (MOOC)      | 13                             | No
+
+Tasks with download_satellite_image steps in their reference solutions have been validated
+against GEE's 40M pixel limit — 6 tasks had their scale corrected (20m -> 30-60m) to match
+feasible download sizes.
+
+
+7. QUICK-REFERENCE: ENTRY POINTS
+----------------------------------
+  Script / Command                                          | What it does
+  ----------------------------------------------------------|------------------------------
+  python tests/benchmarking.py                              | EVE verification — 7-task
+                                                            | curated subset, no judges
+  python tests/benchmarking.py --no-subset                  | EVE on all 64 runnable tasks
+  bash scripts/benchmark.sh                                 | Full multi-model run: 9
+                                                            | generators x 3 judges, per-
+                                                            | process GPU isolation
+  python scripts/build_table.py --output-dir output/...     | Rebuild comparison CSV/HTML
+                                                            | from any archived run
+  notebooks/Benchmarking.ipynb (section 7)                  | Visualize results: accuracy
+                                                            | heatmap, score bar chart,
+                                                            | styled comparison table

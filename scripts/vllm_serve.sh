@@ -1,0 +1,16 @@
+uv run python -m vllm.entrypoints.openai.api_server \
+  --model models/mistral-small/ \
+  --port 18000 \
+  --tokenizer-mode mistral \
+  --config-format mistral \
+  --load-format mistral \
+  --tool-call-parser mistral \
+  --enable-auto-tool-choice \
+  --tensor-parallel-size 2 \
+  --max-model-len 131072 \
+  --max-num-batched-tokens 8000 \
+  --max-num-seqs 512 \
+  --gpu-memory-utilization 0.85 \
+  --enable-prefix-caching \
+  --dtype auto \
+  --served-model-name Mistral-Small-3.1-24B-Base-2503

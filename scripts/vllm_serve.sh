@@ -1,5 +1,5 @@
 uv run python -m vllm.entrypoints.openai.api_server \
-  --model models/mistral-small/ \
+  --model /shared/home/rdercole/Riccardo/projects/agenticeoecosystem/models/eve_hug/EVE-Instruct \
   --port 18000 \
   --tokenizer-mode mistral \
   --config-format mistral \
@@ -13,4 +13,4 @@ uv run python -m vllm.entrypoints.openai.api_server \
   --gpu-memory-utilization 0.85 \
   --enable-prefix-caching \
   --dtype auto \
-  --served-model-name Mistral-Small-3.1-24B-Base-2503
+  --served-model-name EVE-Instruct

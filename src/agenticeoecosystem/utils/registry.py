@@ -65,6 +65,11 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         tool_call_parser="hermes",
         gated=True,
     ),
+    # DeepSeek — free, Qwen2.5-14B distilled with R1 reasoning
+    "deepseek-r1-14b": ModelConfig(
+        model_id="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+        tool_call_parser="hermes",
+    ),
     # Free models
     "phi4-mini": ModelConfig(
         model_id="microsoft/Phi-4-mini-instruct",
@@ -88,7 +93,7 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
 
 _DEFAULT_HOST = "127.0.0.1"
 _DEFAULT_PORT = 8000
-_STARTUP_TIMEOUT = 600  # seconds to wait for vLLM to become ready (12B+ with CUDA compilation can take 8-10 min)
+_STARTUP_TIMEOUT = 1800  # seconds to wait for vLLM to become ready (NemotronH hybrid Mamba-attn takes ~20 min on first run)
 
 
 def _vllm_cmd(cfg: ModelConfig, host: str, port: int) -> list[str]:

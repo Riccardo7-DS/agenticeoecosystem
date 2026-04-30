@@ -106,11 +106,17 @@ def get_mcp_servers() -> dict:
         "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
     })
 
+    _try_register(servers, "gis-mcp", lambda: {
+        "transport": "stdio",
+        "command": "uv",
+        "args": ["tool", "run", "gis-mcp"],
+    })
+
     _try_register(servers, "hybridrag", lambda: (
         _check_hybridrag_env() or {
             "transport": "stdio",
             "command": "python",
-            "args": [f"{HYBRIDRAG_ROOT}/server.py"],
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
         }
     ))
 

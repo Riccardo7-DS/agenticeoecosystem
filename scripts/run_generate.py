@@ -44,7 +44,7 @@ def main() -> int:
     parser.add_argument("--model",                required=True,  help="Model key or HuggingFace ID")
     parser.add_argument("--provider",             default="eve",  help="LangChain provider: eve, vllm, openai, …")
     parser.add_argument("--temperature",          type=float, default=0.0)
-    parser.add_argument("--tasks-file",           required=True,  help="Tasks JSON filename")
+    parser.add_argument("--tasks-file",           required=True, nargs='+', help="Tasks JSON filename(s); multiple files are merged")
     parser.add_argument("--tasks-folder",         default=None,   help="Folder containing tasks file (default: data/tasks)")
     parser.add_argument("--task-ids",             default=None,   help="Comma-separated task IDs to select")
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
@@ -64,14 +64,20 @@ def main() -> int:
     from agenticeoecosystem.evaluation.dataclasses import TaskSet
 
     folder = args.tasks_folder or str(TASKS_FOLDER)
-    tasks = TaskSet.read_from_file(args.tasks_file, folder=folder)
+    tasks = None
+    for tf in args.tasks_file:
+        ts = TaskSet.read_from_file(tf, folder=folder)
+        if tasks is None:
+            tasks = ts
+        else:
+            tasks.extend(ts.tasks)
     if args.task_ids:
         ids = [x.strip() for x in args.task_ids.split(",")]
         tasks = tasks.select_by_ids(ids)
     elif args.task_labels:
         labels = [x.strip() for x in args.task_labels.split(",")]
         tasks = tasks.select_by_labels(labels)
-    logger.info("Loaded %d task(s) from %s/%s", len(tasks), folder, args.tasks_file)
+    logger.info("Loaded %d task(s) from %d file(s) in %s", len(tasks), len(args.tasks_file), folder)
 
     proc = None
     try:

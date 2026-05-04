@@ -11,6 +11,8 @@ import logging
 
 import gradio as gr
 from dotenv import load_dotenv
+import tempfile
+import os
 
 from agenticeoecosystem.definitions import ROOT_DIR
 from agenticeoecosystem.client.client import (
@@ -51,7 +53,54 @@ _MCP_SERVER: dict[str, str] = {
     "retrieve":                 "EVE Retrieval",
     "hybrid_rag_retrieve":      "HybridRAG",
 }
+import numpy as np
+from PIL import Image
+from pathlib import Path
+import re
 
+def extract_image_paths(text: str) -> list[Path]:
+    """
+    Extract filesystem image paths from text.
+    Supports .tif, .tiff, .png, .jpg
+    """
+    pattern = r"(\/[^\s]+?\.(?:tif|tiff|png|jpg|jpeg))"
+    matches = re.findall(pattern, text)
+    return [Path(m) for m in matches if Path(m).exists()]
+def load_image_for_display(path: Path):
+    """
+    Loads an image and converts to displayable RGB PIL image.
+    Handles GeoTIFFs and normal images. Resizes to 512x512.
+    """
+    if path.suffix.lower() in [".tif", ".tiff"]:
+        import rasterio
+
+        with rasterio.open(path) as src:
+            img = src.read()
+
+        # Handle different band cases
+        if img.shape[0] >= 3:
+            img = img[:3]  # take first 3 bands
+        else:
+            img = np.repeat(img, 3, axis=0)
+
+        img = np.transpose(img, (1, 2, 0))
+
+        # Normalize to 0–255
+        img = img.astype(np.float32)
+        img -= img.min()
+        img /= (img.max() + 1e-8)
+        img *= 255
+        img = img.astype(np.uint8)
+
+        pil_img = Image.fromarray(img)
+
+    else:
+        pil_img = Image.open(path).convert("RGB")
+
+    # 🔽 Resize to 512x512 (high-quality downsampling)
+    pil_img = pil_img.resize((512, 512), Image.Resampling.LANCZOS)
+
+    return pil_img
 # ---------------------------------------------------------------------------
 # Streaming response generator
 # ---------------------------------------------------------------------------
@@ -130,7 +179,25 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
                                 for c in content
                             )
                         chat_history[-1] = {"role": "assistant", "content": str(content)}
+                        image_paths = extract_image_paths(content)
                         yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+                        for path in image_paths:
+                            try:
+                                img = load_image_for_display(path)
+                                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                                    img.save(tmp.name)
+                                    chat_history.append({
+                                        "role": "assistant",
+                                        "content": gr.Image(tmp.name)  # ← use gr.Image, not raw PIL
+                                    })
+                                # chat_history.append({
+                                #     "role": "assistant",
+                                #     "content": img  # 👈 THIS is key
+                                # })
+                            except Exception as e:
+                                logger.error(f"Error loading image: {e}")
+                            yield chat_history, _render_steps(steps_acc), "", steps_acc
 
     except Exception as exc:
         logger.exception("Error during agent run")

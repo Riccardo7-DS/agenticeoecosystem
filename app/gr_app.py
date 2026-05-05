@@ -8,11 +8,15 @@ Streaming: async generator yields (chatbot, steps_markdown, cleared_input,
 """
 
 import logging
+import re
+import base64 as _base64
+import tempfile
+from pathlib import Path
 
 import gradio as gr
+import numpy as np
 from dotenv import load_dotenv
-import tempfile
-import os
+from PIL import Image
 
 from agenticeoecosystem.definitions import ROOT_DIR
 from agenticeoecosystem.client.client import (
@@ -28,12 +32,13 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 _IMAGE_PATH = ROOT_DIR / "app" / "ESA_philab.png"
-
-import base64 as _base64
 _IMAGE_B64 = _base64.b64encode(_IMAGE_PATH.read_bytes()).decode()
-_IMAGE_HTML = f'<img src="data:image/png;base64,{_IMAGE_B64}" style="height:100px; width:auto; object-fit:contain;">'
+_IMAGE_HTML = (
+    f'<img src="data:image/png;base64,{_IMAGE_B64}" '
+    f'style="height:100px; width:auto; object-fit:contain;">'
+)
 
-# Human-readable labels for the supervisor's 6 sub-agent wrapper tools.
+# Human-readable labels for the supervisor's sub-agent wrapper tools.
 _AGENT_LABELS: dict[str, str] = {
     "get_eo_stac_data":       "EO Dashboard / STAC",
     "get_gee_data":           "Google Earth Engine",
@@ -43,64 +48,50 @@ _AGENT_LABELS: dict[str, str] = {
     "get_gis_analysis":       "GIS Analysis",
 }
 
-# Maps each MCP-level tool name to its server, built from the sets already
-# defined in client.py so there is no duplication.
+# Maps each MCP-level tool name → its server label.
 _MCP_SERVER: dict[str, str] = {
-    **{name: "EOdashboard"   for name in _EO_STAC_TOOL_NAMES},
-    **{name: "ArXiv"         for name in _ARXIV_TOOL_NAMES},
-    **{name: "GIS"           for name in _GIS_TOOL_NAMES},
+    **{name: "EOdashboard" for name in _EO_STAC_TOOL_NAMES},
+    **{name: "ArXiv"       for name in _ARXIV_TOOL_NAMES},
+    **{name: "GIS"         for name in _GIS_TOOL_NAMES},
     "download_satellite_image": "GEE",
     "retrieve":                 "EVE Retrieval",
     "hybrid_rag_retrieve":      "HybridRAG",
 }
-import numpy as np
-from PIL import Image
-from pathlib import Path
-import re
+
+# ---------------------------------------------------------------------------
+# Image utilities
+# ---------------------------------------------------------------------------
+
+_IMAGE_PATH_PATTERN = re.compile(r"(\/[^\s]+?\.(?:tif|tiff|png|jpg|jpeg))")
+
 
 def extract_image_paths(text: str) -> list[Path]:
-    """
-    Extract filesystem image paths from text.
-    Supports .tif, .tiff, .png, .jpg
-    """
-    pattern = r"(\/[^\s]+?\.(?:tif|tiff|png|jpg|jpeg))"
-    matches = re.findall(pattern, text)
-    return [Path(m) for m in matches if Path(m).exists()]
-def load_image_for_display(path: Path):
-    """
-    Loads an image and converts to displayable RGB PIL image.
-    Handles GeoTIFFs and normal images. Resizes to 512x512.
-    """
-    if path.suffix.lower() in [".tif", ".tiff"]:
-        import rasterio
+    """Return all filesystem image paths found in *text* that actually exist."""
+    return [Path(m) for m in _IMAGE_PATH_PATTERN.findall(text) if Path(m).exists()]
 
+
+def strip_image_paths(text: str) -> str:
+    """Remove image file paths from text so they don't clutter the chat bubble."""
+    return _IMAGE_PATH_PATTERN.sub("", text).strip()
+
+
+def load_image_for_display(path: Path) -> Image.Image:
+    """Load any supported image (including GeoTIFF) as a 512×512 RGB PIL image."""
+    if path.suffix.lower() in {".tif", ".tiff"}:
+        import rasterio
         with rasterio.open(path) as src:
             img = src.read()
-
-        # Handle different band cases
-        if img.shape[0] >= 3:
-            img = img[:3]  # take first 3 bands
-        else:
-            img = np.repeat(img, 3, axis=0)
-
-        img = np.transpose(img, (1, 2, 0))
-
-        # Normalize to 0–255
-        img = img.astype(np.float32)
+        img = img[:3] if img.shape[0] >= 3 else np.repeat(img, 3, axis=0)
+        img = np.transpose(img, (1, 2, 0)).astype(np.float32)
         img -= img.min()
-        img /= (img.max() + 1e-8)
-        img *= 255
-        img = img.astype(np.uint8)
-
-        pil_img = Image.fromarray(img)
-
+        img /= img.max() + 1e-8
+        pil_img = Image.fromarray((img * 255).astype(np.uint8))
     else:
         pil_img = Image.open(path).convert("RGB")
 
-    # 🔽 Resize to 512x512 (high-quality downsampling)
-    pil_img = pil_img.resize((512, 512), Image.Resampling.LANCZOS)
+    return pil_img.resize((512, 512), Image.Resampling.LANCZOS)
 
-    return pil_img
+
 # ---------------------------------------------------------------------------
 # Streaming response generator
 # ---------------------------------------------------------------------------
@@ -117,6 +108,16 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
     - msg has tool_calls  →  supervisor dispatching to a sub-agent
     - msg.type == "tool"  →  sub-agent returned; _step_log has new MCP entries
     - msg.type == "ai"    →  final answer text
+
+    Some changes
+    ─────────────────────
+    1. messages_for_agent is built from chat_history AFTER the user message is
+       appended, but BEFORE the empty assistant placeholder — so the agent never
+       sees a trailing empty assistant turn.
+    2. Only string content is forwarded to the agent; image entries in history
+       are skipped so the LLM context stays clean.
+    3. Image paths are extracted from the raw response and then stripped from
+       the visible chat bubble text.
     """
     if not message.strip():
         yield chat_history, _render_steps(steps_history), "", steps_history
@@ -125,22 +126,25 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
     reset_step_log()
     step_cursor = 0
 
-    # Start from the existing history and add a query separator.
     query_num = steps_history.count("---") + 1
-    steps_acc = steps_history + f"\n\n---\n**Query {query_num}:** *{message[:60]}{'...' if len(message) > 60 else ''}*\n"
+    steps_acc = (
+        steps_history
+        + f"\n\n---\n**Query {query_num}:** "
+        f"*{message[:60]}{'...' if len(message) > 60 else ''}*\n"
+    )
 
-    # Show user message immediately.
+    # 1. Show user message immediately.
     chat_history = chat_history + [{"role": "user", "content": message}]
     yield chat_history, _render_steps(steps_acc), "", steps_acc
 
-    # Full conversation history for multi-turn context (built before the
-    # assistant placeholder is appended so the agent never sees an empty turn).
+    # 2. Build agent message list — skip non-string content (images in history).
     messages_for_agent = [
         {"role": t["role"], "content": t["content"]}
         for t in chat_history
+        if isinstance(t["content"], str)
     ]
 
-    # Empty assistant placeholder rendered while the agent is running.
+    # 3. Add empty assistant placeholder shown while the agent runs.
     chat_history = chat_history + [{"role": "assistant", "content": ""}]
 
     try:
@@ -156,7 +160,10 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
                         for tc in msg.tool_calls:
                             label = _AGENT_LABELS.get(tc["name"], tc["name"])
                             steps_acc += f"\n**→ {label}**"
-                        chat_history[-1] = {"role": "assistant", "content": f"*Calling **{label}**...*"}
+                        chat_history[-1] = {
+                            "role": "assistant",
+                            "content": f"*Calling **{label}**…*",
+                        }
                         yield chat_history, _render_steps(steps_acc), "", steps_acc
 
                     # Sub-agent returned; drain new _step_log entries.
@@ -164,8 +171,8 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
                         new_entries = _step_log[step_cursor:]
                         step_cursor = len(_step_log)
                         for entry in new_entries:
-                            fn = entry.get("function_name", "?")
-                            args = entry.get("arguments", {})
+                            fn     = entry.get("function_name", "?")
+                            args   = entry.get("arguments", {})
                             server = _MCP_SERVER.get(fn, "?")
                             steps_acc += f"\n- [{server}] `{fn}({_format_args(args)})`"
                         yield chat_history, _render_steps(steps_acc), "", steps_acc
@@ -173,30 +180,42 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
                     # Final answer from supervisor.
                     elif msg.type == "ai" and msg.content:
                         content = msg.content
+                        # Flatten list-of-blocks responses.
                         if isinstance(content, list):
                             content = "\n".join(
                                 c.get("text", str(c)) if isinstance(c, dict) else str(c)
                                 for c in content
                             )
-                        chat_history[-1] = {"role": "assistant", "content": str(content)}
+                        content = str(content)
+
+                        # Extract paths BEFORE stripping them from visible text.
                         image_paths = extract_image_paths(content)
+                        clean_content = strip_image_paths(content)
+
+                        chat_history[-1] = {"role": "assistant", "content": clean_content}
                         yield chat_history, _render_steps(steps_acc), "", steps_acc
 
+                        # Append each satellite image as a separate assistant bubble.
                         for path in image_paths:
                             try:
-                                img = load_image_for_display(path)
-                                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-                                    img.save(tmp.name)
-                                    chat_history.append({
-                                        "role": "assistant",
-                                        "content": gr.Image(tmp.name)  # ← use gr.Image, not raw PIL
-                                    })
-                                # chat_history.append({
-                                #     "role": "assistant",
-                                #     "content": img  # 👈 THIS is key
-                                # })
-                            except Exception as e:
-                                logger.error(f"Error loading image: {e}")
+                                pil_img = load_image_for_display(path)
+                                # Write to a named temp file that outlives this scope.
+                                tmp = tempfile.NamedTemporaryFile(
+                                    suffix=".png", delete=False, dir=tempfile.gettempdir()
+                                )
+                                pil_img.save(tmp.name)
+                                tmp.close()
+                                # Gradio Chatbot accepts {"path": ...} for inline media.
+                                chat_history.append({
+                                    "role": "assistant",
+                                    "content": {"path": tmp.name},
+                                })
+                            except Exception as exc:
+                                logger.error("Error loading image %s: %s", path, exc)
+                                chat_history.append({
+                                    "role": "assistant",
+                                    "content": f"*(Could not display image: {path.name})*",
+                                })
                             yield chat_history, _render_steps(steps_acc), "", steps_acc
 
     except Exception as exc:
@@ -209,7 +228,7 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
 
 
 def _format_args(args: dict) -> str:
-    """Compact argument summary, values truncated to 50 chars."""
+    """Compact argument summary; values are truncated to 50 chars."""
     parts = []
     for k, v in args.items():
         v_str = str(v)
@@ -232,7 +251,7 @@ def clear_conversation():
 
 
 # ---------------------------------------------------------------------------
-# Gradio app
+# Gradio UI
 # ---------------------------------------------------------------------------
 
 _THEME = gr.themes.Soft(
@@ -243,16 +262,9 @@ _THEME = gr.themes.Soft(
 )
 
 _CSS = """
-/* Fill the full viewport */
 .gradio-container { max-width: 100% !important; }
-
-/* Blue accent line under header */
-#app-header { border-bottom: 2px solid #2563eb; margin-bottom: 8px; padding-bottom: 10px; }
-
-/* Chatbot: clean white card */
-#chatbot { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; }
-
-/* Steps panel: light gray, scrollable, fills remaining height */
+#app-header  { border-bottom: 2px solid #2563eb; margin-bottom: 8px; padding-bottom: 10px; }
+#chatbot     { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; }
 #steps-panel {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -262,11 +274,7 @@ _CSS = """
     height: calc(100vh - 300px);
     overflow-y: auto;
 }
-
-/* Input: subtle border */
 #msg-input textarea { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; }
-
-/* Clear button */
 #clear-btn { min-width: 70px; }
 """
 
@@ -274,7 +282,7 @@ _CSS = """
 def build_app() -> gr.Blocks:
     with gr.Blocks(title="EO Agent", fill_height=True) as demo:
 
-        # Header
+        # ── Header ──────────────────────────────────────────────────────────
         with gr.Row(elem_id="app-header"):
             with gr.Column(scale=1):
                 gr.HTML(_IMAGE_HTML)
@@ -285,10 +293,10 @@ def build_app() -> gr.Blocks:
                     "GIS analysis, and ESA knowledge."
                 )
 
-        # Persistent state for cumulative steps across queries.
+        # Persistent cumulative step trace.
         steps_history = gr.State("")
 
-        # Main area: chatbot + steps side by side
+        # ── Main area ───────────────────────────────────────────────────────
         with gr.Row(equal_height=True):
             with gr.Column(scale=3):
                 chatbot = gr.Chatbot(
@@ -302,7 +310,6 @@ def build_app() -> gr.Blocks:
                         "collection codes, and retrieve 3 data items.*"
                     ),
                 )
-
             with gr.Column(scale=1, min_width=280):
                 gr.Markdown("#### Agent Steps")
                 steps_box = gr.Markdown(
@@ -310,7 +317,7 @@ def build_app() -> gr.Blocks:
                     elem_id="steps-panel",
                 )
 
-        # Input row
+        # ── Input row ───────────────────────────────────────────────────────
         with gr.Row(elem_id="msg-row"):
             with gr.Column(scale=9):
                 msg_input = gr.Textbox(
@@ -325,7 +332,7 @@ def build_app() -> gr.Blocks:
             with gr.Column(scale=1, min_width=80):
                 clear_btn = gr.Button("Clear", elem_id="clear-btn", size="sm")
 
-        # Event wiring
+        # ── Event wiring ────────────────────────────────────────────────────
         msg_input.submit(
             fn=respond,
             inputs=[msg_input, chatbot, steps_history],
@@ -350,5 +357,10 @@ if __name__ == "__main__":
     setup_logging()
 
     demo = build_app()
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=False,
-                theme=_THEME, css=_CSS)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        theme=_THEME,
+        css=_CSS,
+    )

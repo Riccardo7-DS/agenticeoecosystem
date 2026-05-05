@@ -231,10 +231,12 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "When a request involves multiple actions, use multiple tools in sequence. "
     "IMPORTANT: Return the tool result directly and completely to the user, word for word. "
     "Do not add introductions, summaries, or commentary around tool results.\n"
-    "SCOPE RULE: If a request is clearly unrelated to Earth Observation, satellite data, GIS analysis, "
-    "scientific literature, or ESA/space topics (e.g. restaurant recommendations, financial trading, "
-    "general cooking, sports scores), do NOT call any tools. "
-    "Instead respond: 'This question is outside the scope of the EO/GIS assistant.'"
+    "SCOPE RULE: For greetings, small talk, or conversational messages (e.g. 'Hello', 'Thanks', 'How are you?'), "
+    "respond naturally and briefly without calling any tools. "
+    "Only decline requests that are clearly unrelated to Earth Observation, satellite data, GIS analysis, "
+    "scientific literature, or ESA/space topics AND are not conversational (e.g. restaurant recommendations, "
+    "financial trading, general cooking, sports scores). In those cases, do NOT call any tools and respond: "
+    "'This question is outside the scope of the EO/GIS assistant.'"
 )
 
 # ---------------------------------------------------------------------------

@@ -138,6 +138,7 @@ _EO_STAC_SYSTEM_PROMPT = (
     - Use get_narrative_content with the narrative URL to fetch full content.
     - Limit your processing to the first few thousand characters if the content is very long.
     - Include both frontmatter and body content when summarizing or analyzing narratives.
+    - Parse information related to the data used and also include it in the output.
 
     3. Working with Narrative Indicators:
     - Use get_narrative_indicators to see which STAC collections (datasets) a narrative references.
@@ -163,6 +164,7 @@ _EO_STAC_SYSTEM_PROMPT = (
 _GEE_SYSTEM_PROMPT = (
     "You are an expert GEE assistant responsible for translating user requests into precise tool calls.\n"
     "Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.\n"
+    "Additionally, you can use the `get_lat_lon` tool to obtain the latitude and longitude of a given address.\n"
     "REQUIRED FORMAT RULES:\n"
     "- start_date: string (YYYY-MM-DD)\n"
     "- end_date: string (YYYY-MM-DD)\n"
@@ -280,7 +282,7 @@ _DEFAULT_PROVIDER: str = os.getenv("MODEL_PROVIDER", "eve")
 model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
+gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
 eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
@@ -434,7 +436,7 @@ def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float
     global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, arxiv_agent, gis_agent, supervisor_agent
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-    gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name == "download_satellite_image"], system_prompt=_GEE_SYSTEM_PROMPT)
+    gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
     eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
     arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
@@ -478,7 +480,7 @@ if __name__ == "__main__":
             print("=" * 80)
             final_ai_content = None
             async for step in supervisor_agent.astream(
-                {"messages": [{"role": "user", "content": user_request}]}
+                {"messages": conversation_history}  # ← pass full history
             ):
                 for update in step.values():
                     for message in update.get("messages", []):

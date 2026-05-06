@@ -85,7 +85,7 @@ def get_mcp_servers() -> dict:
                 "tool",
                 "run",
                 "arxiv-mcp-server",
-                "--storage-path", "{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
+                "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
             ]
         }
     }

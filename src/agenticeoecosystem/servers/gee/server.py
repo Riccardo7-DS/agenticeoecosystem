@@ -289,17 +289,6 @@ def _ensure_gee() -> None:
         _os.close(_saved_fd1)
         _sys.stdout = _os.fdopen(1, "w", buffering=1)
 
-# @app.tool()
-# def get_lat_lon(address: str) -> List[float]:
-# 	"""Get the latitude and longitude for a given address."""
-# 	# This is a placeholder implementation. In a real-world scenario, you would query a geocoding service.
-# 	url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={API_KEY}"
-# 	data = requests.get(url).json()
-
-# 	loc = data["results"][0]["geometry"]["location"]
-# 	return [loc["lat"], loc["lng"]]
-
-
 @app.tool()
 def get_bbox(address: str) -> List[float]:
     """Get latitude and longitude for a given address using Google Maps API."""
@@ -323,50 +312,6 @@ def get_bbox(address: str) -> List[float]:
     loc = data["results"][0]["geometry"]["location"]
     return [loc["lat"], loc["lng"]]
 
-# @app.tool()
-# def get_bbox(address: str) -> List[float]:
-#     """Get bounding box [min_lon, min_lat, max_lon, max_lat] for an address using Google Maps API."""
-#     if not API_KEY:
-#         raise ValueError("GOOGLE_MAPS_API_KEY not set in environment.")
-
-#     url = "https://maps.googleapis.com/maps/api/geocode/json"
-#     params = {
-#         "address": address,
-#         "key": API_KEY
-#     }
-
-#     response = requests.get(url, params=params)
-#     response.raise_for_status()
-#     data = response.json()
-
-#     if not data.get("results"):
-#         raise ValueError(f"No geocoding results found for: {address}")
-
-#     geometry = data["results"][0]["geometry"]
-
-#     # Prefer viewport (recommended for regions)
-#     # if "viewport" in geometry:
-#     #     ne = geometry["viewport"]["northeast"]
-#     #     sw = geometry["viewport"]["southwest"]
-
-#     #     min_lon = sw["lng"]
-#     #     min_lat = sw["lat"]
-#     #     max_lon = ne["lng"]
-#     #     max_lat = ne["lat"]
-
-#     #     return [min_lon, min_lat, max_lon, max_lat]
-
-#     # Fallback: use location point with a small buffer
-#     loc = geometry["location"]
-#     lat, lon = loc["lat"], loc["lng"]
-
-#     buffer_deg = 0.01  # ~1km-ish (rough)
-#     return [
-#         lon - buffer_deg,
-#         lat - buffer_deg,
-#         lon + buffer_deg,
-#         lat + buffer_deg,
-#     ]
 
 @app.tool()
 def download_satellite_image(args: DownloadParams) -> Dict[str, Any]:

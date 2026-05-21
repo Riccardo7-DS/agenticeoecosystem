@@ -80,6 +80,8 @@ _ARXIV_TOOL_NAMES = {
     "watch_topic", "check_alerts",
 }
 
+_MOOC_TOOL_NAMES = {"search_moocs"}
+
 _GIS_TOOL_NAMES = {
     # Shapely geometry
     "buffer", "intersection", "union", "difference", "symmetric_difference",
@@ -206,6 +208,12 @@ _ARXIV_SYSTEM_PROMPT = (
     "- If asked to summarise or analyse multiple papers, use 'get_abstract' for all of them."
 )
 
+_MOOC_SYSTEM_PROMPT = (
+    "You are a retrieval assistant for Earth Observation MOOC (Massive Open Online Course) transcripts. "
+    "Use the search_moocs tool to find relevant content from EO educational courses and return "
+    "the retrieved chunks to the caller. Do not summarise or interpret — return the raw context."
+)
+
 _GIS_SYSTEM_PROMPT = (
     "You are a GIS analysis assistant. Use the available tools to perform spatial operations, "
     "raster analysis, coordinate transformations, spatial statistics, map visualization, and geospatial data downloads. "
@@ -227,6 +235,7 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "You can get data from EO Dashboards, Google Earth Engine, "
     "the EVE knowledge base for ESA/EO background information, "
     "the ESA EO Science Strategy knowledge base (hybrid RAG), "
+    "EO MOOC (online course) transcripts, "
     "the ArXiv MCP server for scientific papers, "
     "and the GIS analysis server for spatial operations, raster analysis, visualization, and geospatial data downloads. "
     "Break down user requests into appropriate tool calls and coordinate the results. "
@@ -287,6 +296,7 @@ eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name 
 gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
 eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
 gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
 
@@ -398,6 +408,26 @@ async def get_hybrid_rag_context(request: str) -> str:
 
 
 @tool
+async def get_mooc_context(request: str) -> str:
+    """Retrieve relevant content from Earth Observation MOOC transcripts.
+
+    Use for questions about EO concepts, methods, or topics that may be covered
+    in online educational courses (MOOCs).
+    """
+    logger.info("[TOOL CALL] get_mooc_context: %s", request)
+    try:
+        result = await moocs_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
+        _extract_steps_from_messages(result["messages"])
+        text_output = result["messages"][-1].text
+        if isinstance(text_output, tuple):
+            text_output = " ".join(str(t) for t in text_output)
+        return str(text_output)
+    except Exception as e:
+        logger.error("[TOOL ERROR] get_mooc_context: %s", e)
+        return f"Error: {e}"
+
+
+@tool
 async def get_gis_analysis(request: str) -> str:
     """Perform GIS analysis: spatial operations, raster processing, coordinate transforms,
     spatial statistics, map visualization, and geospatial data downloads.
@@ -424,7 +454,7 @@ async def get_gis_analysis(request: str) -> str:
 
 supervisor_agent = create_agent(
     model,
-    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data, get_gis_analysis],
+    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis],
     system_prompt=_SUPERVISOR_SYSTEM_PROMPT,
 )
 
@@ -435,15 +465,16 @@ supervisor_agent = create_agent(
 
 def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
     """Recreate all agents with a new model. MCP tools are reused."""
-    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, arxiv_agent, gis_agent, supervisor_agent
+    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, moocs_agent, arxiv_agent, gis_agent, supervisor_agent
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
     eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
     arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
     gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
-    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
     logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
 
 

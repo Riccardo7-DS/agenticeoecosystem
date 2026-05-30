@@ -1,189 +1,366 @@
-import gradio as gr
+"""
+app/gr_app.py — Gradio frontend for AgenticEOEcosystem.
+
+Layout   : Chatbot (left) + cumulative agent-steps panel (right), input below.
+Streaming: async generator yields (chatbot, steps_markdown, cleared_input,
+           steps_history) so both panels update live and steps persist across
+           multiple queries within a session.
+"""
+
 import logging
-import os
+import re
+import base64 as _base64
+import tempfile
+from pathlib import Path
 
+import gradio as gr
+import numpy as np
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
-from agenticeoecosystem import  QdrantRetriever, format_docs, run_eodashboard_agent
+from PIL import Image
+
 from agenticeoecosystem.definitions import ROOT_DIR
+from agenticeoecosystem.client.client import (
+    _step_log, reset_step_log, supervisor_agent,
+    _EO_STAC_TOOL_NAMES, _ARXIV_TOOL_NAMES, _GIS_TOOL_NAMES,
+)
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Setup
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
-logger = logging.getLogger(__name__)
 load_dotenv()
+logger = logging.getLogger(__name__)
 
-app_path = ROOT_DIR / "app"
-image_path = app_path / "ESA_philab.png"
+_IMAGE_PATH = ROOT_DIR / "app" / "ESA_philab.png"
+_IMAGE_B64 = _base64.b64encode(_IMAGE_PATH.read_bytes()).decode()
+_IMAGE_HTML = (
+    f'<img src="data:image/png;base64,{_IMAGE_B64}" '
+    f'style="height:100px; width:auto; object-fit:contain;">'
+)
+
+# Human-readable labels for the supervisor's sub-agent wrapper tools.
+_AGENT_LABELS: dict[str, str] = {
+    "get_eo_stac_data":       "EO Dashboard / STAC",
+    "get_gee_data":           "Google Earth Engine",
+    "get_eve_knowledge":      "EVE Knowledge Base",
+    "get_hybrid_rag_context": "ESA EO Science Strategy RAG",
+    "get_arxiv_data":         "ArXiv Papers",
+    "get_gis_analysis":       "GIS Analysis",
+}
+
+# Maps each MCP-level tool name → its server label.
+_MCP_SERVER: dict[str, str] = {
+    **{name: "EOdashboard" for name in _EO_STAC_TOOL_NAMES},
+    **{name: "ArXiv"       for name in _ARXIV_TOOL_NAMES},
+    **{name: "GIS"         for name in _GIS_TOOL_NAMES},
+    "download_satellite_image": "GEE",
+    "retrieve":                 "EVE Retrieval",
+    "hybrid_rag_retrieve":      "HybridRAG",
+}
+
+# ---------------------------------------------------------------------------
+# Image utilities
+# ---------------------------------------------------------------------------
+
+_IMAGE_PATH_PATTERN = re.compile(r"(\/[^\s]+?\.(?:tif|tiff|png|jpg|jpeg))")
 
 
-# ------------------------------------------------------------------
-# Chat function (USED BY ChatInterface)
-# ------------------------------------------------------------------
+def extract_image_paths(text: str) -> list[Path]:
+    """Return all filesystem image paths found in *text* that actually exist."""
+    return [Path(m) for m in _IMAGE_PATH_PATTERN.findall(text) if Path(m).exists()]
 
-def chat_fn(message: str, history, use_rag: bool):
+
+def strip_image_paths(text: str) -> str:
+    """Remove image file paths from text so they don't clutter the chat bubble."""
+    return _IMAGE_PATH_PATTERN.sub("", text).strip()
+
+
+def load_image_for_display(path: Path) -> Image.Image:
+    """Load any supported image (including GeoTIFF) as a 512×512 RGB PIL image."""
+    if path.suffix.lower() in {".tif", ".tiff"}:
+        import rasterio
+        with rasterio.open(path) as src:
+            img = src.read()
+        img = img[:3] if img.shape[0] >= 3 else np.repeat(img, 3, axis=0)
+        img = np.transpose(img, (1, 2, 0)).astype(np.float32)
+        img -= img.min()
+        img /= img.max() + 1e-8
+        pil_img = Image.fromarray((img * 255).astype(np.uint8))
+    else:
+        pil_img = Image.open(path).convert("RGB")
+
+    return pil_img.resize((512, 512), Image.Resampling.LANCZOS)
+
+
+# ---------------------------------------------------------------------------
+# Streaming response generator
+# ---------------------------------------------------------------------------
+
+async def respond(message: str, chat_history: list[dict], steps_history: str):
     """
-    message: str (latest user message)
-    history: List[dict] with keys {"role", "content"}
-             -> managed internally by Gradio
-    use_rag: bool (whether to use RAG)
-    return: str (assistant reply)
+    Async generator consumed by Gradio's streaming event listener.
+    Yields: (updated_chat_history, steps_markdown, cleared_input, steps_history)
+
+    steps_history persists across queries in the session via gr.State so the
+    steps panel accumulates a trace of all tool calls made so far.
+
+    Message types from supervisor_agent.astream():
+    - msg has tool_calls  →  supervisor dispatching to a sub-agent
+    - msg.type == "tool"  →  sub-agent returned; _step_log has new MCP entries
+    - msg.type == "ai"    →  final answer text
+
+    Some changes
+    ─────────────────────
+    1. messages_for_agent is built from chat_history AFTER the user message is
+       appended, but BEFORE the empty assistant placeholder — so the agent never
+       sees a trailing empty assistant turn.
+    2. Only string content is forwarded to the agent; image entries in history
+       are skipped so the LLM context stays clean.
+    3. Image paths are extracted from the raw response and then stripped from
+       the visible chat bubble text.
     """
+    if not message.strip():
+        yield chat_history, _render_steps(steps_history), "", steps_history
+        return
 
-    try:
-        context = ""
-        if use_rag:
-            # --- Retrieval ---
-            retriever = QdrantRetriever()
-            docs = retriever.get_relevant_documents(message)
-            context = format_docs(docs)
+    reset_step_log()
+    step_cursor = 0
 
-        # --- LLM ---
-        llm = ChatOpenAI(
-            base_url=os.getenv("MAIN_MODEL_URL"),
-            api_key=os.getenv("MAIN_MODEL_API_KEY"),
-            model=os.getenv("MAIN_MODEL_NAME"),
-            temperature=0.3,
-        )
-
-        # --- Prompt ---
-        if use_rag:
-            prompt = (
-                "Use the following documents to answer the question. "
-                "When you use info from a document, you MUST refer to it "
-                "by its [Title | File Name] label.\n\n"
-                f"{context}\n"
-                f"Question: {message}\n"
-                "Answer:"
-            )
-        else:
-            prompt = f"Answer the question: {message}"
-
-        response = llm.invoke(
-            [HumanMessage(content=prompt)]
-        ).content
-
-        return response
-
-    except Exception as e:
-        logger.exception("Error during chat")
-        return f"⚠️ Error: {e}"
-
-
-# ------------------------------------------------------------------
-# Agent function
-# ------------------------------------------------------------------
-
-async def run_agent_gradio(query: str, model: str, temperature: float):
-    try:
-        response = await run_eodashboard_agent(query, model, temperature)
-        return response
-    except Exception as e:
-        logger.exception("Error during agent execution")
-        return f"⚠️ Error: {e}"
-
-
-# ------------------------------------------------------------------
-# Gradio App
-# ------------------------------------------------------------------
-
-def build_gradio_app():
-    # Custom theme with navy background and professional font
-    theme = gr.themes.Base(
-        primary_hue="blue",
-        secondary_hue="slate",
-        font=["Inter", "Arial", "sans-serif"],
-        font_mono=["Fira Code", "Courier New", "monospace"],
-    ).set(
-        body_background_fill="#001122",  # Navy background
-        body_text_color="#FFFFFF",       # White text for contrast
-        body_text_color_subdued="#CCCCCC",  # Light gray for subdued text
-        background_fill_primary="#002244",  # Slightly lighter navy for primary backgrounds
-        background_fill_secondary="#003366",  # Even lighter for secondary
-        border_color_primary="#004477",     # Blue border
-        color_accent_soft="secondary",      # Soft accent
-        input_background_fill="#002244",    # White background for inputs to ensure readability
-        input_border_color="#004477",       # Blue border for inputs
-        button_primary_background_fill="#004477",  # Blue for primary buttons
-        button_primary_text_color="#FFFFFF",       # White text on buttons
+    query_num = steps_history.count("---") + 1
+    steps_acc = (
+        steps_history
+        + f"\n\n---\n**Query {query_num}:** "
+        f"*{message[:60]}{'...' if len(message) > 60 else ''}*\n"
     )
-    
-    with gr.Blocks(theme=theme) as demo:
-        with gr.Row():
-            with gr.Column(scale=1, min_width=120):
-                gr.Image(
-                    value=str(image_path),
-                    show_label=False,
-                    height=100,
-                    width=100,
-                )
 
-            with gr.Column(scale=6):
+    # 1. Show user message immediately.
+    chat_history = chat_history + [{"role": "user", "content": message}]
+    yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+    # 2. Build agent message list — skip non-string content (images in history).
+    messages_for_agent = [
+        {"role": t["role"], "content": t["content"]}
+        for t in chat_history
+        if isinstance(t["content"], str)
+    ]
+
+    # 3. Add empty assistant placeholder shown while the agent runs.
+    chat_history = chat_history + [{"role": "assistant", "content": ""}]
+
+    try:
+        async for chunk in supervisor_agent.astream(
+            {"messages": messages_for_agent},
+            config={"recursion_limit": 50},
+        ):
+            for update in chunk.values():
+                for msg in update.get("messages", []):
+
+                    # Supervisor dispatching to a sub-agent.
+                    if getattr(msg, "tool_calls", None):
+                        for tc in msg.tool_calls:
+                            label = _AGENT_LABELS.get(tc["name"], tc["name"])
+                            steps_acc += f"\n**→ {label}**"
+                        chat_history[-1] = {
+                            "role": "assistant",
+                            "content": f"*Calling **{label}**…*",
+                        }
+                        yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+                    # Sub-agent returned; drain new _step_log entries.
+                    elif msg.type == "tool":
+                        new_entries = _step_log[step_cursor:]
+                        step_cursor = len(_step_log)
+                        for entry in new_entries:
+                            fn     = entry.get("function_name", "?")
+                            args   = entry.get("arguments", {})
+                            server = _MCP_SERVER.get(fn, "?")
+                            steps_acc += f"\n- [{server}] `{fn}({_format_args(args)})`"
+                        yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+                    # Final answer from supervisor.
+                    elif msg.type == "ai" and msg.content:
+                        content = msg.content
+                        # Flatten list-of-blocks responses.
+                        if isinstance(content, list):
+                            content = "\n".join(
+                                c.get("text", str(c)) if isinstance(c, dict) else str(c)
+                                for c in content
+                            )
+                        content = str(content)
+
+                        # Extract paths BEFORE stripping them from visible text.
+                        image_paths = extract_image_paths(content)
+                        clean_content = strip_image_paths(content)
+
+                        chat_history[-1] = {"role": "assistant", "content": clean_content}
+                        yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+                        # Append each satellite image as a separate assistant bubble.
+                        for path in image_paths:
+                            try:
+                                pil_img = load_image_for_display(path)
+                                # Write to a named temp file that outlives this scope.
+                                tmp = tempfile.NamedTemporaryFile(
+                                    suffix=".png", delete=False, dir=tempfile.gettempdir()
+                                )
+                                pil_img.save(tmp.name)
+                                tmp.close()
+                                # Gradio Chatbot accepts {"path": ...} for inline media.
+                                chat_history.append({
+                                    "role": "assistant",
+                                    "content": {"path": tmp.name},
+                                })
+                            except Exception as exc:
+                                logger.error("Error loading image %s: %s", path, exc)
+                                chat_history.append({
+                                    "role": "assistant",
+                                    "content": f"*(Could not display image: {path.name})*",
+                                })
+                            yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+    except Exception as exc:
+        logger.exception("Error during agent run")
+        chat_history[-1] = {"role": "assistant", "content": f"**Error:** {exc}"}
+        yield chat_history, _render_steps(steps_acc), "", steps_acc
+        return
+
+    yield chat_history, _render_steps(steps_acc), "", steps_acc
+
+
+def _format_args(args: dict) -> str:
+    """Compact argument summary; values are truncated to 50 chars."""
+    parts = []
+    for k, v in args.items():
+        v_str = str(v)
+        if len(v_str) > 50:
+            v_str = v_str[:47] + "..."
+        parts.append(f"{k}={v_str!r}")
+    return ", ".join(parts)
+
+
+def _render_steps(steps_acc: str) -> str:
+    return steps_acc.strip() if steps_acc.strip() else "_No tool calls yet._"
+
+
+# ---------------------------------------------------------------------------
+# Clear handler
+# ---------------------------------------------------------------------------
+
+def clear_conversation():
+    return [], "_No tool calls yet._", "", ""
+
+
+# ---------------------------------------------------------------------------
+# Gradio UI
+# ---------------------------------------------------------------------------
+
+_THEME = gr.themes.Soft(
+    primary_hue="blue",
+    secondary_hue="sky",
+    font=["Inter", "Arial", "sans-serif"],
+    font_mono=["Fira Code", "Courier New", "monospace"],
+)
+
+_CSS = """
+.gradio-container { max-width: 100% !important; }
+#app-header  { border-bottom: 2px solid #2563eb; margin-bottom: 8px; padding-bottom: 10px; }
+#chatbot     { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; }
+#steps-panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.83rem;
+    height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+#msg-input textarea { border: 1px solid #cbd5e1 !important; border-radius: 8px !important; }
+#clear-btn { min-width: 70px; }
+"""
+
+
+def build_app() -> gr.Blocks:
+    with gr.Blocks(title="EO Agent", fill_height=True) as demo:
+
+        # ── Header ──────────────────────────────────────────────────────────
+        with gr.Row(elem_id="app-header"):
+            with gr.Column(scale=1):
+                gr.HTML(_IMAGE_HTML)
+            with gr.Column(scale=9):
                 gr.Markdown(
-                    """
-                    # 🌍 Earth Observation Assistant  
-                    Ask questions about EO products, drought monitoring,
-                    vegetation indices, and related documentation.
-                    """
+                    "## 🌍 Earth Observation Agent\n"
+                    "Ask about satellite data, EO narratives, scientific papers, "
+                    "GIS analysis, and ESA knowledge."
                 )
 
-        with gr.Tabs():
-            with gr.TabItem("Chat Assistant"):
-                use_rag_checkbox = gr.Checkbox(
-                    label="Use RAG for retrieval-augmented generation",
-                    value=False,
-                    info="Check to retrieve relevant documents before generating answers"
+        # Persistent cumulative step trace.
+        steps_history = gr.State("")
+
+        # ── Main area ───────────────────────────────────────────────────────
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=3):
+                chatbot = gr.Chatbot(
+                    value=[],
+                    elem_id="chatbot",
+                    show_label=False,
+                    height="calc(100vh - 300px)",
+                    placeholder=(
+                        "**EO Agent ready.**  \n"
+                        "Example: *Find a narrative about drought, get its "
+                        "collection codes, and retrieve 3 data items.*"
+                    ),
+                )
+            with gr.Column(scale=1, min_width=280):
+                gr.Markdown("#### Agent Steps")
+                steps_box = gr.Markdown(
+                    value="_No tool calls yet._",
+                    elem_id="steps-panel",
                 )
 
-                gr.ChatInterface(
-                    fn=chat_fn,
-                    chatbot=gr.Chatbot(height=800),
-                    title="EO Assistant",
-                    submit_btn="🔎 Search & Generate",
-                    additional_inputs=[use_rag_checkbox]
+        # ── Input row ───────────────────────────────────────────────────────
+        with gr.Row(elem_id="msg-row"):
+            with gr.Column(scale=9):
+                msg_input = gr.Textbox(
+                    placeholder="Ask a question about Earth Observation...",
+                    show_label=False,
+                    lines=1,
+                    max_lines=5,
+                    elem_id="msg-input",
+                    autofocus=True,
+                    submit_btn=True,
                 )
+            with gr.Column(scale=1, min_width=80):
+                clear_btn = gr.Button("Clear", elem_id="clear-btn", size="sm")
 
-            with gr.TabItem("EO Dashboard Agent"):
-                gr.Markdown("Run the EO Dashboard Agent with MCP tools.")
-
-                model_dropdown = gr.Dropdown(
-                    choices=["mistral", "eve"], 
-                    value="mistral", 
-                    label="Model"
-                )
-                temperature_input = gr.Number(
-                    value=0.3, 
-                    label="Temperature", 
-                    minimum=0.0, 
-                    maximum=1.0
-                )
-                query_input = gr.Textbox(
-                    label="Query", 
-                    lines=3, 
-                    placeholder="Enter your query for the agent...",
-                    value="Find a narrative about agriculture or crops. Then get the collection codes it references. Then search for one of those collections to see its details. Finally, try to get 3 data items from that collection."
-                )
-                run_button = gr.Button("Run Agent")
-                output_text = gr.Textbox(
-                    label="Agent Response", 
-                    lines=10
-                )
-
-                run_button.click(
-                    fn=run_agent_gradio, 
-                    inputs=[query_input, model_dropdown, temperature_input], 
-                    outputs=[output_text]
-                )
+        # ── Event wiring ────────────────────────────────────────────────────
+        msg_input.submit(
+            fn=respond,
+            inputs=[msg_input, chatbot, steps_history],
+            outputs=[chatbot, steps_box, msg_input, steps_history],
+        )
+        clear_btn.click(
+            fn=clear_conversation,
+            inputs=None,
+            outputs=[chatbot, steps_box, msg_input, steps_history],
+            queue=False,
+        )
 
     return demo
 
 
-# ------------------------------------------------------------------
-# Main
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    demo = build_gradio_app()
-    demo.launch(share=False)
+    from agenticeoecosystem.utils.logging import setup_logging
+    setup_logging()
+
+    demo = build_app()
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        theme=_THEME,
+        css=_CSS,
+    )

@@ -33,6 +33,13 @@ def _check_hybridrag_env() -> None:
         )
 
 
+def _check_moocs_env() -> None:
+    """Raise RuntimeError if required MOOC RAG env vars are missing."""
+    missing = [v for v in ("QDRANT_URL", "QDRANT_KEY") if not os.getenv(v)]
+    if missing:
+        raise RuntimeError(f"MOOC RAG env vars not set: {', '.join(missing)} (check .env)")
+
+
 _EVE_RETRIEVAL_URL = (
     "https://bedrock-agentcore.eu-west-1.amazonaws.com/runtimes/"
     "arn%3Aaws%3Abedrock-agentcore%3Aeu-west-1%3A686812424034%3A"
@@ -84,8 +91,9 @@ def get_mcp_servers() -> dict:
             "args": [
                 "tool",
                 "run",
+                "--python", "3.12",
                 "arxiv-mcp-server",
-                "--storage-path", "{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
+                "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
             ]
         }
     }
@@ -109,7 +117,7 @@ def get_mcp_servers() -> dict:
     _try_register(servers, "gis-mcp", lambda: {
         "transport": "stdio",
         "command": "uv",
-        "args": ["tool", "run", "gis-mcp"],
+        "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
     })
 
     _try_register(servers, "hybridrag", lambda: (
@@ -117,6 +125,14 @@ def get_mcp_servers() -> dict:
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
+        }
+    ))
+
+    _try_register(servers, "moocs", lambda: (
+        _check_moocs_env() or {
+            "transport": "stdio",
+            "command": "python",
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
         }
     ))
 

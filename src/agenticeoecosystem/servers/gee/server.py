@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 import ee
+from ee import data
 import requests
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -22,9 +23,9 @@ class DownloadParams(BaseModel):
 	bands: Optional[str] = Field("B4,B3,B2", description="Comma-separated band names to download, e.g., B4,B3,B2")
 	dataset: str = Field(
 		"COPERNICUS/S2_SR_HARMONIZED",
-		description="ImageCollection ID, e.g., COPERNICUS/S2_SR_HARMONIZED or LANDSAT/LC08/C02/T1_L2",
+		description="ImageCollection ID, e.g., COPERNICUS/S2_SR_HARMONIZED or LANDSAT/LC08/C02/T1_L2 or COPERNICUS/S5P/NRTI/L3_NO2",
 	)
-	max_cloud_cover: Optional[float] = Field(20.0, description="Maximum cloud cover percentage (0-100).")
+	max_cloud_cover: Optional[float] = Field(50.0, description="Maximum cloud cover percentage (0-100).")
 	image_count: Optional[int] = Field(1, description="Number of least cloudy images to download.")
 
 	@model_validator(mode='before')
@@ -90,6 +91,7 @@ logging.basicConfig(
 
 load_dotenv()
 gee_project = os.getenv("GEE_PROJECT")
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 def setup_gee() -> None:
 	logging.info("Start the GEE authentication process")
@@ -249,6 +251,7 @@ def _download_with_fallback(selected_bands: ee.Image, region: ee.Geometry, scale
 				results: List[str] = []
 				for idx, sub in enumerate(_split_region_quadrants(region), start=1):
 					results.extend(_download_with_fallback(selected_bands, sub, scale, f"{prefix}_q{idx}", depth + 1))
+					break
 				return results
 			# Last resort: increase scale (coarser resolution)
 			if scale < 160 and depth < 5:
@@ -285,6 +288,29 @@ def _ensure_gee() -> None:
         _os.dup2(_saved_fd1, 1)
         _os.close(_saved_fd1)
         _sys.stdout = _os.fdopen(1, "w", buffering=1)
+
+@app.tool()
+def get_bbox(address: str) -> List[float]:
+    """Get latitude and longitude for a given address using Google Maps API."""
+    # API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+    if not API_KEY:
+        raise ValueError("GOOGLE_MAPS_API_KEY not set in environment.")
+
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {
+        "address": address,
+        "key": API_KEY
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+
+    if not data.get("results"):
+        raise ValueError(f"No geocoding results found for: {address}")
+
+    loc = data["results"][0]["geometry"]["location"]
+    return [loc["lat"], loc["lng"]]
 
 
 @app.tool()

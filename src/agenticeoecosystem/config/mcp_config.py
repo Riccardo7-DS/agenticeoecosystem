@@ -78,63 +78,72 @@ def _get_eve_retrieval_token() -> str:
 
 
 def get_mcp_servers() -> dict:
-    logger.info("Building MCP server list")
+    # eopssrag branch — only EOPSS GraphRAG MCP server active.
+    # All other servers commented out to reduce startup latency.
+    # Prerequisites: uv run python graphrag/05_mcp_server.py (starts on localhost:12000)
+    logger.info("Building MCP server list (eopssrag: GraphRAG only)")
     servers = {
-        "eodashboard": {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"],
+        "eopss_graphrag": {
+            "transport": "streamable_http",
+            "url": "http://localhost:12000/mcp",
         },
-        "arxiv-mcp-server": {
-            "transport": "stdio",
-            "command": "uv",
-            "args": [
-                "tool",
-                "run",
-                "--python", "3.12",
-                "arxiv-mcp-server",
-                "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
-            ]
-        }
     }
-    try:
-        _check_gee_mcp_env()
-        servers["gee-mcp"] = {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
-            "env": {},
-        }
-    except Exception as exc:
-        print(f"Warning: GEE MCP disabled: {exc}")
-
-    _try_register(servers, "eve_retrieval", lambda: {
-        "transport": "streamable_http",
-        "url": _EVE_RETRIEVAL_URL,
-        "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
-    })
-
-    _try_register(servers, "gis-mcp", lambda: {
-        "transport": "stdio",
-        "command": "uv",
-        "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
-    })
-
-    _try_register(servers, "hybridrag", lambda: (
-        _check_hybridrag_env() or {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
-        }
-    ))
-
-    _try_register(servers, "moocs", lambda: (
-        _check_moocs_env() or {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
-        }
-    ))
-
     logger.info("Final MCP servers: %s", list(servers.keys()))
     return servers
+
+    # -- All servers below disabled in eopssrag branch --
+    # Restore on main branch by removing the early return above.
+    #
+    # logger.info("Building MCP server list")
+    # servers = {
+    #     "eodashboard": {
+    #         "transport": "stdio",
+    #         "command": "python",
+    #         "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"],
+    #     },
+    #     "arxiv-mcp-server": {
+    #         "transport": "stdio",
+    #         "command": "uv",
+    #         "args": [
+    #             "tool", "run", "--python", "3.12", "arxiv-mcp-server",
+    #             "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers",
+    #         ],
+    #     },
+    # }
+    # try:
+    #     _check_gee_mcp_env()
+    #     servers["gee-mcp"] = {
+    #         "transport": "stdio",
+    #         "command": "python",
+    #         "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/gee/server.py"],
+    #         "env": {},
+    #     }
+    # except Exception as exc:
+    #     print(f"Warning: GEE MCP disabled: {exc}")
+    #
+    # _try_register(servers, "eve_retrieval", lambda: {
+    #     "transport": "streamable_http",
+    #     "url": _EVE_RETRIEVAL_URL,
+    #     "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
+    # })
+    # _try_register(servers, "gis-mcp", lambda: {
+    #     "transport": "stdio",
+    #     "command": "uv",
+    #     "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
+    # })
+    # _try_register(servers, "hybridrag", lambda: (
+    #     _check_hybridrag_env() or {
+    #         "transport": "stdio",
+    #         "command": "python",
+    #         "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
+    #     }
+    # ))
+    # _try_register(servers, "moocs", lambda: (
+    #     _check_moocs_env() or {
+    #         "transport": "stdio",
+    #         "command": "python",
+    #         "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
+    #     }
+    # ))
+    # logger.info("Final MCP servers: %s", list(servers.keys()))
+    # return servers

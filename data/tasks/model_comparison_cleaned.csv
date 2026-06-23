@@ -1,0 +1,8 @@
+model,tasks_attempted,avg_steps,total_input_tokens,total_output_tokens,evaluated [Gemma3-12B],match (2) [Gemma3-12B],partial (1) [Gemma3-12B],no_match (0) [Gemma3-12B],accuracy_full [Gemma3-12B],accuracy_partial+full [Gemma3-12B],evaluated [Nemotron-2-12B],match (2) [Nemotron-2-12B],partial (1) [Nemotron-2-12B],no_match (0) [Nemotron-2-12B],accuracy_full [Nemotron-2-12B],accuracy_partial+full [Nemotron-2-12B],evaluated [Qwen3-14B],match (2) [Qwen3-14B],partial (1) [Qwen3-14B],no_match (0) [Qwen3-14B],accuracy_full [Qwen3-14B],accuracy_partial+full [Qwen3-14B]
+DeepSeek-R1-14B,25,0.0,6170,14601,25,0,0,25,0.0,0.0,22,0,0,22,0.0,0.0,25,1,0,24,0.04,0.04
+EVE-Instruct,25,1.3,559547,37159,25,2,13,10,0.08,0.6,23,3,9,11,0.13,0.522,25,3,13,9,0.12,0.64
+Gemma3-12B,25,0.0,6206,9094,25,0,0,25,0.0,0.0,22,0,0,22,0.0,0.0,25,1,0,24,0.04,0.04
+Nemotron-2-12B,25,0.7,300742,718230,25,0,12,13,0.0,0.48,24,2,5,17,0.083,0.292,25,4,5,16,0.16,0.36
+Phi4-Mini,25,0.0,6072,3797,25,0,0,25,0.0,0.0,22,0,0,22,0.0,0.0,25,1,0,24,0.04,0.04
+Qwen2.5-14B,25,1.4,294132,20159,25,2,11,12,0.08,0.52,25,3,8,14,0.12,0.44,25,5,8,12,0.2,0.52
+Qwen3-14B,25,2.5,682651,92479,25,2,11,12,0.08,0.52,21,3,8,10,0.143,0.524,25,3,11,11,0.12,0.56

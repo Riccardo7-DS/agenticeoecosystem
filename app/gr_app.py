@@ -7,6 +7,7 @@ Streaming: async generator yields (chatbot, steps_markdown, cleared_input,
            multiple queries within a session.
 """
 
+import datetime
 import logging
 import re
 import base64 as _base64
@@ -21,7 +22,6 @@ from PIL import Image
 from agenticeoecosystem.definitions import ROOT_DIR
 from agenticeoecosystem.client.client import (
     _step_log, reset_step_log, supervisor_agent,
-    _EO_STAC_TOOL_NAMES, _ARXIV_TOOL_NAMES, _GIS_TOOL_NAMES,
 )
 
 # ---------------------------------------------------------------------------
@@ -38,25 +38,49 @@ _IMAGE_HTML = (
     f'style="height:100px; width:auto; object-fit:contain;">'
 )
 
-# Human-readable labels for the supervisor's sub-agent wrapper tools.
+# eopssrag branch — labels and server map for the three GraphRAG tools only.
 _AGENT_LABELS: dict[str, str] = {
-    "get_eo_stac_data":       "EO Dashboard / STAC",
-    "get_gee_data":           "Google Earth Engine",
-    "get_eve_knowledge":      "EVE Knowledge Base",
-    "get_hybrid_rag_context": "ESA EO Science Strategy RAG",
-    "get_arxiv_data":         "ArXiv Papers",
-    "get_gis_analysis":       "GIS Analysis",
+    "search_eopss":        "EOPSS GraphRAG Search",
+    "query_ontology":      "EOPSS Knowledge Graph Query",
+    "list_ontology_nodes": "EOPSS Ontology Browser",
 }
 
-# Maps each MCP-level tool name → its server label.
 _MCP_SERVER: dict[str, str] = {
-    **{name: "EOdashboard" for name in _EO_STAC_TOOL_NAMES},
-    **{name: "ArXiv"       for name in _ARXIV_TOOL_NAMES},
-    **{name: "GIS"         for name in _GIS_TOOL_NAMES},
-    "download_satellite_image": "GEE",
-    "retrieve":                 "EVE Retrieval",
-    "hybrid_rag_retrieve":      "HybridRAG",
+    "search_eopss":        "EOPSS GraphRAG",
+    "query_ontology":      "EOPSS GraphRAG",
+    "list_ontology_nodes": "EOPSS GraphRAG",
 }
+
+# ---------------------------------------------------------------------------
+# Session logging (Q + A pairs, written to graphrag/logs/)
+# ---------------------------------------------------------------------------
+
+_GR_LOG_FILE: Path | None = None
+
+
+def _get_gr_log_file() -> Path:
+    global _GR_LOG_FILE
+    if _GR_LOG_FILE is None:
+        log_dir = ROOT_DIR.parent / "graphrag" / "logs"
+        log_dir.mkdir(exist_ok=True)
+        ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        _GR_LOG_FILE = log_dir / f"gradio_session_{ts}.log"
+        _GR_LOG_FILE.write_text(f"Gradio session — {ts}\n{'═' * 80}\n\n")
+    return _GR_LOG_FILE
+
+
+def _log_qa(question: str, answer: str) -> None:
+    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry = (
+        f"[{ts}]\n"
+        f"Q: {question}\n\n"
+        f"── answer {'─' * 61}\n"
+        f"{answer}\n"
+        f"{'═' * 80}\n\n"
+    )
+    with _get_gr_log_file().open("a") as f:
+        f.write(entry)
+
 
 # ---------------------------------------------------------------------------
 # Image utilities
@@ -192,6 +216,7 @@ async def respond(message: str, chat_history: list[dict], steps_history: str):
                         image_paths = extract_image_paths(content)
                         clean_content = strip_image_paths(content)
 
+                        _log_qa(message, clean_content)
                         chat_history[-1] = {"role": "assistant", "content": clean_content}
                         yield chat_history, _render_steps(steps_acc), "", steps_acc
 
@@ -288,9 +313,9 @@ def build_app() -> gr.Blocks:
                 gr.HTML(_IMAGE_HTML)
             with gr.Column(scale=9):
                 gr.Markdown(
-                    "## 🌍 Earth Observation Agent\n"
-                    "Ask about satellite data, EO narratives, scientific papers, "
-                    "GIS analysis, and ESA knowledge."
+                    "## 🛰️ ESA EO Science Strategy Assistant\n"
+                    "Ask questions about the ESA Earth Observation Science Strategy 2040 — "
+                    "science questions, themes, treaties, tipping points, and knowledge advancement objectives."
                 )
 
         # Persistent cumulative step trace.
@@ -305,9 +330,8 @@ def build_app() -> gr.Blocks:
                     show_label=False,
                     height="calc(100vh - 300px)",
                     placeholder=(
-                        "**EO Agent ready.**  \n"
-                        "Example: *Find a narrative about drought, get its "
-                        "collection codes, and retrieve 3 data items.*"
+                        "**EOPSS Assistant ready.**  \n"
+                        "Example: *What science questions are most relevant to the Paris Agreement?*"
                     ),
                 )
             with gr.Column(scale=1, min_width=280):

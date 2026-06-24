@@ -6,7 +6,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-from agenticeoecosystem.definitions import ROOT_DIR, HYBRIDRAG_ROOT
+from agenticeoecosystem.definitions import ROOT_DIR
 
 load_dotenv(dotenv_path=ROOT_DIR / ".env")
 
@@ -20,17 +20,21 @@ def _try_register(servers: dict, key: str, build_fn) -> None:
         logger.warning("%s MCP disabled: %s", key, exc)
 
 
-def _check_hybridrag_env() -> None:
-    """Raise RuntimeError if required hybridrag env vars are missing."""
-    load_dotenv(HYBRIDRAG_ROOT / ".env")
-    missing = [
-        v for v in ("QDRANT_URL", "QDRANT_KEY", "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD")
-        if not os.getenv(v)
-    ]
-    if missing:
-        raise RuntimeError(
-            f"hybridrag env vars not set: {', '.join(missing)} (check hybridrag_pipeline/.env)"
-        )
+def _get_graphrag_config() -> dict:
+    """Build the remote graphrag MCP server config (hosted via phi-gateway).
+
+    Forwards the static Basic Auth header produced by graphrag/gen_auth_header.py;
+    Basic Auth does not expire, so no token refresh is needed.
+    """
+    url = os.getenv("GRAPHRAG_MCP_URL")
+    auth = os.getenv("GRAPHRAG_AUTH_HEADER")  # full value, e.g. "Basic <base64>"
+    if not url or not auth:
+        raise RuntimeError("Set GRAPHRAG_MCP_URL and GRAPHRAG_AUTH_HEADER.")
+    return {
+        "transport": "streamable_http",
+        "url": url,
+        "headers": {"Authorization": auth},
+    }
 
 
 def _check_moocs_env() -> None:
@@ -120,13 +124,7 @@ def get_mcp_servers() -> dict:
         "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
     })
 
-    _try_register(servers, "hybridrag", lambda: (
-        _check_hybridrag_env() or {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
-        }
-    ))
+    _try_register(servers, "graphrag", _get_graphrag_config)
 
     _try_register(servers, "moocs", lambda: (
         _check_moocs_env() or {

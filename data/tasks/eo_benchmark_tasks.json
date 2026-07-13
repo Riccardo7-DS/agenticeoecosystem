@@ -549,14 +549,14 @@
       "task_ID": "TASK_260419_000015_100015",
       "task_text": "Find MOOC lectures about open science principles applied to Earth observation and satellite data sharing.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on open science in the context of Earth observation.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "open science Earth observation satellite data sharing"
               },
@@ -851,7 +851,7 @@
       "task_ID": "TASK_260419_000021_100021",
       "task_text": "Look up the ESA Science Strategy objective related to sustainable development goals, then find a matching MOOC lecture on that topic.",
       "task_labels": [
-        "Placeholder"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Agent queries the RAG for the relevant Science Strategy SDG objective, then uses the result to search the MOOC catalogue.",
       "reference_solutions": [
@@ -865,7 +865,7 @@
               "comment": "Retrieve Science Strategy content on SDGs"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "<derived from rag response — key SDG theme>"
               },
@@ -1129,7 +1129,7 @@
       "task_ID": "TASK_260419_000025_100025",
       "task_text": "Download a Sentinel-2 false-colour image of the Rotterdam port and industrial area (bbox: [4.0, 51.8, 4.6, 51.95]) for October 2021, find EO Dashboard narratives contextualising industrial emissions or shipping activity, and search for a MOOC lecture on satellite monitoring of industrial sites.",
       "task_labels": [
-        "Placeholder"
+        "Cross-agent Synthesis"
       ],
       "reference_solution_description": "Agent acquires a GEE image, retrieves relevant EODash narratives, and queries the MOOC catalogue in a three-step industrial activity synthesis.",
       "reference_solutions": [
@@ -1161,7 +1161,7 @@
               "comment": "Find EODash narratives about shipping or industrial emissions"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "satellite monitoring industrial emissions shipping"
               },
@@ -1197,7 +1197,7 @@
               "comment": "Alternative keyword — industrial"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "satellite monitoring industrial emissions shipping"
               },
@@ -1275,7 +1275,7 @@
       "task_ID": "TASK_260419_000027_100027",
       "task_text": "Conduct a full synthesis on food security and crop monitoring: find EO Dashboard narratives on the topic and retrieve their STAC collection codes, fetch sample data items from one collection, download a Sentinel-2 false-colour image of a key agricultural region identified in the narrative, query the ESA Science Strategy for relevant food security objectives, and find a MOOC lecture on satellite-based crop monitoring.",
       "task_labels": [
-        "Placeholder"
+        "Cross-agent Synthesis"
       ],
       "reference_solution_description": "Agent executes a six-step workflow spanning all four MCPs: EODash narrative chain, GEE image, RAG policy lookup, and MOOC lecture search.",
       "reference_solutions": [
@@ -1324,7 +1324,7 @@
               "comment": "Retrieve Science Strategy objectives on food security"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "food security crop monitoring satellite remote sensing"
               },
@@ -1377,7 +1377,7 @@
               "comment": "Retrieve Science Strategy objectives"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "food security crop monitoring satellite remote sensing"
               },
@@ -2973,14 +2973,14 @@
       "task_ID": "TASK_260419_000065_100065",
       "task_text": "Find a MOOC lecture about satellite-based monitoring of the water cycle and hydrological processes.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on hydrology and satellite water cycle monitoring.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "satellite hydrology water cycle monitoring"
               },
@@ -3029,14 +3029,14 @@
       "task_ID": "TASK_260419_000067_100067",
       "task_text": "Find a MOOC lecture that explains how satellite sensors such as Sentinel-5P measure NO₂ and other trace gases in the atmosphere.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on atmospheric trace gas monitoring with Sentinel-5P or similar sensors.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "Sentinel-5P NO2 trace gas atmospheric monitoring satellite"
               },
@@ -3047,7 +3047,7 @@
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "nitrogen dioxide atmospheric satellite remote sensing"
               },
@@ -3068,7 +3068,7 @@
       "task_ID": "TASK_260419_000068_100068",
       "task_text": "Look up what the ESA Science Strategy says about monitoring forests and deforestation from space, then find a matching MOOC lecture on the same topic.",
       "task_labels": [
-        "Placeholder"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Agent first retrieves Science Strategy content on forest monitoring, then uses that context to search the MOOC catalogue for a relevant lecture.",
       "reference_solutions": [
@@ -3082,7 +3082,7 @@
               "comment": "Retrieve Science Strategy content on forests"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "<derived from rag response — key forest monitoring theme>"
               },
@@ -3131,14 +3131,14 @@
       "task_ID": "TASK_260419_000070_100070",
       "task_text": "Find a MOOC lecture about using satellite imagery for precision agriculture and crop yield estimation.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on precision agriculture and remote sensing of crop conditions.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "precision agriculture crop yield satellite remote sensing"
               },
@@ -3159,7 +3159,7 @@
       "task_ID": "TASK_260419_000071_100071",
       "task_text": "Find what the ESA Science Strategy says about urban heat islands and city monitoring, then search for a MOOC lecture on urban remote sensing.",
       "task_labels": [
-        "Placeholder"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Agent chains a RAG query on urban EO objectives with a MOOC search for urban remote sensing lectures.",
       "reference_solutions": [
@@ -3173,7 +3173,7 @@
               "comment": "Retrieve Science Strategy content on urban EO"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "<derived from rag response — urban remote sensing theme>"
               },
@@ -3222,14 +3222,14 @@
       "task_ID": "TASK_260419_000073_100073",
       "task_text": "Find a MOOC lecture about using Earth observation for biodiversity monitoring and ecosystem health assessment.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on biodiversity and ecosystem remote sensing.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "biodiversity ecosystem monitoring Earth observation satellite"
               },
@@ -3250,7 +3250,7 @@
       "task_ID": "TASK_260419_000074_100074",
       "task_text": "Look up the ESA Science Strategy objectives on sea ice as a climate indicator, then find a MOOC lecture on cryosphere remote sensing.",
       "task_labels": [
-        "Placeholder"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Agent chains a RAG query on sea ice science objectives with a MOOC search for cryosphere remote sensing lectures.",
       "reference_solutions": [
@@ -3264,7 +3264,7 @@
               "comment": "Retrieve Science Strategy content on sea ice"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "<derived from rag response — cryosphere monitoring theme>"
               },
@@ -3313,14 +3313,14 @@
       "task_ID": "TASK_260419_000076_100076",
       "task_text": "Find a MOOC lecture about satellite-based wildfire detection and burned area mapping using optical or thermal sensors.",
       "task_labels": [
-        "Placeholder"
+        "Tool Grounding"
       ],
       "reference_solution_description": "Agent searches the MOOC catalogue for lectures on wildfire detection and burned area estimation from satellite data.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "wildfire detection burned area satellite optical thermal remote sensing"
               },
@@ -3341,7 +3341,7 @@
       "task_ID": "TASK_260419_000077_100077",
       "task_text": "Find what the ESA Science Strategy says about water resources management and drought monitoring, then search for a MOOC lecture that covers those topics.",
       "task_labels": [
-        "Placeholder"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Agent chains a RAG query on water resources objectives with a MOOC search for drought and water cycle remote sensing lectures.",
       "reference_solutions": [
@@ -3355,11 +3355,287 @@
               "comment": "Retrieve Science Strategy content on water resources"
             },
             {
-              "function_name": "mooc_search",
+              "function_name": "search_moocs",
               "arguments": {
                 "query": "<derived from rag response — water resources drought theme>"
               },
               "comment": "Search MOOC for water resources / drought lectures"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000001_300001",
+      "task_text": "Find MOOC lectures explaining synthetic aperture radar (SAR) principles and how SAR is used to detect ground surface deformation and subsidence.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls search_moocs with a query targeting SAR interferometry and deformation mapping.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "synthetic aperture radar SAR surface deformation subsidence interferometry InSAR"
+              },
+              "comment": "Search MOOC catalogue for SAR and deformation monitoring lectures"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000002_300002",
+      "task_text": "Search the MOOC catalogue for educational content covering deep learning methods applied to land cover classification using multispectral satellite imagery.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls search_moocs with a query combining deep learning and land cover classification from satellite data.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "deep learning land cover classification multispectral satellite imagery convolutional neural network"
+              },
+              "comment": "Search MOOC catalogue for deep learning applied to satellite-based land cover mapping"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000003_300003",
+      "task_text": "Find MOOC lectures about ocean color remote sensing and how satellite sensors such as MODIS or Sentinel-3 are used to measure chlorophyll concentration in coastal waters.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls search_moocs with a query about ocean color and chlorophyll remote sensing.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "ocean color remote sensing chlorophyll coastal waters MODIS Sentinel-3 phytoplankton"
+              },
+              "comment": "Search MOOC catalogue for ocean color and chlorophyll satellite measurement lectures"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000004_300004",
+      "task_text": "What does the ESA EO Science Strategy say about monitoring wetlands and biodiversity? Based on the answer, find a MOOC lecture that covers the relevant satellite observation techniques.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Agent first queries the HybridRAG knowledge base for ESA Science Strategy content on wetland and biodiversity monitoring, then uses the key themes extracted to search the MOOC catalogue for matching educational content.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "hybrid_rag_retrieve",
+              "arguments": {
+                "question": "ESA Science Strategy wetlands biodiversity monitoring Earth observation objectives"
+              },
+              "comment": "Retrieve Science Strategy content on wetland and biodiversity Earth observation"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "<derived from RAG response — key wetland or biodiversity satellite monitoring theme>"
+              },
+              "comment": "Search MOOC catalogue for a lecture matching the Science Strategy theme retrieved"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000005_300005",
+      "task_text": "Search the EO Dashboard for narratives about wildfires, then find a MOOC lecture that teaches the satellite techniques used to detect and monitor active fires from space.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Agent searches EO Dashboard narratives for wildfire content, then uses the satellite sensing context from the narratives to query the MOOC catalogue for fire detection lectures.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "wildfire"
+              },
+              "comment": "Search EO Dashboard for narratives about wildfires or fire activity"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "<derived from narrative content — active fire detection thermal infrared VIIRS MODIS burned area>"
+              },
+              "comment": "Search MOOC catalogue for satellite fire detection techniques mentioned in the narrative"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000006_300006",
+      "task_text": "Based on the ESA Science Strategy's priorities for glacier and cryosphere monitoring, find a MOOC lecture on ice sheet remote sensing, and download a Sentinel-2 image of the Aletsch Glacier (approximately 46.5°N, 8.0°E) for August 2023 at 30 m resolution.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Agent retrieves Science Strategy cryosphere objectives from HybridRAG, searches the MOOC catalogue for an ice sheet remote sensing lecture, then downloads a Sentinel-2 image of the Aletsch Glacier via GEE.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "hybrid_rag_retrieve",
+              "arguments": {
+                "question": "ESA Science Strategy cryosphere glacier ice sheet monitoring priorities"
+              },
+              "comment": "Retrieve Science Strategy content on cryosphere and glacier monitoring"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "glacier ice sheet cryosphere remote sensing optical SAR altimetry satellite"
+              },
+              "comment": "Search MOOC catalogue for lectures on ice sheet remote sensing"
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": 46.5,
+                "longitude": 8.0,
+                "buffer_m": 15000,
+                "start_date": "2023-08-01",
+                "end_date": "2023-08-31",
+                "bands": "B4,B3,B2",
+                "scale": 30,
+                "max_cloud_cover": 30
+              },
+              "comment": "Download Sentinel-2 RGB image of Aletsch Glacier for August 2023"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000007_300007",
+      "task_text": "Find EO Dashboard narratives about urban expansion, retrieve the STAC collection codes they reference, and find a MOOC lecture explaining how satellite data is used to map impervious surfaces and track urban growth.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Agent chains three tools: narrative search for urban content, indicator retrieval for STAC codes, and MOOC search for urban remote sensing lectures.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "urban"
+              },
+              "comment": "Search EO Dashboard for narratives on urban expansion or urban heat"
+            },
+            {
+              "function_name": "get_narrative_indicators",
+              "arguments": {
+                "narrative_title": "<title of an urban narrative from previous step>"
+              },
+              "comment": "Retrieve STAC collection codes referenced by the urban narrative"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "urban expansion impervious surface mapping satellite high resolution land use change"
+              },
+              "comment": "Search MOOC catalogue for urban remote sensing and land use mapping lectures"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260619_000008_300008",
+      "task_text": "Find MOOC lectures about Renaissance Italian painting techniques and how to restore oil paintings on canvas.",
+      "task_labels": [
+        "Scope Awareness"
+      ],
+      "reference_solution_description": "This query is entirely outside the scope of the EO MOOC knowledge base, which covers Earth observation, satellite remote sensing, and related science. The correct agent behavior is to either not call any tool, or to call search_moocs and correctly report that no relevant educational content was found.",
+      "reference_solutions": [
+        {
+          "steps": []
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "Renaissance Italian painting techniques oil canvas restoration"
+              },
+              "comment": "Negative test: art history and painting restoration are entirely outside the EO MOOC catalogue scope — agent should report no relevant results"
             }
           ]
         }

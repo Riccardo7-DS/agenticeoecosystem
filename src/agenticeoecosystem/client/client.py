@@ -463,19 +463,40 @@ supervisor_agent = create_agent(
 # Hot-swap agents without restarting (used by evaluation pipeline)
 # ---------------------------------------------------------------------------
 
-def rebuild_agents(model_name: str, provider: str = "ollama", temperature: float = 0.0) -> None:
-    """Recreate all agents with a new model. MCP tools are reused."""
+def rebuild_agents(
+    model_name: str,
+    provider: str = "ollama",
+    temperature: float = 0.0,
+    agent_models: dict[str, tuple[str, str]] | None = None,
+) -> None:
+    """Recreate all agents with a new model. MCP tools are reused.
+
+    agent_models: optional per-agent overrides, e.g.
+        {"gis": ("mistral-small-24b", "vllm"), "arxiv": ("qwen2.5-14b", "vllm")}
+    Valid keys: eo_stac, gee, eve, eoss_rag, moocs, arxiv, gis, supervisor.
+    Missing keys fall back to (model_name, provider).
+    """
     global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, moocs_agent, arxiv_agent, gis_agent, supervisor_agent
+
+    def _llm(key: str):
+        if agent_models and key in agent_models:
+            m, p = agent_models[key]
+            return load_llm(m, p, temperature)
+        return load_llm(model_name, provider, temperature)
+
     model               = load_llm(model_name, provider, temperature)
-    eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-    gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
-    eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-    eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
-    moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
-    arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
-    gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
-    supervisor_agent    = create_agent(model, tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
-    logger.info("Agents rebuilt — model=%s  provider=%s  temperature=%s", model_name, provider, temperature)
+    eo_stac_agent       = create_agent(_llm("eo_stac"),    tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
+    gee_agent           = create_agent(_llm("gee"),        tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
+    eve_retrieval_agent = create_agent(_llm("eve"),        tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
+    eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    moocs_agent         = create_agent(_llm("moocs"),      tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
+    arxiv_agent         = create_agent(_llm("arxiv"),      tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
+    gis_agent           = create_agent(_llm("gis"),        tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(_llm("supervisor"), tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    logger.info(
+        "Agents rebuilt — model=%s  provider=%s  temperature=%s  overrides=%s",
+        model_name, provider, temperature, list((agent_models or {}).keys()),
+    )
 
 
 # ---------------------------------------------------------------------------

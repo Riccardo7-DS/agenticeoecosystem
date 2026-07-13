@@ -51,10 +51,14 @@ def main() -> int:
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
     parser.add_argument("--skip-solved",          action="store_true", help="Skip tasks that already have a solution")
+    parser.add_argument("--pipeline",             default="multi", choices=["multi", "single"],
+                        help="Pipeline mode: 'multi' (supervisor + sub-agents) or 'single' (one agent, all tools)")
+    parser.add_argument("--agent-models",         default=None,
+                        help='JSON per-agent model overrides for pipeline=multi, e.g. \'{"gis": ["mistral-small-24b", "vllm"]}\'')
     args = parser.parse_args()
 
     label_safe = args.label.replace(" ", "_")
-    setup_logging(log_file=f"generate_{label_safe}")
+    setup_logging(log_file=f"generate_{label_safe}_{args.pipeline}")
     logger = logging.getLogger(__name__)
 
     output_dir = Path(args.output_dir)
@@ -79,6 +83,14 @@ def main() -> int:
         tasks = tasks.select_by_labels(labels)
     logger.info("Loaded %d task(s) from %d file(s) in %s", len(tasks), len(args.tasks_file), folder)
 
+    import json as _json
+    agent_models = None
+    if args.agent_models:
+        raw = _json.loads(args.agent_models)
+        agent_models = {k: tuple(v) for k, v in raw.items()}
+        if args.pipeline == "single":
+            logger.warning("--agent-models is ignored when --pipeline=single")
+
     proc = None
     try:
         if args.provider == "vllm":
@@ -95,6 +107,8 @@ def main() -> int:
             model_provider=args.provider,
             output_filename=output_filename,
             skip_solved=args.skip_solved,
+            pipeline=args.pipeline,
+            agent_models=agent_models,
         )
         # Authoritative save to the requested output_dir
         tasks.save_to_file(output_filename, folder=str(output_dir))

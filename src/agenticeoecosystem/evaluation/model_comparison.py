@@ -56,7 +56,7 @@ def setup_logging(level: int = logging.INFO) -> None:
 @dataclass
 class ModelRun:
     """
-    Describes one model to benchmark.
+    Describes one model run to benchmark.
 
     Args:
         label       : Human-readable name used as a row label in the output table.
@@ -65,6 +65,11 @@ class ModelRun:
                       or a raw HuggingFace model ID.
         provider    : LangChain provider — "eve", "openai", "custom", "vllm", "ollama", …
         temperature : Sampling temperature.
+        pipeline    : "multi" (supervisor + sub-agents) or "single" (one agent, all tools).
+        agent_models: Per-agent model overrides for pipeline="multi", e.g.
+                      {"gis": ("mistral-small-24b", "vllm"), "arxiv": ("qwen2.5-14b", "vllm")}.
+                      Valid keys: eo_stac, gee, eve, eoss_rag, moocs, arxiv, gis, supervisor.
+                      Missing keys fall back to (model, provider). Ignored for pipeline="single".
         launch_vllm         : If True, start a local vLLM server for this model before running
                               and shut it down afterwards.  Only meaningful when provider="vllm".
         vllm_port           : Port for the vLLM server (default 8000).  Ignored unless launch_vllm=True.
@@ -76,6 +81,8 @@ class ModelRun:
     model: str
     provider: str = "eve"
     temperature: float = 0.0
+    pipeline: str = "multi"
+    agent_models: dict | None = None
     launch_vllm: bool = False
     vllm_port: int = 8000
     vllm_startup_timeout: int = 600
@@ -153,6 +160,8 @@ def _generate_one(
             output_filename=output_filename,
             output_folder=str(output_dir),
             skip_solved=skip_solved,
+            pipeline=run.pipeline,
+            agent_models=run.agent_models,
         )
         logger.info("[%s] Generation done in %.1fs", label, time.time() - t0)
     finally:
@@ -231,6 +240,7 @@ def _evaluate_one(
     row: dict = {
         "model": label,
         "provider": run.provider,
+        "pipeline": run.pipeline,
         "tasks_attempted": solved,
         "avg_steps": round(avg_steps, 1),
         "total_input_tokens": in_tok,

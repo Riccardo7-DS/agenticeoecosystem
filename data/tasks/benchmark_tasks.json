@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "description": "Unified EO ecosystem benchmark covering: EO Dashboard STAC narratives, GEE satellite imagery, HybridRAG ESA Science Strategy, MOOC educational content, Arxiv paper search, and GIS raster/vector tools.",
+    "description": "Merged EO + ArXiv/GIS benchmark tasks. Total: 157 tasks across Tool Grounding, Sequential Reasoning, Cross-agent Synthesis, and Scope Awareness categories.",
     "version": "2.0",
     "sources": [
       "eo_benchmark_tasks.json",
@@ -142,23 +142,26 @@
     },
     {
       "task_ID": "TASK_260419_000004_100004",
-      "task_text": "Download a Sentinel-2 RGB satellite image of central Rome (approximately 41.9°N, 12.5°E) for the period January to March 2023, at 10 m resolution with less than 20% cloud cover.",
+      "task_text": "Download a Sentinel-2 RGB satellite image of central Rome, Italy for the period January to March 2023, at 10 m resolution with less than 20% cloud cover.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls the GEE download tool with correct bounding box, date range, bands and cloud filter.",
+      "reference_solution_description": "Agent first geocodes \"central Rome, Italy\" using get_lat_lon to obtain its latitude and longitude, then passes those coordinates to download_satellite_image with the correct date range, bands, scale, and cloud filter.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "central Rome, Italy"
+              },
+              "comment": "Step 1: geocode the address to obtain [latitude, longitude] via Google Maps API."
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  12.45,
-                  41.85,
-                  12.55,
-                  41.95
-                ],
+                "latitude": "<derived from step 1>[0]",
+                "longitude": "<derived from step 1>[1]",
                 "start_date": "2023-01-01",
                 "end_date": "2023-03-31",
                 "bands": "B4,B3,B2",
@@ -166,7 +169,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download RGB Sentinel-2 image for central Rome"
+              "comment": "Step 2: download Sentinel-2 RGB image using the geocoded coordinates."
             }
           ]
         }
@@ -445,23 +448,27 @@
     },
     {
       "task_ID": "TASK_260419_000012_100012",
-      "task_text": "Download a true-colour Sentinel-2 satellite image of central Barcelona, Spain (bbox: [2.05, 41.32, 2.28, 41.47]) for July 2022 at 10 m resolution with a maximum cloud cover of 15%.",
+      "task_text": "Download a true-colour Sentinel-2 satellite image of central Barcelona, Spain for July 2022 at 10 m resolution with a maximum cloud cover of 15%.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls the GEE download tool with the specified bounding box, date range, RGB bands, scale, and cloud filter for Barcelona.",
+      "reference_solution_description": "Geocode 'central Barcelona, Spain' with get_lat_lon, then download a Sentinel-2 RGB image with an 8 km buffer for July 2022 at 10 m resolution.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "central Barcelona, Spain"
+              },
+              "comment": "Geocode 'central Barcelona, Spain' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  2.05,
-                  41.32,
-                  2.28,
-                  41.47
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "bands": "B4,B3,B2",
@@ -469,7 +476,7 @@
                 "max_cloud_cover": 15,
                 "image_count": 1
               },
-              "comment": "Download RGB Sentinel-2 image for central Barcelona"
+              "comment": "Download RGB Sentinel-2 image of central Barcelona at 10 m resolution"
             }
           ]
         }
@@ -484,23 +491,27 @@
     },
     {
       "task_ID": "TASK_260419_000013_100013",
-      "task_text": "Download a false-colour near-infrared composite of the Po Valley agricultural region in northern Italy (bbox: [10.5, 44.7, 12.0, 45.4]) for the growing season of June–August 2021 at 20 m resolution to assess vegetation health.",
+      "task_text": "Download a false-colour near-infrared composite of the agricultural area around Cremona in the Po Valley, Lombardy, Italy for the growing season of June–August 2021 at 20 m resolution to assess vegetation health.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent downloads a NIR false-colour composite (bands B8, B4, B3) from GEE for the Po Valley during the summer growing season.",
+      "reference_solution_description": "Geocode 'Cremona, Lombardy, Italy' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with an 8 km buffer for June–August 2021 at 20 m resolution.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Cremona, Lombardy, Italy"
+              },
+              "comment": "Geocode 'Cremona, Lombardy, Italy' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  10.5,
-                  44.7,
-                  12.0,
-                  45.4
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2021-06-01",
                 "end_date": "2021-08-31",
                 "bands": "B8,B4,B3",
@@ -508,7 +519,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "False-colour NIR composite for vegetation health assessment"
+              "comment": "False-colour NIR composite around Cremona for vegetation health"
             }
           ]
         }
@@ -749,23 +760,27 @@
     },
     {
       "task_ID": "TASK_260419_000019_100019",
-      "task_text": "Download a Sentinel-2 image with bands B8 and B4 for central Spain (bbox: [-4.0, 37.5, -2.0, 39.5]) during the summer drought period of July–September 2022 at 20 m resolution, then find EO Dashboard narratives that contextualise drought or water stress events in Europe.",
+      "task_text": "Download a Sentinel-2 image with bands B8 and B4 for the area around Ciudad Real in central Spain during the summer drought period of July–September 2022 at 20 m resolution, then find EO Dashboard narratives that contextualise drought or water stress events in Europe.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first downloads a GEE image suitable for NDVI analysis, then searches EODash for drought-related narratives.",
+      "reference_solution_description": "Geocode 'Ciudad Real, Spain' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for July–September 2022, then search EO Dashboard for drought or water stress narratives.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Ciudad Real, Spain"
+              },
+              "comment": "Geocode 'Ciudad Real, Spain' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -4.0,
-                  37.5,
-                  -2.0,
-                  39.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4",
@@ -773,7 +788,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download NIR and Red bands for NDVI computation over drought-affected Spain"
+              "comment": "Download NIR and Red bands around Ciudad Real for drought analysis"
             },
             {
               "function_name": "search_narratives",
@@ -787,14 +802,18 @@
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Ciudad Real, Spain"
+              },
+              "comment": "Geocode 'Ciudad Real, Spain' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -4.0,
-                  37.5,
-                  -2.0,
-                  39.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4",
@@ -802,7 +821,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download NIR and Red bands for drought analysis"
+              "comment": "Download NIR and Red bands around Ciudad Real"
             },
             {
               "function_name": "search_narratives",
@@ -888,11 +907,11 @@
     },
     {
       "task_ID": "TASK_260419_000022_100022",
-      "task_text": "Find an EO Dashboard narrative about glaciers or cryosphere change, identify the STAC collections it references, retrieve sample data items from one collection, and download a Sentinel-2 true-colour image of the Alps (bbox: [9.5, 45.5, 11.5, 47.0]) for August 2022.",
+      "task_text": "Find an EO Dashboard narrative about glaciers or cryosphere change, identify the STAC collections it references, retrieve sample data items from one collection, and download a Sentinel-2 true-colour image centred on Innsbruck, Austria for August 2022.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains all four EODash tools and then calls GEE to compare narrative-referenced data with a fresh satellite image.",
+      "reference_solution_description": "Search EO Dashboard for glacier/cryosphere narratives, get STAC collections and sample items, geocode 'Innsbruck, Austria' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2022.",
       "reference_solutions": [
         {
           "steps": [
@@ -908,7 +927,7 @@
               "arguments": {
                 "narrative_title": "<any matching narrative title>"
               },
-              "comment": "Get STAC collection codes referenced by the narrative"
+              "comment": "Get STAC collection codes"
             },
             {
               "function_name": "get_collection_items",
@@ -916,17 +935,21 @@
                 "collection_code": "<derived from previous step>",
                 "limit": 5
               },
-              "comment": "Fetch sample data items from the collection"
+              "comment": "Fetch sample data items"
+            },
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Innsbruck, Austria"
+              },
+              "comment": "Geocode Innsbruck to obtain coordinates for satellite download"
             },
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  9.5,
-                  45.5,
-                  11.5,
-                  47.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-08-01",
                 "end_date": "2022-08-31",
                 "bands": "B4,B3,B2",
@@ -934,7 +957,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download true-colour Alps image for visual comparison"
+              "comment": "Download true-colour Sentinel-2 image centred on Innsbruck"
             }
           ]
         },
@@ -963,14 +986,18 @@
               "comment": "Fetch sample data items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Innsbruck, Austria"
+              },
+              "comment": "Geocode Innsbruck to obtain coordinates for satellite download"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  9.5,
-                  45.5,
-                  11.5,
-                  47.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-08-01",
                 "end_date": "2022-08-31",
                 "bands": "B4,B3,B2",
@@ -978,7 +1005,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download Alps image"
+              "comment": "Download true-colour Innsbruck image"
             }
           ]
         }
@@ -993,11 +1020,11 @@
     },
     {
       "task_ID": "TASK_260419_000023_100023",
-      "task_text": "Find two separate EO Dashboard narratives related to carbon emissions monitoring — one about CO₂ and one about methane or other greenhouse gases — retrieve the STAC collection codes from each, fetch sample data items from both collections, and then download a Sentinel-2 true-colour image of the Ruhr industrial region in Germany (bbox: [6.8, 51.2, 7.8, 51.7]) for January 2022.",
+      "task_text": "Find two separate EO Dashboard narratives related to carbon emissions monitoring — one about CO₂ and one about methane or other greenhouse gases — retrieve the STAC collection codes from each, fetch sample data items from both collections, and then download a Sentinel-2 true-colour image of Essen in the Ruhr industrial region, Germany for January 2022.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent retrieves and cross-validates two indicator collections from different carbon emission narratives, then downloads a GEE image of a key industrial area.",
+      "reference_solution_description": "Search EO Dashboard for CO₂ and methane narratives, get STAC collections and sample items from both, geocode 'Essen, Germany' with get_lat_lon, then download a Sentinel-2 RGB image with a 10 km buffer for January 2022.",
       "reference_solutions": [
         {
           "steps": [
@@ -1046,14 +1073,18 @@
               "comment": "Retrieve sample items from the second collection"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Essen, Germany"
+              },
+              "comment": "Geocode Essen to obtain coordinates for satellite download"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  6.8,
-                  51.2,
-                  7.8,
-                  51.7
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2022-01-01",
                 "end_date": "2022-01-31",
                 "bands": "B4,B3,B2",
@@ -1061,7 +1092,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download Ruhr industrial region image for cross-validation"
+              "comment": "Download Sentinel-2 true-colour image of Essen, Ruhr region"
             }
           ]
         }
@@ -1131,23 +1162,27 @@
     },
     {
       "task_ID": "TASK_260419_000025_100025",
-      "task_text": "Download a Sentinel-2 false-colour image of the Rotterdam port and industrial area (bbox: [4.0, 51.8, 4.6, 51.95]) for October 2021, find EO Dashboard narratives contextualising industrial emissions or shipping activity, and search for a MOOC lecture on satellite monitoring of industrial sites.",
+      "task_text": "Download a Sentinel-2 false-colour image of the Port of Rotterdam, Netherlands for October 2021, find EO Dashboard narratives contextualising industrial emissions or shipping activity, and search for a MOOC lecture on satellite monitoring of industrial sites.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent acquires a GEE image, retrieves relevant EODash narratives, and queries the MOOC catalogue in a three-step industrial activity synthesis.",
+      "reference_solution_description": "Geocode 'Port of Rotterdam, Netherlands' with get_lat_lon, download a Sentinel-2 false-colour image with an 8 km buffer for October 2021, search EO Dashboard for shipping/industrial narratives, and search MOOCs for industrial monitoring lectures.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Port of Rotterdam, Netherlands"
+              },
+              "comment": "Geocode the Rotterdam port area"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  4.0,
-                  51.8,
-                  4.6,
-                  51.95
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
                 "bands": "B8,B4,B3",
@@ -1176,14 +1211,18 @@
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Port of Rotterdam, Netherlands"
+              },
+              "comment": "Geocode the Rotterdam port area"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  4.0,
-                  51.8,
-                  4.6,
-                  51.95
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
                 "bands": "B8,B4,B3",
@@ -1220,23 +1259,27 @@
     },
     {
       "task_ID": "TASK_260419_000026_100026",
-      "task_text": "Download two Sentinel-2 true-colour images of the Gironde region in south-western France (bbox: [-1.2, 44.5, -0.2, 45.2]) — one before the July 2022 heatwave and wildfires (April–June 2022) and one after (August–September 2022) — to assess landscape changes caused by the extreme weather event.",
+      "task_text": "Download two Sentinel-2 true-colour images of Bordeaux, France — one before the July 2022 heatwave and wildfires (April–June 2022) and one after (August–September 2022) — to assess landscape changes caused by the extreme weather event.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent calls download_satellite_image twice with the same bounding box but different date ranges to produce a before/after pair.",
+      "reference_solution_description": "Geocode 'Bordeaux, France' with get_lat_lon, then download two Sentinel-2 RGB images with a 10 km buffer: pre-event (Apr–Jun 2022) and post-event (Aug–Sep 2022).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Bordeaux, France"
+              },
+              "comment": "Geocode Bordeaux to obtain coordinates for both satellite downloads"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -1.2,
-                  44.5,
-                  -0.2,
-                  45.2
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2022-04-01",
                 "end_date": "2022-06-30",
                 "bands": "B4,B3,B2",
@@ -1249,12 +1292,9 @@
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -1.2,
-                  44.5,
-                  -0.2,
-                  45.2
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2022-08-01",
                 "end_date": "2022-09-30",
                 "bands": "B4,B3,B2",
@@ -1725,23 +1765,27 @@
     },
     {
       "task_ID": "TASK_260419_000036_100036",
-      "task_text": "Download a true-colour Sentinel-2 satellite image of Wuhan, China (bbox: [113.8, 30.4, 114.4, 30.8]) for February 2020 at 20 m resolution to observe the city during the COVID-19 lockdown period.",
+      "task_text": "Download a true-colour Sentinel-2 satellite image of central Wuhan, Hubei, China for February 2020 at 20 m resolution to observe the city during the COVID-19 lockdown period.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls the GEE download tool with the Wuhan bounding box, February 2020 date range, RGB bands, and 20 m scale.",
+      "reference_solution_description": "Geocode 'central Wuhan, Hubei, China' with get_lat_lon, then download a Sentinel-2 RGB image with a 10 km buffer for February 2020 at 20 m resolution.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "central Wuhan, Hubei, China"
+              },
+              "comment": "Geocode 'central Wuhan, Hubei, China' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  113.8,
-                  30.4,
-                  114.4,
-                  30.8
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2020-02-01",
                 "end_date": "2020-02-29",
                 "bands": "B4,B3,B2",
@@ -1764,23 +1808,27 @@
     },
     {
       "task_ID": "TASK_260419_000037_100037",
-      "task_text": "Download a false-colour near-infrared composite of the Nile Delta agricultural region in Egypt (bbox: [30.0, 30.5, 32.0, 31.5]) for March–April 2022 at 20 m resolution to assess crop conditions before harvest.",
+      "task_text": "Download a false-colour near-infrared composite of the agricultural area near Mansoura in the Nile Delta, Egypt for March–April 2022 at 20 m resolution to assess crop conditions before harvest.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent downloads a NIR false-colour composite (bands B8, B4, B3) for the Nile Delta during the pre-harvest growing season.",
+      "reference_solution_description": "Geocode 'Mansoura, Dakahlia, Egypt' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with a 10 km buffer for March–April 2022 at 20 m resolution.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Mansoura, Dakahlia, Egypt"
+              },
+              "comment": "Geocode 'Mansoura, Dakahlia, Egypt' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  30.0,
-                  30.5,
-                  32.0,
-                  31.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2022-03-01",
                 "end_date": "2022-04-30",
                 "bands": "B8,B4,B3",
@@ -1788,7 +1836,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "NIR false-colour for Nile Delta crop assessment"
+              "comment": "NIR false-colour for Nile Delta crop assessment around Mansoura"
             }
           ]
         }
@@ -1803,23 +1851,27 @@
     },
     {
       "task_ID": "TASK_260419_000038_100038",
-      "task_text": "Download a true-colour Sentinel-2 image of the southern Aral Sea region (bbox: [58.5, 43.5, 61.0, 45.0]) for August 2021 at 30 m resolution to observe water extent in this historically shrinking lake.",
+      "task_text": "Download a true-colour Sentinel-2 image of the area around Muynak, Karakalpakstan, Uzbekistan for August 2021 at 30 m resolution to observe the water extent in this historically shrinking part of the Aral Sea.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent downloads a true-colour GEE image for the southern Aral Sea in peak-summer 2021 to observe water extent.",
+      "reference_solution_description": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2021 at 30 m resolution.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Muynak, Karakalpakstan, Uzbekistan"
+              },
+              "comment": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  58.5,
-                  43.5,
-                  61.0,
-                  45.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2021-08-01",
                 "end_date": "2021-08-31",
                 "bands": "B4,B3,B2",
@@ -1827,7 +1879,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "True-colour Aral Sea summer 2021 for water extent monitoring"
+              "comment": "True-colour Aral Sea summer 2021 for water extent monitoring near Muynak"
             }
           ]
         }
@@ -2086,23 +2138,27 @@
     },
     {
       "task_ID": "TASK_260419_000043_100043",
-      "task_text": "Download a Sentinel-2 true-colour image of the Great Barrier Reef region in Australia (bbox: [145.5, -17.5, 147.0, -16.0]) for September 2022 at 30 m resolution, then search the EO Dashboard for narratives about coral reef bleaching or ocean warming that provide ecological context for the image.",
+      "task_text": "Download a Sentinel-2 true-colour image of the coastal area near Cairns, Queensland, Australia for September 2022 at 30 m resolution, then search the EO Dashboard for narratives about coral reef bleaching or ocean warming that provide ecological context for the image.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first acquires a GEE image, then uses knowledge of the region to search EODash for contextualising narratives — output of step 1 informs the search keyword in step 2.",
+      "reference_solution_description": "Geocode 'Cairns, Queensland, Australia' with get_lat_lon, download a Sentinel-2 RGB image with a 15 km buffer for September 2022, then search EO Dashboard for coral reef or ocean warming narratives.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Cairns, Queensland, Australia"
+              },
+              "comment": "Geocode Cairns to obtain coordinates near the Great Barrier Reef"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  145.5,
-                  -17.5,
-                  147.0,
-                  -16.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-09-01",
                 "end_date": "2022-09-30",
                 "bands": "B4,B3,B2",
@@ -2110,7 +2166,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "True-colour GBR image"
+              "comment": "True-colour coastal image near Cairns and the Great Barrier Reef"
             },
             {
               "function_name": "search_narratives",
@@ -2124,14 +2180,18 @@
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Cairns, Queensland, Australia"
+              },
+              "comment": "Geocode Cairns to obtain coordinates near the Great Barrier Reef"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  145.5,
-                  -17.5,
-                  147.0,
-                  -16.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-09-01",
                 "end_date": "2022-09-30",
                 "bands": "B4,B3,B2",
@@ -2139,7 +2199,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "True-colour GBR image"
+              "comment": "True-colour coastal image near Cairns"
             },
             {
               "function_name": "search_narratives",
@@ -2240,11 +2300,11 @@
     },
     {
       "task_ID": "TASK_260419_000045_100045",
-      "task_text": "Find an EO Dashboard narrative about NO₂ reduction during COVID-19 lockdowns, retrieve its STAC collection codes, fetch sample data items, then download two Sentinel-2 true-colour images of the Po Valley industrial region in northern Italy (bbox: [8.5, 44.5, 12.0, 46.0]) — one before lockdown (January–February 2020) and one during lockdown (March–April 2020) — to visually compare conditions.",
+      "task_text": "Search the EO Dashboard for narratives about NO₂ or COVID-19 lockdown air quality, identify the STAC collections they reference, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of Milan, Lombardy, Italy — one before the lockdown (January–February 2020) and one during it (March–April 2020) — to visually compare the atmosphere over the city.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains the full EODash tool sequence then issues two GEE downloads for a before/after comparison of NO₂-related surface conditions during COVID lockdown.",
+      "reference_solution_description": "Search EO Dashboard for NO₂/lockdown narratives, get STAC collections and sample items, geocode 'Milan, Lombardy, Italy' with get_lat_lon, then download two Sentinel-2 RGB images with a 12 km buffer: pre-lockdown (Jan–Feb 2020) and during lockdown (Mar–Apr 2020).",
       "reference_solutions": [
         {
           "steps": [
@@ -2271,14 +2331,18 @@
               "comment": "Retrieve sample items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Milan, Lombardy, Italy"
+              },
+              "comment": "Geocode Milan to obtain coordinates for both satellite downloads"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  8.5,
-                  44.5,
-                  12.0,
-                  46.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 12000,
                 "start_date": "2020-01-01",
                 "end_date": "2020-02-29",
                 "bands": "B4,B3,B2",
@@ -2286,17 +2350,14 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Pre-lockdown image — Po Valley January–February 2020"
+              "comment": "Pre-lockdown image — Milan January–February 2020"
             },
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  8.5,
-                  44.5,
-                  12.0,
-                  46.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 12000,
                 "start_date": "2020-03-01",
                 "end_date": "2020-04-30",
                 "bands": "B4,B3,B2",
@@ -2304,7 +2365,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "During-lockdown image — Po Valley March–April 2020"
+              "comment": "During-lockdown image — Milan March–April 2020"
             }
           ]
         },
@@ -2333,14 +2394,18 @@
               "comment": "Retrieve sample items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Milan, Lombardy, Italy"
+              },
+              "comment": "Geocode Milan to obtain coordinates for both satellite downloads"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  8.5,
-                  44.5,
-                  12.0,
-                  46.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 12000,
                 "start_date": "2020-01-01",
                 "end_date": "2020-02-29",
                 "bands": "B4,B3,B2",
@@ -2353,12 +2418,9 @@
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  8.5,
-                  44.5,
-                  12.0,
-                  46.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 12000,
                 "start_date": "2020-03-01",
                 "end_date": "2020-04-30",
                 "bands": "B4,B3,B2",
@@ -2381,11 +2443,11 @@
     },
     {
       "task_ID": "TASK_260419_000046_100046",
-      "task_text": "Find an EO Dashboard narrative about wildfires or burned areas, retrieve the STAC collection codes it references, fetch sample data items, then download two Sentinel-2 true-colour images of coastal New South Wales, Australia (bbox: [149.0, -37.0, 152.0, -33.5]) — one before the 2019–2020 Black Summer fires (September–November 2019) and one after (February–March 2020).",
+      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas, identify the STAC collections they reference, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of Narooma on the south coast of New South Wales, Australia — one before the 2019–2020 Black Summer fires (September–November 2019) and one after (February–March 2020) — to assess fire extent and landscape changes.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent runs the full EODash chain then issues two GEE downloads to document landscape change from the Black Summer wildfires using a real, well-documented event.",
+      "reference_solution_description": "Search EO Dashboard for wildfire narratives, get STAC collections and sample items, geocode 'Narooma, New South Wales, Australia' with get_lat_lon, then download two Sentinel-2 RGB images with a 15 km buffer: pre-fire (Sep–Nov 2019) and post-fire (Feb–Mar 2020).",
       "reference_solutions": [
         {
           "steps": [
@@ -2412,14 +2474,18 @@
               "comment": "Retrieve sample data items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Narooma, New South Wales, Australia"
+              },
+              "comment": "Geocode Narooma to obtain coordinates for both satellite downloads"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  149.0,
-                  -37.0,
-                  152.0,
-                  -33.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2019-09-01",
                 "end_date": "2019-11-30",
                 "bands": "B4,B3,B2",
@@ -2432,12 +2498,9 @@
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  149.0,
-                  -37.0,
-                  152.0,
-                  -33.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2020-02-01",
                 "end_date": "2020-03-31",
                 "bands": "B4,B3,B2",
@@ -2474,14 +2537,18 @@
               "comment": "Retrieve sample data items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Narooma, New South Wales, Australia"
+              },
+              "comment": "Geocode Narooma to obtain coordinates for both satellite downloads"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  149.0,
-                  -37.0,
-                  152.0,
-                  -33.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2019-09-01",
                 "end_date": "2019-11-30",
                 "bands": "B4,B3,B2",
@@ -2494,12 +2561,9 @@
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  149.0,
-                  -37.0,
-                  152.0,
-                  -33.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2020-02-01",
                 "end_date": "2020-03-31",
                 "bands": "B4,B3,B2",
@@ -2522,11 +2586,11 @@
     },
     {
       "task_ID": "TASK_260419_000047_100047",
-      "task_text": "Find an EO Dashboard narrative about Amazon deforestation or tropical forest loss, retrieve the STAC collection codes it references, fetch sample data items, and download a false-colour Sentinel-2 image of the Pará state deforestation frontier in Brazil (bbox: [-55.0, -5.0, -53.0, -3.0]) for the dry season of July–September 2022 to visually assess forest cover.",
+      "task_text": "Search the EO Dashboard for narratives about deforestation or the Amazon rainforest, identify the STAC collections they reference, retrieve sample data items from one collection, and download a Sentinel-2 false-colour image of the area around Altamira, Pará, Brazil during the dry season (July–September 2022) to visualise the deforestation frontier.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains the full EODash narrative tool sequence then downloads a NIR false-colour GEE image of a known deforestation hotspot to compare against narrative data.",
+      "reference_solution_description": "Search EO Dashboard for deforestation/Amazon narratives, get STAC collections and sample items, geocode 'Altamira, Pará, Brazil' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with a 15 km buffer for July–September 2022.",
       "reference_solutions": [
         {
           "steps": [
@@ -2553,14 +2617,18 @@
               "comment": "Retrieve sample data items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Altamira, Pará, Brazil"
+              },
+              "comment": "Geocode Altamira to obtain coordinates at the Amazon deforestation frontier"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -55.0,
-                  -5.0,
-                  -53.0,
-                  -3.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4,B3",
@@ -2568,7 +2636,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "NIR false-colour of Amazon deforestation frontier during dry season"
+              "comment": "NIR false-colour of Amazon deforestation frontier around Altamira during dry season"
             }
           ]
         },
@@ -2597,14 +2665,18 @@
               "comment": "Retrieve sample data items"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Altamira, Pará, Brazil"
+              },
+              "comment": "Geocode Altamira to obtain coordinates at the deforestation frontier"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -55.0,
-                  -5.0,
-                  -53.0,
-                  -3.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4,B3",
@@ -2612,7 +2684,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "NIR false-colour Amazon image"
+              "comment": "NIR false-colour Amazon image around Altamira"
             }
           ]
         }
@@ -3532,11 +3604,11 @@
     },
     {
       "task_ID": "TASK_260619_000006_300006",
-      "task_text": "Based on the ESA Science Strategy's priorities for glacier and cryosphere monitoring, find a MOOC lecture on ice sheet remote sensing, and download a Sentinel-2 image of the Aletsch Glacier (approximately 46.5°N, 8.0°E) for August 2023 at 30 m resolution.",
+      "task_text": "Based on the ESA Science Strategy's priorities for glacier and cryosphere monitoring, find a MOOC lecture on ice sheet remote sensing, and download a Sentinel-2 image of the Aletsch Glacier in Switzerland for August 2023 at 30 m resolution.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent retrieves Science Strategy cryosphere objectives from HybridRAG, searches the MOOC catalogue for an ice sheet remote sensing lecture, then downloads a Sentinel-2 image of the Aletsch Glacier via GEE.",
+      "reference_solution_description": "Retrieve ESA Science Strategy content on cryosphere monitoring with hybrid_rag_retrieve, search MOOCs for ice sheet remote sensing, geocode 'Aletsch Glacier, Valais, Switzerland' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2023.",
       "reference_solutions": [
         {
           "steps": [
@@ -3555,10 +3627,17 @@
               "comment": "Search MOOC catalogue for lectures on ice sheet remote sensing"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Aletsch Glacier, Valais, Switzerland"
+              },
+              "comment": "Geocode the Aletsch Glacier to obtain coordinates for satellite download"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "latitude": 46.5,
-                "longitude": 8.0,
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
                 "buffer_m": 15000,
                 "start_date": "2023-08-01",
                 "end_date": "2023-08-31",
@@ -4160,30 +4239,34 @@
     },
     {
       "task_ID": "TASK_260427_000013_200013",
-      "task_text": "Download a Sentinel-2 image of a Ukrainian agricultural area (bbox: [31.0, 48.5, 33.0, 50.0]) for June 2023 with bands B4 and B8 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save it to /tmp/ndvi_ukraine.tif. Report the mean and maximum NDVI values using raster band statistics.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 and B8 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save it to /tmp/ndvi_ukraine.tif. Report the mean and maximum NDVI values using raster band statistics.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls download_satellite_image → compute_ndvi → raster_band_statistics, chaining the downloaded file path between steps.",
+      "reference_solution_description": "Geocode 'Bila Tserkva, Kyiv Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B4+B8 image with a 10 km buffer for June 2023, compute NDVI, then report band statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Bila Tserkva, Kyiv Oblast, Ukraine"
+              },
+              "comment": "Geocode 'Bila Tserkva, Kyiv Oblast, Ukraine' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  31.0,
-                  48.5,
-                  33.0,
-                  50.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "bands": "B4,B8",
                 "scale": 20,
                 "max_cloud_cover": 20
               },
-              "comment": "Download Sentinel-2 image for Ukraine agricultural area"
+              "comment": "Download Sentinel-2 image for agricultural area around Bila Tserkva"
             },
             {
               "function_name": "compute_ndvi",
@@ -4215,25 +4298,29 @@
     },
     {
       "task_ID": "TASK_260427_000014_200014",
-      "task_text": "Transform the geographic coordinates of the Colosseum in Rome (longitude: 12.4922, latitude: 41.8902) from WGS84 (EPSG:4326) to UTM zone 33N (EPSG:32633).",
+      "task_text": "Transform the geographic coordinates of the Colosseum in Rome from WGS84 (EPSG:4326) to UTM zone 33N (EPSG:32633).",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls transform_coordinates with the Colosseum WGS84 coordinates and requests conversion to UTM 33N.",
+      "reference_solution_description": "Geocode 'Colosseum, Rome, Italy' with get_lat_lon to obtain WGS84 coordinates, then transform the result from EPSG:4326 to EPSG:32633 (UTM zone 33N).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Colosseum, Rome, Italy"
+              },
+              "comment": "Geocode the Colosseum to obtain its WGS84 coordinates"
+            },
+            {
               "function_name": "transform_coordinates",
               "arguments": {
-                "coordinates": [
-                  12.4922,
-                  41.8902
-                ],
+                "coordinates": "<derived from get_lat_lon step>",
                 "source_crs": "EPSG:4326",
                 "target_crs": "EPSG:32633"
               },
-              "comment": "Transform Colosseum coordinates from geographic WGS84 to UTM 33N"
+              "comment": "Transform geocoded Colosseum coordinates from WGS84 to UTM 33N"
             }
           ]
         }
@@ -4248,21 +4335,25 @@
     },
     {
       "task_ID": "TASK_260427_000015_200015",
-      "task_text": "Find the appropriate UTM CRS for a location in central Ethiopia at longitude 39.0°E and latitude 9.0°N.",
+      "task_text": "Find the appropriate UTM CRS for the centre of Addis Ababa, Ethiopia.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent queries the UTM CRS for the given coordinate to identify the correct projection zone for that region.",
+      "reference_solution_description": "Geocode 'Addis Ababa, Ethiopia' with get_lat_lon to obtain the coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the correct UTM projection.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Addis Ababa, Ethiopia"
+              },
+              "comment": "Geocode 'Addis Ababa, Ethiopia' to obtain latitude and longitude"
+            },
+            {
               "function_name": "get_utm_crs",
               "arguments": {
-                "coordinates": [
-                  39.0,
-                  9.0
-                ]
+                "coordinates": "<derived from get_lat_lon step>"
               },
               "comment": "Get the UTM CRS code appropriate for central Ethiopia"
             }
@@ -4271,12 +4362,16 @@
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Addis Ababa, Ethiopia"
+              },
+              "comment": "Geocode 'Addis Ababa, Ethiopia' to obtain latitude and longitude"
+            },
+            {
               "function_name": "get_utm_zone",
               "arguments": {
-                "coordinates": [
-                  39.0,
-                  9.0
-                ]
+                "coordinates": "<derived from get_lat_lon step>"
               },
               "comment": "Alternative: get the UTM zone identifier for the same location"
             }
@@ -4293,25 +4388,33 @@
     },
     {
       "task_ID": "TASK_260427_000016_200016",
-      "task_text": "Calculate the geodetic distance in metres along the WGS84 ellipsoid between ESA's ESRIN centre in Frascati, Italy (13.0°E, 41.8°N) and ESA's ESAC centre in Villanueva de la Cañada, Spain (-4.0°E, 40.4°N).",
+      "task_text": "Calculate the geodetic distance in metres along the WGS84 ellipsoid between ESA’s ESRIN centre in Frascati, Italy and ESA’s ESAC centre in Villanueva de la Cañada, Spain.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls calculate_geodetic_distance with the two site coordinates to compute the great-circle distance on the WGS84 ellipsoid.",
+      "reference_solution_description": "Geocode both ESA facilities with get_lat_lon, then pass the resulting coordinates to calculate_geodetic_distance to compute the WGS84 geodetic distance between them.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "ESRIN, Frascati, Italy"
+              },
+              "comment": "Geocode ESRIN to obtain its WGS84 coordinates"
+            },
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "ESAC, Villanueva de la Cañada, Madrid, Spain"
+              },
+              "comment": "Geocode ESAC to obtain its WGS84 coordinates"
+            },
+            {
               "function_name": "calculate_geodetic_distance",
               "arguments": {
-                "point1": [
-                  13.0,
-                  41.8
-                ],
-                "point2": [
-                  -4.0,
-                  40.4
-                ],
+                "point1": "<derived from step 1>",
+                "point2": "<derived from step 2>",
                 "ellps": "WGS84"
               },
               "comment": "Compute geodetic distance between ESRIN (Italy) and ESAC (Spain)"
@@ -4441,7 +4544,7 @@
     },
     {
       "task_ID": "TASK_260427_000020_200020",
-      "task_text": "Search arXiv for papers on SAR-based flood extent mapping published since 2023, download the most relevant result, read its full content to identify the study area, then compute the geodetic distance between that study area centroid and Rome, Italy (12.5°E, 41.9°N).",
+      "task_text": "Search arXiv for papers on SAR-based flood extent mapping published since 2023, download the most relevant result, read its full content to identify the study area, then compute the geodetic distance between that study area centroid and Rome, Italy.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -4473,16 +4576,20 @@
               "comment": "Read the paper to identify the study area location"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Rome, Italy"
+              },
+              "comment": "Geocode Rome to obtain coordinates for the distance calculation"
+            },
+            {
               "function_name": "calculate_geodetic_distance",
               "arguments": {
                 "point1": "<study area centroid [lon, lat] derived from paper>",
-                "point2": [
-                  12.5,
-                  41.9
-                ],
+                "point2": "<derived from get_lat_lon step>",
                 "ellps": "WGS84"
               },
-              "comment": "Compute distance from the study area to Rome"
+              "comment": "Compute geodetic distance from the study area to Rome"
             }
           ]
         }
@@ -4932,23 +5039,27 @@
     },
     {
       "task_ID": "TASK_260427_000031_200031",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the Po Valley agricultural region in northern Italy (bbox: [10.5, 44.7, 12.0, 45.4]) for June–August 2023 at 20 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save it to /output/ndvi_po_valley_2023.tif.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia in the Po Valley, Lombardy, Italy for June–August 2023 at 20 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save it to /output/ndvi_po_valley_2023.tif.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent downloads a two-band Sentinel-2 image via GEE (B8 first, B4 second), then computes NDVI using nir_band_index=1 and red_band_index=2 on the returned file path.",
+      "reference_solution_description": "Geocode 'Pavia, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023, then compute NDVI from the downloaded raster.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Pavia, Lombardy, Italy"
+              },
+              "comment": "Geocode 'Pavia, Lombardy, Italy' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  10.5,
-                  44.7,
-                  12.0,
-                  45.4
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
                 "bands": "B8,B4",
@@ -4956,7 +5067,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red bands for the Po Valley summer growing season"
+              "comment": "Download NIR+Red bands for the Po Valley summer growing season near Pavia"
             },
             {
               "function_name": "compute_ndvi",
@@ -4973,14 +5084,18 @@
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Pavia, Lombardy, Italy"
+              },
+              "comment": "Geocode 'Pavia, Lombardy, Italy' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  10.5,
-                  44.7,
-                  12.0,
-                  45.4
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
                 "bands": "B4,B8",
@@ -5013,23 +5128,27 @@
     },
     {
       "task_ID": "TASK_260427_000032_200032",
-      "task_text": "Download a Sentinel-2 image of the Sahel region in Niger (bbox: [2.0, 13.0, 4.0, 15.0]) for the rainy season of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI from the result, then calculate the per-band statistics of the NDVI raster to understand the vegetation density distribution.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for the rainy season of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI from the result, then calculate the per-band statistics of the NDVI raster to understand the vegetation density distribution.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent downloads the GEE image, computes NDVI, then retrieves band statistics to summarise the NDVI values.",
+      "reference_solution_description": "Geocode 'Zinder, Niger' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for July–September 2022, compute NDVI, then calculate per-band statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Zinder, Niger"
+              },
+              "comment": "Geocode 'Zinder, Niger' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  2.0,
-                  13.0,
-                  4.0,
-                  15.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4",
@@ -5037,7 +5156,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red Sentinel-2 for the Sahel rainy season"
+              "comment": "Download NIR+Red Sentinel-2 for the Sahel rainy season around Zinder"
             },
             {
               "function_name": "compute_ndvi",
@@ -5069,23 +5188,27 @@
     },
     {
       "task_ID": "TASK_260427_000033_200033",
-      "task_text": "Download a Sentinel-2 image of central Spain (bbox: [-4.0, 37.5, -2.0, 39.5]) for the summer drought of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI, then produce a 256-bin histogram of the NDVI raster to assess how severely vegetation was affected by the drought.",
+      "task_text": "Download a Sentinel-2 image of the area around Córdoba, Andalusia, Spain for the summer drought of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI, then produce a 256-bin histogram of the NDVI raster to assess how severely vegetation was affected by the drought.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent downloads a GEE NIR+Red image, computes NDVI, then produces a histogram to reveal the NDVI distribution under drought stress.",
+      "reference_solution_description": "Geocode 'Córdoba, Andalusia, Spain' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for July–September 2022, compute NDVI, then produce a 256-bin histogram.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Córdoba, Andalusia, Spain"
+              },
+              "comment": "Geocode 'Córdoba, Andalusia, Spain' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -4.0,
-                  37.5,
-                  -2.0,
-                  39.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "bands": "B8,B4",
@@ -5093,7 +5216,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red for drought-affected central Spain"
+              "comment": "Download NIR+Red for drought-affected area around Córdoba"
             },
             {
               "function_name": "compute_ndvi",
@@ -5126,23 +5249,27 @@
     },
     {
       "task_ID": "TASK_260427_000034_200034",
-      "task_text": "Download a Sentinel-2 image of the Nile Delta agricultural region in Egypt (bbox: [30.0, 30.0, 32.5, 31.5]) for April 2023 with bands B8 and B4 at 20 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save it to /output/ndvi_nile_delta_utm.tif.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 20 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save it to /output/ndvi_nile_delta_utm.tif.",
       "task_labels": [
-        "Cross-agent Synthesis"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent downloads the GEE image, reprojects to a metric CRS, then computes NDVI so that pixel distances are in metres.",
+      "reference_solution_description": "Geocode 'Kafr el-Sheikh, Egypt' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for April 2023, reproject to UTM 36N, then compute NDVI from the reprojected raster.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Kafr el-Sheikh, Egypt"
+              },
+              "comment": "Geocode 'Kafr el-Sheikh, Egypt' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  30.0,
-                  30.0,
-                  32.5,
-                  31.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2023-04-01",
                 "end_date": "2023-04-30",
                 "bands": "B8,B4",
@@ -5185,30 +5312,34 @@
     },
     {
       "task_ID": "TASK_260427_000035_200035",
-      "task_text": "Download a Sentinel-2 image of a Ukrainian agricultural sub-area (bbox: [31.5, 48.8, 32.5, 49.5]) for June 2023 with bands B8 and B4 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save it to /tmp/ndvi_ukraine_inner.tif. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save as /tmp/ndvi_ukraine_utm.tif. Finally report band statistics (mean, max, std) for the reprojected raster.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save it to /tmp/ndvi_ukraine_inner.tif. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save as /tmp/ndvi_ukraine_utm.tif. Finally report band statistics (mean, max, std) for the reprojected raster.",
       "task_labels": [
-        "Cross-agent Synthesis"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent chains GEE download → compute_ndvi → reproject_raster → raster_band_statistics for an end-to-end cross-server analysis.",
+      "reference_solution_description": "Geocode 'Yahotyn, Kyiv Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for June 2023, compute NDVI, reproject to UTM 36N, then report band statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Yahotyn, Kyiv Oblast, Ukraine"
+              },
+              "comment": "Geocode 'Yahotyn, Kyiv Oblast, Ukraine' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  31.5,
-                  48.8,
-                  32.5,
-                  49.5
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "bands": "B8,B4",
                 "scale": 20,
                 "max_cloud_cover": 20
               },
-              "comment": "Download Sentinel-2 image for Ukrainian sub-region study area"
+              "comment": "Download Sentinel-2 image for agricultural area around Yahotyn"
             },
             {
               "function_name": "compute_ndvi",
@@ -5249,11 +5380,11 @@
     },
     {
       "task_ID": "TASK_260427_000036_200036",
-      "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the Sahel in Mali (bbox: [-3.0, 13.0, -1.0, 15.0]) for August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
+      "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the agricultural area around Mopti, Mali for August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent combines ESA strategy context with a full GEE→NDVI→statistics pipeline to assess vegetation status against the strategy's food security objectives.",
+      "reference_solution_description": "Retrieve ESA strategy objectives on food security with hybrid_rag_retrieve, geocode 'Mopti, Mali' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for August 2023, compute NDVI, then report band statistics.",
       "reference_solutions": [
         {
           "steps": [
@@ -5265,14 +5396,18 @@
               "comment": "Retrieve ESA strategy objectives on food security and vegetation"
             },
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Mopti, Mali"
+              },
+              "comment": "Geocode 'Mopti, Mali' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  -3.0,
-                  13.0,
-                  -1.0,
-                  15.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 15000,
                 "start_date": "2023-08-01",
                 "end_date": "2023-08-31",
                 "bands": "B8,B4",
@@ -5280,7 +5415,7 @@
                 "max_cloud_cover": 30,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red for Mali Sahel peak growing season"
+              "comment": "Download NIR+Red for Mali Sahel peak growing season around Mopti"
             },
             {
               "function_name": "compute_ndvi",
@@ -5312,23 +5447,27 @@
     },
     {
       "task_ID": "TASK_260427_000037_200037",
-      "task_text": "Download a Sentinel-2 image of central Rome (bbox: [12.45, 41.85, 12.55, 41.95]) for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster (using a red-yellow-green colormap) to /output/maps/ndvi_rome_2023.png.",
+      "task_text": "Download a Sentinel-2 image of central Rome, Italy for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster (using a red-yellow-green colormap) to /output/maps/ndvi_rome_2023.png.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent downloads the GEE image, computes NDVI, then calls create_map with the NDVI raster as a single layer styled with cmap RdYlGn.",
+      "reference_solution_description": "Geocode 'central Rome, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 5 km buffer for June 2023 at 10 m resolution, compute NDVI, then render a static PNG map.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "central Rome, Italy"
+              },
+              "comment": "Geocode central Rome to obtain coordinates for satellite download"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  12.45,
-                  41.85,
-                  12.55,
-                  41.95
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 5000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "bands": "B8,B4",
@@ -5381,23 +5520,27 @@
     },
     {
       "task_ID": "TASK_260427_000038_200038",
-      "task_text": "Download a Sentinel-2 image of the Po Valley (bbox: [10.5, 44.7, 12.0, 45.4]) for June–August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, then create a static map that layers the NDVI raster (red-yellow-green colormap) together with the administrative region boundary shapefile at /data/po_valley_boundary.shp as a black outline.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, then create a static map that layers the NDVI raster (red-yellow-green colormap) together with the administrative region boundary shapefile at /data/po_valley_boundary.shp as a black outline.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent downloads the GEE image, computes NDVI, then calls create_map with two layers: the NDVI raster and the vector boundary overlaid on top.",
+      "reference_solution_description": "Geocode 'Lodi, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023, compute NDVI, then create a static map with the region boundary overlay.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Lodi, Lombardy, Italy"
+              },
+              "comment": "Geocode 'Lodi, Lombardy, Italy' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  10.5,
-                  44.7,
-                  12.0,
-                  45.4
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 8000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
                 "bands": "B8,B4",
@@ -5405,7 +5548,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red for Po Valley summer"
+              "comment": "Download NIR+Red for Po Valley summer near Lodi"
             },
             {
               "function_name": "compute_ndvi",
@@ -5459,23 +5602,27 @@
     },
     {
       "task_ID": "TASK_260427_000039_200039",
-      "task_text": "Download a Sentinel-2 image of the Ukrainian agricultural area (bbox: [31.0, 48.5, 33.0, 50.0]) for June 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, calculate zonal statistics (mean NDVI) for the field parcels at /data/ukraine_fields.shp, then create a static map showing the NDVI raster with the field parcel boundaries overlaid.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Uman, Cherkasy Oblast, Ukraine for June 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, calculate zonal statistics (mean NDVI) for the field parcels at /data/ukraine_fields.shp, then create a static map showing the NDVI raster with the field parcel boundaries overlaid.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent executes a full crop-monitoring pipeline ending in a map: GEE download → NDVI → zonal statistics → create_map with NDVI raster and field boundary layers.",
+      "reference_solution_description": "Geocode 'Uman, Cherkasy Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for June 2023, compute NDVI, calculate zonal statistics per parcel, then render a static map.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Uman, Cherkasy Oblast, Ukraine"
+              },
+              "comment": "Geocode 'Uman, Cherkasy Oblast, Ukraine' to obtain latitude and longitude"
+            },
+            {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": [
-                  31.0,
-                  48.5,
-                  33.0,
-                  50.0
-                ],
+                "latitude": "<derived from get_lat_lon step>[0]",
+                "longitude": "<derived from get_lat_lon step>[1]",
+                "buffer_m": 10000,
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "bands": "B8,B4",
@@ -5483,7 +5630,7 @@
                 "max_cloud_cover": 20,
                 "image_count": 1
               },
-              "comment": "Download NIR+Red for Ukrainian agricultural area"
+              "comment": "Download NIR+Red for Ukrainian agricultural area around Uman"
             },
             {
               "function_name": "compute_ndvi",
@@ -5745,20 +5892,20 @@
     },
     {
       "task_ID": "TASK_260619_000014_300014",
-      "task_text": "Get the geographic bounding box coordinates for Nairobi, Kenya.",
+      "task_text": "Get the latitude and longitude coordinates for Nairobi, Kenya.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Agent calls get_bbox with the address string to retrieve the bounding box coordinates for Nairobi.",
+      "reference_solution_description": "Agent calls get_lat_lon with the address string to retrieve the geographic coordinates for Nairobi.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "get_bbox",
+              "function_name": "get_lat_lon",
               "arguments": {
                 "address": "Nairobi, Kenya"
               },
-              "comment": "Retrieve bounding box coordinates for Nairobi using the geocoding tool"
+              "comment": "Retrieve [latitude, longitude] for Nairobi using the Google Maps geocoding tool"
             }
           ]
         }
@@ -5773,32 +5920,33 @@
     },
     {
       "task_ID": "TASK_260619_000015_300015",
-      "task_text": "Get the bounding box for Reykjavik, Iceland, then use those coordinates to download a Sentinel-2 image of that area for July 2022 at 60 m resolution.",
+      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 60 m resolution.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first geocodes Reykjavik to a bounding box, then passes those coordinates to download_satellite_image.",
+      "reference_solution_description": "Agent first geocodes Reykjavik with get_lat_lon, then passes the returned coordinates to download_satellite_image.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "get_bbox",
+              "function_name": "get_lat_lon",
               "arguments": {
                 "address": "Reykjavik, Iceland"
               },
-              "comment": "Geocode Reykjavik to retrieve its bounding box"
+              "comment": "Geocode Reykjavik; returns [latitude, longitude]"
             },
             {
               "function_name": "download_satellite_image",
               "arguments": {
-                "bounding_box": "<[min_lon, min_lat, max_lon, max_lat] from previous step>",
+                "latitude": "<derived from previous step>[0]",
+                "longitude": "<derived from previous step>[1]",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "scale": 60,
                 "bands": "B4,B3,B2",
                 "max_cloud_cover": 40.0
               },
-              "comment": "Download Sentinel-2 RGB image using the bounding box from get_bbox"
+              "comment": "Download Sentinel-2 RGB image using coordinates from get_lat_lon"
             }
           ]
         }
@@ -5810,6 +5958,1027 @@
       "match_score_LLM": null,
       "match_reasoning_Human": null,
       "match_score_Human": null
+    },
+    {
+      "task_ID": "TASK_260713_000001_400001",
+      "task_text": "What are the latitude and longitude coordinates of the ESA ESRIN facility in Frascati, Italy?",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Call get_lat_lon with the address of ESA ESRIN. Returns [latitude, longitude] via Google Maps API.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "ESA ESRIN, Via Galileo Galilei, Frascati, Italy"
+              },
+              "comment": "Correct if get_lat_lon resolves to the ESRIN campus coordinates near Frascati."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000002_400002",
+      "task_text": "Retrieve the latitude and longitude of Manaus, Brazil, the gateway city for Amazon basin satellite observation campaigns.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Call get_lat_lon with Manaus, Brazil. Returns the geographic centroid of the city.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Manaus, Amazonas, Brazil"
+              },
+              "comment": "Correct if get_lat_lon resolves unambiguously to Manaus."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000003_400003",
+      "task_text": "What are the geographic coordinates of the Mauna Loa Observatory in Hawaii, one of the world's key atmospheric CO2 monitoring stations?",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Call get_lat_lon with the Mauna Loa Observatory address to obtain its latitude and longitude.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Mauna Loa Observatory, Hawaii, USA"
+              },
+              "comment": "Correct if get_lat_lon resolves to the Mauna Loa Observatory on Hawaii's Big Island."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000004_400004",
+      "task_text": "Geocode the city of Aral, Kazakhstan, then download a Sentinel-2 true colour image of that location for July 2023 at 30 m resolution to observe Aral Sea shoreline change.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Call get_lat_lon to resolve coordinates for Aral, Kazakhstan, then pass them to download_satellite_image for a Sentinel-2 RGB scene.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Aral, Kyzylorda Region, Kazakhstan"
+              },
+              "comment": "Step 1: geocode the location near the Aral Sea."
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": "<derived from step 1>[0]",
+                "longitude": "<derived from step 1>[1]",
+                "start_date": "2023-07-01",
+                "end_date": "2023-07-31",
+                "scale": 30,
+                "bands": "B4,B3,B2",
+                "dataset": "COPERNICUS/S2_SR_HARMONIZED",
+                "max_cloud_cover": 20
+              },
+              "comment": "Step 2: download Sentinel-2 RGB using coordinates from step 1."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000005_400005",
+      "task_text": "Locate Mount Etna in Sicily, Italy, then download a Sentinel-2 short-wave infrared composite (bands B12, B11, B8A) for October–November 2022 at 20 m resolution to monitor volcanic thermal anomalies.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode Mount Etna with get_lat_lon, then use the coordinates to download a Sentinel-2 SWIR image.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Mount Etna, Sicily, Italy"
+              },
+              "comment": "Step 1: resolve the volcano's geographic coordinates."
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": "<derived from step 1>[0]",
+                "longitude": "<derived from step 1>[1]",
+                "start_date": "2022-10-01",
+                "end_date": "2022-11-30",
+                "scale": 20,
+                "bands": "B12,B11,B8A",
+                "dataset": "COPERNICUS/S2_SR_HARMONIZED",
+                "max_cloud_cover": 30
+              },
+              "comment": "Step 2: download Sentinel-2 SWIR bands for volcanic heat signature detection."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000006_400006",
+      "task_text": "Find MOOC educational content on SAR-based flood mapping, then geocode Dhaka, Bangladesh and download a Sentinel-1 GRD image from August 2022 at 10 m resolution to assess monsoon flood extent.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Search MOOCs for SAR flood content, geocode Dhaka with get_lat_lon, then download a Sentinel-1 image using those coordinates.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "SAR flood mapping synthetic aperture radar",
+                "top_k": 5
+              },
+              "comment": "Step 1: find EO MOOC content on SAR-based flood detection."
+            },
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Dhaka, Bangladesh"
+              },
+              "comment": "Step 2: geocode the study area."
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": "<derived from step 2>[0]",
+                "longitude": "<derived from step 2>[1]",
+                "start_date": "2022-08-01",
+                "end_date": "2022-08-31",
+                "scale": 10,
+                "dataset": "COPERNICUS/S1_GRD",
+                "bands": "VV"
+              },
+              "comment": "Step 3: download Sentinel-1 SAR image using geocoded coordinates."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000007_400007",
+      "task_text": "Retrieve ESA strategic priorities for Arctic cryosphere monitoring from the knowledge base, then geocode the Ny-Ålesund research station in Svalbard, Norway and download a Sentinel-2 image from September 2023 to assess sea ice retreat.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Use hybrid_rag_retrieve for ESA Arctic strategy content, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "hybrid_rag_retrieve",
+              "arguments": {
+                "question": "ESA strategic priorities for Arctic cryosphere and sea ice monitoring"
+              },
+              "comment": "Step 1: retrieve relevant ESA science strategy content from the knowledge graph."
+            },
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Ny-Ålesund, Svalbard, Norway"
+              },
+              "comment": "Step 2: geocode the Arctic research station."
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": "<derived from step 2>[0]",
+                "longitude": "<derived from step 2>[1]",
+                "start_date": "2023-09-01",
+                "end_date": "2023-09-30",
+                "scale": 10,
+                "bands": "B4,B3,B2",
+                "dataset": "COPERNICUS/S2_SR_HARMONIZED",
+                "max_cloud_cover": 50
+              },
+              "comment": "Step 3: download Sentinel-2 image using geocoded coordinates."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000008_400008",
+      "task_text": "Use get_lat_lon to find the geographic coordinates of the Perseverance rover's landing site on Mars.",
+      "task_labels": [
+        "Scope Awareness"
+      ],
+      "reference_solution_description": "The correct response is to not call get_lat_lon. It uses the Google Maps API which covers only Earth addresses; Martian locations are entirely outside its scope. The agent should explain this limitation rather than calling the tool.",
+      "reference_solutions": [
+        {
+          "steps": []
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000009_400009",
+      "task_text": "Read the metadata (driver, CRS, pixel resolution, band count, data type, and geographic extent) of a Copernicus DEM raster file at /data/copernicus_dem_etna.tif.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls metadata_raster with the file path to retrieve all raster metadata properties.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "metadata_raster",
+              "arguments": {
+                "path_or_url": "/data/copernicus_dem_etna.tif"
+              },
+              "comment": "Retrieve driver, CRS, dimensions, band count, dtype and bounds of the DEM raster."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000010_400010",
+      "task_text": "Read the metadata of /data/landsat8_california_2022.tif to verify its CRS and band structure, then compute per-band statistics to summarise the reflectance distribution.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Call metadata_raster to inspect the Landsat file, then raster_band_statistics on the same file to get per-band min/max/mean/std.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "metadata_raster",
+              "arguments": {
+                "path_or_url": "/data/landsat8_california_2022.tif"
+              },
+              "comment": "Step 1: inspect CRS, band count, and data type of the Landsat file."
+            },
+            {
+              "function_name": "raster_band_statistics",
+              "arguments": {
+                "source": "/data/landsat8_california_2022.tif"
+              },
+              "comment": "Step 2: compute min, max, mean and std for each band."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000011_400011",
+      "task_text": "Compute NDVI for the Congo Basin rainforest (bbox: [22.0, -3.0, 26.0, 1.0]) using Sentinel-2 imagery for August 2023 and save the result to /tmp/ndvi_congo_2023.tif.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls compute_s2_ndvi with the Congo Basin bounding box, August 2023 time range, and output path.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "compute_s2_ndvi",
+              "arguments": {
+                "bbox": [
+                  22.0,
+                  -3.0,
+                  26.0,
+                  1.0
+                ],
+                "time_range": "2023-08-01/2023-08-31",
+                "output_path": "/tmp/ndvi_congo_2023.tif"
+              },
+              "comment": "Fetch Sentinel-2 tiles via Planetary Computer and compute NDVI for the Congo Basin."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000012_400012",
+      "task_text": "Compute NDVI for the Iberian Peninsula (bbox: [-9.5, 36.0, -6.0, 40.0]) for September 2022 to assess late-summer vegetation stress, then generate a histogram of the NDVI values with 100 bins.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Call compute_s2_ndvi to produce an NDVI raster for Iberia, then call raster_histogram on the output to analyse the pixel-value distribution.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "compute_s2_ndvi",
+              "arguments": {
+                "bbox": [
+                  -9.5,
+                  36.0,
+                  -6.0,
+                  40.0
+                ],
+                "time_range": "2022-09-01/2022-09-30",
+                "output_path": "/tmp/ndvi_iberia_2022.tif"
+              },
+              "comment": "Step 1: compute NDVI for the Iberian Peninsula."
+            },
+            {
+              "function_name": "raster_histogram",
+              "arguments": {
+                "source": "/tmp/ndvi_iberia_2022.tif",
+                "bins": 100
+              },
+              "comment": "Step 2: compute 100-bin histogram of NDVI values to characterise vegetation stress distribution."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000013_400013",
+      "task_text": "Clip the global ESA WorldCover 2021 land-cover raster at /data/esa_worldcover_2021.tif to the Kenya country boundary shapefile at /data/kenya_boundary.shp and save the result to /output/worldcover_kenya_2021.tif.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls clip_raster_with_shapefile with the WorldCover raster and the Kenya boundary shapefile.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "clip_raster_with_shapefile",
+              "arguments": {
+                "raster_path_or_url": "/data/esa_worldcover_2021.tif",
+                "shapefile_path": "/data/kenya_boundary.shp",
+                "destination": "/output/worldcover_kenya_2021.tif"
+              },
+              "comment": "Clip global land-cover raster to Kenya boundary."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000014_400014",
+      "task_text": "Clip the Sentinel-2 image at /data/sentinel2_greece_2023.tif to the Attica region polygon at /data/attica_boundary.shp, then compute NDVI (NIR = band 8, Red = band 4) from the clipped result to assess summer vegetation in the Greek capital region.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Clip the Sentinel-2 raster to Attica, then compute NDVI from the clipped output.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "clip_raster_with_shapefile",
+              "arguments": {
+                "raster_path_or_url": "/data/sentinel2_greece_2023.tif",
+                "shapefile_path": "/data/attica_boundary.shp",
+                "destination": "/output/s2_attica_2023_clipped.tif"
+              },
+              "comment": "Step 1: clip Sentinel-2 to the Attica region boundary."
+            },
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "/output/s2_attica_2023_clipped.tif",
+                "nir_band_index": 8,
+                "red_band_index": 4,
+                "destination": "/output/ndvi_attica_2023.tif"
+              },
+              "comment": "Step 2: compute NDVI from the clipped image for summer vegetation assessment."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000015_400015",
+      "task_text": "Convert the coordinates of the Greenland Ice Sheet monitoring station at longitude -40.5°, latitude 72.6° from WGS84 (EPSG:4326) to EPSG:3413 (WGS 84 / NSIDC Sea Ice Polar Stereographic North) for polar-projection analysis.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls transform_coordinates with the Greenland station WGS84 coordinates and requests conversion to EPSG:3413.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "transform_coordinates",
+              "arguments": {
+                "coordinates": [
+                  -40.5,
+                  72.6
+                ],
+                "source_crs": "EPSG:4326",
+                "target_crs": "EPSG:3413"
+              },
+              "comment": "Transform Greenland coordinates to NSIDC polar stereographic north projection."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000016_400016",
+      "task_text": "Find the appropriate UTM CRS for central Addis Ababa, Ethiopia, then transform the city centre coordinates from WGS84 to that UTM projection.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode 'central Addis Ababa, Ethiopia' with get_lat_lon, pass the result to get_utm_crs, then transform the same coordinates from EPSG:4326 to the derived UTM CRS.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "central Addis Ababa, Ethiopia"
+              },
+              "comment": "Step 1: geocode Addis Ababa to obtain WGS84 coordinates."
+            },
+            {
+              "function_name": "get_utm_crs",
+              "arguments": {
+                "coordinates": "<derived from get_lat_lon step>"
+              },
+              "comment": "Step 2: identify the UTM CRS code for central Ethiopia."
+            },
+            {
+              "function_name": "transform_coordinates",
+              "arguments": {
+                "coordinates": "<derived from get_lat_lon step>",
+                "source_crs": "EPSG:4326",
+                "target_crs": "<derived from step 2>"
+              },
+              "comment": "Step 3: transform Addis Ababa centroid to UTM using the CRS from step 2."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000017_400017",
+      "task_text": "Determine the UTM CRS and UTM zone for a satellite downlink station near Belém, Brazil.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode 'Belém, Pará, Brazil' with get_lat_lon to obtain coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the UTM projection.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Belém, Pará, Brazil"
+              },
+              "comment": "Geocode 'Belém, Pará, Brazil' to obtain latitude and longitude"
+            },
+            {
+              "function_name": "get_utm_crs",
+              "arguments": {
+                "coordinates": "<derived from get_lat_lon step>"
+              },
+              "comment": "Return the EPSG code for the UTM zone covering the Amazon estuary region near Belém."
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Belém, Pará, Brazil"
+              },
+              "comment": "Geocode 'Belém, Pará, Brazil' to obtain latitude and longitude"
+            },
+            {
+              "function_name": "get_utm_zone",
+              "arguments": {
+                "coordinates": "<derived from get_lat_lon step>"
+              },
+              "comment": "Alternative: return the UTM zone identifier for the same location."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000018_400018",
+      "task_text": "Find the UTM zone for a Finnish boreal forest monitoring site near Joensuu, North Karelia, Finland, then reproject the forest density raster at /data/finland_forest_2022.tif to that UTM projection using bilinear resampling.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode 'Joensuu, North Karelia, Finland' with get_lat_lon, pass the coordinates to get_utm_zone, then reproject the forest raster to the derived UTM projection using bilinear resampling.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Joensuu, North Karelia, Finland"
+              },
+              "comment": "Step 1: geocode the Finnish boreal forest monitoring site."
+            },
+            {
+              "function_name": "get_utm_zone",
+              "arguments": {
+                "coordinates": "<derived from get_lat_lon step>"
+              },
+              "comment": "Step 2: identify the UTM zone for the Finnish boreal region."
+            },
+            {
+              "function_name": "reproject_raster",
+              "arguments": {
+                "source": "/data/finland_forest_2022.tif",
+                "target_crs": "<derived from step 2>",
+                "destination": "/output/finland_forest_utm35n.tif",
+                "resampling": "bilinear"
+              },
+              "comment": "Step 3: reproject the forest raster to the UTM projection found in step 2."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000019_400019",
+      "task_text": "Create a 3 km exclusion buffer around the Chernobyl Nuclear Power Plant representing a contamination perimeter, then calculate the geodetic area of the resulting polygon.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode 'Chernobyl Nuclear Power Plant, Ukraine' with get_lat_lon, construct a WKT POINT from the returned longitude and latitude, create a 3 km buffer, then calculate the geodetic area of the resulting polygon.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Chernobyl Nuclear Power Plant, Ukraine"
+              },
+              "comment": "Step 1: geocode the Chernobyl NPP to obtain WGS84 coordinates."
+            },
+            {
+              "function_name": "buffer",
+              "arguments": {
+                "geometry": "POINT(<lon from get_lat_lon step> <lat from get_lat_lon step>)",
+                "distance": 3000.0,
+                "resolution": 64
+              },
+              "comment": "Step 2: construct WKT POINT(lon lat) from geocoded coordinates and create 3 km exclusion buffer."
+            },
+            {
+              "function_name": "calculate_geodetic_area",
+              "arguments": {
+                "geometry": "<WKT polygon returned by buffer>",
+                "ellps": "WGS84"
+              },
+              "comment": "Step 3: compute the geodetic area of the buffered exclusion zone polygon."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000020_400020",
+      "task_text": "Calculate the geodetic area in square kilometres of the Greenland ice sheet region defined by the polygon WKT: POLYGON((-73.0 76.0, -12.0 83.5, 18.0 77.0, 10.0 70.0, -24.0 65.0, -44.0 59.5, -59.0 62.0, -73.0 76.0)).",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls calculate_geodetic_area with the Greenland polygon WKT to compute its area on the WGS84 ellipsoid.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "calculate_geodetic_area",
+              "arguments": {
+                "geometry": "POLYGON((-73.0 76.0, -12.0 83.5, 18.0 77.0, 10.0 70.0, -24.0 65.0, -44.0 59.5, -59.0 62.0, -73.0 76.0))",
+                "ellps": "WGS84"
+              },
+              "comment": "Compute the geodetic area of the approximate Greenland ice sheet outline."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000021_400021",
+      "task_text": "Create a 20 km buffer around the 2018 Camp Fire origin point near Paradise, Butte County, California representing the potential smoke-impact zone, then retrieve ESA strategic content on fire-monitoring remote sensing to contextualise the risk assessment.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Geocode 'Paradise, Butte County, California, USA' with get_lat_lon, construct a WKT POINT from the coordinates, create a 20 km buffer, then retrieve ESA Science Strategy content on wildfire monitoring.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "get_lat_lon",
+              "arguments": {
+                "address": "Paradise, Butte County, California, USA"
+              },
+              "comment": "Step 1: geocode the wildfire origin site near Paradise, CA."
+            },
+            {
+              "function_name": "buffer",
+              "arguments": {
+                "geometry": "POINT(<lon from get_lat_lon step> <lat from get_lat_lon step>)",
+                "distance": 20000.0,
+                "resolution": 64
+              },
+              "comment": "Step 2: construct WKT POINT(lon lat) from geocoded coordinates and create 20 km smoke-impact buffer."
+            },
+            {
+              "function_name": "hybrid_rag_retrieve",
+              "arguments": {
+                "question": "ESA Earth Observation strategic objectives for wildfire monitoring and burned area mapping"
+              },
+              "comment": "Step 3: retrieve ESA science strategy context for fire monitoring."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000022_400022",
+      "task_text": "Spatially join the wildfire ignition points at /data/california_fires_2020.gpkg with the land management zones at /data/california_land_mgmt.gpkg to determine which agency is responsible for each fire location, saving the result to /output/fires_with_mgmt_zones.gpkg.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls sjoin_gpd to join wildfire ignition points with land management zone polygons.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "sjoin_gpd",
+              "arguments": {
+                "left_path": "/data/california_fires_2020.gpkg",
+                "right_path": "/data/california_land_mgmt.gpkg",
+                "how": "inner",
+                "predicate": "intersects",
+                "output_path": "/output/fires_with_mgmt_zones.gpkg"
+              },
+              "comment": "Spatially join fire ignition points to land management zones they fall within."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000023_400023",
+      "task_text": "Check which ICOS carbon flux tower locations at /data/icos_stations.gpkg fall within Natura 2000 protected areas at /data/natura2000_eu.gpkg, then join those results with EU country boundaries at /data/eu_countries.gpkg to identify how many protected-area stations exist per country.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Call point_in_polygon to filter ICOS stations inside Natura 2000 areas, then sjoin_gpd to attach country information.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "point_in_polygon",
+              "arguments": {
+                "points_path": "/data/icos_stations.gpkg",
+                "polygons_path": "/data/natura2000_eu.gpkg",
+                "output_path": "/output/icos_in_natura2000.gpkg"
+              },
+              "comment": "Step 1: identify ICOS stations inside Natura 2000 protected areas."
+            },
+            {
+              "function_name": "sjoin_gpd",
+              "arguments": {
+                "left_path": "/output/icos_in_natura2000.gpkg",
+                "right_path": "/data/eu_countries.gpkg",
+                "how": "inner",
+                "predicate": "intersects",
+                "output_path": "/output/icos_natura2000_by_country.gpkg"
+              },
+              "comment": "Step 2: join with country boundaries to attribute each station to a country."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000024_400024",
+      "task_text": "Check which PRODES 2022 deforestation alert locations at /data/prodes_2022_alerts.gpkg fall inside Brazilian conservation units at /data/brazil_conservation_units.gpkg and save the intersecting records to /output/alerts_in_protected_areas.gpkg.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls point_in_polygon to filter deforestation alerts that intersect protected area polygons.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "point_in_polygon",
+              "arguments": {
+                "points_path": "/data/prodes_2022_alerts.gpkg",
+                "polygons_path": "/data/brazil_conservation_units.gpkg",
+                "output_path": "/output/alerts_in_protected_areas.gpkg"
+              },
+              "comment": "Filter deforestation alerts that fall inside conservation unit boundaries."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000025_400025",
+      "task_text": "Compute zonal statistics (mean, max, and standard deviation of NDVI) for the Po Valley NDVI raster at /output/ndvi_po_valley.tif using the agricultural field parcel boundaries at /data/po_fields.shp.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent calls zonal_statistics with the NDVI raster and field parcel shapefile to compute per-parcel statistics.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "zonal_statistics",
+              "arguments": {
+                "raster_path": "/output/ndvi_po_valley.tif",
+                "vector_path": "/data/po_fields.shp",
+                "stats": [
+                  "mean",
+                  "max",
+                  "std"
+                ]
+              },
+              "comment": "Compute mean, max and std NDVI per agricultural field parcel."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260713_000026_400026",
+      "task_text": "Compute NDVI from the Sentinel-2 image at /data/sentinel2_sahel_2023.tif (NIR = band 8, Red = band 4, output: /tmp/ndvi_sahel_2023.tif), then calculate the mean NDVI for each agro-pastoral zone defined in /data/sahel_zones.shp to assess vegetation productivity across the Sahel.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Compute NDVI from the Sentinel-2 image, then run zonal statistics on the NDVI raster for the Sahel management zones.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "/data/sentinel2_sahel_2023.tif",
+                "nir_band_index": 8,
+                "red_band_index": 4,
+                "destination": "/tmp/ndvi_sahel_2023.tif"
+              },
+              "comment": "Step 1: compute NDVI from NIR and Red bands."
+            },
+            {
+              "function_name": "zonal_statistics",
+              "arguments": {
+                "raster_path": "/tmp/ndvi_sahel_2023.tif",
+                "vector_path": "/data/sahel_zones.shp",
+                "stats": [
+                  "mean"
+                ]
+              },
+              "comment": "Step 2: compute mean NDVI per agro-pastoral zone."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
     }
   ]
 }

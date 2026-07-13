@@ -53,6 +53,16 @@ def _check_gee_mcp_env() -> None:
         raise RuntimeError("GEE credentials file not found.")
 
 
+def _check_eumetsat_env() -> None:
+    """Raise RuntimeError if EUMETSAT Data Store credentials are missing."""
+    missing = [
+        v for v in ("EUMETSAT_CONSUMER_KEY", "EUMETSAT_CONSUMER_SECRET")
+        if not os.getenv(v)
+    ]
+    if missing:
+        raise RuntimeError(f"EUMETSAT credentials not set: {', '.join(missing)}")
+
+
 def _get_eve_retrieval_token() -> str:
     client_id = os.getenv("EVE_RETRIEVAL_CLIENT_ID")
     client_secret = os.getenv("EVE_RETRIEVAL_CLIENT_SECRET")
@@ -133,6 +143,14 @@ def get_mcp_servers() -> dict:
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
+        }
+    ))
+
+    _try_register(servers, "eumetsat-mcp", lambda: (
+        _check_eumetsat_env() or {
+            "transport": "stdio",
+            "command": "python",
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"],
         }
     ))
 

@@ -44,3 +44,4 @@ test_eve_auth.py
 logs/
 *.sif
 .claude/
+src/eoss_graphrag/

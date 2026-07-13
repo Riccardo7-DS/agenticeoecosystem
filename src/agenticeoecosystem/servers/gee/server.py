@@ -288,11 +288,13 @@ def _ensure_gee() -> None:
         _os.dup2(_saved_fd1, 1)
         _os.close(_saved_fd1)
         _sys.stdout = _os.fdopen(1, "w", buffering=1)
+	
 
 @app.tool()
-def get_bbox(address: str) -> List[float]:
+def get_lat_lon(address: str) -> List[float]:
     """Get latitude and longitude for a given address using Google Maps API."""
     # API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+
     if not API_KEY:
         raise ValueError("GOOGLE_MAPS_API_KEY not set in environment.")
 

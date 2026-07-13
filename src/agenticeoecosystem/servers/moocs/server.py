@@ -138,4 +138,5 @@ def search_moocs(query: str, top_k: int = 5) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    # mcp.run()
+    _retrieve(query="sea ice")

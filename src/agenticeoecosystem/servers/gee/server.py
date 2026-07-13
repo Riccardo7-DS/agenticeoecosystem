@@ -91,7 +91,7 @@ logging.basicConfig(
 
 load_dotenv()
 gee_project = os.getenv("GEE_PROJECT")
-API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+map_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
 
 def setup_gee() -> None:
 	logging.info("Start the GEE authentication process")
@@ -295,13 +295,13 @@ def get_lat_lon(address: str) -> List[float]:
     """Get latitude and longitude for a given address using Google Maps API."""
     # API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
-    if not API_KEY:
+    if not map_api_key:
         raise ValueError("GOOGLE_MAPS_API_KEY not set in environment.")
 
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {
         "address": address,
-        "key": API_KEY
+        "key": map_api_key
     }
 
     response = requests.get(url, params=params)

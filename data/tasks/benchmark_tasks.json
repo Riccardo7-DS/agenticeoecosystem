@@ -142,11 +142,11 @@
     },
     {
       "task_ID": "TASK_260419_000004_100004",
-      "task_text": "Download a Sentinel-2 RGB satellite image of central Rome, Italy for the period January to March 2023, at 10 m resolution with less than 20% cloud cover.",
+      "task_text": "Download a Sentinel-2 RGB satellite image of central Rome, Italy for the period January to March 2023, at 10 m resolution with less than 20% cloud cover. Is the Tiber River clearly visible? If so, describe the direction in which it flows across the image.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first geocodes \"central Rome, Italy\" using get_lat_lon to obtain its latitude and longitude, then passes those coordinates to download_satellite_image with the correct date range, bands, scale, and cloud filter.",
+      "reference_solution_description": "Agent first geocodes \"central Rome, Italy\" using get_lat_lon to obtain its latitude and longitude, then passes those coordinates to download_satellite_image with the correct date range, bands, scale, and cloud filter. Finally, visually inspect the downloaded image and report whether the Tiber River is discernible, noting the direction of its flow across the scene.",
       "reference_solutions": [
         {
           "steps": [
@@ -180,35 +180,35 @@
     },
     {
       "task_ID": "TASK_260419_000005_100005",
-      "task_text": "Find an EOdashboard narrative about environmental changes observed from space during the Covid-19 lockdown (such as improved air quality, clearer waterways, or reduced maritime traffic). Retrieve its STAC collection items, then download a Sentinel-2 true-colour image of the affected area highlighted in the narrative to visually illustrate the change.",
+      "task_text": "Find an EOdashboard narrative about environmental changes observed from space during the Covid-19 lockdown (such as improved air quality, clearer waterways, or reduced maritime traffic). Retrieve its STAC collection items, then download two Sentinel-2 true-colour images of the affected area highlighted in the narrative — one from approximately one year before the lockdown (same season, 2019) and one from during the lockdown (2020) — and compare the two images to assess whether visible environmental changes are apparent.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Multi-agent task: EO STAC agent finds narrative and collection, GEE agent downloads imagery for the study area.",
+      "reference_solution_description": "Multi-agent task: EO STAC agent finds narrative and collection, GEE agent downloads two imagery scenes for the study area — one pre-lockdown (same calendar period in 2019) and one during lockdown (2020). Agent then compares the two images and reports any visible environmental change (e.g., reduced haze, clearer water, less ship traffic).",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "covid lockdown environment"
+                "keyword": "lockdown"
               },
-              "comment": "Find Covid-19 related narratives"
+              "comment": "Find lockdown environmental change narrative"
             },
             {
               "function_name": "get_narrative_indicators",
               "arguments": {
-                "narrative_title": "<covid narrative title>"
+                "narrative_title": "<any matching narrative title>"
               },
-              "comment": "Get STAC collection codes for the narrative"
+              "comment": "Get STAC collection codes"
             },
             {
               "function_name": "get_collection_items",
               "arguments": {
-                "collection_code": "<collection code from previous step>",
+                "collection_code": "<inferred>",
                 "limit": 5
               },
-              "comment": "Fetch sample data items to identify the study area location"
+              "comment": "Retrieve sample items"
             },
             {
               "function_name": "geocode_place",
@@ -220,12 +220,25 @@
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<inferred from geocode_place>",
-                "start_date": "2020-01-01",
-                "end_date": "2021-01-01",
+                "start_date": "<same season 2019>",
+                "end_date": "<same season 2019>",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_coverage": 20
-              }
+              },
+              "comment": "Pre-lockdown baseline (one year before)"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "<lockdown period 2020>",
+                "end_date": "<lockdown period 2020>",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_coverage": 20
+              },
+              "comment": "During lockdown"
             }
           ]
         }
@@ -448,11 +461,11 @@
     },
     {
       "task_ID": "TASK_260419_000012_100012",
-      "task_text": "Download a true-colour Sentinel-2 satellite image of central Barcelona, Spain for July 2022 at 10 m resolution with a maximum cloud cover of 15%.",
+      "task_text": "Download a true-colour Sentinel-2 satellite image of central Barcelona, Spain for July 2022 at 10 m resolution with a maximum cloud cover of 15%. Is this image suitable for mapping urban features in the city centre? Briefly justify your answer.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'central Barcelona, Spain' with get_lat_lon, then download a Sentinel-2 RGB image with an 8 km buffer for July 2022 at 10 m resolution.",
+      "reference_solution_description": "Geocode 'central Barcelona, Spain' with get_lat_lon, then download a Sentinel-2 RGB image with an 8 km buffer for July 2022 at 10 m resolution. Finally, assess whether the spatial resolution and spectral composite of the downloaded image are appropriate for mapping urban features in Barcelona's city centre.",
       "reference_solutions": [
         {
           "steps": [
@@ -650,11 +663,11 @@
     },
     {
       "task_ID": "TASK_260419_000018_100018",
-      "task_text": "Find an EO Dashboard narrative about biodiversity or habitat loss, extract a study area from it, and download a Sentinel-2 true-colour image for that area for the most recent available year.",
+      "task_text": "Find an EO Dashboard narrative about biodiversity or habitat loss, extract a study area from it, and download a Sentinel-2 true-colour image for that area for the most recent available year. Identify whether the selected area still appears to contain the habitat type described in the dashboard and explain your reasoning.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent searches for a biodiversity narrative, reads its content to identify the AOI, then downloads a GEE image for the derived bounding box.",
+      "reference_solution_description": "Agent searches for a biodiversity narrative, reads its content to identify the AOI, downloads a Sentinel-2 RGB image for the derived bounding box for the most recent year, then visually assesses whether the habitat type described in the narrative is still present and explains the reasoning based on visible land-cover indicators.",
       "reference_solutions": [
         {
           "steps": [
@@ -845,11 +858,11 @@
     },
     {
       "task_ID": "TASK_260419_000022_100022",
-      "task_text": "Find an EO Dashboard narrative about glaciers or cryosphere change, identify the STAC collections it references, retrieve sample data items from one collection, and download a Sentinel-2 true-colour image centred on Innsbruck, Austria for August 2022.",
+      "task_text": "Find an EO Dashboard narrative about glaciers or cryosphere change. Extract the study area and identify the STAC collections referenced in the narrative. Retrieve relevant STAC items from one of these collections and download the corresponding data using the appropriate data access tool. Summarize what the downloaded data reveals about the cryosphere conditions or ice extent described in the narrative and explain your reasoning.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for glacier/cryosphere narratives, get STAC collections and sample items, geocode 'Innsbruck, Austria' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2022.",
+      "reference_solution_description": "Search EO Dashboard for glacier/cryosphere narratives, extract the study area from the narrative content, get STAC collections and sample items, geocode the site with get_lat_lon, then download a Sentinel-2 RGB image. Summarize visible cryosphere conditions (e.g., snow/ice extent, glacier retreat) and relate them to the narrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -948,11 +961,11 @@
     },
     {
       "task_ID": "TASK_260419_000023_100023",
-      "task_text": "Find two separate EO Dashboard narratives related to carbon emissions monitoring — one about CO₂ and one about methane or other greenhouse gases — retrieve the STAC collection codes from each, fetch sample data items from both collections, and then download a Sentinel-2 true-colour image of Essen in the Ruhr industrial region, Germany for January 2022.",
+      "task_text": "Find two separate EO Dashboard narratives related to greenhouse gas monitoring: one focused on CO₂ emissions and one focused on methane or other greenhouse gases. Extract the study areas and identify the STAC collections referenced by each narrative. Retrieve representative STAC items from both collections and download the associated datasets using the appropriate data access tools. Summarize the spatial and temporal characteristics of each dataset and explain how they support the emission monitoring objectives described in the narratives.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for CO₂ and methane narratives, get STAC collections and sample items from both, geocode 'Essen, Germany' with get_lat_lon, then download a Sentinel-2 RGB image with a 10 km buffer for January 2022.",
+      "reference_solution_description": "Search EO Dashboard for CO₂ and methane narratives, extract study areas from each, get STAC collections and sample items from both, then download imagery for each study area. Summarize the spatial extent, temporal coverage, and relevance of each dataset to the emission monitoring objective described in its respective narrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -1184,11 +1197,11 @@
     },
     {
       "task_ID": "TASK_260419_000026_100026",
-      "task_text": "Download two Sentinel-2 true-colour images of Bordeaux, France — one before the July 2022 heatwave and wildfires (April–June 2022) and one after (August–September 2022) — to assess landscape changes caused by the extreme weather event.",
+      "task_text": "Download two Sentinel-2 true-colour images of Bordeaux, France — one before the July 2022 heatwave and wildfires (April–June 2022) and one after (August–September 2022) — to assess landscape changes caused by the extreme weather event. Compare the two images and assess whether visible landscape changes — such as vegetation stress, burn scars, or browning — are observable between the pre- and post-event periods.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Bordeaux, France' with get_lat_lon, then download two Sentinel-2 RGB images with a 10 km buffer: pre-event (Apr–Jun 2022) and post-event (Aug–Sep 2022).",
+      "reference_solution_description": "Geocode 'Bordeaux, France' with get_lat_lon, then download two Sentinel-2 RGB images with a 10 km buffer: pre-event (Apr–Jun 2022) and post-event (Aug–Sep 2022). Finally, visually compare the two downloaded images and report the visible landscape changes (e.g., burn scars, vegetation browning) caused by the heatwave and wildfires.",
       "reference_solutions": [
         {
           "steps": [
@@ -1697,11 +1710,11 @@
     },
     {
       "task_ID": "TASK_260419_000036_100036",
-      "task_text": "Download a true-colour Sentinel-2 satellite image of central Wuhan, Hubei, China for February 2020 at 20 m resolution to observe the city during the COVID-19 lockdown period.",
+      "task_text": "Retrieve a Sentinel-2 true-colour image of central Wuhan, Hubei, China during the February 2020 COVID-19 lockdown period. Select the most suitable available acquisition based on cloud cover and image quality. Describe the visible urban environment and explain what information can and cannot be inferred from this optical image about lockdown-related changes.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'central Wuhan, Hubei, China' with get_lat_lon, then download a Sentinel-2 RGB image with a 10 km buffer for February 2020 at 20 m resolution.",
+      "reference_solution_description": "Geocode 'central Wuhan, Hubei, China' with get_lat_lon, then download the best-quality (lowest cloud cover) Sentinel-2 RGB image for February 2020. Describe visible urban features (roads, buildings, greenery) and explain what lockdown-related signals can or cannot be detected from an optical scene of this type.",
       "reference_solutions": [
         {
           "steps": [
@@ -1777,11 +1790,11 @@
     },
     {
       "task_ID": "TASK_260419_000038_100038",
-      "task_text": "Download a true-colour Sentinel-2 image of the area around Muynak, Karakalpakstan, Uzbekistan for August 2021 at 30 m resolution to observe the water extent in this historically shrinking part of the Aral Sea.",
+      "task_text": "Download a true-colour Sentinel-2 image of the area around Muynak, Karakalpakstan, Uzbekistan for August 2021 to observe the water extent in this historically shrinking part of the Aral Sea. Estimate the visible water-covered area and describe the spatial distribution of remaining water bodies compared with the surrounding exposed seabed.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2021 at 30 m resolution.",
+      "reference_solution_description": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2021. Estimate the visible water-covered fraction and describe the spatial distribution of remaining water bodies relative to the exposed, former seabed terrain.",
       "reference_solutions": [
         {
           "steps": [
@@ -2132,11 +2145,11 @@
     },
     {
       "task_ID": "TASK_260419_000044_100044",
-      "task_text": "Find an EO Dashboard narrative about land cover change or urbanisation, read its full content to identify the study area, then download a Sentinel-2 false-colour image of that area for 2023 to compare current land use against the narrative's findings.",
+      "task_text": "Find an EO Dashboard narrative about land cover change or urbanisation. Read the full content to identify the study area and the main change process described. Retrieve a Sentinel-2 image covering that area for 2023 using an appropriate false-colour composite. Describe the visible land-cover patterns and assess whether the image provides evidence consistent with the changes reported in the narrative.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent chains search→content→GEE download, where the bounding box in step 3 is derived from the geographic area identified in the narrative content of step 2.",
+      "reference_solution_description": "Agent searches for a land-cover/urbanisation narrative, reads its full content to identify the AOI and change process, geocodes the site, downloads a Sentinel-2 false-colour image for 2023, then describes visible land-cover patterns and assesses consistency with the narrative's reported changes.",
       "reference_solutions": [
         {
           "steps": [
@@ -2227,11 +2240,11 @@
     },
     {
       "task_ID": "TASK_260419_000045_100045",
-      "task_text": "Search the EO Dashboard for narratives about NO₂ or COVID-19 lockdown air quality. Identify the STAC collections referenced in the narrative, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of the city highlighted in the narrative — one from before the lockdown and one from during it — to visually compare the atmosphere over the urban area.",
+      "task_text": "Search the EO Dashboard for narratives about NO₂ or COVID-19 lockdown air quality. Identify the STAC collections referenced in the narrative, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of the city highlighted in the narrative — one from before the lockdown and one from during it — to visually compare the atmosphere over the urban area. Compare the two images and assess whether a visible change in air quality — such as reduced haze or improved atmospheric clarity — is observable between the before and during lockdown periods.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for NO₂/lockdown narratives, get STAC collections and sample items, geocode 'Milan, Lombardy, Italy' with get_lat_lon, then download two Sentinel-2 RGB images with a 12 km buffer: pre-lockdown (Jan–Feb 2020) and during lockdown (Mar–Apr 2020).",
+      "reference_solution_description": "Search EO Dashboard for NO₂/lockdown narratives, get STAC collections and sample items, geocode 'Milan, Lombardy, Italy' with get_lat_lon, then download two Sentinel-2 RGB images with a 12 km buffer: pre-lockdown (Jan–Feb 2020) and during lockdown (Mar–Apr 2020). Finally, visually compare the two downloaded images and report whether a visible reduction in haze/aerosol coverage is observable during the lockdown period.",
       "reference_solutions": [
         {
           "steps": [
@@ -2352,11 +2365,11 @@
     },
     {
       "task_ID": "TASK_260419_000046_100046",
-      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas, identify the STAC collections they reference, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of Narooma on the south coast of New South Wales, Australia — one before the 2019–2020 Black Summer fires (September–November 2019) and one after (February–March 2020) — to assess fire extent and landscape changes.",
+      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas, identify the STAC collections they reference, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of Narooma on the south coast of New South Wales, Australia — one before the 2019–2020 Black Summer fires (September–November 2019) and one after (February–March 2020) — to assess fire extent and landscape changes. Compare the two images and assess the visible extent of fire damage and landscape change between the pre- and post-fire periods.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for wildfire narratives, get STAC collections and sample items, geocode 'Narooma, New South Wales, Australia' with get_lat_lon, then download two Sentinel-2 RGB images with a 15 km buffer: pre-fire (Sep–Nov 2019) and post-fire (Feb–Mar 2020).",
+      "reference_solution_description": "Search EO Dashboard for wildfire narratives, get STAC collections and sample items, geocode 'Narooma, New South Wales, Australia' with get_lat_lon, then download two Sentinel-2 RGB images with a 15 km buffer: pre-fire (Sep–Nov 2019) and post-fire (Feb–Mar 2020). Finally, visually compare the two downloaded images and report the visible extent of burned area and landscape change caused by the fires.",
       "reference_solutions": [
         {
           "steps": [
@@ -2477,11 +2490,11 @@
     },
     {
       "task_ID": "TASK_260419_000047_100047",
-      "task_text": "Search the EO Dashboard for narratives about deforestation or the Amazon rainforest, identify the STAC collections they reference, retrieve sample data items from one collection, and download a Sentinel-2 false-colour image of the area around Altamira, Pará, Brazil during the dry season (July–September 2022) to visualise the deforestation frontier.",
+      "task_text": "Search the EO Dashboard for a narrative about Amazon deforestation. Read the complete narrative to identify the study area, environmental issue, and referenced datasets. Retrieve the corresponding STAC collections and sample data items, then download the relevant assets. Select a Sentinel-2 false-colour image covering the same region during the dry season (July–September 2022). Summarize the visible evidence of deforestation or forest degradation and explain how it supports or challenges the findings described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for deforestation/Amazon narratives, get STAC collections and sample items, geocode 'Altamira, Pará, Brazil' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with a 15 km buffer for July–September 2022.",
+      "reference_solution_description": "Search EO Dashboard for Amazon deforestation narrative, read full content to identify study area, get STAC collections and sample items, geocode the narrative's study area, download a Sentinel-2 NIR false-colour image for July–September 2022. Summarize visible deforestation evidence and relate it to the narrative's findings.",
       "reference_solutions": [
         {
           "steps": [
@@ -4159,51 +4172,6 @@
       "match_score_Human": null
     },
     {
-      "task_ID": "TASK_260427_000018_200018",
-      "task_text": "Perform a spatial join to identify which flood-event point observations stored in /data/flood_points.gpkg intersect with administrative district polygons in /data/admin_districts.gpkg, and save the joined result to /output/flood_points_with_districts.gpkg.",
-      "task_labels": [
-        "Tool Grounding"
-      ],
-      "reference_solution_description": "Agent calls sjoin_gpd to spatially join flood points with administrative districts using an intersects predicate.",
-      "reference_solutions": [
-        {
-          "steps": [
-            {
-              "function_name": "sjoin_gpd",
-              "arguments": {
-                "left_path": "/data/flood_points.gpkg",
-                "right_path": "/data/admin_districts.gpkg",
-                "how": "inner",
-                "predicate": "intersects",
-                "output_path": "/output/flood_points_with_districts.gpkg"
-              },
-              "comment": "Spatially join flood points to administrative districts they fall within"
-            }
-          ]
-        },
-        {
-          "steps": [
-            {
-              "function_name": "point_in_polygon",
-              "arguments": {
-                "points_path": "/data/flood_points.gpkg",
-                "polygons_path": "/data/admin_districts.gpkg",
-                "output_path": "/output/flood_points_with_districts.gpkg"
-              },
-              "comment": "Alternative: use point-in-polygon tool directly"
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null
-    },
-    {
       "task_ID": "TASK_260427_000019_200019",
       "task_text": "Download a Sentinel-2 image of the Po Valley agricultural region in northern Italy for July 2022, compute NDVI, then generate a 256-bin pixel-value histogram to understand the distribution of vegetation density across the area.",
       "task_labels": [
@@ -5561,11 +5529,11 @@
     },
     {
       "task_ID": "TASK_260619_000015_300015",
-      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 60 m resolution.",
+      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 60 m resolution. Describe the dominant landforms visible in the image and identify features that are characteristic of Iceland's volcanic landscape.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first geocodes Reykjavik with get_lat_lon, then passes the returned coordinates to download_satellite_image.",
+      "reference_solution_description": "Geocode Reykjavik with get_lat_lon, then download a Sentinel-2 RGB scene for July 2022 at 60 m resolution. Describe the dominant landforms (e.g., lava fields, glaciers, coastal topography) and identify visible features characteristic of Iceland's volcanic geology.",
       "reference_solutions": [
         {
           "steps": [
@@ -5665,11 +5633,11 @@
     },
     {
       "task_ID": "TASK_260713_000004_400004",
-      "task_text": "Geocode the city of Aral, Kazakhstan, then download a Sentinel-2 true colour image of that location for July 2023 at 30 m resolution to observe Aral Sea shoreline change.",
+      "task_text": "Geocode the city of Aral, Kazakhstan. Retrieve a suitable Sentinel-2 true-colour observation covering the area during July 2023. Assess the current Aral Sea shoreline, describe visible evidence of environmental change, and explain how the observation could be combined with historical data to quantify shoreline retreat.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call get_lat_lon to resolve coordinates for Aral, Kazakhstan, then pass them to download_satellite_image for a Sentinel-2 RGB scene.",
+      "reference_solution_description": "Call get_lat_lon to resolve coordinates for Aral, Kazakhstan, then download a Sentinel-2 RGB scene for July 2023. Identify the current shoreline, describe visible environmental change indicators (exposed seabed, salt flats, remnant water bodies), and explain how multi-temporal analysis could quantify the extent of shoreline retreat.",
       "reference_solutions": [
         {
           "steps": [
@@ -5795,11 +5763,11 @@
     },
     {
       "task_ID": "TASK_260713_000007_400007",
-      "task_text": "Retrieve ESA strategic priorities for Arctic cryosphere monitoring from the knowledge base, then geocode the Ny-Ålesund research station in Svalbard, Norway and download a Sentinel-2 image from September 2023 to assess sea ice retreat.",
+      "task_text": "Retrieve ESA strategic priorities for Arctic cryosphere monitoring from the knowledge base. Identify the relevant objectives and study areas mentioned. Then geocode the Ny-Ålesund research station in Svalbard, Norway and retrieve a suitable Sentinel-2 observation from September 2023 covering the area. Describe the visible sea ice conditions and explain how the observation supports Arctic cryosphere monitoring objectives.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Use search_eopss for ESA Arctic strategy content, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023.",
+      "reference_solution_description": "Use search_eopss for ESA Arctic strategy content to identify objectives and study areas, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023. Describe visible sea ice extent/conditions and relate them to the ESA cryosphere monitoring objectives retrieved.",
       "reference_solutions": [
         {
           "steps": [
@@ -6383,124 +6351,46 @@
       "evaluator_reasoning": {}
     },
     {
-      "task_ID": "TASK_260713_000022_400022",
-      "task_text": "Spatially join the wildfire ignition points at /data/california_fires_2020.gpkg with the land management zones at /data/california_land_mgmt.gpkg to determine which agency is responsible for each fire location, saving the result to /output/fires_with_mgmt_zones.gpkg.",
-      "task_labels": [
-        "Tool Grounding"
-      ],
-      "reference_solution_description": "Agent calls sjoin_gpd to join wildfire ignition points with land management zone polygons.",
-      "reference_solutions": [
-        {
-          "steps": [
-            {
-              "function_name": "sjoin_gpd",
-              "arguments": {
-                "left_path": "/data/california_fires_2020.gpkg",
-                "right_path": "/data/california_land_mgmt.gpkg",
-                "how": "inner",
-                "predicate": "intersects",
-                "output_path": "/output/fires_with_mgmt_zones.gpkg"
-              },
-              "comment": "Spatially join fire ignition points to land management zones they fall within."
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null,
-      "evaluator_scores": {},
-      "evaluator_reasoning": {}
-    },
-    {
-      "task_ID": "TASK_260713_000023_400023",
-      "task_text": "Check which ICOS carbon flux tower locations at /data/icos_stations.gpkg fall within Natura 2000 protected areas at /data/natura2000_eu.gpkg, then join those results with EU country boundaries at /data/eu_countries.gpkg to identify how many protected-area stations exist per country.",
+      "task_ID": "TASK_260713_000025_400025",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 at 20 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save it to /output/ndvi_po_valley.tif. Then calculate zonal statistics (mean, max, and standard deviation of NDVI) for the agricultural field parcels at /data/po_fields.shp.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call point_in_polygon to filter ICOS stations inside Natura 2000 areas, then sjoin_gpd to attach country information.",
+      "reference_solution_description": "Geocode 'Lodi, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023 at 20 m resolution, compute NDVI saving to /output/ndvi_po_valley.tif, then run zonal_statistics with the field parcel shapefile to compute per-parcel mean, max, and standard deviation.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "point_in_polygon",
+              "function_name": "geocode_place",
               "arguments": {
-                "points_path": "/data/icos_stations.gpkg",
-                "polygons_path": "/data/natura2000_eu.gpkg",
-                "output_path": "/output/icos_in_natura2000.gpkg"
-              },
-              "comment": "Step 1: identify ICOS stations inside Natura 2000 protected areas."
+                "place_name": "Lodi, Lombardy, Italy"
+              }
             },
             {
-              "function_name": "sjoin_gpd",
+              "function_name": "download_satellite_image",
               "arguments": {
-                "left_path": "/output/icos_in_natura2000.gpkg",
-                "right_path": "/data/eu_countries.gpkg",
-                "how": "inner",
-                "predicate": "intersects",
-                "output_path": "/output/icos_natura2000_by_country.gpkg"
+                "latitude": "<inferred>",
+                "longitude": "<inferred>",
+                "buffer_m": 8000,
+                "start_date": "2023-06-01",
+                "end_date": "2023-08-31",
+                "bands": "B8,B4",
+                "scale": 20,
+                "max_cloud_cover": 20,
+                "image_count": 1
               },
-              "comment": "Step 2: join with country boundaries to attribute each station to a country."
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null,
-      "evaluator_scores": {},
-      "evaluator_reasoning": {}
-    },
-    {
-      "task_ID": "TASK_260713_000024_400024",
-      "task_text": "Check which PRODES 2022 deforestation alert locations at /data/prodes_2022_alerts.gpkg fall inside Brazilian conservation units at /data/brazil_conservation_units.gpkg and save the intersecting records to /output/alerts_in_protected_areas.gpkg.",
-      "task_labels": [
-        "Tool Grounding"
-      ],
-      "reference_solution_description": "Agent calls point_in_polygon to filter deforestation alerts that intersect protected area polygons.",
-      "reference_solutions": [
-        {
-          "steps": [
+              "comment": "Download NIR+Red bands for Po Valley summer season"
+            },
             {
-              "function_name": "point_in_polygon",
+              "function_name": "compute_ndvi",
               "arguments": {
-                "points_path": "/data/prodes_2022_alerts.gpkg",
-                "polygons_path": "/data/brazil_conservation_units.gpkg",
-                "output_path": "/output/alerts_in_protected_areas.gpkg"
+                "source": "<file path returned by download_satellite_image>",
+                "nir_band_index": 1,
+                "red_band_index": 2,
+                "destination": "/output/ndvi_po_valley.tif"
               },
-              "comment": "Filter deforestation alerts that fall inside conservation unit boundaries."
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null,
-      "evaluator_scores": {},
-      "evaluator_reasoning": {}
-    },
-    {
-      "task_ID": "TASK_260713_000025_400025",
-      "task_text": "Compute zonal statistics (mean, max, and standard deviation of NDVI) for the Po Valley NDVI raster at /output/ndvi_po_valley.tif using the agricultural field parcel boundaries at /data/po_fields.shp.",
-      "task_labels": [
-        "Tool Grounding"
-      ],
-      "reference_solution_description": "Agent calls zonal_statistics with the NDVI raster and field parcel shapefile to compute per-parcel statistics.",
-      "reference_solutions": [
-        {
-          "steps": [
+              "comment": "band 1 = B8 (NIR), band 2 = B4 (Red)"
+            },
             {
               "function_name": "zonal_statistics",
               "arguments": {
@@ -6512,7 +6402,55 @@
                   "std"
                 ]
               },
-              "comment": "Compute mean, max and std NDVI per agricultural field parcel."
+              "comment": "Compute per-parcel NDVI statistics"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Lodi, Lombardy, Italy"
+              }
+            },
+            {
+              "function_name": "download_satellite_image",
+              "arguments": {
+                "latitude": "<inferred>",
+                "longitude": "<inferred>",
+                "buffer_m": 8000,
+                "start_date": "2023-06-01",
+                "end_date": "2023-08-31",
+                "bands": "B4,B8",
+                "scale": 20,
+                "max_cloud_cover": 20,
+                "image_count": 1
+              },
+              "comment": "Alternative band order: B4 first, B8 second"
+            },
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "<file path returned by download_satellite_image>",
+                "nir_band_index": 2,
+                "red_band_index": 1,
+                "destination": "/output/ndvi_po_valley.tif"
+              },
+              "comment": "band 1 = B4 (Red), band 2 = B8 (NIR)"
+            },
+            {
+              "function_name": "zonal_statistics",
+              "arguments": {
+                "raster_path": "/output/ndvi_po_valley.tif",
+                "vector_path": "/data/po_fields.shp",
+                "stats": [
+                  "mean",
+                  "max",
+                  "std"
+                ]
+              },
+              "comment": "Compute per-parcel NDVI statistics"
             }
           ]
         }
@@ -6529,14 +6467,21 @@
     },
     {
       "task_ID": "TASK_260713_000026_400026",
-      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B3, B4, B8. Compute NDVI (NIR = band 4, Red = band 3), then calculate mean NDVI for each agro-pastoral zone defined in data/sahel_zones.shp to assess vegetation productivity.",
+      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B3, B4, B8. Compute NDVI (NIR = band 4, Red = band 3) and save the result. Report the mean and maximum NDVI values across the scene to assess overall vegetation productivity.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Compute NDVI from the Sentinel-2 image, then run zonal statistics on the NDVI raster for the Sahel management zones.",
+      "reference_solution_description": "Geocode a representative Sahel location (e.g. Niamey, Niger) with get_lat_lon, download a Sentinel-2 B2/B3/B4/B8 image with a large buffer for July 2023, compute NDVI from the result, then report per-band statistics (mean, max) on the NDVI raster.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Niamey, Niger"
+              },
+              "comment": "Representative Sahel location"
+            },
             {
               "function_name": "download_satellite_image",
               "arguments": {
@@ -6548,29 +6493,24 @@
                 "bands": "B2,B3,B4,B8",
                 "scale": 20,
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_sahel_2023.tif"
+                "image_count": 1
               }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "data/sentinel2_sahel_2023.tif",
-                "nir_band_index": 8,
-                "red_band_index": 4,
+                "source": "<file path returned by download_satellite_image>",
+                "nir_band_index": 4,
+                "red_band_index": 3,
                 "destination": "data/ndvi_sahel_2023.tif"
-              },
-              "comment": "Step 1: compute NDVI from NIR and Red bands."
+              }
             },
             {
-              "function_name": "zonal_statistics",
+              "function_name": "raster_band_statistics",
               "arguments": {
-                "raster_path": "data/ndvi_sahel_2023.tif",
-                "vector_path": "/data/sahel_zones.shp",
-                "stats": [
-                  "mean"
-                ]
+                "path": "data/ndvi_sahel_2023.tif"
               },
-              "comment": "Step 2: compute mean NDVI per agro-pastoral zone."
+              "comment": "Report mean and max NDVI across the scene"
             }
           ]
         }
@@ -9236,11 +9176,11 @@
     },
     {
       "task_ID": "TASK_260713_000017_600017",
-      "task_text": "Download hourly ERA5 2m temperature for January 10-15, 2023 at 00:00 and 12:00 UTC only, saved as data/t2m_6days_jan2023.nc over Europe.",
+      "task_text": "Download hourly ERA5 2 m temperature over Europe for 10–15 January 2023, retrieving only the 00:00 and 12:00 UTC time steps.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels with specific days list ['10','11','12','13','14','15'] and times ['00:00','12:00'].",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='2m_temperature', the six-day date range, times=['00:00','12:00'], and an area covering Europe.",
       "reference_solutions": [
         {
           "steps": [
@@ -9282,11 +9222,11 @@
     },
     {
       "task_ID": "TASK_260713_000018_600018",
-      "task_text": "Download hourly ERA5 10m u-component of wind for June 2020 over the Mediterranean region, saved as data/u10_med_jun2020.nc.",
+      "task_text": "Download hourly ERA5 10 m u-component of wind over the Mediterranean region for June 2020.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='10m_u_component_of_wind', area=[47,-6,30,37].",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='10m_u_component_of_wind', month='06', year='2020', and an area covering the Mediterranean.",
       "reference_solutions": [
         {
           "steps": [
@@ -9465,11 +9405,11 @@
     },
     {
       "task_ID": "TASK_260713_000024_600024",
-      "task_text": "Download hourly ERA5 geopotential at 500 hPa for January 15, 2023 saved as data/z500_20230115.nc over Europe.",
+      "task_text": "Download hourly ERA5 geopotential at 500 hPa over Europe for 15 January 2023.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "fetch_era5_hourly_pressure_levels with variable='geopotential', pressure_level=500, days=['15'], times='all'.",
+      "reference_solution_description": "Call fetch_era5_hourly_pressure_levels with variable='geopotential', pressure_level='500', the single-day date, and an area covering Europe.",
       "reference_solutions": [
         {
           "steps": [
@@ -9799,11 +9739,11 @@
     },
     {
       "task_ID": "TASK_260713_000032_600032",
-      "task_text": "Download hourly ERA5-Land total precipitation for July 2021 over the Po Valley in Italy, saved as data/era5land_tp_povalley_jul2021.nc.",
+      "task_text": "Download hourly ERA5-Land total precipitation over the Po Valley, Italy for July 2021.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "fetch_era5_land with variable='total_precipitation' and area bbox for Po Valley.",
+      "reference_solution_description": "Call fetch_era5_land with variable='total_precipitation', month='07', year='2021', and an area covering the Po Valley.",
       "reference_solutions": [
         {
           "steps": [
@@ -10701,11 +10641,11 @@
     },
     {
       "task_ID": "TASK_260713_000053_600053",
-      "task_text": "Download hourly ERA5 total precipitation for August 2021, then convert to daily totals and save as 'data/tp_daily_aug2021.nc'.",
+      "task_text": "Download hourly ERA5 total precipitation for August 2021, then aggregate the sub-daily values to daily totals. Report the resulting daily precipitation values.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "convert_hourly_to_daily with method='sum'.",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels for total_precipitation over August 2021, then call convert_hourly_to_daily with method='sum' to produce daily totals.",
       "reference_solutions": [
         {
           "steps": [
@@ -10743,11 +10683,11 @@
     },
     {
       "task_ID": "TASK_260713_000054_600054",
-      "task_text": "Download hourly ERA5 2m temperature for January 2023, then convert to daily mean values and save as 'data/t2m_daily_jan2023.nc'.",
+      "task_text": "Download hourly ERA5 2 m temperature for January 2023, then aggregate the sub-daily values to daily mean temperature. Report the resulting daily mean values.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "convert_hourly_to_daily with method='mean'.",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels for 2m_temperature over January 2023, then call convert_hourly_to_daily with method='mean' to produce daily means.",
       "reference_solutions": [
         {
           "steps": [
@@ -10931,11 +10871,11 @@
     },
     {
       "task_ID": "TASK_260713_000061_600061",
-      "task_text": "Download ERA5 daily total precipitation for August 2022, then aggregate to monthly totals and save as 'data/tp_monthly_2022.nc'.",
+      "task_text": "Download ERA5 daily total precipitation for August 2022, then resample the daily time series to a monthly total. Report the resulting monthly precipitation value.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "convert_daily_to_monthly with method='sum'.",
+      "reference_solution_description": "Call fetch_era5_daily_statistics for total_precipitation with statistic='daily_sum' for August 2022, then call resample_temporal with freq='MS' and method='sum' to produce the monthly total.",
       "reference_solutions": [
         {
           "steps": [
@@ -10974,11 +10914,11 @@
     },
     {
       "task_ID": "TASK_260713_000062_600062",
-      "task_text": "Download ERA5 daily mean 2m temperature for July 2022, then aggregate to a monthly mean and save as 'data/t2m_monthly_2022.nc'.",
+      "task_text": "Download ERA5 daily mean 2 m temperature for July 2022, then resample the daily time series to a monthly mean. Report the resulting monthly average temperature.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "convert_daily_to_monthly with method='mean'.",
+      "reference_solution_description": "Call fetch_era5_daily_statistics for 2m_temperature with statistic='daily_mean' for July 2022, then call resample_temporal with freq='MS' and method='mean' to produce the monthly mean.",
       "reference_solutions": [
         {
           "steps": [
@@ -11177,11 +11117,11 @@
     },
     {
       "task_ID": "TASK_260713_000067_600067",
-      "task_text": "Download ERA5 daily mean 2m temperature for July 2023, then use resample_temporal with freq='MS' and method='mean' to aggregate to monthly frequency.",
+      "task_text": "Retrieve ERA5 daily mean 2 m temperature data for July 2023, then resample the time series to monthly frequency using a mean aggregation. Report the resulting monthly average temperature.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "resample_temporal with freq='YE', method='mean'.",
+      "reference_solution_description": "Call fetch_era5_daily_statistics with variable=\"2m_temperature\", statistic=\"daily_mean\", year=\"2023\", month=\"07\" to download the daily data. Then call resample_temporal with freq=\"MS\" and method=\"mean\" to aggregate to monthly frequency and report the resulting monthly average temperature value.",
       "reference_solutions": [
         {
           "steps": [
@@ -11221,11 +11161,11 @@
     },
     {
       "task_ID": "TASK_260713_000068_600068",
-      "task_text": "Download ERA5 mean sea level pressure at 6-hourly intervals for January 2023, then resample to daily mean values using resample_temporal.",
+      "task_text": "Download ERA5 mean sea level pressure at 6-hourly intervals for January 2023, then aggregate the sub-daily values to daily means. Report the resulting daily mean pressure series.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "resample_temporal with freq='D', method='mean'.",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels for mean_sea_level_pressure with times at 6-hourly intervals for January 2023, then call resample_temporal with freq='D' and method='mean' to produce daily means.",
       "reference_solutions": [
         {
           "steps": [
@@ -11320,11 +11260,11 @@
     },
     {
       "task_ID": "TASK_260713_000070_600070",
-      "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean. Then use resample_temporal to compute monthly total precipitation.",
+      "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean, then aggregate the hourly values to a monthly total precipitation. Report the resulting monthly value.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_hourly_single_levels then resample_temporal with freq='ME', method='sum'.",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels for total_precipitation over the Mediterranean for January 2022, then call resample_temporal with freq='MS' and method='sum' to compute the monthly total.",
       "reference_solutions": [
         {
           "steps": [
@@ -11364,11 +11304,11 @@
     },
     {
       "task_ID": "TASK_260713_000071_600071",
-      "task_text": "Search EO Dashboard narratives about sea surface temperature trends. Based on the geographic focus of the narrative, download ERA5 monthly mean sea surface temperature for three reference decades to illustrate the long-term trend, then compute a multi-year mean using resample_temporal.",
+      "task_text": "Search EO Dashboard narratives about sea surface temperature trends. Based on the geographic focus of the narrative, download ERA5 monthly mean sea surface temperature for three reference decades to illustrate the long-term trend, then compute a multi-year mean across the downloaded data.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for SST, then fetch_era5_single_levels three times for SST, then resample_temporal with freq='YE'.",
+      "reference_solution_description": "Search EO Dashboard for SST-trend narratives, extract the study area, call fetch_era5_single_levels for mean_sea_surface_temperature across three decades, then call resample_temporal with freq='YE' and method='mean' to compute a multi-year average.",
       "reference_solutions": [
         {
           "steps": [
@@ -11427,11 +11367,11 @@
     },
     {
       "task_ID": "TASK_260713_000073_600073",
-      "task_text": "Download ERA5 monthly mean 2m temperature for July 2023, then convert the variable from Kelvin to Celsius and save as 'data/era5_t2m_2023_07_degC.nc'.",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2023, then convert the temperature values from Kelvin to Celsius. Report the resulting temperature in Celsius.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "convert_units with variable='t2m', from_unit='K', to_unit='C'.",
+      "reference_solution_description": "Call fetch_era5_single_levels for 2m_temperature for July 2023, then call convert_units to transform from Kelvin to Celsius (subtract 273.15).",
       "reference_solutions": [
         {
           "steps": [
@@ -11762,11 +11702,11 @@
     },
     {
       "task_ID": "TASK_260713_000081_600081",
-      "task_text": "Download ERA5 monthly mean total precipitation for January 2023 globally. Then clip the result to Western Europe and save as 'data/tp_weur_2023_01.nc'.",
+      "task_text": "Download ERA5 monthly mean total precipitation for January 2023 at global coverage, then clip the result to the Western Europe region. Report the clipped dataset extent.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Fetch ERA5 tp January 2023 globally with fetch_era5_single_levels (no area), then clip to Western Europe with clip_to_bbox.",
+      "reference_solution_description": "Call fetch_era5_single_levels for total_precipitation at global area for January 2023, then call clip_to_bbox with a bounding box covering Western Europe.",
       "reference_solutions": [
         {
           "steps": [
@@ -11807,11 +11747,11 @@
     },
     {
       "task_ID": "TASK_260713_000082_600082",
-      "task_text": "Download ERA5 monthly mean 2m temperature for July 2022 globally. Then clip the result to the Nile River basin and save as 'data/t2m_nile_2022_07.nc'.",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2022 at global coverage, then clip the result to the Nile River basin. Report the clipped dataset extent.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Fetch ERA5 t2m July 2022 globally with fetch_era5_single_levels (no area), then clip to the Nile River basin with clip_to_bbox.",
+      "reference_solution_description": "Call fetch_era5_single_levels for 2m_temperature at global area for July 2022, then call clip_to_bbox with a bounding box covering the Nile River basin.",
       "reference_solutions": [
         {
           "steps": [
@@ -11852,11 +11792,11 @@
     },
     {
       "task_ID": "TASK_260713_000083_600083",
-      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 globally. Then clip the result to the South Asian monsoon region and save as 'data/z500_sam_jan2023.nc'.",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 at global coverage, then clip the result to the South Asian monsoon region. Report the clipped dataset extent.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Fetch ERA5 geopotential 500 hPa January 2023 globally with fetch_era5_pressure_levels (no area), then clip to the South Asian monsoon region with clip_to_bbox.",
+      "reference_solution_description": "Call fetch_era5_pressure_levels for geopotential at 500 hPa at global area for January 2023, then call clip_to_bbox with a bounding box covering the South Asian monsoon region.",
       "reference_solutions": [
         {
           "steps": [
@@ -12084,8 +12024,8 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "task_text": "Download a Sentinel-3 OLCI true-colour image of the North Sea for June 2023 to visualise a phytoplankton bloom.",
-      "reference_solution_description": "Geocode the North Sea to get a bounding box, then call fetch_sentinel3_olci with preset='true_color' to retrieve the ocean colour image.",
+      "task_text": "Download a Sentinel-3 OLCI true-colour image of the North Sea for June 2023 to visualise a phytoplankton bloom. Identify whether a visible bloom is present and describe its approximate location.",
+      "reference_solution_description": "Geocode the North Sea to get a bounding box, then call fetch_sentinel3_olci with preset='true_color' to retrieve the ocean colour image. Visually inspect the downloaded image and report whether a phytoplankton bloom signature is present, describing its approximate location within the North Sea.",
       "reference_solutions": [
         {
           "steps": [
@@ -12113,8 +12053,8 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "task_text": "Download a Sentinel-3 SLSTR false-colour image over the Sahara Desert for July 2022 to characterise land surface temperature patterns.",
-      "reference_solution_description": "Geocode the Sahara Desert to get a bounding box, then call fetch_sentinel3_slstr with preset='false_color'.",
+      "task_text": "Download a Sentinel-3 SLSTR false-colour image over the Sahara Desert for July 2022 to characterise land surface temperature patterns. Describe the spatial distribution of temperature patterns visible in the image and identify areas with relatively higher or lower surface temperatures.",
+      "reference_solution_description": "Geocode the Sahara Desert to get a bounding box, then call fetch_sentinel3_slstr with preset='false_color'. Visually inspect the downloaded image and describe the spatial distribution of surface temperature patterns, identifying areas with relatively higher or lower temperatures.",
       "reference_solutions": [
         {
           "steps": [
@@ -12200,8 +12140,8 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "task_text": "Download a Sentinel-1 GRD SAR image of the Po Delta, northern Italy for October 2023 to assess wetland extent and soil moisture.",
-      "reference_solution_description": "Geocode the Po Delta to get a bounding box, then call fetch_sentinel1_grd with preset='vv_vh_rgb' to retrieve the dual-polarisation SAR composite.",
+      "task_text": "Download a Sentinel-1 GRD SAR image of the Po Delta, northern Italy for October 2023 to assess wetland extent and soil moisture. Describe the main backscatter patterns visible in the image and identify areas likely associated with wetlands or open water.",
+      "reference_solution_description": "Geocode the Po Delta to get a bounding box, then call fetch_sentinel1_grd with preset='vv_vh_rgb' to retrieve the dual-polarisation SAR composite. Visually inspect the SAR composite and describe the main backscatter patterns, identifying low-backscatter areas likely corresponding to open water or wetlands.",
       "reference_solutions": [
         {
           "steps": [
@@ -12224,6 +12164,134 @@
           ]
         }
       ]
+    },
+    {
+      "task_ID": "TASK_260714_000097_700007",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "task_text": "Geocode Andalusia, Spain, then download a Sentinel-3 SYN L2 true-colour image of that region for June 2023. Describe the dominant land-cover patterns visible and comment on the added value of using the combined OLCI+SLSTR Synergy product over a single-sensor acquisition.",
+      "reference_solution_description": "Geocode 'Andalusia, Spain' with geocode_place to obtain a regional bounding box, then call fetch_sentinel3_syn_l2 with preset='true_color' for June 2023. Describe visible land-cover patterns (e.g., olive groves, semi-arid interior, coastal areas) and explain how the SYN L2 surface reflectance product benefits from combining OLCI and SLSTR observations.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Andalusia, Spain"
+              },
+              "comment": "Get bounding box for Andalusia region"
+            },
+            {
+              "function_name": "fetch_sentinel3_syn_l2",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2023-06-01",
+                "end_date": "2023-06-30",
+                "preset": "true_color"
+              },
+              "comment": "Download SYN L2 true-colour composite"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260714_000098_700008",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "task_text": "Geocode the Sacramento Valley, California and download a Landsat OT L1 true-colour image of that location for July 2022 with less than 20% cloud cover. Describe the visible land-cover patterns and identify the main agricultural features in the scene. Comment on the spatial resolution and spectral characteristics that make Landsat suitable for monitoring agricultural areas.",
+      "reference_solution_description": "Geocode 'Sacramento Valley, California' with geocode_place to get the bounding box, then call fetch_landsat_ot_l1 with preset='true_color' and max_cloud_cover=20 for July 2022. Describe visible agricultural patterns (field geometry, crop types, irrigation channels) and comment on Landsat's ~30 m resolution and spectral range as relevant for crop monitoring.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Sacramento Valley, California"
+              }
+            },
+            {
+              "function_name": "fetch_landsat_ot_l1",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2022-07-01",
+                "end_date": "2022-07-31",
+                "preset": "true_color",
+                "max_cloud_cover": 20
+              },
+              "comment": "Download Landsat 8/9 OLI true-colour image for summer 2022"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260714_000099_700009",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "task_text": "The coordinates 45.4654° N, 9.1859° E correspond to a major European city. Reverse geocode these coordinates to identify the city name, then download a Sentinel-5P NO₂ column map over that location for March 2020. Describe the spatial distribution of NO₂ concentrations visible in the map and identify areas with relatively higher or lower values.",
+      "reference_solution_description": "Call reverse_geocode_place with latitude=45.4654, longitude=9.1859 to identify Milan, Italy. Then geocode_place 'Milan, Italy' to get a bounding box, and call fetch_sentinel5p_l2 with preset='no2' for March 2020. Describe the NO₂ distribution visible over the Po Valley and urban area during the lockdown period.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "reverse_geocode_place",
+              "arguments": {
+                "latitude": 45.4654,
+                "longitude": 9.1859
+              },
+              "comment": "Identify the city from coordinates"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Milan, Italy"
+              },
+              "comment": "Get bounding box for the identified city"
+            },
+            {
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2020-03-01",
+                "end_date": "2020-03-31",
+                "preset": "no2"
+              },
+              "comment": "Download S5P NO₂ map during COVID-19 lockdown"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
     }
   ]
 }

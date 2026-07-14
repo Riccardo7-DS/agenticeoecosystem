@@ -189,7 +189,7 @@ _EVE_RETRIEVAL_SYSTEM_PROMPT = (
 
 _RAG_SYSTEM_PROMPT = (
     "You are a retrieval assistant for ESA Earth Observation Science Strategy. "
-    "Use the hybrid_rag_retrieve tool to fetch relevant document chunks and "
+    "Use the search_eopss tool to fetch relevant document chunks and "
     "knowledge graph context, then return the raw context to the caller."
 )
 
@@ -295,7 +295,7 @@ model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
 gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
 moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
 gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
@@ -390,14 +390,14 @@ async def get_hybrid_rag_context(request: str) -> str:
         _extract_steps_from_messages(result["messages"])
         for msg in result["messages"]:
             for tc in getattr(msg, "tool_calls", []):
-                logger.debug("[eoss_rag_agent -> hybrid_rag_retrieve] args: %s", tc.get("args", {}))
+                logger.debug("[eoss_rag_agent -> search_eopss] args: %s", tc.get("args", {}))
             if getattr(msg, "type", None) == "tool":
                 content = msg.content
                 if isinstance(content, list):
                     content = "\n".join(
                         c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content
                     )
-                logger.debug("[hybrid_rag_retrieve raw output]\n%s", content)
+                logger.debug("[search_eopss raw output]\n%s", content)
         text_output = result["messages"][-1].text
         if isinstance(text_output, tuple):
             text_output = " ".join(str(t) for t in text_output)
@@ -488,7 +488,7 @@ def rebuild_agents(
     eo_stac_agent       = create_agent(_llm("eo_stac"),    tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(_llm("gee"),        tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(_llm("eve"),        tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-    eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name == "hybrid_rag_retrieve"], system_prompt=_RAG_SYSTEM_PROMPT)
+    eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
     moocs_agent         = create_agent(_llm("moocs"),      tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
     arxiv_agent         = create_agent(_llm("arxiv"),      tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
     gis_agent           = create_agent(_llm("gis"),        tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)

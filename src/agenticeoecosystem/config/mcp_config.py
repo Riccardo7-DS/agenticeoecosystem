@@ -6,7 +6,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-from agenticeoecosystem.definitions import ROOT_DIR, HYBRIDRAG_ROOT
+from agenticeoecosystem.definitions import ROOT_DIR
 
 load_dotenv(dotenv_path=ROOT_DIR / ".env")
 
@@ -20,24 +20,35 @@ def _try_register(servers: dict, key: str, build_fn) -> None:
         logger.warning("%s MCP disabled: %s", key, exc)
 
 
-def _check_hybridrag_env() -> None:
-    """Raise RuntimeError if required hybridrag env vars are missing."""
-    load_dotenv(HYBRIDRAG_ROOT / ".env")
-    missing = [
-        v for v in ("QDRANT_URL", "QDRANT_KEY", "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD")
-        if not os.getenv(v)
-    ]
-    if missing:
-        raise RuntimeError(
-            f"hybridrag env vars not set: {', '.join(missing)} (check hybridrag_pipeline/.env)"
-        )
-
-
 def _check_moocs_env() -> None:
     """Raise RuntimeError if required MOOC RAG env vars are missing."""
     missing = [v for v in ("QDRANT_URL", "QDRANT_KEY") if not os.getenv(v)]
     if missing:
         raise RuntimeError(f"MOOC RAG env vars not set: {', '.join(missing)} (check .env)")
+
+
+def _check_geos_ops_env() -> None:
+    """Raise RuntimeError if EUMETSAT Data Store credentials are missing."""
+    missing = [
+        v for v in ("EUMETSAT_CONSUMER_KEY", "EUMETSAT_CONSUMER_SECRET")
+        if not os.getenv(v)
+    ]
+    if missing:
+        raise RuntimeError(f"geos_ops (EUMETSAT) credentials not set: {', '.join(missing)}")
+
+
+def _check_eoss_graphrag_env() -> None:
+    """Raise RuntimeError if EOPSS GraphRAG connection details are missing."""
+    missing = [v for v in ("GRAPHRAG_MCP_URL", "GRAPHRAG_AUTH_HEADER") if not os.getenv(v)]
+    if missing:
+        raise RuntimeError(f"eoss_graphrag env vars not set: {', '.join(missing)} (check .env)")
+
+
+def _check_climate_env() -> None:
+    """Raise RuntimeError if CDS API credentials are missing."""
+    missing = [v for v in ("CDS_URL", "CDS_KEY") if not os.getenv(v)]
+    if missing:
+        raise RuntimeError(f"Climate (CDS) env vars not set: {', '.join(missing)} (check .env)")
 
 
 _EVE_RETRIEVAL_URL = (
@@ -51,16 +62,6 @@ def _check_gee_mcp_env() -> None:
     cred_path = ROOT_DIR / "src/agenticeoecosystem/servers/gee/gee-key.json"
     if not cred_path.exists():
         raise RuntimeError("GEE credentials file not found.")
-
-
-def _check_eumetsat_env() -> None:
-    """Raise RuntimeError if EUMETSAT Data Store credentials are missing."""
-    missing = [
-        v for v in ("EUMETSAT_CONSUMER_KEY", "EUMETSAT_CONSUMER_SECRET")
-        if not os.getenv(v)
-    ]
-    if missing:
-        raise RuntimeError(f"EUMETSAT credentials not set: {', '.join(missing)}")
 
 
 def _get_eve_retrieval_token() -> str:
@@ -130,14 +131,6 @@ def get_mcp_servers() -> dict:
         "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
     })
 
-    _try_register(servers, "hybridrag", lambda: (
-        _check_hybridrag_env() or {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/hybridrag/server.py"],
-        }
-    ))
-
     _try_register(servers, "moocs", lambda: (
         _check_moocs_env() or {
             "transport": "stdio",
@@ -146,11 +139,27 @@ def get_mcp_servers() -> dict:
         }
     ))
 
-    _try_register(servers, "eumetsat-mcp", lambda: (
-        _check_eumetsat_env() or {
+    _try_register(servers, "eoss_graphrag", lambda: (
+        _check_eoss_graphrag_env() or {
+            "transport": "streamable_http",
+            "url": os.getenv("GRAPHRAG_MCP_URL"),
+            "headers": {"Authorization": os.getenv("GRAPHRAG_AUTH_HEADER")},
+        }
+    ))
+
+    _try_register(servers, "geos_ops", lambda: (
+        _check_geos_ops_env() or {
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"],
+        }
+    ))
+
+    _try_register(servers, "climate", lambda: (
+        _check_climate_env() or {
+            "transport": "stdio",
+            "command": "python",
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/climate/server.py"],
         }
     ))
 

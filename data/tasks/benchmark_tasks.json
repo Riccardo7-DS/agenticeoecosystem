@@ -8039,11 +8039,11 @@
     },
     {
       "task_ID": "TASK_260713_000066_500045",
-      "task_text": "Search EOdashboard for narratives about climate monitoring and ERA5 reanalysis. Based on the geographic focus of the narrative, download ERA5 total precipitation for the relevant period and inspect the resulting file.",
+      "task_text": "Search the EO Dashboard for narratives about climate monitoring. Based on the geographic focus of the narrative, download ERA5 relevant data for the mentioned time period and inspect the resulting file.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives for climate monitoring ERA5 context. Step 2: fetch_era5_single_levels for precipitation. Step 3: inspect_netcdf.",
+      "reference_solution_description": "Search EO Dashboard narratives for climate monitoring content, read the narrative to extract the study area and time period, download the relevant ERA5 variable for that area and period using the appropriate fetch tool, then inspect the resulting NetCDF file to report its dimensions, variables, and coordinate ranges.",
       "reference_solutions": [
         {
           "steps": [
@@ -8060,7 +8060,7 @@
                 "variable": "total_precipitation",
                 "year": "2022",
                 "month": "12",
-                "output_filename": "/data/era5/tp_2022_12.nc",
+                "output_filename": "<inferred>",
                 "area": "<inferred>"
               },
               "comment": "Download ERA5 monthly mean total precipitation for December 2022"

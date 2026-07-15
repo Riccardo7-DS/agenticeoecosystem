@@ -4069,11 +4069,11 @@
     },
     {
       "task_ID": "TASK_260427_000012_200012",
-      "task_text": "Download a Sentinel-2 image of southern Spain for June 2023 with bands B2, B3, B4, B8. Clip it to the study-area polygon at data/study_area.shp, then compute NDVI (Red = band 3, NIR = band 4) from the clipped result.",
+      "task_text": "Download a Sentinel-2 image of southern Spain for June 2023 with bands B2, B3, B4, B8. Clip it to the Almeria study area, then compute NDVI (Red = band 3, NIR = band 4) from the clipped result.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_sentinel2 (as_geotiff=True) via CDSE, clip_raster_with_shapefile, then compute_ndvi.",
+      "reference_solution_description": "fetch_sentinel2 for southern Spain, geocode 'Almeria, Spain' with geocode_place for the narrower study area, clip_raster_with_bbox using that bbox, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
@@ -4096,13 +4096,20 @@
               }
             },
             {
-              "function_name": "clip_raster_with_shapefile",
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Almeria, Spain"
+              },
+              "comment": "Narrower study-area bbox within southern Spain"
+            },
+            {
+              "function_name": "clip_raster_with_bbox",
               "arguments": {
                 "raster_path_or_url": "data/sentinel2_spain.tif",
-                "shapefile_path": "/data/study_area.shp",
+                "bbox": "<derived from previous step>",
                 "destination": "data/sentinel2_spain_clipped.tif"
               },
-              "comment": "Clip the Sentinel-2 raster to the study area polygon"
+              "comment": "Clip the Sentinel-2 raster to the Almeria study-area bounding box"
             },
             {
               "function_name": "compute_ndvi",
@@ -6311,11 +6318,11 @@
     },
     {
       "task_ID": "TASK_260713_000013_400013",
-      "task_text": "Download the ESA WorldCover 2021 land-cover raster for Kenya, then clip it to the Kenya country boundary at data/kenya_boundary.shp and save the result.",
+      "task_text": "Download the ESA WorldCover 2021 land-cover raster for Kenya, then clip it to the Kenya national bounding box and save the result.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call download_gee_product with dataset='ESA/WorldCover/v200' (no CDSE equivalent exists for this dataset), then clip_raster_with_shapefile on the returned file path.",
+      "reference_solution_description": "Call download_gee_product with dataset='ESA/WorldCover/v200' (no CDSE equivalent exists for this dataset), geocode 'Kenya' with geocode_place, then clip_raster_with_bbox on the returned file path.",
       "reference_solutions": [
         {
           "steps": [
@@ -6334,13 +6341,20 @@
               "comment": "ESA WorldCover has no CDSE equivalent — only reachable via GEE's generic dataset= field. start_date/end_date are required by the tool schema even though WorldCover is a static annual product; no output_path argument exists."
             },
             {
-              "function_name": "clip_raster_with_shapefile",
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Kenya"
+              },
+              "comment": "National boundary bbox for Kenya"
+            },
+            {
+              "function_name": "clip_raster_with_bbox",
               "arguments": {
                 "raster_path_or_url": "<derived from download_gee_product: files[0]>",
-                "shapefile_path": "/data/kenya_boundary.shp",
+                "bbox": "<derived from previous step>",
                 "destination": "data/worldcover_kenya_2021.tif"
               },
-              "comment": "Clip global land-cover raster to Kenya boundary"
+              "comment": "Clip global land-cover raster to the Kenya bounding box"
             }
           ]
         }
@@ -6357,11 +6371,11 @@
     },
     {
       "task_ID": "TASK_260713_000014_400014",
-      "task_text": "Download a Sentinel-2 image of the Attica region of Greece for August 2023 with bands B2, B3, B4, B8. Clip it to the Attica region polygon at data/attica_boundary.shp, then compute NDVI (NIR = band 4, Red = band 3) to assess summer vegetation.",
+      "task_text": "Download a Sentinel-2 image of the Attica region of Greece for August 2023 with bands B2, B3, B4, B8. Clip it to the Attica region bounding box, then compute NDVI (NIR = band 4, Red = band 3) to assess summer vegetation.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Attica, Greece' with geocode_place, then fetch_sentinel2 (as_geotiff=True), clip_raster_with_shapefile, then compute_ndvi.",
+      "reference_solution_description": "Geocode 'Attica, Greece' with geocode_place, fetch_sentinel2 (as_geotiff=True), clip_raster_with_bbox using the same geocoded bbox, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
@@ -6391,13 +6405,13 @@
               }
             },
             {
-              "function_name": "clip_raster_with_shapefile",
+              "function_name": "clip_raster_with_bbox",
               "arguments": {
                 "raster_path_or_url": "data/sentinel2_attica.tif",
-                "shapefile_path": "/data/attica_boundary.shp",
+                "bbox": "<derived from geocode_place step>",
                 "destination": "data/s2_attica_2023_clipped.tif"
               },
-              "comment": "Clip Sentinel-2 to the Attica region boundary"
+              "comment": "Clip Sentinel-2 to the Attica region bounding box"
             },
             {
               "function_name": "compute_ndvi",

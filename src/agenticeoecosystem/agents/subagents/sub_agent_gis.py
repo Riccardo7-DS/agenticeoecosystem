@@ -4,6 +4,8 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from typing import Optional
+from pathlib import Path
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,8 +21,67 @@ _GIS_SYSTEM_PROMPT = (
     "- Spatial statistics (Moran's I, LISA, spatial regression) via PySAL\n"
     "- Map creation (static PNG/PDF via create_map, interactive HTML via create_web_map)\n"
     "Extract all parameters from the user's request and chain tools as needed. "
-    "Return file paths for saved outputs (maps, rasters, vectors)."
+    "Return file paths for saved outputs (maps, rasters, vectors).\n"
+    "To clip a raster to a region: use clip_raster_with_shapefile only if the "
+    "caller already gave you a .shp path. If you only have a bounding box "
+    "(west, south, east, north) and no shapefile, use clip_raster_with_bbox "
+    "directly — do not try to fabricate or guess a shapefile path."
 )
+
+
+def clip_raster_with_bbox(
+    raster_path: str,
+    bbox: list[float],
+    destination: str,
+    bbox_crs: str = "EPSG:4326",
+) -> dict:
+    """Clip a raster to a bounding box, without requiring a shapefile.
+
+    Args:
+        raster_path: Local path to the source raster.
+        bbox: [west, south, east, north].
+        destination: Local path to write the clipped raster to.
+        bbox_crs: CRS of the bbox coordinates (default WGS-84 lon/lat).
+
+    Returns:
+        dict with status, destination path, and a message.
+    """
+    import rasterio
+    from rasterio.windows import from_bounds
+    from rasterio.warp import transform_bounds
+
+    src_path = os.path.expanduser(raster_path.replace("`", ""))
+    if not os.path.isfile(src_path):
+        raise FileNotFoundError(f"Raster not found at '{src_path}'.")
+
+    west, south, east, north = bbox
+
+    with rasterio.open(src_path) as src:
+        if src.crs and str(src.crs) != bbox_crs:
+            west, south, east, north = transform_bounds(
+                bbox_crs, src.crs, west, south, east, north
+            )
+        window = from_bounds(west, south, east, north, transform=src.transform)
+        out_transform = src.window_transform(window)
+        out_image = src.read(window=window)
+        out_meta = src.meta.copy()
+        out_meta.update({
+            "driver": "GTiff",
+            "height": out_image.shape[1],
+            "width": out_image.shape[2],
+            "transform": out_transform,
+        })
+
+    dst_path = Path(os.path.expanduser(destination.replace("`", "")))
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    with rasterio.open(str(dst_path), "w", **out_meta) as dst:
+        dst.write(out_image)
+
+    return {
+        "status": "success",
+        "destination": str(dst_path),
+        "message": f"Raster clipped to bbox and saved to '{dst_path}'.",
+    }
 
 _GIS_TOOL_NAMES = {
     # Shapely geometry
@@ -89,7 +150,7 @@ def _fetch_agent(toolset) -> Optional[Agent]:
                 name='gis_agent',
                 description='A helpful assistant for performing GIS analysis, spatial operations, raster analysis, and map visualization.',
                 instruction=_GIS_SYSTEM_PROMPT,
-                tools=toolset,
+                tools=toolset + [clip_raster_with_bbox],
                 mode='single_turn'
             )
         else:

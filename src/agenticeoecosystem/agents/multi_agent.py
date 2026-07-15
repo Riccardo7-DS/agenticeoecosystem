@@ -101,6 +101,10 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "geopotential, precipitation) as NetCDF files for a given year/month\n"
     "\n"
     "ROUTING:\n"
+    "- Every sub-agent above is called directly as a function tool by its own "
+    "name (e.g. cdse_agent(request=...), climate_agent(request=...)). There is "
+    "no transfer_to_agent tool in this setup — never call a tool named "
+    "transfer_to_agent; it does not exist here and calling it will fail.\n"
     "- Break requests into the appropriate tool call(s) and coordinate results.\n"
     "- If a request needs multiple sources, call tools in sequence and combine their outputs.\n"
     "- For general or 'sample' imagery requests (e.g. Sentinel-2, Sentinel-1, "
@@ -136,12 +140,23 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "assistant.'"
 )
 
+def _on_tool_error(tool, args, tool_context, error):
+    """Turn a tool-execution failure into a normal tool result instead of
+    letting it propagate and abort the turn (which otherwise leaves that
+    tool call's id permanently unresolved in history — e.g. when the model
+    hallucinates a call to a tool that isn't registered, such as
+    transfer_to_agent, which this orchestrator never exposes)."""
+    logger.warning("Tool '%s' failed: %s", getattr(tool, "name", "?"), error)
+    return {"error": f"Tool '{getattr(tool, 'name', '?')}' failed: {error}"}
+
+
 root = Agent(
     model=llm,
     name="orchestrator_agent",      # coordinator agent
     sub_agents=ALL_SUB_AGENTS, # List all sub-agents here
     description="An orchestrator agent that routes user queries to its sub-agents based on the query content.",
-    instruction=_SUPERVISOR_SYSTEM_PROMPT
+    instruction=_SUPERVISOR_SYSTEM_PROMPT,
+    on_tool_error_callback=_on_tool_error,
 # Auto-injects: request_task_weather_checker, request_task_flight_booker
 )
 
@@ -286,7 +301,7 @@ if __name__ == "__main__":
     try:
         # ans = asyncio.run(get_ans_tool_path("Download the geopotential height at 500 hPa for January 2023, and tell me what the file looks like once it's downloaded."))
         # ans = asyncio.run(get_ans_tool_path("Download a VIIRS image over Naples, Italy for the first week of March 2024."))
-        ans = asyncio.run(get_ans_tool_path("Find MSG SEVIRI images over Athens, Greece on 2024-06-01 only one observation per day at 12:00 UTC, and download it."))
+        ans = asyncio.run(get_ans_tool_path("Search EO Dashboard narratives about sea surface temperature anomalies. Based on the region and season highlighted, download ERA5 monthly mean skin temperature for the relevant period and convert from Kelvin to Celsius."))
         print(ans)
     except Exception as e:
         print(f"An error occurred: {e}")    

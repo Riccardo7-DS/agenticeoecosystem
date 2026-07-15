@@ -146,7 +146,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent first geocodes \"central Rome, Italy\" using get_lat_lon to obtain its latitude and longitude, then passes those coordinates to download_satellite_image with the correct date range, bands, scale, and cloud filter. Finally, visually inspect the downloaded image and report whether the Tiber River is discernible, noting the direction of its flow across the scene.",
+      "reference_solution_description": "Agent first geocodes \"central Rome, Italy\" using geocode_place to obtain its latitude and longitude, then passes those coordinates to download_gee_product with the correct date range, bands, scale, and cloud filter. Finally, visually inspect the downloaded image and report whether the Tiber River is discernible, noting the direction of its flow across the scene.",
       "reference_solutions": [
         {
           "steps": [
@@ -159,12 +159,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-01-01",
                 "end_date": "2023-03-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -219,24 +219,24 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "<same season 2019>",
                 "end_date": "<same season 2019>",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               },
               "comment": "Pre-lockdown baseline (one year before)"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "<lockdown period 2020>",
                 "end_date": "<lockdown period 2020>",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               },
               "comment": "During lockdown"
             }
@@ -465,7 +465,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'central Barcelona, Spain' with get_lat_lon, then download a Sentinel-2 RGB image with an 8 km buffer for July 2022 at 10 m resolution. Finally, assess whether the spatial resolution and spectral composite of the downloaded image are appropriate for mapping urban features in Barcelona's city centre.",
+      "reference_solution_description": "Geocode 'central Barcelona, Spain' with geocode_place, then download a Sentinel-2 RGB image with an 8 km buffer for July 2022 at 10 m resolution. Finally, assess whether the spatial resolution and spectral composite of the downloaded image are appropriate for mapping urban features in Barcelona's city centre.",
       "reference_solutions": [
         {
           "steps": [
@@ -478,12 +478,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 15
+                "max_cloud_cover": 15
               }
             }
           ]
@@ -499,11 +499,11 @@
     },
     {
       "task_ID": "TASK_260419_000013_100013",
-      "task_text": "Download a false-colour near-infrared composite of the agricultural area around Cremona in the Po Valley, Lombardy, Italy for the growing season of June–August 2021 at 20 m resolution to assess vegetation health.",
+      "task_text": "Download a false-colour near-infrared composite of the agricultural area around Cremona, Lombardy, Italy for the growing season (June–August 2021) at 20 m resolution. Describe the spatial patterns of vegetation conditions visible in the image and identify areas with stronger or weaker vegetation signals.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Cremona, Lombardy, Italy' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with an 8 km buffer for June–August 2021 at 20 m resolution.",
+      "reference_solution_description": "Geocode 'Cremona, Lombardy, Italy' with geocode_place, then download a Sentinel-2 NIR false-colour image with an 8 km buffer for June–August 2021 at 20 m resolution.",
       "reference_solutions": [
         {
           "steps": [
@@ -516,7 +516,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2021-06-01",
                 "end_date": "2021-08-31",
                 "collection": "L2A",
@@ -525,7 +525,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -541,11 +541,11 @@
     },
     {
       "task_ID": "TASK_260419_000016_100016",
-      "task_text": "Find EO Dashboard narratives about forest cover change, identify the STAC collection codes they reference, and retrieve a sample of data items from one of those collections.",
+      "task_text": "Find an EO Dashboard narrative about forest cover change, identify the referenced STAC collection, retrieve sample data items from that collection, and download a representative satellite image for the study area. Describe whether the retrieved image provides visible evidence supporting the forest cover changes discussed in the narrative.",
       "task_labels": [
-        "Sequential Reasoning"
+        "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains three EODash tools: narrative search, indicator lookup, and collection item retrieval.",
+      "reference_solution_description": "Chain EODash narrative search, indicator lookup, and collection item retrieval, geocode the study area (Kalimantan, Indonesia) with geocode_place, then fetch_sentinel2 for a representative true-colour image.",
       "reference_solutions": [
         {
           "steps": [
@@ -570,6 +570,25 @@
                 "limit": 10
               },
               "comment": "Retrieve sample data items from the identified collection"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Kalimantan, Indonesia"
+              },
+              "comment": "Study area from the narrative"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2023-06-01",
+                "end_date": "2023-08-31",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 30
+              },
+              "comment": "Representative true-colour image of the study area"
             }
           ]
         },
@@ -580,7 +599,7 @@
               "arguments": {
                 "keyword": "deforestation"
               },
-              "comment": "Alternative keyword — deforestation"
+              "comment": "Alternative keyword -- deforestation"
             },
             {
               "function_name": "get_narrative_indicators",
@@ -596,6 +615,25 @@
                 "limit": 10
               },
               "comment": "Retrieve sample data items"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Kalimantan, Indonesia"
+              },
+              "comment": "Study area from the narrative"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2023-06-01",
+                "end_date": "2023-08-31",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 30
+              },
+              "comment": "Representative true-colour image of the study area"
             }
           ]
         }
@@ -694,12 +732,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-01-01",
                 "end_date": "2023-12-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -719,7 +757,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Ciudad Real, Spain' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for July–September 2022, then search EO Dashboard for drought or water stress narratives.",
+      "reference_solution_description": "Geocode 'Ciudad Real, Spain' with geocode_place, download a Sentinel-2 B8+B4 image with a 15 km buffer for July–September 2022, then search EO Dashboard for drought or water stress narratives.",
       "reference_solutions": [
         {
           "steps": [
@@ -732,7 +770,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -740,7 +778,7 @@
                   "B08",
                   "B04"
                 ],
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             },
             {
@@ -763,7 +801,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -771,7 +809,7 @@
                   "B08",
                   "B04"
                 ],
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             },
             {
@@ -862,7 +900,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for glacier/cryosphere narratives, extract the study area from the narrative content, get STAC collections and sample items, geocode the site with get_lat_lon, then download a Sentinel-2 RGB image. Summarize visible cryosphere conditions (e.g., snow/ice extent, glacier retreat) and relate them to the narrative.",
+      "reference_solution_description": "Search EO Dashboard for glacier/cryosphere narratives, extract the study area from the narrative content, get STAC collections and sample items, geocode the site with geocode_place, then download a Sentinel-2 RGB image. Summarize visible cryosphere conditions (e.g., snow/ice extent, glacier retreat) and relate them to the narrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -897,12 +935,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-01",
                 "end_date": "2022-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -940,12 +978,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-01",
                 "end_date": "2022-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -1022,12 +1060,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-01-01",
                 "end_date": "2022-01-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             }
           ]
@@ -1043,7 +1081,7 @@
     },
     {
       "task_ID": "TASK_260419_000024_100024",
-      "task_text": "Find an EO Dashboard narrative about climate change impacts, retrieve its full content to identify a study area, download a Sentinel-2 image for that area, and then query the ESA Science Strategy for policy context on the same topic.",
+      "task_text": "Find an EO Dashboard narrative about climate change impacts, retrieve its full content to identify the study area, select and download an appropriate EO image for that area, and query the ESA Science Strategy for policy context on the same topic. Explain how the selected observation helps assess the climate impact described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -1074,12 +1112,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-01-01",
                 "end_date": "2022-12-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
@@ -1102,24 +1140,32 @@
     },
     {
       "task_ID": "TASK_260419_000025_100025",
-      "task_text": "Download a Sentinel-2 false-colour image of the Port of Rotterdam, Netherlands for October 2021, find EO Dashboard narratives contextualising industrial emissions or shipping activity, and search for a MOOC lecture on satellite monitoring of industrial sites.",
+      "task_text": "Find an EO Dashboard narrative about industrial activity or emissions monitoring. Identify the study area mentioned in the narrative, retrieve a suitable Earth observation dataset for that location, and search for relevant ESA educational resources about satellite monitoring of industrial sites. Explain how the retrieved EO data can be used to investigate the environmental issue described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Port of Rotterdam, Netherlands' with get_lat_lon, download a Sentinel-2 false-colour image with an 8 km buffer for October 2021, search EO Dashboard for shipping/industrial narratives, and search MOOCs for industrial monitoring lectures.",
+      "reference_solution_description": "Search EO Dashboard for industrial/shipping narratives, geocode the study area identified in the narrative (Port of Rotterdam, Netherlands) with geocode_place, fetch_sentinel2 for that area, then search_moocs for related educational content.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "shipping"
+              },
+              "comment": "Find EODash narratives about shipping or industrial emissions"
+            },
+            {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "Port of Rotterdam, Netherlands"
-              }
+              },
+              "comment": "Study area identified from the narrative"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
                 "collection": "L2A",
@@ -1128,15 +1174,8 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
-            },
-            {
-              "function_name": "search_narratives",
-              "arguments": {
-                "keyword": "shipping"
-              },
-              "comment": "Find EODash narratives about shipping or industrial emissions"
             },
             {
               "function_name": "search_moocs",
@@ -1150,15 +1189,23 @@
         {
           "steps": [
             {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "industrial"
+              },
+              "comment": "Alternative keyword -- industrial"
+            },
+            {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "Port of Rotterdam, Netherlands"
-              }
+              },
+              "comment": "Study area identified from the narrative"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
                 "collection": "L2A",
@@ -1167,15 +1214,8 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
-            },
-            {
-              "function_name": "search_narratives",
-              "arguments": {
-                "keyword": "industrial"
-              },
-              "comment": "Alternative keyword — industrial"
             },
             {
               "function_name": "search_moocs",
@@ -1201,7 +1241,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Bordeaux, France' with get_lat_lon, then download two Sentinel-2 RGB images with a 10 km buffer: pre-event (Apr–Jun 2022) and post-event (Aug–Sep 2022). Finally, visually compare the two downloaded images and report the visible landscape changes (e.g., burn scars, vegetation browning) caused by the heatwave and wildfires.",
+      "reference_solution_description": "Geocode 'Bordeaux, France' with geocode_place, then download two Sentinel-2 RGB images with a 10 km buffer: pre-event (Apr–Jun 2022) and post-event (Aug–Sep 2022). Finally, visually compare the two downloaded images and report the visible landscape changes (e.g., burn scars, vegetation browning) caused by the heatwave and wildfires.",
       "reference_solutions": [
         {
           "steps": [
@@ -1214,23 +1254,23 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-04-01",
                 "end_date": "2022-06-30",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -1285,7 +1325,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-03-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -1294,7 +1334,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
@@ -1346,7 +1386,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-03-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -1355,7 +1395,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
@@ -1714,7 +1754,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'central Wuhan, Hubei, China' with get_lat_lon, then download the best-quality (lowest cloud cover) Sentinel-2 RGB image for February 2020. Describe visible urban features (roads, buildings, greenery) and explain what lockdown-related signals can or cannot be detected from an optical scene of this type.",
+      "reference_solution_description": "Geocode 'central Wuhan, Hubei, China' with geocode_place, then download the best-quality (lowest cloud cover) Sentinel-2 RGB image for February 2020. Describe visible urban features (roads, buildings, greenery) and explain what lockdown-related signals can or cannot be detected from an optical scene of this type.",
       "reference_solutions": [
         {
           "steps": [
@@ -1727,12 +1767,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-02-01",
                 "end_date": "2020-02-29",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -1748,11 +1788,11 @@
     },
     {
       "task_ID": "TASK_260419_000037_100037",
-      "task_text": "Download a false-colour near-infrared composite of the agricultural area near Mansoura in the Nile Delta, Egypt for March–April 2022 at 20 m resolution to assess crop conditions before harvest.",
+      "task_text": "Retrieve a false-colour near-infrared composite of the agricultural area near Mansoura, Egypt for March–April 2022 at 20 m resolution. Describe the main vegetation patterns visible in the image before harvest.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Mansoura, Dakahlia, Egypt' with get_lat_lon, then download a Sentinel-2 NIR false-colour image with a 10 km buffer for March–April 2022 at 20 m resolution.",
+      "reference_solution_description": "Geocode 'Mansoura, Dakahlia, Egypt' with geocode_place, then download a Sentinel-2 NIR false-colour image with a 10 km buffer for March–April 2022 at 20 m resolution.",
       "reference_solutions": [
         {
           "steps": [
@@ -1765,7 +1805,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-03-01",
                 "end_date": "2022-04-30",
                 "collection": "L2A",
@@ -1774,7 +1814,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -1794,7 +1834,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' with get_lat_lon, then download a Sentinel-2 RGB image with a 15 km buffer for August 2021. Estimate the visible water-covered fraction and describe the spatial distribution of remaining water bodies relative to the exposed, former seabed terrain.",
+      "reference_solution_description": "Geocode 'Muynak, Karakalpakstan, Uzbekistan' with geocode_place, then download a Sentinel-2 RGB image with a 15 km buffer for August 2021. Estimate the visible water-covered fraction and describe the spatial distribution of remaining water bodies relative to the exposed, former seabed terrain.",
       "reference_solutions": [
         {
           "steps": [
@@ -1807,12 +1847,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2021-08-01",
                 "end_date": "2021-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -2076,7 +2116,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Cairns, Queensland, Australia' with get_lat_lon, download a Sentinel-2 RGB image with a 15 km buffer for September 2022, then search EO Dashboard for coral reef or ocean warming narratives.",
+      "reference_solution_description": "Geocode 'Cairns, Queensland, Australia' with geocode_place, download a Sentinel-2 RGB image with a 15 km buffer for September 2022, then search EO Dashboard for coral reef or ocean warming narratives.",
       "reference_solutions": [
         {
           "steps": [
@@ -2089,12 +2129,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-09-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
@@ -2117,12 +2157,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-09-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             },
             {
@@ -2176,7 +2216,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-01-01",
                 "end_date": "2023-12-31",
                 "collection": "L2A",
@@ -2185,7 +2225,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -2215,7 +2255,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-01-01",
                 "end_date": "2023-12-31",
                 "collection": "L2A",
@@ -2224,7 +2264,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -2279,24 +2319,24 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2018-07-01",
                 "end_date": "2018-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               },
               "comment": "Pre-forest-loss true-colour baseline (dry season for low cloud cover)"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-07-01",
                 "end_date": "2020-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               },
               "comment": "Post-forest-loss true-colour image, same season for comparability"
             }
@@ -2335,24 +2375,24 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2018-07-01",
                 "end_date": "2018-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               },
               "comment": "Pre-forest-loss true-colour baseline (dry season for low cloud cover)"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-07-01",
                 "end_date": "2020-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               },
               "comment": "Post-forest-loss true-colour image, same season for comparability"
             }
@@ -2369,11 +2409,11 @@
     },
     {
       "task_ID": "TASK_260419_000046_100046",
-      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas, identify the STAC collections they reference, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of Narooma on the south coast of New South Wales, Australia — one before the 2019–2020 Black Summer fires (September–November 2019) and one after (February–March 2020) — to assess fire extent and landscape changes. Compare the two images and assess the visible extent of fire damage and landscape change between the pre- and post-fire periods.",
+      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas. Identify the referenced STAC collections, retrieve sample data items from one collection, and download two Sentinel-2 false-colour near-infrared composites of the affected area: one before and one after the wildfire event. Compare the images and describe visible changes in vegetation cover, burned areas, and landscape conditions associated with the fire.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for wildfire narratives, get STAC collections and sample items, geocode 'Narooma, New South Wales, Australia' with get_lat_lon, then download two Sentinel-2 RGB images with a 15 km buffer: pre-fire (Sep–Nov 2019) and post-fire (Feb–Mar 2020). Finally, visually compare the two downloaded images and report the visible extent of burned area and landscape change caused by the fires.",
+      "reference_solution_description": "Search EO Dashboard for wildfire narratives, get STAC collections and sample items, geocode the study area identified in the narrative, then download two Sentinel-2 false-colour NIR composites (NIR/Red/Green) with a preset='true_color' -> custom_bands swap: pre-fire and post-fire.",
       "reference_solutions": [
         {
           "steps": [
@@ -2408,23 +2448,31 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2019-09-01",
                 "end_date": "2019-11-30",
                 "collection": "L2A",
-                "preset": "true_color",
-                "max_cloud_coverage": 20
+                "custom_bands": [
+                  "B08",
+                  "B04",
+                  "B03"
+                ],
+                "max_cloud_cover": 20
               }
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-02-01",
                 "end_date": "2020-03-31",
                 "collection": "L2A",
-                "preset": "true_color",
-                "max_cloud_coverage": 20
+                "custom_bands": [
+                  "B08",
+                  "B04",
+                  "B03"
+                ],
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -2462,23 +2510,31 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2019-09-01",
                 "end_date": "2019-11-30",
                 "collection": "L2A",
-                "preset": "true_color",
-                "max_cloud_coverage": 20
+                "custom_bands": [
+                  "B08",
+                  "B04",
+                  "B03"
+                ],
+                "max_cloud_cover": 20
               }
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-02-01",
                 "end_date": "2020-03-31",
                 "collection": "L2A",
-                "preset": "true_color",
-                "max_cloud_coverage": 20
+                "custom_bands": [
+                  "B08",
+                  "B04",
+                  "B03"
+                ],
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -2533,7 +2589,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -2542,7 +2598,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             }
           ]
@@ -2580,7 +2636,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
                 "collection": "L2A",
@@ -2589,7 +2645,7 @@
                   "B04",
                   "B03"
                 ],
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             }
           ]
@@ -3314,7 +3370,7 @@
     },
     {
       "task_ID": "TASK_260619_000006_300006",
-      "task_text": "Search the ESA Science Strategy for priorities on glacier and cryosphere monitoring, and search MOOC content for lectures on ice sheet remote sensing. Based on a specific glacier or cryosphere site highlighted across those sources, download a Sentinel-2 image of that location for a recent summer period.",
+      "task_text": "Search the ESA Science Strategy for priorities on glacier and cryosphere monitoring and search MOOC content for lectures on ice sheet remote sensing. Identify a glacier or cryosphere study site relevant to these sources, download a recent summer Sentinel-2 image of that location, and describe the visible cryosphere features that are relevant for monitoring climate change impacts.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -3345,12 +3401,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-08-01",
                 "end_date": "2023-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             }
           ]
@@ -3770,25 +3826,32 @@
       "task_ID": "TASK_260427_000008_200008",
       "task_text": "Download a Sentinel-2 true-colour image of central Rome, Italy for March 2023, then read the raster metadata (driver, CRS, size, band count, data type, geographic extent) of the resulting file.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls metadata_raster with the file path to retrieve all raster metadata.",
+      "reference_solution_description": "Geocode 'central Rome, Italy' with geocode_place, then fetch_sentinel2 (as_geotiff=True) using the resulting bbox, then metadata_raster.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 5000,
+                "place_name": "central Rome, Italy"
+              },
+              "comment": "Expected coordinates ~41.9028, 12.4964"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-03-01",
                 "end_date": "2023-03-31",
-                "bands": "B4,B3,B2",
-                "scale": 10,
+                "collection": "L2A",
+                "preset": "true_color",
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_rome.tif"
-              }
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_rome.tif"
+              },
+              "comment": "as_geotiff=True returns a georeferenced GeoTIFF, required for metadata_raster to read CRS/driver/extent"
             },
             {
               "function_name": "metadata_raster",
@@ -3812,25 +3875,37 @@
       "task_ID": "TASK_260427_000009_200009",
       "task_text": "Download a multi-band Sentinel-2 image of central Barcelona, Spain for July 2022, then calculate the minimum, maximum, mean, and standard deviation for each band.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls raster_band_statistics to compute per-band statistics for the input raster.",
+      "reference_solution_description": "Geocode 'central Barcelona, Spain' with geocode_place, then fetch_sentinel2 (as_geotiff=True), then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 5000,
+                "place_name": "central Barcelona, Spain"
+              },
+              "comment": "Expected coordinates ~41.3874, 2.1686"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
-                "bands": "B2,B3,B4,B8",
-                "scale": 10,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_barcelona.tif"
-              }
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_barcelona.tif"
+              },
+              "comment": "as_geotiff=True yields raw FLOAT32 reflectance per band, needed for meaningful band statistics"
             },
             {
               "function_name": "raster_band_statistics",
@@ -3852,22 +3927,47 @@
     },
     {
       "task_ID": "TASK_260427_000010_200010",
-      "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022. Use the compute_s2_ndvi tool and save the result to /tmp/ndvi_po_valley.tif.",
+      "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022 and save the result to /tmp/ndvi_po_valley.tif.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls compute_s2_ndvi with the correct bounding box, date range, and output path for the Po Valley.",
+      "reference_solution_description": "Call fetch_sentinel2 (as_geotiff=True) for NIR+Red bands via CDSE, then compute_ndvi on the result.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "compute_s2_ndvi",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "bbox": "<inferred>",
-                "time_range": "2022-07-01/2022-07-31",
-                "output_path": "/tmp/ndvi_po_valley.tif"
+                "region_name": "Po Valley"
               },
-              "comment": "Download and compute NDVI for Po Valley via Planetary Computer Sentinel-2"
+              "comment": "Resolve 'Po Valley' to a bounding box via the region gazetteer"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2022-07-01",
+                "end_date": "2022-07-31",
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
+                "max_cloud_cover": 20,
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_po_valley_200010.tif"
+              },
+              "comment": "Fetch NIR+Red bands as a georeferenced GeoTIFF via CDSE"
+            },
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "data/sentinel2_po_valley_200010.tif",
+                "red_band_index": 2,
+                "nir_band_index": 1,
+                "destination": "/tmp/ndvi_po_valley.tif"
+              },
+              "comment": "band 1 = B08 (NIR), band 2 = B04 (Red)"
             }
           ]
         }
@@ -3886,23 +3986,30 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent reprojects the raster to UTM 32N then computes band statistics on the reprojected file.",
+      "reference_solution_description": "Call fetch_sentinel2 with as_geotiff=True, reproject_raster to UTM 32N, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 20000,
+                "region_name": "Swiss Alps"
+              },
+              "comment": "Resolve 'Swiss Alps' to a bounding box via the region gazetteer"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-09-01",
                 "end_date": "2022-09-30",
-                "bands": "B4,B3,B2",
-                "scale": 20,
+                "collection": "L2A",
+                "preset": "true_color",
                 "max_cloud_cover": 30,
-                "output_path": "data/sentinel2_alps.tif"
-              }
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_alps.tif"
+              },
+              "comment": "as_geotiff=True for a georeferenced raster that reproject_raster can operate on"
             },
             {
               "function_name": "reproject_raster",
@@ -3938,22 +4045,26 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent clips the raster to the study area and then computes NDVI from the clipped output.",
+      "reference_solution_description": "fetch_sentinel2 (as_geotiff=True) via CDSE, clip_raster_with_shapefile, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "fetch_sentinel2",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
+                "bbox": "<inferred>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
-                "bands": "B2,B3,B4,B8",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_spain.tif"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_spain.tif"
               }
             },
             {
@@ -3992,33 +4103,42 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Bila Tserkva, Kyiv Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B4+B8 image with a 10 km buffer for June 2023, compute NDVI, then report band statistics.",
+      "reference_solution_description": "Geocode 'Bila Tserkva, Kyiv Oblast, Ukraine' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "place_name": "Bila Tserkva, Kyiv Oblast, Ukraine"
+              },
+              "comment": "Expected coordinates ~49.7950, 30.1310"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
-                "bands": "B4,B8",
-                "scale": 20,
-                "max_cloud_cover": 20
-              },
-              "comment": "Download Sentinel-2 image for agricultural area around Bila Tserkva"
+                "collection": "L2A",
+                "custom_bands": [
+                  "B04",
+                  "B08"
+                ],
+                "max_cloud_cover": 20,
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_bila_tserkva.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<path returned by download_satellite_image>",
+                "source": "data/sentinel2_bila_tserkva.tif",
                 "red_band_index": 1,
                 "nir_band_index": 2,
                 "destination": "/tmp/ndvi_ukraine.tif"
               },
-              "comment": "Compute NDVI (B4=band1=Red, B8=band2=NIR)"
+              "comment": "B4=band1=Red, B8=band2=NIR"
             },
             {
               "function_name": "raster_band_statistics",
@@ -4044,14 +4164,21 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Colosseum, Rome, Italy' with get_lat_lon to obtain WGS84 coordinates, then transform the result from EPSG:4326 to EPSG:32633 (UTM zone 33N).",
+      "reference_solution_description": "Geocode 'Colosseum, Rome, Italy' with geocode_place to obtain WGS84 coordinates, then transform_coordinates from EPSG:4326 to EPSG:32633 (UTM zone 33N).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Colosseum, Rome, Italy"
+              },
+              "comment": "Geocode the Colosseum (~41.8902N, 12.4922E)"
+            },
+            {
               "function_name": "transform_coordinates",
               "arguments": {
-                "coordinates": "<inferred>",
+                "coordinates": "<derived from previous step>",
                 "source_crs": "EPSG:4326",
                 "target_crs": "EPSG:32633"
               },
@@ -4074,27 +4201,40 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Addis Ababa, Ethiopia' with get_lat_lon to obtain the coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the correct UTM projection.",
+      "reference_solution_description": "Geocode 'Addis Ababa, Ethiopia' with geocode_place to obtain the coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the correct UTM projection (EPSG:32637, zone 37N).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Addis Ababa, Ethiopia"
+              },
+              "comment": "Geocode central Addis Ababa (~9.0250N, 38.7469E)"
+            },
+            {
               "function_name": "get_utm_crs",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from previous step>"
               },
-              "comment": "Get the UTM CRS code appropriate for central Ethiopia"
+              "comment": "Get the UTM CRS code appropriate for central Ethiopia (expected EPSG:32637)"
             }
           ]
         },
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Addis Ababa, Ethiopia"
+              }
+            },
+            {
               "function_name": "get_utm_zone",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from previous step>"
               },
-              "comment": "Alternative: get the UTM zone identifier for the same location"
+              "comment": "Alternative: get the UTM zone identifier for the same location (expected zone 37N)"
             }
           ]
         }
@@ -4113,15 +4253,29 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode both ESA facilities with get_lat_lon, then pass the resulting coordinates to calculate_geodetic_distance to compute the WGS84 geodetic distance between them.",
+      "reference_solution_description": "Geocode both ESA facilities with geocode_place, then pass the resulting coordinates to calculate_geodetic_distance to compute the WGS84 geodetic distance between them.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "ESA ESRIN, Frascati, Italy"
+              },
+              "comment": "Geocode ESRIN (~41.8264N, 12.6738E)"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "ESA ESAC, Villanueva de la Canada, Spain"
+              },
+              "comment": "Geocode ESAC (~40.4527N, -4.0090W)"
+            },
+            {
               "function_name": "calculate_geodetic_distance",
               "arguments": {
-                "point1": "<inferred>",
-                "point2": "<inferred>",
+                "point1": "<derived from ESRIN geocode_place step>",
+                "point2": "<derived from ESAC geocode_place step>",
                 "ellps": "WGS84"
               },
               "comment": "Compute geodetic distance between ESRIN (Italy) and ESAC (Spain)"
@@ -4179,24 +4333,35 @@
       "task_ID": "TASK_260427_000019_200019",
       "task_text": "Download a Sentinel-2 image of the Po Valley agricultural region in northern Italy for July 2022, compute NDVI, then generate a 256-bin pixel-value histogram to understand the distribution of vegetation density across the area.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls raster_histogram on the NDVI raster with 256 bins.",
+      "reference_solution_description": "fetch_sentinel2 (as_geotiff=True) via CDSE, compute_ndvi, then raster_histogram.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
+                "region_name": "Po Valley"
+              },
+              "comment": "Resolve 'Po Valley' to a bounding box via the region gazetteer"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
-                "bands": "B2,B3,B4,B8",
-                "scale": 30,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_po_valley_jul2022.tif"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_po_valley_jul2022.tif"
               }
             },
             {
@@ -4232,7 +4397,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent retrieves a recent SAR flood paper from arXiv, reads it to extract a study area location, then uses the GIS server to compute the geodetic distance from that location to Rome.",
+      "reference_solution_description": "Search arXiv for a SAR flood-mapping paper, geocode 'Rome, Italy' with geocode_place, then calculate_geodetic_distance between the paper's study area and Rome.",
       "reference_solutions": [
         {
           "steps": [
@@ -4260,10 +4425,17 @@
               "comment": "Read the paper to identify the study area location"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Rome, Italy"
+              },
+              "comment": "Expected coordinates ~41.9028, 12.4964"
+            },
+            {
               "function_name": "calculate_geodetic_distance",
               "arguments": {
                 "point1": "<study area centroid [lon, lat] derived from paper>",
-                "point2": "<inferred>",
+                "point2": "<derived from geocode_place step>",
                 "ellps": "WGS84"
               },
               "comment": "Compute geodetic distance from the study area to Rome"
@@ -4285,7 +4457,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent retrieves a vegetation/drought paper from arXiv, then uses the GIS server to compute NDVI from a corresponding satellite image.",
+      "reference_solution_description": "Retrieve a drought/vegetation-index paper from arXiv, fetch_sentinel2 (as_geotiff=True) for the study region, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
@@ -4305,17 +4477,21 @@
               "comment": "Retrieve the abstract of the selected paper"
             },
             {
-              "function_name": "download_satellite_image",
+              "function_name": "fetch_sentinel2",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "bbox": "<inferred from paper abstract>",
                 "start_date": "<inferred>",
                 "end_date": "<inferred>",
-                "bands": "B2,B3,B4,B8",
-                "scale": 30,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_drought.tif"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_drought.tif"
               }
             },
             {
@@ -4734,63 +4910,42 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Pavia, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023, then compute NDVI from the downloaded raster.",
+      "reference_solution_description": "Geocode 'Pavia, Lombardy, Italy' with geocode_place, then fetch_sentinel2 (as_geotiff=True), then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 8000,
+                "place_name": "Pavia, Lombardy, Italy"
+              },
+              "comment": "Expected coordinates ~45.1847, 9.1582"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red bands for the Po Valley summer growing season near Pavia"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_pavia.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_pavia.tif",
                 "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_po_valley_2023.tif"
               },
-              "comment": "Compute NDVI: band 1 = B8 (NIR), band 2 = B4 (Red)"
-            }
-          ]
-        },
-        {
-          "steps": [
-            {
-              "function_name": "download_satellite_image",
-              "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 8000,
-                "start_date": "2023-06-01",
-                "end_date": "2023-08-31",
-                "bands": "B4,B8",
-                "scale": 20,
-                "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Alternative band order: B4 first, B8 second"
-            },
-            {
-              "function_name": "compute_ndvi",
-              "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 2,
-                "red_band_index": 1,
-                "destination": "/output/ndvi_po_valley_2023.tif"
-              },
-              "comment": "Compute NDVI: band 1 = B4 (Red), band 2 = B8 (NIR)"
+              "comment": "band 1 = B8 (NIR), band 2 = B4 (Red)"
             }
           ]
         }
@@ -4809,41 +4964,48 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Zinder, Niger' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for July–September 2022, compute NDVI, then calculate per-band statistics.",
+      "reference_solution_description": "Geocode 'Zinder, Niger' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
+                "place_name": "Zinder, Niger"
+              },
+              "comment": "Expected coordinates ~13.8073, 8.9880"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 30,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red Sentinel-2 for the Sahel rainy season around Zinder"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_zinder.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_zinder.tif",
                 "red_band_index": 2,
-                "destination": "/output/ndvi_sahel_2022.tif"
-              },
-              "comment": "Compute NDVI from the downloaded image"
+                "nir_band_index": 1,
+                "destination": "data/ndvi_zinder.tif"
+              }
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "/output/ndvi_sahel_2022.tif"
+                "source": "data/ndvi_zinder.tif"
               },
-              "comment": "Summarise NDVI distribution with min, max, mean and std"
+              "comment": "Per-band statistics of the NDVI raster to characterise vegetation density"
             }
           ]
         }
@@ -4862,42 +5024,49 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Córdoba, Andalusia, Spain' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for July–September 2022, compute NDVI, then produce a 256-bin histogram.",
+      "reference_solution_description": "Geocode 'Cordoba, Andalusia, Spain' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then raster_histogram.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "place_name": "Cordoba, Andalusia, Spain"
+              },
+              "comment": "Expected coordinates ~37.8882, -4.7794"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-09-30",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 30,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red for drought-affected area around Córdoba"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_cordoba.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_cordoba.tif",
                 "red_band_index": 2,
-                "destination": "/output/ndvi_spain_drought_2022.tif"
-              },
-              "comment": "Compute NDVI for the drought period"
+                "nir_band_index": 1,
+                "destination": "data/ndvi_cordoba.tif"
+              }
             },
             {
               "function_name": "raster_histogram",
               "arguments": {
-                "source": "/output/ndvi_spain_drought_2022.tif",
+                "source": "data/ndvi_cordoba.tif",
                 "bins": 256
               },
-              "comment": "Produce a histogram of NDVI values to assess drought severity"
+              "comment": "256-bin histogram of the NDVI raster to assess drought severity"
             }
           ]
         }
@@ -4916,31 +5085,40 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Kafr el-Sheikh, Egypt' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for April 2023, reproject to UTM 36N, then compute NDVI from the reprojected raster.",
+      "reference_solution_description": "Geocode 'Kafr el-Sheikh, Egypt' with geocode_place, then fetch_sentinel2 (as_geotiff=True), reproject_raster, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "place_name": "Kafr el-Sheikh, Egypt"
+              },
+              "comment": "Expected coordinates ~31.1107, 30.9388"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-04-01",
                 "end_date": "2023-04-30",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_nile_delta.tif"
               },
-              "comment": "Download NIR+Red Sentinel-2 for the Nile Delta pre-harvest"
+              "comment": "Fetch NIR+Red Sentinel-2 for the Nile Delta pre-harvest"
             },
             {
               "function_name": "reproject_raster",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
+                "source": "data/sentinel2_nile_delta.tif",
                 "target_crs": "EPSG:32636",
-                "destination": "/output/nile_delta_utm36n.tif",
+                "destination": "data/sentinel2_nile_delta_utm.tif",
                 "resampling": "bilinear"
               },
               "comment": "Reproject to UTM 36N for metric spatial analysis"
@@ -4948,9 +5126,9 @@
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "/output/nile_delta_utm36n.tif",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_nile_delta_utm.tif",
                 "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_nile_delta_utm.tif"
               },
               "comment": "Compute NDVI from the reprojected image"
@@ -4972,49 +5150,58 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Yahotyn, Kyiv Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for June 2023, compute NDVI, reproject to UTM 36N, then report band statistics.",
+      "reference_solution_description": "Geocode 'Yahotyn, Kyiv Oblast, Ukraine' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, reproject_raster, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "place_name": "Yahotyn, Kyiv Oblast, Ukraine"
+              },
+              "comment": "Expected coordinates ~50.2667, 31.7667"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
-                "bands": "B8,B4",
-                "scale": 20,
-                "max_cloud_cover": 20
-              },
-              "comment": "Download Sentinel-2 image for agricultural area around Yahotyn"
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
+                "max_cloud_cover": 20,
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_yahotyn.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<path returned by download_satellite_image>",
+                "source": "data/sentinel2_yahotyn.tif",
                 "red_band_index": 2,
                 "nir_band_index": 1,
                 "destination": "/tmp/ndvi_ukraine_inner.tif"
-              },
-              "comment": "Compute NDVI (bands ordered B8=band1=NIR, B4=band2=Red)"
+              }
             },
             {
               "function_name": "reproject_raster",
               "arguments": {
                 "source": "/tmp/ndvi_ukraine_inner.tif",
+                "target_crs": "EPSG:32636",
                 "destination": "/tmp/ndvi_ukraine_utm.tif",
-                "dst_crs": "EPSG:32636"
+                "resampling": "bilinear"
               },
-              "comment": "Reproject to UTM Zone 36N for metric analysis"
+              "comment": "Reproject the NDVI raster to UTM zone 36N"
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
                 "source": "/tmp/ndvi_ukraine_utm.tif"
               },
-              "comment": "Report mean, max, std of reprojected NDVI"
+              "comment": "Report mean, max, std for the reprojected NDVI raster"
             }
           ]
         }
@@ -5033,48 +5220,55 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Retrieve ESA strategy objectives on food security with search_eoss, geocode 'Mopti, Mali' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for August 2023, compute NDVI, then report band statistics.",
+      "reference_solution_description": "search_eoss for strategy context, geocode 'Mopti, Mali' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_eoss",
               "arguments": {
-                "question": "food security vegetation monitoring satellite ESA Science Strategy"
+                "question": "food security vegetation monitoring Earth observation ESA Science Strategy"
               },
-              "comment": "Retrieve ESA strategy objectives on food security and vegetation"
+              "comment": "Find ESA strategy context on food security and vegetation monitoring"
             },
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
+                "place_name": "Mopti, Mali"
+              },
+              "comment": "Expected coordinates ~14.4843, -4.1963"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-08-01",
                 "end_date": "2023-08-31",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 30,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red for Mali Sahel peak growing season around Mopti"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_mopti.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_mopti.tif",
                 "red_band_index": 2,
-                "destination": "/output/ndvi_mali_sahel_2023.tif"
-              },
-              "comment": "Compute NDVI"
+                "nir_band_index": 1,
+                "destination": "data/ndvi_mopti.tif"
+              }
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "/output/ndvi_mali_sahel_2023.tif"
+                "source": "data/ndvi_mopti.tif"
               },
-              "comment": "Summarise NDVI distribution to contextualise against strategy targets"
+              "comment": "Per-band NDVI statistics for the Mopti agricultural area"
             }
           ]
         }
@@ -5093,34 +5287,42 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'central Rome, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 5 km buffer for June 2023 at 10 m resolution, compute NDVI, then render a static PNG map.",
+      "reference_solution_description": "Geocode 'central Rome, Italy' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then create_map.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 5000,
+                "place_name": "central Rome, Italy"
+              },
+              "comment": "Expected coordinates ~41.9028, 12.4964"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
-                "bands": "B8,B4",
-                "scale": 10,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red for central Rome"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_rome_ndvi_bands.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_rome_ndvi_bands.tif",
                 "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_rome_2023.tif"
               },
-              "comment": "Compute NDVI: band 1 = B8 (NIR), band 2 = B4 (Red)"
+              "comment": "band 1 = B8 (NIR), band 2 = B4 (Red)"
             },
             {
               "function_name": "create_map",
@@ -5159,34 +5361,41 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Lodi, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023, compute NDVI, then create a static map with the region boundary overlay.",
+      "reference_solution_description": "Geocode 'Lodi, Lombardy, Italy' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, then create_map.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 8000,
+                "place_name": "Lodi, Lombardy, Italy"
+              },
+              "comment": "Expected coordinates ~45.3142, 9.5033"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red for Po Valley summer near Lodi"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_lodi.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_lodi.tif",
                 "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_po_valley_2023.tif"
-              },
-              "comment": "Compute NDVI"
+              }
             },
             {
               "function_name": "create_map",
@@ -5234,34 +5443,41 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Uman, Cherkasy Oblast, Ukraine' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 10 km buffer for June 2023, compute NDVI, calculate zonal statistics per parcel, then render a static map.",
+      "reference_solution_description": "Geocode 'Uman, Cherkasy Oblast, Ukraine' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, zonal_statistics, then create_map.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 10000,
+                "place_name": "Uman, Cherkasy Oblast, Ukraine"
+              },
+              "comment": "Expected coordinates ~48.7500, 30.2167"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red for Ukrainian agricultural area around Uman"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_uman.tif"
+              }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
+                "source": "data/sentinel2_uman.tif",
                 "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_ukraine_2023.tif"
-              },
-              "comment": "Compute NDVI"
+              }
             },
             {
               "function_name": "zonal_statistics",
@@ -5517,10 +5733,18 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Agent calls get_lat_lon with the address string to retrieve the geographic coordinates for Nairobi.",
+      "reference_solution_description": "Agent calls geocode_place with 'Nairobi, Kenya' to retrieve the geographic coordinates.",
       "reference_solutions": [
         {
-          "steps": []
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Nairobi, Kenya"
+              },
+              "comment": "Expected coordinates ~-1.2864, 36.8172"
+            }
+          ]
         }
       ],
       "generated_solution": null,
@@ -5537,7 +5761,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode Reykjavik with get_lat_lon, then download a Sentinel-2 RGB scene for July 2022 at 60 m resolution. Describe the dominant landforms (e.g., lava fields, glaciers, coastal topography) and identify visible features characteristic of Iceland's volcanic geology.",
+      "reference_solution_description": "Geocode Reykjavik with geocode_place, then download a Sentinel-2 RGB scene for July 2022 at 60 m resolution. Describe the dominant landforms (e.g., lava fields, glaciers, coastal topography) and identify visible features characteristic of Iceland's volcanic geology.",
       "reference_solutions": [
         {
           "steps": [
@@ -5550,12 +5774,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 40.0
+                "max_cloud_cover": 40.0
               }
             }
           ]
@@ -5575,10 +5799,18 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call get_lat_lon with the address of ESA ESRIN. Returns [latitude, longitude] via Google Maps API.",
+      "reference_solution_description": "Call geocode_place with the address of ESA ESRIN. Returns latitude/longitude via the CDSE geocoder.",
       "reference_solutions": [
         {
-          "steps": []
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "ESA ESRIN, Frascati, Italy"
+              },
+              "comment": "Expected coordinates ~41.8264, 12.6738"
+            }
+          ]
         }
       ],
       "generated_solution": null,
@@ -5597,10 +5829,18 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call get_lat_lon with Manaus, Brazil. Returns the geographic centroid of the city.",
+      "reference_solution_description": "Call geocode_place with 'Manaus, Brazil'. Returns the geographic centroid of the city.",
       "reference_solutions": [
         {
-          "steps": []
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Manaus, Brazil"
+              },
+              "comment": "Expected coordinates ~-3.1190, -60.0217"
+            }
+          ]
         }
       ],
       "generated_solution": null,
@@ -5619,10 +5859,18 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call get_lat_lon with the Mauna Loa Observatory address to obtain its latitude and longitude.",
+      "reference_solution_description": "Call geocode_place with the Mauna Loa Observatory address to obtain its latitude and longitude.",
       "reference_solutions": [
         {
-          "steps": []
+          "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Mauna Loa Observatory, Hawaii"
+              },
+              "comment": "Expected coordinates ~19.5362, -155.5763"
+            }
+          ]
         }
       ],
       "generated_solution": null,
@@ -5641,7 +5889,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call get_lat_lon to resolve coordinates for Aral, Kazakhstan, then download a Sentinel-2 RGB scene for July 2023. Identify the current shoreline, describe visible environmental change indicators (exposed seabed, salt flats, remnant water bodies), and explain how multi-temporal analysis could quantify the extent of shoreline retreat.",
+      "reference_solution_description": "Call geocode_place to resolve coordinates for Aral, Kazakhstan, then download a Sentinel-2 RGB scene for July 2023. Identify the current shoreline, describe visible environmental change indicators (exposed seabed, salt flats, remnant water bodies), and explain how multi-temporal analysis could quantify the extent of shoreline retreat.",
       "reference_solutions": [
         {
           "steps": [
@@ -5654,12 +5902,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-07-01",
                 "end_date": "2023-07-31",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -5681,7 +5929,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode Mount Etna with get_lat_lon, then use the coordinates to download a Sentinel-2 SWIR image.",
+      "reference_solution_description": "Geocode Mount Etna with geocode_place, then use the coordinates to download a Sentinel-2 SWIR image.",
       "reference_solutions": [
         {
           "steps": [
@@ -5694,7 +5942,7 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-10-01",
                 "end_date": "2022-11-30",
                 "collection": "L2A",
@@ -5703,7 +5951,7 @@
                   "B11",
                   "B8A"
                 ],
-                "max_cloud_coverage": 30
+                "max_cloud_cover": 30
               }
             }
           ]
@@ -5746,7 +5994,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-01",
                 "end_date": "2022-08-31",
                 "preset": "vv_vh_rgb"
@@ -5771,7 +6019,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Use search_eoss for ESA Arctic strategy content to identify objectives and study areas, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023. Describe visible sea ice extent/conditions and relate them to the ESA cryosphere monitoring objectives retrieved.",
+      "reference_solution_description": "Use search_eoss for ESA Arctic strategy content to identify objectives and study areas, geocode Ny-Ålesund with geocode_place, then download a Sentinel-2 scene for September 2023. Describe visible sea ice extent/conditions and relate them to the ESA cryosphere monitoring objectives retrieved.",
       "reference_solutions": [
         {
           "steps": [
@@ -5791,12 +6039,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-09-01",
                 "end_date": "2023-09-30",
                 "collection": "L2A",
                 "preset": "true_color",
-                "max_cloud_coverage": 50
+                "max_cloud_cover": 50
               }
             }
           ]
@@ -5816,23 +6064,28 @@
       "task_ID": "TASK_260713_000009_400009",
       "task_text": "Download the Copernicus 30 m DEM for Mount Etna, Sicily, then read its metadata (driver, CRS, pixel resolution, band count, data type, and geographic extent).",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls metadata_raster with the file path to retrieve all raster metadata properties.",
+      "reference_solution_description": "Geocode 'Mount Etna, Sicily, Italy' with geocode_place, then fetch_dem (as_geotiff=True), then metadata_raster.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
-                "dataset": "COPERNICUS/DEM/GLO30",
-                "bands": "DEM",
-                "scale": 30,
-                "output_path": "data/copernicus_dem_etna.tif"
-              }
+                "place_name": "Mount Etna, Sicily, Italy"
+              },
+              "comment": "Expected coordinates ~37.7510, 14.9934"
+            },
+            {
+              "function_name": "fetch_dem",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "dem_instance": "COPERNICUS_30",
+                "as_geotiff": true,
+                "save_path": "data/copernicus_dem_etna.tif"
+              },
+              "comment": "as_geotiff=True ignores the display presets and returns raw FLOAT32 elevation in a georeferenced GeoTIFF"
             },
             {
               "function_name": "metadata_raster",
@@ -5860,12 +6113,12 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call metadata_raster to inspect the Landsat file, then raster_band_statistics on the same file to get per-band min/max/mean/std.",
+      "reference_solution_description": "Call download_gee_product with dataset='LANDSAT/LC08/C02/T1_L2' (true surface reflectance, not available via CDSE), then metadata_raster and raster_band_statistics on the returned file path.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "download_gee_product",
               "arguments": {
                 "latitude": "<inferred>",
                 "longitude": "<inferred>",
@@ -5875,23 +6128,23 @@
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "scale": 30,
-                "max_cloud_cover": 20,
-                "output_path": "data/landsat8_california_2022.tif"
-              }
+                "max_cloud_cover": 20
+              },
+              "comment": "download_gee_product is the only tool with true Landsat surface-reflectance (L2) data — CDSE's fetch_landsat_ot_l1 is L1/TOA only. No output_path argument exists; the tool returns {'files': [...], 'message': ...}."
             },
             {
               "function_name": "metadata_raster",
               "arguments": {
-                "path_or_url": "data/landsat8_california_2022.tif"
+                "path_or_url": "<derived from download_gee_product: files[0]>"
               },
-              "comment": "Step 1: inspect CRS, band count, and data type of the Landsat file."
+              "comment": "Inspect CRS, band count, and data type of the Landsat file"
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "data/landsat8_california_2022.tif"
+                "source": "<derived from download_gee_product: files[0]>"
               },
-              "comment": "Step 2: compute min, max, mean and std for each band."
+              "comment": "Compute min, max, mean and std for each band"
             }
           ]
         }
@@ -5910,20 +6163,45 @@
       "task_ID": "TASK_260713_000011_400011",
       "task_text": "Compute NDVI for the Congo Basin rainforest using Sentinel-2 imagery for August 2023 and save the result to /tmp/ndvi_congo_2023.tif.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent calls compute_s2_ndvi with the Congo Basin bounding box, August 2023 time range, and output path.",
+      "reference_solution_description": "Call fetch_sentinel2 (as_geotiff=True) for the Congo Basin, then compute_ndvi on the result.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "compute_s2_ndvi",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "bbox": "<inferred>",
-                "time_range": "2023-08-01/2023-08-31",
-                "output_path": "/tmp/ndvi_congo_2023.tif"
+                "region_name": "Congo Basin"
               },
-              "comment": "Fetch Sentinel-2 tiles via Planetary Computer and compute NDVI for the Congo Basin."
+              "comment": "Resolve 'Congo Basin' to a bounding box via the region gazetteer"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2023-08-01",
+                "end_date": "2023-08-31",
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
+                "max_cloud_cover": 20,
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_congo.tif"
+              },
+              "comment": "Fetch NIR+Red bands as a georeferenced GeoTIFF via CDSE"
+            },
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "data/sentinel2_congo.tif",
+                "red_band_index": 2,
+                "nir_band_index": 1,
+                "destination": "/tmp/ndvi_congo_2023.tif"
+              },
+              "comment": "band 1 = B08 (NIR), band 2 = B04 (Red)"
             }
           ]
         }
@@ -5944,18 +6222,43 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call compute_s2_ndvi to produce an NDVI raster for Iberia, then call raster_histogram on the output to analyse the pixel-value distribution.",
+      "reference_solution_description": "Resolve 'Iberian Peninsula' with resolve_named_region, fetch_sentinel2 (as_geotiff=True) for NIR+Red bands, compute_ndvi, then raster_histogram.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "compute_s2_ndvi",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "bbox": "<inferred>",
-                "time_range": "2022-09-01/2022-09-30",
-                "output_path": "/tmp/ndvi_iberia_2022.tif"
+                "region_name": "Iberian Peninsula"
               },
-              "comment": "Step 1: compute NDVI for the Iberian Peninsula."
+              "comment": "Resolve 'Iberian Peninsula' to a bounding box via the region gazetteer"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2022-09-01",
+                "end_date": "2022-09-30",
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
+                "max_cloud_cover": 20,
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_iberia.tif"
+              },
+              "comment": "Fetch NIR+Red bands as a georeferenced GeoTIFF via CDSE"
+            },
+            {
+              "function_name": "compute_ndvi",
+              "arguments": {
+                "source": "data/sentinel2_iberia.tif",
+                "red_band_index": 2,
+                "nir_band_index": 1,
+                "destination": "/tmp/ndvi_iberia_2022.tif"
+              },
+              "comment": "band 1 = B08 (NIR), band 2 = B04 (Red)"
             },
             {
               "function_name": "raster_histogram",
@@ -5963,7 +6266,7 @@
                 "source": "/tmp/ndvi_iberia_2022.tif",
                 "bins": 100
               },
-              "comment": "Step 2: compute 100-bin histogram of NDVI values to characterise vegetation stress distribution."
+              "comment": "100-bin histogram of NDVI values to characterise vegetation stress distribution"
             }
           ]
         }
@@ -5984,12 +6287,12 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Agent calls clip_raster_with_shapefile with the WorldCover raster and the Kenya boundary shapefile.",
+      "reference_solution_description": "Call download_gee_product with dataset='ESA/WorldCover/v200' (no CDSE equivalent exists for this dataset), then clip_raster_with_shapefile on the returned file path.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "download_gee_product",
               "arguments": {
                 "latitude": "<inferred>",
                 "longitude": "<inferred>",
@@ -5997,17 +6300,19 @@
                 "dataset": "ESA/WorldCover/v200",
                 "bands": "Map",
                 "scale": 100,
-                "output_path": "data/esa_worldcover_2021.tif"
-              }
+                "start_date": "2021-01-01",
+                "end_date": "2021-12-31"
+              },
+              "comment": "ESA WorldCover has no CDSE equivalent — only reachable via GEE's generic dataset= field. start_date/end_date are required by the tool schema even though WorldCover is a static annual product; no output_path argument exists."
             },
             {
               "function_name": "clip_raster_with_shapefile",
               "arguments": {
-                "raster_path_or_url": "data/esa_worldcover_2021.tif",
+                "raster_path_or_url": "<derived from download_gee_product: files[0]>",
                 "shapefile_path": "/data/kenya_boundary.shp",
                 "destination": "data/worldcover_kenya_2021.tif"
               },
-              "comment": "Clip global land-cover raster to Kenya boundary."
+              "comment": "Clip global land-cover raster to Kenya boundary"
             }
           ]
         }
@@ -6028,42 +6333,53 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Clip the Sentinel-2 raster to Attica, then compute NDVI from the clipped output.",
+      "reference_solution_description": "Geocode 'Attica, Greece' with geocode_place, then fetch_sentinel2 (as_geotiff=True), clip_raster_with_shapefile, then compute_ndvi.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 20000,
+                "place_name": "Attica, Greece"
+              },
+              "comment": "Expected coordinates ~38.0, 23.7"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-08-01",
                 "end_date": "2023-08-31",
-                "bands": "B2,B3,B4,B8",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/sentinel2_greece_2023.tif"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_attica.tif"
               }
             },
             {
               "function_name": "clip_raster_with_shapefile",
               "arguments": {
-                "raster_path_or_url": "data/sentinel2_greece_2023.tif",
+                "raster_path_or_url": "data/sentinel2_attica.tif",
                 "shapefile_path": "/data/attica_boundary.shp",
                 "destination": "data/s2_attica_2023_clipped.tif"
               },
-              "comment": "Step 1: clip Sentinel-2 to the Attica region boundary."
+              "comment": "Clip Sentinel-2 to the Attica region boundary"
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
                 "source": "data/s2_attica_2023_clipped.tif",
-                "nir_band_index": 8,
-                "red_band_index": 4,
+                "red_band_index": 3,
+                "nir_band_index": 4,
                 "destination": "data/ndvi_attica_2023.tif"
               },
-              "comment": "Step 2: compute NDVI from the clipped image for summer vegetation assessment."
+              "comment": "Compute NDVI from the clipped image for summer vegetation assessment"
             }
           ]
         }
@@ -6084,18 +6400,21 @@
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Agent calls transform_coordinates with the Greenland station WGS84 coordinates and requests conversion to EPSG:3413.",
+      "reference_solution_description": "Coordinates are given directly in the task text (-40.5, 72.6); call transform_coordinates with those literal values, no geocoding step required.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "transform_coordinates",
               "arguments": {
-                "coordinates": "<inferred>",
+                "coordinates": [
+                  -40.5,
+                  72.6
+                ],
                 "source_crs": "EPSG:4326",
                 "target_crs": "EPSG:3413"
               },
-              "comment": "Transform Greenland coordinates to NSIDC polar stereographic north projection."
+              "comment": "Coordinates given directly in the task text -- no geocoding needed"
             }
           ]
         }
@@ -6116,25 +6435,32 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'central Addis Ababa, Ethiopia' with get_lat_lon, pass the result to get_utm_crs, then transform the same coordinates from EPSG:4326 to the derived UTM CRS.",
+      "reference_solution_description": "Geocode 'central Addis Ababa, Ethiopia' with geocode_place, pass the result to get_utm_crs, then transform the same coordinates from EPSG:4326 to the derived UTM CRS (EPSG:32637).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "central Addis Ababa, Ethiopia"
+              },
+              "comment": "Geocode central Addis Ababa (~9.0250N, 38.7469E)"
+            },
+            {
               "function_name": "get_utm_crs",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from previous step>"
               },
-              "comment": "Step 2: identify the UTM CRS code for central Ethiopia."
+              "comment": "Identify the UTM CRS code for central Ethiopia (expected EPSG:32637)"
             },
             {
               "function_name": "transform_coordinates",
               "arguments": {
-                "coordinates": "<inferred>",
+                "coordinates": "<derived from geocode_place step>",
                 "source_crs": "EPSG:4326",
-                "target_crs": "<inferred>"
+                "target_crs": "<derived from get_utm_crs step>"
               },
-              "comment": "Step 3: transform Addis Ababa centroid to UTM using the CRS from step 2."
+              "comment": "Transform Addis Ababa centroid to UTM using the CRS from the previous step"
             }
           ]
         }
@@ -6155,27 +6481,40 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Belém, Pará, Brazil' with get_lat_lon to obtain coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the UTM projection.",
+      "reference_solution_description": "Geocode 'Belem, Para, Brazil' with geocode_place to obtain coordinates, then pass them to get_utm_crs (or get_utm_zone) to identify the UTM projection (EPSG:32722, zone 22S).",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Belem, Para, Brazil"
+              },
+              "comment": "Geocode Belem (~-1.4558, -48.5044)"
+            },
+            {
               "function_name": "get_utm_crs",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from previous step>"
               },
-              "comment": "Return the EPSG code for the UTM zone covering the Amazon estuary region near Belém."
+              "comment": "Return the EPSG code for the UTM zone covering the Amazon estuary region near Belem (expected EPSG:32722)"
             }
           ]
         },
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Belem, Para, Brazil"
+              }
+            },
+            {
               "function_name": "get_utm_zone",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from previous step>"
               },
-              "comment": "Alternative: return the UTM zone identifier for the same location."
+              "comment": "Alternative: return the UTM zone identifier for the same location (expected zone 22S)"
             }
           ]
         }
@@ -6196,40 +6535,51 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Joensuu, North Karelia, Finland' with get_lat_lon, pass the coordinates to get_utm_zone, then reproject the forest raster to the derived UTM projection using bilinear resampling.",
+      "reference_solution_description": "Geocode 'Joensuu, North Karelia, Finland' with geocode_place, fetch_sentinel2 (as_geotiff=True) for NIR+Red+Green bands, get_utm_zone from the geocoded coordinates, then reproject_raster using the derived UTM CRS (EPSG:32635).",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "download_satellite_image",
+              "function_name": "geocode_place",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 15000,
+                "place_name": "Joensuu, North Karelia, Finland"
+              },
+              "comment": "Expected coordinates ~62.6010, 29.7636 (UTM zone 35N, EPSG:32635)"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
-                "bands": "B8,B4,B3",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04",
+                  "B03"
+                ],
                 "max_cloud_cover": 20,
-                "output_path": "data/finland_forest_2022.tif"
-              }
+                "as_geotiff": true,
+                "save_path": "data/finland_forest_2022.tif"
+              },
+              "comment": "NIR false-colour composite as a georeferenced GeoTIFF (as_geotiff=True) so reproject_raster works"
             },
             {
               "function_name": "get_utm_zone",
               "arguments": {
-                "coordinates": "<inferred>"
+                "coordinates": "<derived from geocode_place step>"
               },
-              "comment": "Step 2: identify the UTM zone for the Finnish boreal region."
+              "comment": "Identify the UTM zone for the Finnish boreal region (expected zone 35N, EPSG:32635)"
             },
             {
               "function_name": "reproject_raster",
               "arguments": {
                 "source": "data/finland_forest_2022.tif",
-                "target_crs": "<inferred>",
+                "target_crs": "<derived from get_utm_zone step>",
                 "destination": "data/finland_forest_utm35n.tif",
                 "resampling": "bilinear"
               },
-              "comment": "Step 3: reproject the forest raster to the UTM projection found in step 2."
+              "comment": "Reproject the forest raster to the UTM projection found in the previous step (expected EPSG:32635)"
             }
           ]
         }
@@ -6250,18 +6600,25 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Chernobyl Nuclear Power Plant, Ukraine' with get_lat_lon, construct a WKT POINT from the returned longitude and latitude, create a 3 km buffer, then calculate the geodetic area of the resulting polygon.",
+      "reference_solution_description": "Geocode 'Chernobyl Nuclear Power Plant, Ukraine' with geocode_place, construct a WKT POINT from the returned longitude and latitude, create a 3 km buffer, then calculate the geodetic area of the resulting polygon.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Chernobyl Nuclear Power Plant, Ukraine"
+              },
+              "comment": "Expected coordinates ~51.3894, 30.0989"
+            },
+            {
               "function_name": "buffer",
               "arguments": {
-                "geometry": "POINT(<lon from get_lat_lon step> <lat from get_lat_lon step>)",
+                "geometry": "POINT(<lon from geocode_place step> <lat from geocode_place step>)",
                 "distance": 3000.0,
                 "resolution": 64
               },
-              "comment": "Step 2: construct WKT POINT(lon lat) from geocoded coordinates and create 3 km exclusion buffer."
+              "comment": "Construct WKT POINT(lon lat) from geocoded coordinates and create 3 km exclusion buffer"
             },
             {
               "function_name": "calculate_geodetic_area",
@@ -6269,7 +6626,7 @@
                 "geometry": "<WKT polygon returned by buffer>",
                 "ellps": "WGS84"
               },
-              "comment": "Step 3: compute the geodetic area of the buffered exclusion zone polygon."
+              "comment": "Compute the geodetic area of the buffered exclusion zone polygon"
             }
           ]
         }
@@ -6321,25 +6678,32 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Paradise, Butte County, California, USA' with get_lat_lon, construct a WKT POINT from the coordinates, create a 20 km buffer, then retrieve ESA Science Strategy content on wildfire monitoring.",
+      "reference_solution_description": "Geocode 'Paradise, Butte County, California, USA' with geocode_place, construct a WKT POINT from the coordinates, create a 20 km buffer, then retrieve ESA Science Strategy content on wildfire monitoring.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Paradise, Butte County, California, USA"
+              },
+              "comment": "Expected coordinates ~39.7596, -121.6219"
+            },
+            {
               "function_name": "buffer",
               "arguments": {
-                "geometry": "POINT(<lon from get_lat_lon step> <lat from get_lat_lon step>)",
+                "geometry": "POINT(<lon from geocode_place step> <lat from geocode_place step>)",
                 "distance": 20000.0,
                 "resolution": 64
               },
-              "comment": "Step 2: construct WKT POINT(lon lat) from geocoded coordinates and create 20 km smoke-impact buffer."
+              "comment": "Construct WKT POINT(lon lat) from geocoded coordinates and create 20 km smoke-impact buffer"
             },
             {
               "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA Earth Observation strategic objectives for wildfire monitoring and burned area mapping"
               },
-              "comment": "Step 3: retrieve ESA science strategy context for fire monitoring."
+              "comment": "Retrieve ESA science strategy context for fire monitoring"
             }
           ]
         }
@@ -6360,7 +6724,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Lodi, Lombardy, Italy' with get_lat_lon, download a Sentinel-2 B8+B4 image with an 8 km buffer for June–August 2023 at 20 m resolution, compute NDVI saving to /output/ndvi_po_valley.tif, then run zonal_statistics with the field parcel shapefile to compute per-parcel mean, max, and standard deviation.",
+      "reference_solution_description": "geocode_place for Lodi, fetch_sentinel2 (as_geotiff=True) for the bbox, compute_ndvi, then zonal_statistics.",
       "reference_solutions": [
         {
           "steps": [
@@ -6371,77 +6735,29 @@
               }
             },
             {
-              "function_name": "download_satellite_image",
+              "function_name": "fetch_sentinel2",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 8000,
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
-                "bands": "B8,B4",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B04"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Download NIR+Red bands for Po Valley summer season"
-            },
-            {
-              "function_name": "compute_ndvi",
-              "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 1,
-                "red_band_index": 2,
-                "destination": "/output/ndvi_po_valley.tif"
-              },
-              "comment": "band 1 = B8 (NIR), band 2 = B4 (Red)"
-            },
-            {
-              "function_name": "zonal_statistics",
-              "arguments": {
-                "raster_path": "/output/ndvi_po_valley.tif",
-                "vector_path": "/data/po_fields.shp",
-                "stats": [
-                  "mean",
-                  "max",
-                  "std"
-                ]
-              },
-              "comment": "Compute per-parcel NDVI statistics"
-            }
-          ]
-        },
-        {
-          "steps": [
-            {
-              "function_name": "geocode_place",
-              "arguments": {
-                "place_name": "Lodi, Lombardy, Italy"
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_lodi_ndvi.tif"
               }
             },
             {
-              "function_name": "download_satellite_image",
-              "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 8000,
-                "start_date": "2023-06-01",
-                "end_date": "2023-08-31",
-                "bands": "B4,B8",
-                "scale": 20,
-                "max_cloud_cover": 20,
-                "image_count": 1
-              },
-              "comment": "Alternative band order: B4 first, B8 second"
-            },
-            {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 2,
-                "red_band_index": 1,
+                "source": "data/sentinel2_lodi_ndvi.tif",
+                "red_band_index": 2,
+                "nir_band_index": 1,
                 "destination": "/output/ndvi_po_valley.tif"
-              },
-              "comment": "band 1 = B4 (Red), band 2 = B8 (NIR)"
+              }
             },
             {
               "function_name": "zonal_statistics",
@@ -6475,7 +6791,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode a representative Sahel location (e.g. Niamey, Niger) with get_lat_lon, download a Sentinel-2 B2/B3/B4/B8 image with a large buffer for July 2023, compute NDVI from the result, then report per-band statistics (mean, max) on the NDVI raster.",
+      "reference_solution_description": "geocode_place for a Sahel location, fetch_sentinel2 (as_geotiff=True) for the bbox, compute_ndvi, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
@@ -6487,32 +6803,36 @@
               "comment": "Representative Sahel location"
             },
             {
-              "function_name": "download_satellite_image",
+              "function_name": "fetch_sentinel2",
               "arguments": {
-                "latitude": "<inferred>",
-                "longitude": "<inferred>",
-                "buffer_m": 50000,
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-07-01",
                 "end_date": "2023-07-31",
-                "bands": "B2,B3,B4,B8",
-                "scale": 20,
+                "collection": "L2A",
+                "custom_bands": [
+                  "B02",
+                  "B03",
+                  "B04",
+                  "B08"
+                ],
                 "max_cloud_cover": 20,
-                "image_count": 1
+                "as_geotiff": true,
+                "save_path": "data/sentinel2_sahel.tif"
               }
             },
             {
               "function_name": "compute_ndvi",
               "arguments": {
-                "source": "<file path returned by download_satellite_image>",
-                "nir_band_index": 4,
+                "source": "data/sentinel2_sahel.tif",
                 "red_band_index": 3,
+                "nir_band_index": 4,
                 "destination": "data/ndvi_sahel_2023.tif"
               }
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "path": "data/ndvi_sahel_2023.tif"
+                "source": "data/ndvi_sahel_2023.tif"
               },
               "comment": "Report mean and max NDVI across the scene"
             }
@@ -7128,7 +7448,7 @@
     },
     {
       "task_ID": "TASK_260713_000042_500021",
-      "task_text": "List all available EUMETSAT products, select the MSG SEVIRI Prime product, and download one observation from the morning of 20 March 2023.",
+      "task_text": "Search the EUMETSAT catalogue for MSG SEVIRI Prime products, identify the appropriate collection, and download one observation from the morning of 20 March 2023. Summarize the retrieved dataset, including acquisition time, coverage, and visible features in the image.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -7310,19 +7630,26 @@
       "task_ID": "TASK_260713_000047_500026",
       "task_text": "Search for MSG SEVIRI Prime products over the Iberian Peninsula for the week of 1–7 June 2023, one observation per day at 12:00 UTC.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Call search_eumetsat_products for MSG-SEVIRI-Prime with bbox covering Iberia and the target date range.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Iberian Peninsula"
+              },
+              "comment": "Resolve 'Iberian Peninsula' to a bounding box via the region gazetteer"
+            },
+            {
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MSG-SEVIRI-Prime",
                 "start_date": "2023-06-01T12:00:00",
                 "end_date": "2023-06-07T12:05:00",
-                "bbox": "<inferred>"
+                "bbox": "<derived from previous step>"
               },
               "comment": "Returns available SEVIRI Prime observations over Iberia in early June 2023"
             }
@@ -7343,19 +7670,26 @@
       "task_ID": "TASK_260713_000048_500027",
       "task_text": "Check how many MTG FCI Level 2 active fire detection products are available for the Italian peninsula during August 2023 before deciding whether to download them.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Use search_eumetsat_products to count available MTG-FCI-L2-AFD products over Italy in August 2023, then assess whether the count is within the per-call download limit.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Italian peninsula"
+              },
+              "comment": "Resolve 'Italian peninsula' to a bounding box via the region gazetteer"
+            },
+            {
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L2-AFD",
                 "start_date": "2023-08-01T00:00:00",
                 "end_date": "2023-08-31T23:59:00",
-                "bbox": "<inferred>"
+                "bbox": "<derived from previous step>"
               },
               "comment": "Returns count of FCI fire detection products over Italy in August 2023"
             }
@@ -7420,12 +7754,19 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "central Europe"
+              },
+              "comment": "Resolve 'central Europe' to a bounding box via the region gazetteer"
+            },
+            {
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2023-09-05T08:00:00",
                 "end_date": "2023-09-05T14:00:00",
-                "bbox": "<inferred>"
+                "bbox": "<derived from previous step>"
               },
               "comment": "Check availability of FCI FDHSI slots over central Europe"
             },
@@ -7435,7 +7776,7 @@
                 "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2023-09-05T08:00:00",
                 "end_date": "2023-09-05T14:00:00",
-                "bbox": "<inferred>",
+                "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 3,
                 "start_hour": 8,
@@ -7519,7 +7860,7 @@
                 "product": "MTG-FCI-L1C-HRFI",
                 "start_date": "2024-06-20T10:00:00",
                 "end_date": "2024-06-20T12:00:00",
-                "bbox": "<inferred from geocode_place>"
+                "bbox": "<derived from previous step>"
               },
               "comment": "Search for FCI HRFI products over the Rome area on 20 June 2024"
             }
@@ -7598,19 +7939,26 @@
       "task_ID": "TASK_260713_000055_500034",
       "task_text": "Download MSG SEVIRI Prime data over the North Atlantic for 3 January 2023, reprojected to geographic lat/lon in NetCDF4 format using the Data Tailor.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Call download_eumetsat_product for MSG-SEVIRI-Prime using the datatailor method with format=netcdf4 and a bbox covering the North Atlantic.",
       "reference_solutions": [
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer"
+            },
+            {
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MSG-SEVIRI-Prime",
                 "start_date": "2023-01-03T12:00:00",
                 "end_date": "2023-01-03T12:20:00",
-                "bbox": "<inferred>",
+                "bbox": "<derived from previous step>",
                 "format": "netcdf4",
                 "method": "datatailor",
                 "observations_per_day": 1,
@@ -7681,12 +8029,19 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Middle East"
+              },
+              "comment": "Resolve 'Middle East' to a bounding box via the region gazetteer"
+            },
+            {
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2024-06-15T08:00:00",
                 "end_date": "2024-06-15T11:00:00",
-                "bbox": "<inferred>"
+                "bbox": "<derived from previous step>"
               },
               "comment": "Verify availability and count before downloading"
             },
@@ -7696,7 +8051,7 @@
                 "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2024-06-15T08:00:00",
                 "end_date": "2024-06-15T11:00:00",
-                "bbox": "<inferred>",
+                "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 3,
                 "start_hour": 8,
@@ -7777,17 +8132,24 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: download_eumetsat_product for MTG FCI Level 2 cloud mask. Step 2: search_eoss for cloud monitoring in the science strategy.",
+      "reference_solution_description": "Geocode 'Spain' with geocode_place, then download_eumetsat_product for the MTG FCI cloud mask, then search_eoss for strategy context.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Spain"
+              },
+              "comment": "Expected coordinates ~national boundary"
+            },
             {
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-CLD",
                 "start_date": "2023-07-10T10:00:00",
                 "end_date": "2023-07-10T12:00:00",
-                "bbox": "<inferred>",
+                "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 2,
                 "start_hour": 10,
@@ -7969,13 +8331,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2021",
                 "month": "07",
                 "output_filename": "/data/era5/t2m_2021_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 monthly mean 2m temperature for July 2021"
             },
@@ -8010,6 +8379,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "geopotential",
@@ -8017,7 +8393,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "/data/era5/z500_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023"
             },
@@ -8149,6 +8525,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "geopotential",
@@ -8156,7 +8539,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "/data/era5/z500_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 500 hPa geopotential for January 2023"
             },
@@ -8191,6 +8574,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "temperature",
@@ -8202,7 +8592,7 @@
                   "08"
                 ],
                 "output_filename": "/data/era5/t850_2022_jja.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Single multi-month request for June, July, August 2022"
             },
@@ -8237,6 +8627,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "u_component_of_wind",
@@ -8244,7 +8641,7 @@
                 "year": "2021",
                 "month": "12",
                 "output_filename": "/data/era5/u250_2021_12.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Downloads ERA5 monthly mean u-wind at 250 hPa for December 2021"
             },
@@ -8279,6 +8676,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "geopotential",
@@ -8286,7 +8690,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "/data/era5/z500_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 500 hPa geopotential for January 2023"
             },
@@ -8452,13 +8856,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2021",
                 "month": "07",
                 "output_filename": "/data/era5/t2m_2021_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Downloads ERA5 monthly mean 2m temperature for July 2021"
             },
@@ -8493,13 +8904,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
                 "year": "2023",
                 "month": "01",
                 "output_filename": "/data/era5/tp_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Downloads ERA5 monthly mean total precipitation for January 2023"
             },
@@ -8534,13 +8952,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "sea_surface_temperature",
                 "year": "2022",
                 "month": "08",
                 "output_filename": "/data/era5/sst_2022_08.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Downloads ERA5 monthly mean sea surface temperature for August 2022"
             },
@@ -8575,13 +9000,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
                 "output_filename": "/data/era5/t2m_2023_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 monthly mean 2m temperature for July 2023"
             },
@@ -8623,13 +9055,20 @@
               "comment": "Retrieve EOSS context on monitoring extreme heat"
             },
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Mediterranean"
+              },
+              "comment": "Resolve 'Mediterranean' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2022",
                 "month": "07",
                 "output_filename": "/data/era5/t2m_2022_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5 2m temperature for July 2022 European heatwave analysis"
             }
@@ -8791,10 +9230,17 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call list_era5_single_level_variables to confirm the name is 'total_precipitation', then call fetch_era5_single_levels.",
+      "reference_solution_description": "list_era5_single_level_variables to confirm the variable name, geocode 'Germany' with geocode_place, then fetch_era5_single_levels.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Germany"
+              },
+              "comment": "Expected coordinates ~national boundary (reorder geocode_place's [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "list_era5_single_level_variables",
               "arguments": {},
@@ -8807,7 +9253,7 @@
                 "year": "2022",
                 "month": "01",
                 "output_filename": "data/tp_germany_2022_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download monthly mean"
             }
@@ -8964,6 +9410,13 @@
               "comment": "Confirm 'geopotential' is the correct CDS name"
             },
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "geopotential",
@@ -8971,7 +9424,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/z500_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download monthly mean geopotential"
             }
@@ -9011,6 +9464,13 @@
               "comment": "Confirm variable name and valid pressure levels"
             },
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "u_component_of_wind",
@@ -9018,7 +9478,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/u250_2023_01.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download jet-stream level wind"
             }
@@ -9091,7 +9551,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "list_cds_datasets identifies 'derived-era5-single-levels-daily-statistics', then fetch_era5_daily_statistics with statistic='daily_maximum'.",
+      "reference_solution_description": "list_cds_datasets to identify the pre-computed daily statistics dataset, geocode 'Spain' with geocode_place, then fetch_era5_daily_statistics.",
       "reference_solutions": [
         {
           "steps": [
@@ -9101,6 +9561,13 @@
               "comment": "Identify the pre-computed daily statistics dataset"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Spain"
+              },
+              "comment": "Expected coordinates ~national boundary (reorder geocode_place's [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "2m_temperature",
@@ -9108,7 +9575,7 @@
                 "year": "2023",
                 "month": "07",
                 "output_filename": "data/t2m_dailymax_spain_2023_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download pre-computed daily maximum"
             }
@@ -9199,13 +9666,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
                 "year": "2021",
                 "month": "08",
                 "output_filename": "data/tp_hourly_aug2021.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download all hours and days for August 2021"
             },
@@ -9244,6 +9718,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
@@ -9262,7 +9743,7 @@
                   "00:00",
                   "12:00"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Subset to specific days and synoptic hours"
             },
@@ -9301,13 +9782,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Mediterranean"
+              },
+              "comment": "Resolve 'Mediterranean' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "10m_u_component_of_wind",
                 "year": "2020",
                 "month": "06",
                 "output_filename": "data/u10_med_jun2020.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Clip to Mediterranean at download time"
             },
@@ -9342,13 +9830,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Southern Europe"
+              },
+              "comment": "Resolve 'Southern Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
                 "output_filename": "data/t2m_seur_jul2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download hourly temperature"
             },
@@ -9491,6 +9986,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_pressure_levels",
               "arguments": {
                 "variable": "geopotential",
@@ -9501,7 +10003,7 @@
                 "days": [
                   "15"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Single-day hourly geopotential at 500 hPa"
             },
@@ -9536,6 +10038,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_pressure_levels",
               "arguments": {
                 "variable": "temperature",
@@ -9547,7 +10056,7 @@
                   "00:00",
                   "12:00"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Synoptic-hour temperature at 850 hPa over North Atlantic"
             },
@@ -9582,6 +10091,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Northern Hemisphere"
+              },
+              "comment": "Resolve 'Northern Hemisphere' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_pressure_levels",
               "arguments": {
                 "variable": "u_component_of_wind",
@@ -9589,7 +10105,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/u250_nh_jan2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download zonal wind at 250 hPa"
             },
@@ -9601,7 +10117,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/v250_nh_jan2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download meridional wind at 250 hPa"
             },
@@ -9638,6 +10154,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_pressure_levels",
               "arguments": {
                 "variable": "temperature",
@@ -9645,7 +10168,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/t850_eur_jan2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download hourly temperature at 850 hPa"
             },
@@ -9683,6 +10206,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Mediterranean"
+              },
+              "comment": "Resolve 'Mediterranean' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_pressure_levels",
               "arguments": {
                 "variable": "specific_humidity",
@@ -9693,7 +10223,7 @@
                 "times": [
                   "00:00"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download 00Z specific humidity snapshots"
             },
@@ -9841,12 +10371,19 @@
       "task_ID": "TASK_260713_000032_600032",
       "task_text": "Download hourly ERA5-Land total precipitation over the Po Valley, Italy for July 2021.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "Call fetch_era5_land with variable='total_precipitation', month='07', year='2021', and an area covering the Po Valley.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Po Valley"
+              },
+              "comment": "Resolve 'Po Valley' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_land",
               "arguments": {
@@ -9854,7 +10391,7 @@
                 "year": "2021",
                 "month": "07",
                 "output_filename": "data/era5land_tp_povalley_jul2021.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "High-resolution (0.1°) ERA5-Land precipitation"
             }
@@ -9875,12 +10412,19 @@
       "task_ID": "TASK_260713_000033_600033",
       "task_text": "Download hourly ERA5-Land volumetric soil water layer 1 for August 2022 over the Iberian Peninsula.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "fetch_era5_land with variable='volumetric_soil_water_layer_1' and Iberian bbox.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Iberian Peninsula"
+              },
+              "comment": "Resolve 'Iberian Peninsula' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_land",
               "arguments": {
@@ -9888,7 +10432,7 @@
                 "year": "2022",
                 "month": "08",
                 "output_filename": "data/era5land_swvl1_iberia_aug2022.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5-Land soil moisture"
             }
@@ -9909,12 +10453,19 @@
       "task_ID": "TASK_260713_000034_600034",
       "task_text": "Download ERA5-Land snow depth at 12:00 UTC only for March 2023 over the Alps.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "fetch_era5_land with variable='snow_depth', times=['12:00'], and Alps bbox.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "the Alps"
+              },
+              "comment": "Resolve 'the Alps' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_land",
               "arguments": {
@@ -9925,7 +10476,7 @@
                 "times": [
                   "12:00"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "One snapshot per day at midday"
             }
@@ -9953,13 +10504,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Central Europe"
+              },
+              "comment": "Resolve 'Central Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_land",
               "arguments": {
                 "variable": "total_precipitation",
                 "year": "2022",
                 "month": "09",
                 "output_filename": "data/era5land_tp_ceur_sep2022.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5-Land hourly precipitation"
             },
@@ -9996,13 +10554,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Sahel"
+              },
+              "comment": "Resolve 'Sahel' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_land",
               "arguments": {
                 "variable": "soil_temperature_level_1",
                 "year": "2023",
                 "month": "06",
                 "output_filename": "data/era5land_stl1_sahel_jun2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download ERA5-Land soil temperature"
             },
@@ -10138,12 +10703,19 @@
       "task_ID": "TASK_260713_000040_600040",
       "task_text": "Download pre-computed daily mean 2m temperature for January 2023 over Europe without downloading raw hourly data.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "fetch_era5_daily_statistics with statistic='daily_mean', variable='2m_temperature'.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -10152,7 +10724,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/t2m_dailymean_eur_jan2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Pre-computed daily mean — no hourly download needed"
             }
@@ -10173,12 +10745,19 @@
       "task_ID": "TASK_260713_000041_600041",
       "task_text": "Download pre-computed daily maximum 2m temperature for July 2023 over Spain and Portugal.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "fetch_era5_daily_statistics with statistic='daily_maximum'.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Spain and Portugal"
+              },
+              "comment": "Resolve 'Spain and Portugal' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -10187,7 +10766,7 @@
                 "year": "2023",
                 "month": "07",
                 "output_filename": "data/t2m_dailymax_iberia_jul2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily maximum temperature"
             }
@@ -10208,12 +10787,19 @@
       "task_ID": "TASK_260713_000042_600042",
       "task_text": "Download the pre-computed daily sum of total precipitation for December 2022 over the UK and Ireland.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
       "reference_solution_description": "fetch_era5_daily_statistics with variable='total_precipitation', statistic='daily_sum'.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "UK and Ireland"
+              },
+              "comment": "Resolve 'UK and Ireland' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -10222,7 +10808,7 @@
                 "year": "2022",
                 "month": "12",
                 "output_filename": "data/tp_dailysum_uk_dec2022.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily precipitation sum"
             }
@@ -10245,10 +10831,17 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_daily_statistics then inspect_netcdf.",
+      "reference_solution_description": "Geocode 'France' with geocode_place, then fetch_era5_daily_statistics, then inspect_netcdf.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "France"
+              },
+              "comment": "Expected coordinates ~national boundary; NOTE: Nominatim may include overseas territories (French Guiana, Reunion, etc.) in France's boundary, producing an unexpectedly huge bbox -- flagging, not verified against live API (reorder geocode_place's [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -10257,7 +10850,7 @@
                 "year": "2023",
                 "month": "07",
                 "output_filename": "data/t2m_dailymax_france_jul2023.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily max temperature"
             },
@@ -10287,10 +10880,17 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_daily_statistics then convert_units m→mm.",
+      "reference_solution_description": "Geocode 'Belgium' with geocode_place, then fetch_era5_daily_statistics, then convert_units.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Belgium"
+              },
+              "comment": "Expected coordinates ~national boundary (reorder geocode_place's [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -10299,7 +10899,7 @@
                 "year": "2021",
                 "month": "08",
                 "output_filename": "data/tp_dailysum_belgium_aug2021.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily precipitation sum"
             },
@@ -11066,6 +11666,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Sahel"
+              },
+              "comment": "Resolve 'Sahel' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "total_precipitation",
@@ -11073,7 +11680,7 @@
                 "year": "2022",
                 "month": "07",
                 "output_filename": "data/tp_sahel_jul2022_daily.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily precipitation sums"
             },
@@ -11110,6 +11717,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Central Europe"
+              },
+              "comment": "Resolve 'Central Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "2m_temperature",
@@ -11117,7 +11731,7 @@
                 "year": "2023",
                 "month": "01",
                 "output_filename": "data/t2m_ceur_jan2023_daily.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download daily mean temperature"
             },
@@ -11319,6 +11933,13 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Atlantic"
+              },
+              "comment": "Resolve 'North Atlantic' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "mean_sea_level_pressure",
@@ -11331,7 +11952,7 @@
                   "12:00",
                   "18:00"
                 ],
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download 6-hourly MSLP"
             },
@@ -11369,13 +11990,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Mediterranean"
+              },
+              "comment": "Resolve 'Mediterranean' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
                 "year": "2022",
                 "month": "01",
                 "output_filename": "data/tp_med_jan2022_hourly.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download hourly precipitation"
             },
@@ -11608,13 +12236,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "Europe"
+              },
+              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
                 "output_filename": "data/t2m_europe_2023_07.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download monthly mean 2m temperature"
             },
@@ -11648,10 +12283,17 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_hourly_single_levels → convert_hourly_to_daily (sum) → convert_units (m→mm).",
+      "reference_solution_description": "Geocode 'Italy' with geocode_place, then fetch_era5_hourly_single_levels, convert_hourly_to_daily, then convert_units.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Italy"
+              },
+              "comment": "Expected coordinates ~national boundary (reorder geocode_place's [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
             {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
@@ -11659,7 +12301,7 @@
                 "year": "2022",
                 "month": "08",
                 "output_filename": "data/tp_italy_aug2022.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download hourly precipitation over Italy"
             },
@@ -11947,13 +12589,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "sub-Saharan Africa"
+              },
+              "comment": "Resolve 'sub-Saharan Africa' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2022",
                 "month": "12",
                 "output_filename": "data/t2m_sub_saharan__2022_12.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download global 2m temperature"
             },
@@ -12039,7 +12688,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eoss for Pakistan floods, then fetch_era5_daily_statistics → clip_to_bbox.",
+      "reference_solution_description": "search_eoss for 2022 Pakistan floods context, geocode 'Pakistan' with geocode_place for the national bbox, fetch_era5_daily_statistics, then clip_to_bbox to the most-affected region identified from the search_eoss result (not from the national geocode).",
       "reference_solutions": [
         {
           "steps": [
@@ -12051,6 +12700,13 @@
               "comment": "Find ESA response context"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Pakistan"
+              },
+              "comment": "National boundary bbox (reorder to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "total_precipitation",
@@ -12058,7 +12714,7 @@
                 "year": "2022",
                 "month": "08",
                 "output_filename": "data/tp_pakistan_aug2022_daily.nc",
-                "area": "<inferred>"
+                "area": "<derived from geocode_place step>"
               },
               "comment": "Download daily precipitation for Pakistan"
             },
@@ -12067,10 +12723,10 @@
               "arguments": {
                 "input_filepath": "data/tp_pakistan_aug2022_daily.nc",
                 "output_filepath": "data/tp_pakistan_south_aug2022.nc",
-                "north": "<inferred>",
-                "south": "<inferred>",
-                "east": "<inferred>",
-                "west": "<inferred>"
+                "north": "<derived from search_eoss step: most-affected flood region>",
+                "south": "<derived from search_eoss step: most-affected flood region>",
+                "east": "<derived from search_eoss step: most-affected flood region>",
+                "west": "<derived from search_eoss step: most-affected flood region>"
               },
               "comment": "Clip to most-affected southern provinces"
             }
@@ -12107,12 +12763,12 @@
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "collection": "L2A",
                 "preset": "ndvi",
-                "max_cloud_coverage": 20
+                "max_cloud_cover": 20
               }
             }
           ]
@@ -12138,7 +12794,7 @@
             {
               "function_name": "fetch_sentinel3_olci",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "preset": "true_color"
@@ -12167,7 +12823,7 @@
             {
               "function_name": "fetch_sentinel3_slstr",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "preset": "false_color"
@@ -12196,7 +12852,7 @@
             {
               "function_name": "fetch_sentinel5p_l2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-01-01",
                 "end_date": "2020-01-31",
                 "preset": "no2"
@@ -12226,7 +12882,7 @@
             {
               "function_name": "fetch_dem",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "preset": "elevation_color",
                 "dem_instance": "COPERNICUS_30"
               }
@@ -12255,7 +12911,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-10-01",
                 "end_date": "2023-10-31",
                 "preset": "vv_vh_rgb"
@@ -12285,7 +12941,7 @@
             {
               "function_name": "fetch_sentinel3_syn_l2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-06-30",
                 "preset": "true_color"
@@ -12324,7 +12980,7 @@
             {
               "function_name": "fetch_landsat_ot_l1",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-07-01",
                 "end_date": "2022-07-31",
                 "preset": "true_color",
@@ -12373,7 +13029,7 @@
             {
               "function_name": "fetch_sentinel5p_l2",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2020-03-01",
                 "end_date": "2020-03-31",
                 "preset": "no2"
@@ -12404,13 +13060,20 @@
         {
           "steps": [
             {
+              "function_name": "resolve_named_region",
+              "arguments": {
+                "region_name": "North Sea"
+              },
+              "comment": "Resolve 'North Sea' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "10m_u_component_of_wind",
                 "year": "2023",
                 "month": "03",
                 "output_filename": "/data/era5/u10_northsea_2023_03.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download monthly mean 10m zonal wind for March 2023"
             },
@@ -12421,7 +13084,7 @@
                 "year": "2023",
                 "month": "03",
                 "output_filename": "/data/era5/v10_northsea_2023_03.nc",
-                "area": "<inferred>"
+                "area": "<derived from previous step>"
               },
               "comment": "Download monthly mean 10m meridional wind for March 2023"
             },
@@ -12551,7 +13214,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-06-01",
                 "end_date": "2022-06-30",
                 "preset": "vv_vh_rgb"
@@ -12561,7 +13224,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-15",
                 "end_date": "2022-09-15",
                 "preset": "vv_vh_rgb"
@@ -12603,7 +13266,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-06-01",
                 "end_date": "2022-06-30",
                 "preset": "vv_vh_rgb"
@@ -12613,7 +13276,7 @@
             {
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
-                "bbox": "<inferred from geocode_place>",
+                "bbox": "<derived from previous step>",
                 "start_date": "2022-08-15",
                 "end_date": "2022-09-15",
                 "preset": "vv_vh_rgb"

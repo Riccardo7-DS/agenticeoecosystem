@@ -90,12 +90,12 @@ mcp = FastMCP(
 OUTPUT_DIR = pathlib.Path(os.environ.get("CDSE_OUTPUT_DIR", "./sentinel_output"))
 
 
-def _default_save_path(collection: str) -> str:
+def _default_save_path(collection: str, ext: str = "jpg") -> str:
     """Build a unique default file path for a given collection."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     ts = time.strftime("%Y%m%dT%H%M%S")
     uid = uuid.uuid4().hex[:6]
-    fname = f"{collection}_{ts}_{uid}.jpg"
+    fname = f"{collection}_{ts}_{uid}.{ext}"
     return str(OUTPUT_DIR / fname)
 
 
@@ -234,7 +234,10 @@ def tool_sentinel1_grd(
         "Collection : choose form L2A or L1c, defaults to L2A"
         "Preset: 'true_color' (R=B04, G=B03, B=B02). 'ndvi' (NIR=B08, R=B04) "
         "Use custom_bands for any combination of B01–B12, B8A. "
-        "Note: no atmospheric correction — use L2A for surface reflectance."
+        "Note: no atmospheric correction — use L2A for surface reflectance. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "values (instead of an 8-bit display JPEG) for feeding into raster "
+        "analysis tools (metadata_raster, raster_band_statistics, reproject_raster, ...)."
     ),
 )
 def tool_sentinel2(
@@ -265,16 +268,22 @@ def tool_sentinel2(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 values instead "
+        "of an 8-bit display JPEG — use when the output feeds a raster analysis "
+        "tool rather than being viewed directly. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel2")
+    save_path = save_path or _default_save_path("sentinel2", ext="tif" if as_geotiff else "jpg")
     result = fectch_sentinel2(
         bbox=bbox,
         start_date=start_date,
@@ -289,6 +298,7 @@ def tool_sentinel2(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -530,7 +540,10 @@ def tool_sentinel5p_l2(
         "custom_bands: B01 (coastal), B02 (blue), B03 (green), B04 (red), "
         "B05 (NIR), B06 (SWIR-1), B07 (SWIR-2), B08 (pan), "
         "B09 (cirrus), B10/B11 (thermal). "
-        "e.g. ['B07','B05','B04'] for SWIR false colour."
+        "e.g. ['B07','B05','B04'] for SWIR false colour. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "values (instead of an 8-bit display JPEG) for feeding into raster "
+        "analysis tools (metadata_raster, raster_band_statistics, ...)."
     ),
 )
 def tool_landsat_ot_l1(
@@ -556,16 +569,22 @@ def tool_landsat_ot_l1(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 values instead "
+        "of an 8-bit display JPEG — use when the output feeds a raster analysis "
+        "tool rather than being viewed directly. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("landsat_ot_l1")
+    save_path = save_path or _default_save_path("landsat_ot_l1", ext="tif" if as_geotiff else "jpg")
     result = fetch_landsat_ot_l1(
         bbox=bbox,
         start_date=start_date,
@@ -578,6 +597,7 @@ def tool_landsat_ot_l1(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -594,7 +614,10 @@ def tool_landsat_ot_l1(
         "by the API but does not filter scenes. "
         "Presets: 'elevation_grey' (0–8000 m greyscale), "
         "'elevation_color' (blue→green→yellow→red ramp, 0–5000 m). "
-        "dem_instance: COPERNICUS_30 (30 m, default) | COPERNICUS_90 (90 m) | MAPZEN."
+        "dem_instance: COPERNICUS_30 (30 m, default) | COPERNICUS_90 (90 m) | MAPZEN. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "elevation values in metres (ignores the display presets) for feeding "
+        "into raster analysis tools (metadata_raster, raster_band_statistics, ...)."
     ),
 )
 def tool_dem(
@@ -617,16 +640,22 @@ def tool_dem(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 elevation values "
+        "(metres) instead of an 8-bit display JPEG, ignoring preset — use when "
+        "the output feeds a raster analysis tool. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("dem")
+    save_path = save_path or _default_save_path("dem", ext="tif" if as_geotiff else "jpg")
     result = fetch_dem(
         bbox=bbox,
         start_date=start_date,
@@ -638,6 +667,7 @@ def tool_dem(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -793,6 +823,95 @@ async def reverse_geocode_place(
             "latitude": latitude,
             "longitude": longitude,
             "address": location.address,
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# Named-region gazetteer (fixed lookup, not live geocoding)
+#
+# Covers broad macro-regions (continents, seas, multi-country areas) that
+# geocode_place (a place/administrative-boundary geocoder) doesn't resolve
+# well — there's no single OSM boundary for "Europe" or "the Sahel". These
+# are commonly-used EO/climate-community region definitions, not official
+# standardized boundaries.
+# ---------------------------------------------------------------------------
+
+_NAMED_REGIONS: dict[str, tuple[float, float, float, float]] = {
+    # name -> (west, south, east, north)
+    "europe": (-25.0, 34.0, 45.0, 72.0),
+    "north atlantic": (-80.0, 0.0, 20.0, 70.0),
+    "middle east": (25.0, 12.0, 63.0, 42.0),
+    "mediterranean": (-6.0, 30.0, 37.0, 46.0),
+    "iberian peninsula": (-9.5, 36.0, 4.5, 44.0),
+    "italian peninsula": (6.6, 35.5, 18.6, 47.1),
+    "central europe": (5.0, 45.0, 24.0, 55.0),
+    "southern europe": (-10.0, 34.0, 30.0, 46.0),
+    "sahel": (-18.0, 10.0, 40.0, 20.0),
+    "alps": (5.5, 43.5, 16.5, 48.0),
+    "swiss alps": (5.9, 45.8, 10.5, 47.8),
+    "north sea": (-4.0, 51.0, 9.0, 61.0),
+    "sub-saharan africa": (-18.0, -35.0, 52.0, 20.0),
+    "uk and ireland": (-11.0, 49.0, 2.0, 61.0),
+    "spain and portugal": (-9.5, 36.0, 4.5, 44.0),
+    "congo basin": (12.0, -6.0, 31.0, 8.0),
+    "po valley": (7.5, 44.5, 12.5, 45.7),
+    "northern hemisphere": (-180.0, 0.0, 180.0, 90.0),
+}
+
+
+@mcp.tool()
+def resolve_named_region(region_name: str) -> str:
+    """
+    Look up a bounding box for a well-known named macro-region (continent,
+    sea, or multi-country area) that isn't a single administrative unit a
+    place geocoder can resolve — e.g. "Europe", "the Sahel", "Middle East",
+    "Iberian Peninsula". For a specific city, landmark, or single country,
+    use geocode_place instead.
+
+    This is a small fixed lookup table (not a live geocoding call), covering
+    commonly-referenced EO/climate-community region definitions rather than
+    official standardized boundaries.
+
+    Bbox format matches geocode_place: "west,south,east,north". Note the
+    climate server's `area` parameter uses a DIFFERENT order,
+    [north, west, south, east] — reorder before passing into climate tools.
+
+    Args:
+        region_name: Name of the region, e.g. "Europe", "North Atlantic",
+                     "Middle East", "the Sahel", "Iberian Peninsula".
+
+    Returns:
+        JSON with the matched region name and its bbox, or an error listing
+        available region names if no match was found.
+    """
+    query = region_name.strip().lower()
+    if query.startswith("the "):
+        query = query[4:]
+
+    match_key = None
+    if query in _NAMED_REGIONS:
+        match_key = query
+    else:
+        for key in _NAMED_REGIONS:
+            if key in query or query in key:
+                match_key = key
+                break
+
+    if match_key is None:
+        return json.dumps(
+            {
+                "error": f"No known region matching '{region_name}'.",
+                "available_regions": sorted(_NAMED_REGIONS.keys()),
+            }
+        )
+
+    west, south, east, north = _NAMED_REGIONS[match_key]
+    return json.dumps(
+        {
+            "region_name": match_key,
+            "bbox": f"{west},{south},{east},{north}",
+            "bbox_array": [west, south, east, north],
         }
     )
 

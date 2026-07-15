@@ -316,7 +316,7 @@ def get_lat_lon(address: str) -> List[float]:
 
 
 @app.tool()
-def download_satellite_image(args: DownloadParams) -> Dict[str, Any]:
+def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 	"""Download satellite images from GEE and return a dictionary with file paths and a status message.
 	Arguments include coordinates, date range, dataset, bands, scale, buffer, cloud cover, and image count.
 	"""
@@ -439,7 +439,7 @@ def get_llm_prompt(query: str) -> str:
 
 	return f"""
 	You are an expert GEE assistant responsible for translating user requests into precise tool calls.
-	Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.
+	Your task is to answer the user's query about satellite image downloads by using the `download_gee_product` tool.
 
 	**VERY IMPORTANT:** You must determine the user's region of interest and format it correctly.
 	- If the user provides a latitude and longitude, use the `latitude` and `longitude` parameters.

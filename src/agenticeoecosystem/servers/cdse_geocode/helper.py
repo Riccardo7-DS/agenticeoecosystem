@@ -67,15 +67,23 @@ def _fetch(
     height: int = 512,
     data_filter_extra: Optional[dict] = None,
     processing_options: Optional[dict] = None,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    output_format: str = "jpeg",
 ) -> dict:
     """
     Low-level POST to the Sentinel Hub Process API.
+
+    output_format: "jpeg" (default, 8-bit display image) or "tiff" — the
+    Process API returns a proper GeoTIFF with CRS/geotransform embedded from
+    the request's `bounds.bbox`, suitable for downstream raster analysis
+    tools (metadata_raster, raster_band_statistics, reproject_raster, etc.)
+    that need real georeferencing, unlike the JPEG output.
 
     Returns a dict with keys:
         image_b64, media_type, width, height, collection,
         evalscript, saved_path
     """
+    mime_type = "image/tiff" if output_format == "tiff" else "image/jpeg"
     data_filter: dict = {
         "timeRange": {
             "from": start_date + "T00:00:00Z",
@@ -106,7 +114,7 @@ def _fetch(
             "width": width,
             "height": height,
             "responses": [
-                {"identifier": "default", "format": {"type": "image/jpeg"}}
+                {"identifier": "default", "format": {"type": mime_type}}
             ],
         },
         "evalscript": evalscript,
@@ -116,7 +124,7 @@ def _fetch(
     headers = {
         "Authorization": "Bearer " + token,
         "Content-Type": "application/json",
-        "Accept": "image/jpeg",
+        "Accept": mime_type,
     }
 
     logger.info(
@@ -157,7 +165,7 @@ def _fetch(
 
     return {
         "image_b64": base64.b64encode(image_bytes).decode("ascii"),
-        "media_type": "image/jpeg",
+        "media_type": mime_type,
         "width": actual_w,
         "height": actual_h,
         "collection": collection_type,
@@ -172,11 +180,12 @@ def validate_bands(query_bands: list[str], true_bands: list[str]) -> bool:
 # Evalscript builders (internal)
 # ---------------------------------------------------------------------------
 
-def _es_rgb(r: str, g: str, b: str, gain: float = 2.5) -> str:
-    """Generic 3-band RGB evalscript."""
+def _es_rgb(r: str, g: str, b: str, gain: float = 2.5, sample_type: str = "AUTO") -> str:
+    """Generic 3-band RGB evalscript. Pass gain=1.0, sample_type="FLOAT32" for
+    raw (unstretched) reflectance values suitable for GeoTIFF/analysis output."""
     return (
         "//VERSION=3\n"
-        f'function setup(){{return{{input:["{r}","{g}","{b}"],output:{{bands:3,sampleType:"AUTO"}}}}}}\n'
+        f'function setup(){{return{{input:["{r}","{g}","{b}"],output:{{bands:3,sampleType:"{sample_type}"}}}}}}\n'
         f"function evaluatePixel(s){{return[{gain}*s.{r},{gain}*s.{g},{gain}*s.{b}]}}"
     )
 
@@ -346,13 +355,13 @@ def _es_s2_ndvi(nir: str = "B08", r: str = "B04") -> str:
         "}}\n"
         f"function evaluatePixel(s){{return[(s.{nir}-s.{r})/(s.{nir}+s.{r})]}}"
     )
-def _es_s2_custom_bands(bands: list[str]) -> str:
+def _es_s2_custom_bands(bands: list[str], sample_type: str = "AUTO") -> str:
     n = len(bands)
     bands_js = ", ".join(f'"{b}"' for b in bands)
     returns = ",".join(f"s.{b}" for b in bands)
     return (
         "//VERSION=3\n"
-        f'function setup(){{return{{input:[{bands_js}],output:{{bands:{n},sampleType:"AUTO"}}}}}}\n'
+        f'function setup(){{return{{input:[{bands_js}],output:{{bands:{n},sampleType:"{sample_type}"}}}}}}\n'
         f"function evaluatePixel(s){{return[{returns}]}}"
     )
 
@@ -362,7 +371,7 @@ def fectch_sentinel2(
     end_date: str,
     collection: Optional[str] = 'L2A',
     *,
-    preset: Optional[str] = "true_color",       
+    preset: Optional[str] = "true_color",
     custom_bands: Optional[list[str]] = None,
     evalscript: Optional[str] = None,
     max_cloud_cover: Optional[float] = None,
@@ -370,9 +379,10 @@ def fectch_sentinel2(
     harmonize_values: bool = False,
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
-    
+
     """
     Fetch a Sentinel-2 L1C/L2A images.
 
@@ -381,23 +391,32 @@ def fectch_sentinel2(
     "true_color"  – Natural colour RGB: R=B04, G=B03, B=B02,
     "ndvi" - vegetation index : (NIR - Red) / (NIR + Red)
 
+    as_geotiff: when True, returns a georeferenced GeoTIFF (CRS/transform
+    embedded from bbox) with raw, unstretched FLOAT32 reflectance values
+    instead of a display-oriented 8-bit JPEG — use this when the output
+    feeds a raster-analysis tool (metadata_raster, raster_band_statistics,
+    reproject_raster, etc.) rather than being viewed directly.
     """
     if evalscript is None:
         if custom_bands:
             if validate_bands(custom_bands, _S2_BANDS):
-                evalscript = _es_s2_custom_bands(custom_bands)
+                evalscript = _es_s2_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
             else:
                 raise ValueError(f"Unidentifed band in Sentinel-2, Choose from the followinfg bands : {_S2_BANDS}")
         elif preset:
             p = preset.lower()
             if p == "true_color":
-                evalscript = _es_rgb("B04", "B03", "B02")
+                evalscript = _es_rgb(
+                    "B04", "B03", "B02",
+                    gain=1.0 if as_geotiff else 2.5,
+                    sample_type="FLOAT32" if as_geotiff else "AUTO",
+                )
             elif p == "ndvi":
                  evalscript = _es_s2_ndvi("B08", "B04")
 
             else:
                 if validate_bands(custom_bands, _S2_BANDS):
-                    evalscript = _es_s2_custom_bands(custom_bands)
+                    evalscript = _es_s2_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
                 else:
                     raise ValueError(f"Unidentifed band in Sentinel-2, Choose from the followinfg bands : {_S2_BANDS}")
         else:
@@ -419,7 +438,8 @@ def fectch_sentinel2(
         height=height,
         data_filter_extra=df_extra,
         processing_options=proc,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 
@@ -682,23 +702,26 @@ def fetch_sentinel3_syn_l2(
         save_path=save_path
     )
 
-def _es_custom_bands(bands: list[str], gain: float = 2.5) -> str:
+def _es_custom_bands(bands: list[str], gain: float = 2.5, force_raw: bool = False) -> str:
     """
     Build an evalscript for arbitrary band names.
     For 3 bands → RGB output (gain applied).
     For 1 band  → single-channel greyscale output (gain applied).
     For other counts → raw output (no gain), sampleType FLOAT32.
+
+    force_raw=True always takes the raw/no-gain/FLOAT32 path regardless of
+    band count — use for GeoTIFF/analysis-ready output (e.g. raster_band_statistics).
     """
     n = len(bands)
     bands_js = ", ".join(f'"{b}"' for b in bands)
-    if n == 3:
+    if not force_raw and n == 3:
         r, g, bl = bands
         return (
             "//VERSION=3\n"
             f'function setup(){{return{{input:[{bands_js}],output:{{bands:3,sampleType:"AUTO"}}}}}}\n'
             f"function evaluatePixel(s){{return[{gain}*s.{r},{gain}*s.{g},{gain}*s.{bl}]}}"
         )
-    elif n == 1:
+    elif not force_raw and n == 1:
         b0 = bands[0]
         return (
             "//VERSION=3\n"
@@ -817,14 +840,15 @@ def fetch_landsat_ot_l1(
     start_date: str,
     end_date: str,
     *,
-    preset: Optional[str] = "true_color",        
+    preset: Optional[str] = "true_color",
     custom_bands: Optional[list[str]] = None,
     evalscript: Optional[str] = None,
     max_cloud_cover: Optional[float] = None,
     mosaicking_order: str = "leastCC",
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Landsat 8/9 OLI-TIRS L1 image (~30 m resolution).
@@ -840,14 +864,22 @@ def fetch_landsat_ot_l1(
     B09 (cirrus), B10 (TIRS-1 thermal), B11 (TIRS-2 thermal)
     custom_bands=["B07","B05","B04"]  → SWIR false colour
     custom_bands=["B05","B04","B03"]  → NIR false colour (vegetation)
+
+    as_geotiff: when True, returns a georeferenced GeoTIFF with raw
+    FLOAT32 values instead of a display-oriented 8-bit JPEG — use for
+    downstream raster-analysis tools (metadata_raster, raster_band_statistics, ...).
     """
     if evalscript is None:
         if custom_bands:
-            evalscript = _es_custom_bands(custom_bands)
+            evalscript = _es_custom_bands(custom_bands, force_raw=as_geotiff)
         elif preset:
             p = preset.lower()
             if p == "true_color":
-                evalscript = _es_rgb("B04", "B03", "B02")
+                evalscript = _es_rgb(
+                    "B04", "B03", "B02",
+                    gain=1.0 if as_geotiff else 2.5,
+                    sample_type="FLOAT32" if as_geotiff else "AUTO",
+                )
             else:
                 raise ValueError(
                     f"Unknown Landsat OT L1 preset '{preset}'. Choose: true_color"
@@ -868,7 +900,8 @@ def fetch_landsat_ot_l1(
         width=width,
         height=height,
         data_filter_extra=df_extra,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 
@@ -896,19 +929,24 @@ function evaluatePixel(s){
   return[1,(1-v)*4,0];
 }"""
 
+_DEM_RAW_ES = """//VERSION=3
+function setup(){return{input:["DEM"],output:{bands:1,sampleType:"FLOAT32"}}}
+function evaluatePixel(s){return[s.DEM]}"""
+
 
 def fetch_dem(
     bbox: list[float],
     start_date: str = "2020-01-01",
     end_date: str = "2020-12-31",
     *,
-    preset: Optional[str] = "elevation_grey",       
+    preset: Optional[str] = "elevation_grey",
     custom_bands: Optional[list[str]] = None,  # typically ["DEM"]
     evalscript: Optional[str] = None,
     dem_instance: str = "COPERNICUS_30", # COPERNICUS_30 | COPERNICUS_90 | MAPZEN
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Digital Elevation Model image.
@@ -923,8 +961,11 @@ def fetch_dem(
     Custom bands
     ------------
     The only band is "DEM" (elevation in metres, float).
-    For raw FLOAT32 values use:
-        custom_bands=["DEM"] with your own evalscript= for scientific use.
+
+    as_geotiff: when True, ignores the display presets above and always
+    returns a georeferenced GeoTIFF with raw FLOAT32 elevation values in
+    metres (no display normalisation) — use for scientific/analysis use
+    (metadata_raster, raster_band_statistics, etc.).
 
     dem_instance
     ------------
@@ -933,7 +974,9 @@ def fetch_dem(
     "MAPZEN"         – Mapzen Terrain Tiles
     """
     if evalscript is None:
-        if custom_bands:
+        if as_geotiff:
+            evalscript = _DEM_RAW_ES
+        elif custom_bands:
             evalscript = _es_custom_bands(custom_bands)
         elif preset:
             p = preset.lower()
@@ -960,5 +1003,6 @@ def fetch_dem(
         width=width,
         height=height,
         processing_options=proc,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )

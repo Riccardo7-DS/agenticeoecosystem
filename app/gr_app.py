@@ -53,7 +53,7 @@ _MCP_SERVER: dict[str, str] = {
     **{name: "EOdashboard" for name in _EO_STAC_TOOL_NAMES},
     **{name: "ArXiv"       for name in _ARXIV_TOOL_NAMES},
     **{name: "GIS"         for name in _GIS_TOOL_NAMES},
-    "download_satellite_image": "GEE",
+    "download_gee_product": "GEE",
     "retrieve":                 "EVE Retrieval",
     "hybrid_rag_retrieve":      "HybridRAG",
 }

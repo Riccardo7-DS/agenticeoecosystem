@@ -17,7 +17,7 @@ Available tools:
 - get_lat_lon(address): geocode a place name into [latitude, longitude]
   using Google Maps. Use this first if the user gives an address or place
   name instead of coordinates/a region.
-- download_satellite_image(args): fetch and download imagery from a GEE
+- download_gee_product(args): fetch and download imagery from a GEE
   ImageCollection to disk.
 
 Workflow:

@@ -165,7 +165,7 @@ _EO_STAC_SYSTEM_PROMPT = (
 
 _GEE_SYSTEM_PROMPT = (
     "You are an expert GEE assistant responsible for translating user requests into precise tool calls.\n"
-    "Your task is to answer the user's query about satellite image downloads by using the `download_satellite_image` tool.\n"
+    "Your task is to answer the user's query about satellite image downloads by using the `download_gee_product` tool.\n"
     "Additionally, you can use the `get_lat_lon` tool to obtain the latitude and longitude of a given address.\n"
     "REQUIRED FORMAT RULES:\n"
     "- start_date: string (YYYY-MM-DD)\n"
@@ -293,7 +293,7 @@ _DEFAULT_PROVIDER: str = os.getenv("MODEL_PROVIDER", "eve")
 model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
+gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
 eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
 moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
@@ -486,7 +486,7 @@ def rebuild_agents(
 
     model               = load_llm(model_name, provider, temperature)
     eo_stac_agent       = create_agent(_llm("eo_stac"),    tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-    gee_agent           = create_agent(_llm("gee"),        tools=[t for t in mcp_tools if t.name in ["download_satellite_image", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
+    gee_agent           = create_agent(_llm("gee"),        tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(_llm("eve"),        tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
     eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
     moocs_agent         = create_agent(_llm("moocs"),      tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)

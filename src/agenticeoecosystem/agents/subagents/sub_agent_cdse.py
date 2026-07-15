@@ -33,6 +33,7 @@ Workflow:
 5. Leave return_image at its default (False) unless the user explicitly
    needs the image inline — images are saved to disk by default and the
    tool response includes `saved_path`.
+6. Don't change the save path variable from the default unless the user explicitly requests a different path.
 
 Output rules:
 - Report the `saved_path` from the tool's JSON response as plain text

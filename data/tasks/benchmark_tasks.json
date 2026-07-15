@@ -47,14 +47,14 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "wildfire"
+                "keyword": "bushfire"
               },
               "comment": "Search for narratives matching the wildfire keyword"
             },
             {
               "function_name": "get_narrative_indicators",
               "arguments": {
-                "narrative_title": "<any wildfire narrative title>"
+                "narrative_title": "<any matching narrative title>"
               },
               "comment": "Get STAC collection codes referenced by the chosen narrative"
             }
@@ -72,7 +72,7 @@
             {
               "function_name": "get_narrative_indicators",
               "arguments": {
-                "narrative_title": "<any fire narrative title>"
+                "narrative_title": "<any matching narrative title>"
               },
               "comment": "Get STAC collection codes"
             }
@@ -354,7 +354,7 @@
     },
     {
       "task_ID": "TASK_260419_000009_100009",
-      "task_text": "Find an EO Dashboard narrative about deforestation and retrieve its full text content.",
+      "task_text": "Find an EO Dashboard narrative about forest cover loss and retrieve its full text content.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -365,7 +365,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "deforestation"
+                "keyword": "forest"
               },
               "comment": "Find narratives about deforestation"
             },
@@ -383,7 +383,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "forest loss"
+                "keyword": "biomass"
               },
               "comment": "Alternative keyword — forest loss"
             },
@@ -597,7 +597,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "deforestation"
+                "keyword": "biomass"
               },
               "comment": "Alternative keyword -- deforestation"
             },
@@ -677,7 +677,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "flooding"
+                "keyword": "cyclone"
               },
               "comment": "Alternative keyword — flooding"
             },
@@ -701,7 +701,7 @@
     },
     {
       "task_ID": "TASK_260419_000018_100018",
-      "task_text": "Find an EO Dashboard narrative about biodiversity or habitat loss, extract a study area from it, and download a Sentinel-2 true-colour image for that area for the most recent available year. Identify whether the selected area still appears to contain the habitat type described in the dashboard and explain your reasoning.",
+      "task_text": "Find an EO Dashboard narrative about forest habitat change, extract a study area from it, and download a Sentinel-2 true-colour image for that area for the most recent available year. Identify whether the selected area still appears to contain the forest habitat described in the dashboard and explain your reasoning.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -712,7 +712,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "biodiversity"
+                "keyword": "forest"
               },
               "comment": "Find narratives about biodiversity or habitat"
             },
@@ -753,7 +753,7 @@
     },
     {
       "task_ID": "TASK_260419_000019_100019",
-      "task_text": "Download a Sentinel-2 image with bands B8 and B4 for the area around Ciudad Real in central Spain during the summer drought period of July–September 2022 at 20 m resolution, then find EO Dashboard narratives that contextualise drought or water stress events in Europe.",
+      "task_text": "Download a Sentinel-2 image with bands B8 and B4 for the area around Ciudad Real in central Spain during the summer drought period of July–September 2022 at 10 m resolution, then find EO Dashboard narratives that discuss food security or extreme climate impacts relevant to agricultural drought in Europe.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -784,7 +784,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "drought"
+                "keyword": "food security"
               },
               "comment": "Find EODash narratives contextualising drought events"
             }
@@ -815,7 +815,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "water stress"
+                "keyword": "extreme"
               },
               "comment": "Alternative keyword — water stress"
             }
@@ -832,7 +832,7 @@
     },
     {
       "task_ID": "TASK_260419_000020_100020",
-      "task_text": "Retrieve data items from the EO Dashboard STAC collection for Arctic sea ice extent (collection code EO:ESA:DAT:CRYOSAT:SEA_ICE_THICKNESS) and summarise what temporal period the records cover.",
+      "task_text": "Retrieve data items from the EO Dashboard STAC collection for Arctic sea ice thickness (collection code SIC_sea_ice_thickness_cryosat) and summarise what temporal period the records cover.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -843,7 +843,7 @@
             {
               "function_name": "get_collection_items",
               "arguments": {
-                "collection_code": "EO:ESA:DAT:CRYOSAT:SEA_ICE_THICKNESS",
+                "collection_code": "SIC_sea_ice_thickness_cryosat",
                 "limit": 20
               },
               "comment": "Retrieve a sample of items to inspect the temporal coverage"
@@ -861,27 +861,55 @@
     },
     {
       "task_ID": "TASK_260419_000021_100021",
-      "task_text": "Look up the ESA Science Strategy objective related to sustainable development goals, then find a matching MOOC lecture on that topic.",
+      "task_text": "Retrieve multiple priority areas from the ESA Earth Observation Science Strategy, identify the related Earth observation application domains, and search for MOOC lectures covering satellite-based monitoring methods for each domain. Determine which ESA priorities are represented in the available MOOC content, and explain how the lectures support the corresponding strategy objectives.",
       "task_labels": [
-        "Sequential Reasoning"
+        "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent queries the RAG for the relevant Science Strategy SDG objective, then uses the result to search the MOOC catalogue.",
+      "reference_solution_description": "Retrieve three ESA Science Strategy priority areas (forest monitoring, drought/water resources, sea ice/cryosphere) and search_moocs for real lecture content matching each -- all three have confirmed coverage in the MOOC catalogue.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_eoss",
               "arguments": {
-                "question": "ESA Science Strategy sustainable development goals SDG Earth observation"
+                "question": "ESA Science Strategy priorities forest monitoring deforestation Earth observation"
               },
-              "comment": "Retrieve Science Strategy content on SDGs"
+              "comment": "Priority area 1: forest monitoring"
             },
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "<inferred>"
+                "query": "forest monitoring deforestation satellite remote sensing"
               },
-              "comment": "Search MOOC catalogue for lectures matching the identified SDG objective"
+              "comment": "Real MOOC coverage: Forest Monitoring series, deforestation detection with Sentinel-1"
+            },
+            {
+              "function_name": "search_eoss",
+              "arguments": {
+                "question": "ESA Science Strategy priorities drought water resources monitoring Earth observation"
+              },
+              "comment": "Priority area 2: drought / water resources"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "drought monitoring soil moisture water resources satellite"
+              },
+              "comment": "Real MOOC coverage: Drought Monitoring series, Soil Moisture Estimation series"
+            },
+            {
+              "function_name": "search_eoss",
+              "arguments": {
+                "question": "ESA Science Strategy priorities sea ice cryosphere monitoring Earth observation"
+              },
+              "comment": "Priority area 3: sea ice / cryosphere"
+            },
+            {
+              "function_name": "search_moocs",
+              "arguments": {
+                "query": "sea ice cryosphere glacier remote sensing satellite"
+              },
+              "comment": "Real MOOC coverage: Sea Ice series, Global Glacier Mapping"
             }
           ]
         }
@@ -999,7 +1027,7 @@
     },
     {
       "task_ID": "TASK_260419_000023_100023",
-      "task_text": "Find two separate EO Dashboard narratives related to greenhouse gas monitoring: one focused on CO₂ emissions and one focused on methane or other greenhouse gases. Extract the study areas and identify the STAC collections referenced by each narrative. Retrieve representative STAC items from both collections and download the associated datasets using the appropriate data access tools. Summarize the spatial and temporal characteristics of each dataset and explain how they support the emission monitoring objectives described in the narratives.",
+      "task_text": "Find two separate EO Dashboard narratives related to greenhouse gas monitoring: one focused on carbon content and one focused on other greenhouse gases (e.g. during COVID-19 lockdowns). Extract the study areas and identify the STAC collections referenced by each narrative. Retrieve representative STAC items from both collections and download the associated datasets using the appropriate data access tools. Summarize the spatial and temporal characteristics of each dataset and explain how they support the emission monitoring objectives described in the narratives.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -1032,9 +1060,9 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "methane"
+                "keyword": "greenhouse"
               },
-              "comment": "Find a second narrative on a related greenhouse gas"
+              "comment": "Find a second narrative on greenhouse gases"
             },
             {
               "function_name": "get_narrative_indicators",
@@ -1140,7 +1168,7 @@
     },
     {
       "task_ID": "TASK_260419_000025_100025",
-      "task_text": "Find an EO Dashboard narrative about industrial activity or emissions monitoring. Identify the study area mentioned in the narrative, retrieve a suitable Earth observation dataset for that location, and search for relevant ESA educational resources about satellite monitoring of industrial sites. Explain how the retrieved EO data can be used to investigate the environmental issue described in the narrative.",
+      "task_text": "Find an EO Dashboard narrative about industrial activity or emissions monitoring. Identify the study area mentioned in the narrative, retrieve a suitable Earth observation dataset for that location, and search for relevant ESA educational resources about land-cover-based monitoring of industrial and urban footprints. Explain how the retrieved EO data can be used to investigate the environmental issue described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -1180,9 +1208,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "satellite monitoring industrial emissions shipping"
+                "query": "urban industrial footprint land cover mapping global human settlement"
               },
-              "comment": "Search MOOC catalogue for lectures on industrial site monitoring"
+              "comment": "Real MOOC coverage: Urban Land Cover Mapping series (incl. Global Human Settlement Layers)"
             }
           ]
         },
@@ -1191,7 +1219,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "industrial"
+                "keyword": "automotive"
               },
               "comment": "Alternative keyword -- industrial"
             },
@@ -1220,9 +1248,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "satellite monitoring industrial emissions shipping"
+                "query": "urban industrial footprint land cover mapping global human settlement"
               },
-              "comment": "Search MOOC catalogue"
+              "comment": "Real MOOC coverage: Urban Land Cover Mapping series (incl. Global Human Settlement Layers)"
             }
           ]
         }
@@ -1485,7 +1513,7 @@
     },
     {
       "task_ID": "TASK_260419_000031_100031",
-      "task_text": "Find EO Dashboard narratives about nitrogen dioxide (NO₂) concentrations and list the STAC collection codes they reference.",
+      "task_text": "Find EO Dashboard narratives about air pollution or urban air quality and list the STAC collection codes they reference.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -1496,7 +1524,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "NO2"
+                "keyword": "air pollution"
               },
               "comment": "Search for NO₂-related narratives"
             },
@@ -1514,7 +1542,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "nitrogen dioxide"
+                "keyword": "urban"
               },
               "comment": "Alternative full keyword"
             },
@@ -1567,7 +1595,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "particulate"
+                "keyword": "air pollution"
               },
               "comment": "Alternative keyword — particulate matter"
             },
@@ -1620,7 +1648,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "land use"
+                "keyword": "tree"
               },
               "comment": "Alternative keyword — land use"
             },
@@ -1726,7 +1754,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "maritime"
+                "keyword": "cargo"
               },
               "comment": "Alternative keyword — maritime"
             },
@@ -1868,7 +1896,7 @@
     },
     {
       "task_ID": "TASK_260419_000039_100039",
-      "task_text": "Find EO Dashboard narratives about natural disasters or disaster risk and list the STAC collection codes they reference.",
+      "task_text": "Find EO Dashboard narratives about extreme events or natural hazards and list the STAC collection codes they reference.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -1879,7 +1907,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "disaster"
+                "keyword": "extreme"
               },
               "comment": "Search for disaster or hazard narratives"
             },
@@ -1897,7 +1925,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "natural hazard"
+                "keyword": "eruption"
               },
               "comment": "Alternative keyword — natural hazard"
             },
@@ -1921,7 +1949,7 @@
     },
     {
       "task_ID": "TASK_260419_000040_100040",
-      "task_text": "Find an EO Dashboard narrative about economic recovery or human mobility patterns observed from space and retrieve its full text content.",
+      "task_text": "Find an EO Dashboard narrative about economic activity or night-time lighting patterns observed from space and retrieve its full text content.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -1932,7 +1960,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "economic"
+                "keyword": "economy"
               },
               "comment": "Search for economic recovery narratives"
             },
@@ -1950,7 +1978,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "mobility"
+                "keyword": "night"
               },
               "comment": "Alternative keyword — mobility"
             },
@@ -1985,7 +2013,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "NO2"
+                "keyword": "urban"
               },
               "comment": "Find NO₂ air pollution narratives"
             },
@@ -2043,7 +2071,7 @@
     },
     {
       "task_ID": "TASK_260419_000042_100042",
-      "task_text": "Find an EO Dashboard narrative about sea level rise or ocean warming, retrieve its STAC collection codes, then fetch a sample of data items from the most relevant collection to assess its temporal coverage.",
+      "task_text": "Find an EO Dashboard narrative about climate change effects on ocean warming, retrieve its STAC collection codes, then fetch a sample of data items from the most relevant collection to assess its temporal coverage.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -2054,7 +2082,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "sea level"
+                "keyword": "climate"
               },
               "comment": "Find sea level rise narratives"
             },
@@ -2080,7 +2108,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "ocean warming"
+                "keyword": "ocean currents"
               },
               "comment": "Alternative keyword — ocean warming"
             },
@@ -2112,7 +2140,7 @@
     },
     {
       "task_ID": "TASK_260419_000043_100043",
-      "task_text": "Download a Sentinel-2 true-colour image of the coastal area near Cairns, Queensland, Australia for September 2022 at 30 m resolution, then search the EO Dashboard for narratives about coral reef bleaching or ocean warming that provide ecological context for the image.",
+      "task_text": "Download a Sentinel-2 true-colour image of the coastal area near Cairns, Queensland, Australia for September 2022 at 10 m resolution, then search the EO Dashboard for narratives about climate change effects on ocean warming that provide ecological context for the image.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -2140,7 +2168,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "coral reef"
+                "keyword": "climate"
               },
               "comment": "Find EODash narratives contextualising the reef environment"
             }
@@ -2168,7 +2196,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "ocean warming"
+                "keyword": "ocean currents"
               },
               "comment": "Alternative keyword — ocean warming"
             }
@@ -2235,7 +2263,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "urbanisation"
+                "keyword": "urban"
               },
               "comment": "Alternative keyword — urbanisation"
             },
@@ -2291,7 +2319,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "deforestation"
+                "keyword": "forest"
               },
               "comment": "Find deforestation narratives via keyword 'deforestation'"
             },
@@ -2347,7 +2375,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "forest loss"
+                "keyword": "biomass"
               },
               "comment": "Find deforestation narratives via keyword 'forest loss'"
             },
@@ -2420,7 +2448,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "wildfire"
+                "keyword": "bushfire"
               },
               "comment": "Find wildfire or burned area narratives"
             },
@@ -2561,7 +2589,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "deforestation"
+                "keyword": "forest"
               },
               "comment": "Find deforestation or tropical forest narratives"
             },
@@ -2608,7 +2636,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "Amazon"
+                "keyword": "biomass"
               },
               "comment": "Alternative keyword — Amazon"
             },
@@ -3037,7 +3065,7 @@
     },
     {
       "task_ID": "TASK_260419_000067_100067",
-      "task_text": "Find a MOOC lecture that explains how satellite sensors such as Sentinel-5P measure NO₂ and other trace gases in the atmosphere.",
+      "task_text": "Find a MOOC lecture that explains how satellite sensors such as MODIS measure land surface temperature for environmental monitoring.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -3048,9 +3076,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "Sentinel-5P NO2 trace gas atmospheric monitoring satellite"
+                "query": "MODIS land surface temperature LST satellite monitoring"
               },
-              "comment": "Search MOOC for atmospheric chemistry satellite lectures"
+              "comment": "Real MOOC coverage: Urban Land Cover Mapping - Lecture about Urban Monitoring with MODIS Data based LST"
             }
           ]
         },
@@ -3059,7 +3087,7 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "nitrogen dioxide atmospheric satellite remote sensing"
+                "query": "land surface temperature thermal satellite remote sensing"
               },
               "comment": "Alternative query"
             }
@@ -3272,7 +3300,7 @@
     },
     {
       "task_ID": "TASK_260619_000003_300003",
-      "task_text": "Find MOOC lectures about ocean color remote sensing and how satellite sensors such as MODIS or Sentinel-3 are used to measure chlorophyll concentration in coastal waters.",
+      "task_text": "Find MOOC lectures about radar-based ocean remote sensing, including how SAR is used to detect oil spills and measure sea surface wind and waves.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -3283,9 +3311,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "ocean color remote sensing chlorophyll coastal waters MODIS Sentinel-3 phytoplankton"
+                "query": "SAR ocean oil spill sea surface wind waves radar backscatter"
               },
-              "comment": "Search MOOC catalogue for ocean color and chlorophyll satellite measurement lectures"
+              "comment": "Real MOOC coverage: ESA Echoes in Space - Water series (oil spill mapping, sea surface wind, ocean waves)"
             }
           ]
         }
@@ -3300,7 +3328,7 @@
     },
     {
       "task_ID": "TASK_260619_000004_300004",
-      "task_text": "What does the ESA EO Science Strategy say about monitoring wetlands and biodiversity? Based on the answer, find a MOOC lecture that covers the relevant satellite observation techniques.",
+      "task_text": "What does the ESA EO Science Strategy say about monitoring land degradation? Based on the answer, find a MOOC lecture that covers the relevant satellite observation techniques.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -3311,16 +3339,16 @@
             {
               "function_name": "search_eoss",
               "arguments": {
-                "question": "ESA Science Strategy wetlands biodiversity monitoring Earth observation objectives"
+                "question": "ESA Science Strategy land degradation monitoring Earth observation objectives"
               },
-              "comment": "Retrieve Science Strategy content on wetland and biodiversity Earth observation"
+              "comment": "Retrieve Science Strategy content on land degradation Earth observation"
             },
             {
               "function_name": "search_moocs",
               "arguments": {
                 "query": "<inferred>"
               },
-              "comment": "Search MOOC catalogue for a lecture matching the Science Strategy theme retrieved"
+              "comment": "Real MOOC coverage: Land Degradation series (SDG 15.3.1 indicators, Trends.Earth)"
             }
           ]
         }
@@ -3346,7 +3374,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "wildfire"
+                "keyword": "bushfire"
               },
               "comment": "Search EO Dashboard for narratives about wildfires or fire activity"
             },
@@ -4099,7 +4127,7 @@
     },
     {
       "task_ID": "TASK_260427_000013_200013",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 and B8 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save it to /tmp/ndvi_ukraine.tif. Report the mean and maximum NDVI values using raster band statistics.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 and B8 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save it to /tmp/ndvi_ukraine.tif. Report the mean and maximum NDVI values using raster band statistics.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -4906,7 +4934,7 @@
     },
     {
       "task_ID": "TASK_260427_000031_200031",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia in the Po Valley, Lombardy, Italy for June–August 2023 at 20 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save it to /output/ndvi_po_valley_2023.tif.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save it to /output/ndvi_po_valley_2023.tif.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -4960,7 +4988,7 @@
     },
     {
       "task_ID": "TASK_260427_000032_200032",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for the rainy season of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI from the result, then calculate the per-band statistics of the NDVI raster to understand the vegetation density distribution.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for the rainy season of July–September 2022 with bands B8 and B4 at 10 m resolution, compute NDVI from the result, then calculate the per-band statistics of the NDVI raster to understand the vegetation density distribution.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5020,7 +5048,7 @@
     },
     {
       "task_ID": "TASK_260427_000033_200033",
-      "task_text": "Download a Sentinel-2 image of the area around Córdoba, Andalusia, Spain for the summer drought of July–September 2022 with bands B8 and B4 at 20 m resolution, compute NDVI, then produce a 256-bin histogram of the NDVI raster to assess how severely vegetation was affected by the drought.",
+      "task_text": "Download a Sentinel-2 image of the area around Córdoba, Andalusia, Spain for the summer drought of July–September 2022 with bands B8 and B4 at 10 m resolution, compute NDVI, then produce a 256-bin histogram of the NDVI raster to assess how severely vegetation was affected by the drought.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5081,7 +5109,7 @@
     },
     {
       "task_ID": "TASK_260427_000034_200034",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 20 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save it to /output/ndvi_nile_delta_utm.tif.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 10 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save it to /output/ndvi_nile_delta_utm.tif.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -5146,7 +5174,7 @@
     },
     {
       "task_ID": "TASK_260427_000035_200035",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 20 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save it to /tmp/ndvi_ukraine_inner.tif. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save as /tmp/ndvi_ukraine_utm.tif. Finally report band statistics (mean, max, std) for the reprojected raster.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save it to /tmp/ndvi_ukraine_inner.tif. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save as /tmp/ndvi_ukraine_utm.tif. Finally report band statistics (mean, max, std) for the reprojected raster.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -5216,7 +5244,7 @@
     },
     {
       "task_ID": "TASK_260427_000036_200036",
-      "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the agricultural area around Mopti, Mali for August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
+      "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the agricultural area around Mopti, Mali for August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5357,7 +5385,7 @@
     },
     {
       "task_ID": "TASK_260427_000038_200038",
-      "task_text": "Download a Sentinel-2 image of the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, then create a static map that layers the NDVI raster (red-yellow-green colormap) together with the administrative region boundary shapefile at /data/po_valley_boundary.shp as a black outline.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, then create a static map that layers the NDVI raster (red-yellow-green colormap) together with the administrative region boundary shapefile at /data/po_valley_boundary.shp as a black outline.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5439,7 +5467,7 @@
     },
     {
       "task_ID": "TASK_260427_000039_200039",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Uman, Cherkasy Oblast, Ukraine for June 2023 with bands B8 and B4 at 20 m resolution, compute NDVI, calculate zonal statistics (mean NDVI) for the field parcels at /data/ukraine_fields.shp, then create a static map showing the NDVI raster with the field parcel boundaries overlaid.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Uman, Cherkasy Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, calculate zonal statistics (mean NDVI) for the field parcels at /data/ukraine_fields.shp, then create a static map showing the NDVI raster with the field parcel boundaries overlaid.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5598,7 +5626,7 @@
     },
     {
       "task_ID": "TASK_260619_000010_300010",
-      "task_text": "List all EO Dashboard narratives, then search among them for any related to sea level rise.",
+      "task_text": "List all EO Dashboard narratives, then search among them for any related to ocean or climate change.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -5614,7 +5642,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "sea level"
+                "keyword": "ocean"
               },
               "comment": "Filter narratives for sea level rise content"
             }
@@ -5698,14 +5726,14 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "deforestation"
+                "keyword": "forest"
               },
-              "comment": "Find narratives about deforestation"
+              "comment": "Find narratives about forest loss"
             },
             {
               "function_name": "get_narrative_indicators",
               "arguments": {
-                "narrative_title": "<title of a matching deforestation narrative>"
+                "narrative_title": "<title of a matching forest narrative>"
               },
               "comment": "Retrieve STAC collection codes from the selected narrative"
             },
@@ -5757,7 +5785,7 @@
     },
     {
       "task_ID": "TASK_260619_000015_300015",
-      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 60 m resolution. Describe the dominant landforms visible in the image and identify features that are characteristic of Iceland's volcanic landscape.",
+      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 10 m resolution. Describe the dominant landforms visible in the image and identify features that are characteristic of Iceland's volcanic landscape.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -6720,7 +6748,7 @@
     },
     {
       "task_ID": "TASK_260713_000025_400025",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 at 20 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save it to /output/ndvi_po_valley.tif. Then calculate zonal statistics (mean, max, and standard deviation of NDVI) for the agricultural field parcels at /data/po_fields.shp.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save it to /output/ndvi_po_valley.tif. Then calculate zonal statistics (mean, max, and standard deviation of NDVI) for the agricultural field parcels at /data/po_fields.shp.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -6995,7 +7023,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "climate change adaptation"
+                "keyword": "climate"
               },
               "comment": "Find EOdashboard narratives on climate adaptation"
             },
@@ -7270,7 +7298,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "carbon cycle"
+                "keyword": "carbon"
               },
               "comment": "Find EOdashboard narratives related to carbon cycle KAO themes"
             }
@@ -7489,30 +7517,30 @@
     },
     {
       "task_ID": "TASK_260713_000043_500022",
-      "task_text": "Search EOdashboard for a narrative about wildfire smoke over Europe. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI active fire detection products.",
+      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI imagery products.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for wildfire context. Step 2: search_eumetsat_products for MTG FCI fire detection over the Mediterranean in August 2023.",
+      "reference_solution_description": "Step 1: search_narratives on eodashboard for the Farmlands North of Cairo CO2 narrative. Step 2: search_eumetsat_products for MTG FCI Level 1C imagery over Egypt in August 2023.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "wildfire smoke Europe"
+                "keyword": "Cairo"
               },
-              "comment": "Find EOdashboard narratives about wildfire smoke over Europe"
+              "comment": "Find the real EOdashboard narrative on atmospheric CO2 monitoring over Egypt"
             },
             {
               "function_name": "search_eumetsat_products",
               "arguments": {
-                "product": "MTG-FCI-L2-AFD",
+                "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2023-08-01T00:00:00",
                 "end_date": "2023-08-31T23:59:00",
                 "bbox": "<inferred>"
               },
-              "comment": "Search for MTG FCI active fire detection products over the Mediterranean in August 2023"
+              "comment": "Search for MTG FCI Level 1C imagery over Egypt in August 2023"
             }
           ]
         }
@@ -7799,7 +7827,7 @@
     },
     {
       "task_ID": "TASK_260713_000051_500030",
-      "task_text": "Search EOdashboard narratives about land surface temperature anomalies during the 2022 European heatwave. Based on the country or region highlighted in the narrative, search for MSG SEVIRI Prime products for that area and period.",
+      "task_text": "Search EOdashboard narratives about record-breaking temperature anomalies. Based on the region and time period described in the narrative, search for MSG SEVIRI Prime products for that area and period.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -7810,7 +7838,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "land surface temperature heatwave Europe"
+                "keyword": "temperature"
               },
               "comment": "Find EOdashboard narratives on 2022 European heatwave"
             },
@@ -8074,35 +8102,35 @@
     },
     {
       "task_ID": "TASK_260713_000058_500037",
-      "task_text": "Search EOdashboard for narratives about forest fire detection from space. Based on the geographic focus and time period of the narrative, search for and download the corresponding MTG FCI active fire detection products.",
+      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Based on the geographic focus and time period of the narrative, search for and download the corresponding MTG FCI imagery products.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives for wildfire detection context. Step 2: search_eumetsat_products to check availability. Step 3: download_eumetsat_product for FCI fire detection data over Iberia.",
+      "reference_solution_description": "Step 1: search_narratives for the Farmlands North of Cairo CO2 narrative. Step 2: search_eumetsat_products to check availability. Step 3: download_eumetsat_product for FCI Level 1C imagery over Egypt.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "forest fire detection satellite"
+                "keyword": "Cairo"
               },
-              "comment": "Find EOdashboard narrative context for fire detection"
+              "comment": "Find EOdashboard narrative context for atmospheric CO2 monitoring over Egypt"
             },
             {
               "function_name": "search_eumetsat_products",
               "arguments": {
-                "product": "MTG-FCI-L2-AFD",
+                "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2023-08-15T00:00:00",
                 "end_date": "2023-08-20T23:59:00",
                 "bbox": "<inferred>"
               },
-              "comment": "Check availability of FCI fire detection products over Iberia"
+              "comment": "Check availability of FCI Level 1C imagery over Egypt"
             },
             {
               "function_name": "download_eumetsat_product",
               "arguments": {
-                "product": "MTG-FCI-L2-AFD",
+                "product": "MTG-FCI-L1C-FDHSI",
                 "start_date": "2023-08-15T00:00:00",
                 "end_date": "2023-08-20T23:59:00",
                 "bbox": "<inferred>",
@@ -8111,7 +8139,7 @@
                 "start_hour": 8,
                 "interval_minutes": 180
               },
-              "comment": "Download FCI active fire detection data over Iberia"
+              "comment": "Download FCI Level 1C imagery over Egypt"
             }
           ]
         }
@@ -8430,7 +8458,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "climate monitoring reanalysis"
+                "keyword": "climate"
               },
               "comment": "Find EOdashboard narratives about climate monitoring with reanalysis data"
             },
@@ -8758,7 +8786,7 @@
     },
     {
       "task_ID": "TASK_260713_000074_500053",
-      "task_text": "Search EOdashboard for narratives related to jet stream variability. Based on the geographic focus of the narrative, download ERA5 monthly mean zonal wind at 250 hPa for recent winters to quantify the anomalies.",
+      "task_text": "Search EOdashboard for narratives related to atmospheric monitoring. Based on the geographic focus of the narrative, download ERA5 monthly mean zonal wind at 250 hPa for recent winters to quantify upper-level circulation anomalies.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -8769,7 +8797,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "jet stream variability"
+                "keyword": "atmosphere"
               },
               "comment": "Find EOdashboard narratives about jet stream variability"
             },
@@ -9098,7 +9126,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "sea surface temperature ocean heat content"
+                "keyword": "sea surface temperature"
               },
               "comment": "Find EOdashboard narratives about SST and ocean heat"
             },
@@ -9272,7 +9300,7 @@
     },
     {
       "task_ID": "TASK_260713_000004_600004",
-      "task_text": "A MOOC on EO applications mentions 'latent heat flux' as a key land-atmosphere variable. Check whether it is available in ERA5 single-level data, then fetch its monthly mean for a recent summer month over a mid-latitude land region.",
+      "task_text": "A MOOC on EO applications discusses soil moisture as a key land-atmosphere variable. Check whether it is available in ERA5 single-level data, then fetch its monthly mean for a recent summer month over a mid-latitude land region.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9283,9 +9311,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "latent heat flux land atmosphere"
+                "query": "soil moisture land atmosphere satellite remote sensing"
               },
-              "comment": "Find relevant MOOC content"
+              "comment": "Real MOOC coverage: Soil Moisture Estimation series"
             },
             {
               "function_name": "list_era5_single_level_variables",
@@ -9295,13 +9323,13 @@
             {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
-                "variable": "surface_latent_heat_flux",
+                "variable": "volumetric_soil_water_layer_1",
                 "year": "2023",
                 "month": "07",
-                "output_filename": "data/slhf_2023_07.nc",
+                "output_filename": "data/swvl1_2023_07.nc",
                 "area": "<inferred>"
               },
-              "comment": "Download monthly mean"
+              "comment": "Download monthly mean soil moisture"
             }
           ]
         }
@@ -9914,7 +9942,7 @@
     },
     {
       "task_ID": "TASK_260713_000022_600022",
-      "task_text": "Search MOOC content about heatwaves and their socioeconomic impacts. Based on the geographic examples and season discussed, download hourly ERA5 2m temperature for the relevant region and period to support a case study.",
+      "task_text": "Search MOOC content about urban heat islands and land surface temperature monitoring. Based on the geographic examples and season discussed, download hourly ERA5 2m temperature for the relevant region and period to support a case study.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9925,9 +9953,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "heatwave socioeconomic impacts urban heat island"
+                "query": "urban heat island land surface temperature MODIS monitoring"
               },
-              "comment": "Find MOOC content on heatwaves"
+              "comment": "Real MOOC coverage: Urban Land Cover Mapping - Urban Monitoring LST with MODIS Data"
             },
             {
               "function_name": "fetch_era5_hourly_single_levels",
@@ -10929,7 +10957,7 @@
     },
     {
       "task_ID": "TASK_260713_000045_600045",
-      "task_text": "Search EO Dashboard narratives about extreme heat or heatwaves in Europe. Based on the region and time period of the event described, download the pre-computed daily maximum 2m temperature to contextualise the narrative.",
+      "task_text": "Search EO Dashboard narratives about record-breaking temperature anomalies. Based on the region and time period of the event described, download the pre-computed daily maximum 2m temperature to contextualise the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -10940,7 +10968,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "heat"
+                "keyword": "temperature"
               },
               "comment": "Find EO Dashboard heatwave narratives"
             },
@@ -11759,7 +11787,7 @@
     },
     {
       "task_ID": "TASK_260713_000065_600065",
-      "task_text": "Search MOOC content on seasonal climate variability and the annual temperature cycle. Based on the concepts covered, download ERA5 daily mean 2m temperature for a winter season over a relevant mid-latitude region and aggregate each month to a monthly mean.",
+      "task_text": "Search MOOC content on temporal signatures and satellite time series analysis. Based on the concepts covered, download ERA5 daily mean 2m temperature for a winter season over a relevant mid-latitude region and aggregate each month to a monthly mean.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -11770,9 +11798,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "seasonal climate variability annual temperature cycle"
+                "query": "temporal signatures satellite time series seasonal remote sensing"
               },
-              "comment": "Find relevant MOOC content"
+              "comment": "Real MOOC coverage: Basics of Remote Sensing - Temporal signatures; ESA Echoes in Space - Introduction to Satellite Time Series"
             },
             {
               "function_name": "fetch_era5_daily_statistics",
@@ -12340,7 +12368,7 @@
     },
     {
       "task_ID": "TASK_260713_000078_600078",
-      "task_text": "Search MOOC content about Arctic amplification and polar warming. Based on the region and recent period discussed, download ERA5 monthly mean 2m temperature and convert to Celsius to illustrate the warming signal.",
+      "task_text": "Search MOOC content about sea ice monitoring and glacier mapping. Based on the region and recent period discussed, download ERA5 monthly mean 2m temperature and convert to Celsius to illustrate the warming signal.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -12351,9 +12379,9 @@
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "Arctic amplification polar warming sea ice"
+                "query": "sea ice glacier mapping polar remote sensing SAR"
               },
-              "comment": "Find MOOC content on Arctic climate"
+              "comment": "Real MOOC coverage: Sea Ice series (Canadian Ice Service); Global Glacier Mapping"
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -12632,7 +12660,7 @@
     },
     {
       "task_ID": "TASK_260713_000086_600086",
-      "task_text": "Search EO Dashboard narratives about drought in the Horn of Africa or East Africa. Based on the drought period described in the narrative, download ERA5 monthly mean total precipitation for the relevant months and clip to the affected region.",
+      "task_text": "Search EO Dashboard narratives about floods in East Africa. Based on the flood period described in the narrative, download ERA5 monthly mean total precipitation for the relevant months and clip to the affected region.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -12643,7 +12671,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "drought"
+                "keyword": "east africa"
               },
               "comment": "Find drought-related EO Dashboard narratives"
             },
@@ -13238,7 +13266,7 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "flooding"
+                "keyword": "cyclone"
               },
               "comment": "Find flood narratives via keyword 'flooding'"
             },

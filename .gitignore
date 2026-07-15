@@ -46,3 +46,7 @@ logs/
 .claude/*
 !.claude/skills/
 src/eoss_graphrag/
+
+docs/eo_dashboard_narratives.mk
+docs/MOOC.jsonl
+scripts/vlm.sh

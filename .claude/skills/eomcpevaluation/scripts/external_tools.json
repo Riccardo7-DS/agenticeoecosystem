@@ -1,0 +1,31 @@
+{
+  "arxiv-mcp-server": [
+    "search_papers",
+    "download_paper",
+    "read_paper",
+    "get_abstract",
+    "citation_graph",
+    "semantic_search",
+    "list_papers"
+  ],
+  "gis-mcp": [
+    "metadata_raster",
+    "raster_band_statistics",
+    "compute_s2_ndvi",
+    "compute_ndvi",
+    "reproject_raster",
+    "clip_raster_with_shapefile",
+    "transform_coordinates",
+    "get_utm_crs",
+    "get_utm_zone",
+    "calculate_geodetic_distance",
+    "buffer",
+    "calculate_geodetic_area",
+    "sjoin_gpd",
+    "point_in_polygon",
+    "raster_histogram",
+    "create_map",
+    "zonal_statistics"
+  ],
+  "eve_retrieval": []
+}

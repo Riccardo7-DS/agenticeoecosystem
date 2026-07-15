@@ -43,5 +43,6 @@ test_eve_auth.py
 
 logs/
 *.sif
-.claude/
+.claude/*
+!.claude/skills/
 src/eoss_graphrag/

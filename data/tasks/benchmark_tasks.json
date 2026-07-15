@@ -832,7 +832,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA Science Strategy sustainable development goals SDG Earth observation"
               },
@@ -1083,7 +1083,7 @@
               }
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "<inferred>"
               },
@@ -1298,7 +1298,7 @@
               }
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "food security crop monitoring Earth observation ESA Science Strategy"
               },
@@ -1359,7 +1359,7 @@
               }
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "food security crop monitoring Earth observation ESA Science Strategy"
               },
@@ -2240,20 +2240,20 @@
     },
     {
       "task_ID": "TASK_260419_000045_100045",
-      "task_text": "Search the EO Dashboard for narratives about NO₂ or COVID-19 lockdown air quality. Identify the STAC collections referenced in the narrative, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of the city highlighted in the narrative — one from before the lockdown and one from during it — to visually compare the atmosphere over the urban area. Compare the two images and assess whether a visible change in air quality — such as reduced haze or improved atmospheric clarity — is observable between the before and during lockdown periods.",
+      "task_text": "Search the EO Dashboard for a narrative about deforestation or forest loss. Identify the STAC collections referenced in the narrative, retrieve sample data items from one collection, and download two Sentinel-2 true-colour images of the study area: one before and one after the reported forest change. Compare the images and describe visible land-cover changes.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for NO₂/lockdown narratives, get STAC collections and sample items, geocode 'Milan, Lombardy, Italy' with get_lat_lon, then download two Sentinel-2 RGB images with a 12 km buffer: pre-lockdown (Jan–Feb 2020) and during lockdown (Mar–Apr 2020). Finally, visually compare the two downloaded images and report whether a visible reduction in haze/aerosol coverage is observable during the lockdown period.",
+      "reference_solution_description": "Search EO Dashboard for deforestation narratives, get STAC collections and sample items, geocode 'Rondônia, Brazil' with geocode_place, then download two Sentinel-2 true-colour images in matching dry seasons (low cloud cover): before (Jul–Aug 2018) and after (Jul–Aug 2020) the reported forest loss. Compare the two images and describe visible land-cover change (e.g. reduced forest canopy, new clearings).",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "NO2"
+                "keyword": "deforestation"
               },
-              "comment": "Find NO₂ lockdown narratives"
+              "comment": "Find deforestation narratives via keyword 'deforestation'"
             },
             {
               "function_name": "get_narrative_indicators",
@@ -2273,30 +2273,32 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "<inferred from narrative>"
+                "place_name": "Rondônia, Brazil"
               }
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<inferred from geocode_place>",
-                "start_date": "2020-01-01",
-                "end_date": "2020-02-29",
+                "start_date": "2018-07-01",
+                "end_date": "2018-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_coverage": 30
-              }
+              },
+              "comment": "Pre-forest-loss true-colour baseline (dry season for low cloud cover)"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<inferred from geocode_place>",
-                "start_date": "2020-03-01",
-                "end_date": "2020-04-30",
+                "start_date": "2020-07-01",
+                "end_date": "2020-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_coverage": 30
-              }
+              },
+              "comment": "Post-forest-loss true-colour image, same season for comparability"
             }
           ]
         },
@@ -2305,9 +2307,9 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "lockdown"
+                "keyword": "forest loss"
               },
-              "comment": "Alternative keyword — lockdown"
+              "comment": "Find deforestation narratives via keyword 'forest loss'"
             },
             {
               "function_name": "get_narrative_indicators",
@@ -2327,30 +2329,32 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "<inferred from narrative>"
+                "place_name": "Rondônia, Brazil"
               }
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<inferred from geocode_place>",
-                "start_date": "2020-01-01",
-                "end_date": "2020-02-29",
+                "start_date": "2018-07-01",
+                "end_date": "2018-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_coverage": 30
-              }
+              },
+              "comment": "Pre-forest-loss true-colour baseline (dry season for low cloud cover)"
             },
             {
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<inferred from geocode_place>",
-                "start_date": "2020-03-01",
-                "end_date": "2020-04-30",
+                "start_date": "2020-07-01",
+                "end_date": "2020-08-31",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_coverage": 30
-              }
+              },
+              "comment": "Post-forest-loss true-colour image, same season for comparability"
             }
           ]
         }
@@ -2930,7 +2934,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "carbon emissions satellite monitoring ESA Science Strategy"
               },
@@ -2958,7 +2962,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "disaster risk reduction emergency response Earth observation ESA"
               },
@@ -3025,7 +3029,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "forest monitoring deforestation Earth observation ESA Science Strategy"
               },
@@ -3060,7 +3064,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "Arctic polar sea ice monitoring climate change ESA Science Strategy"
               },
@@ -3088,7 +3092,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "urban heat island city monitoring Earth observation ESA"
               },
@@ -3123,7 +3127,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "sea ice cryosphere climate indicator ESA Science Strategy"
               },
@@ -3158,7 +3162,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "water resources management drought monitoring satellite ESA Science Strategy"
               },
@@ -3249,7 +3253,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA Science Strategy wetlands biodiversity monitoring Earth observation objectives"
               },
@@ -3314,12 +3318,12 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EOPSS for cryosphere monitoring priorities and MOOCs for ice sheet remote sensing content. Use a glacier site identified from those results as the download target — geocode it, then download a Sentinel-2 RGB image for a cloud-free summer acquisition.",
+      "reference_solution_description": "Search EOSS for cryosphere monitoring priorities and MOOCs for ice sheet remote sensing content. Use a glacier site identified from those results as the download target — geocode it, then download a Sentinel-2 RGB image for a cloud-free summer acquisition.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA Science Strategy cryosphere glacier ice sheet monitoring priorities"
               },
@@ -3335,7 +3339,7 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "<inferred from EOPSS/MOOC result>"
+                "place_name": "<inferred from EOSS/MOOC result>"
               }
             },
             {
@@ -4346,7 +4350,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "carbon emissions monitoring satellite CO2 ESA Science Strategy"
               },
@@ -4366,7 +4370,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "greenhouse gas satellite observation ESA strategy carbon accounting"
               },
@@ -4403,7 +4407,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "cryosphere sea ice monitoring satellite ESA Science Strategy"
               },
@@ -4423,7 +4427,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "polar ice cryosphere ESA observation strategy"
               },
@@ -4460,7 +4464,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "biodiversity ecosystem monitoring Earth observation ESA Science Strategy"
               },
@@ -4504,7 +4508,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "water resources management hydrological cycle satellite monitoring ESA Science Strategy"
               },
@@ -4531,7 +4535,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "drought water stress Earth observation ESA strategy"
               },
@@ -4575,7 +4579,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "disaster risk reduction emergency response satellite ESA Science Strategy"
               },
@@ -4626,7 +4630,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "urban monitoring sustainable cities satellite Earth observation ESA Science Strategy"
               },
@@ -4646,7 +4650,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "urban expansion land use change monitoring satellite ESA"
               },
@@ -4683,7 +4687,7 @@
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ocean health marine environment monitoring satellite ESA Science Strategy"
               },
@@ -5029,12 +5033,12 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Retrieve ESA strategy objectives on food security with search_eopss, geocode 'Mopti, Mali' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for August 2023, compute NDVI, then report band statistics.",
+      "reference_solution_description": "Retrieve ESA strategy objectives on food security with search_eoss, geocode 'Mopti, Mali' with get_lat_lon, download a Sentinel-2 B8+B4 image with a 15 km buffer for August 2023, compute NDVI, then report band statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "food security vegetation monitoring satellite ESA Science Strategy"
               },
@@ -5767,12 +5771,12 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Use search_eopss for ESA Arctic strategy content to identify objectives and study areas, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023. Describe visible sea ice extent/conditions and relate them to the ESA cryosphere monitoring objectives retrieved.",
+      "reference_solution_description": "Use search_eoss for ESA Arctic strategy content to identify objectives and study areas, geocode Ny-Ålesund with get_lat_lon, then download a Sentinel-2 scene for September 2023. Describe visible sea ice extent/conditions and relate them to the ESA cryosphere monitoring objectives retrieved.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA strategic priorities for Arctic cryosphere and sea ice monitoring"
               },
@@ -5781,7 +5785,7 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "<inferred from EOPSS result>"
+                "place_name": "<inferred from EOSS result>"
               }
             },
             {
@@ -6331,7 +6335,7 @@
               "comment": "Step 2: construct WKT POINT(lon lat) from geocoded coordinates and create 20 km smoke-impact buffer."
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "ESA Earth Observation strategic objectives for wildfire monitoring and burned area mapping"
               },
@@ -6527,7 +6531,7 @@
     },
     {
       "task_ID": "TASK_260713_000022_500001",
-      "task_text": "Using the EOPSS knowledge graph, find all science questions that are directly linked to the Paris Agreement treaty.",
+      "task_text": "Using the EOSS knowledge graph, find all science questions that are directly linked to the Paris Agreement treaty.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -6557,7 +6561,7 @@
     },
     {
       "task_ID": "TASK_260713_000024_500003",
-      "task_text": "Query the EOPSS ontology to retrieve all tipping points that are associated with ice-related science themes.",
+      "task_text": "Query the EOSS ontology to retrieve all tipping points that are associated with ice-related science themes.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -6587,7 +6591,7 @@
     },
     {
       "task_ID": "TASK_260713_000025_500004",
-      "task_text": "First, list all node types available in the EOPSS knowledge graph, then query for all Treaty nodes with their descriptions.",
+      "task_text": "First, list all node types available in the EOSS knowledge graph, then query for all Treaty nodes with their descriptions.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -6622,16 +6626,16 @@
     },
     {
       "task_ID": "TASK_260713_000026_500005",
-      "task_text": "Search the EOPSS knowledge base for content about 'enabling tools for Earth observation', then run a structured Cypher query to retrieve all EnablingTool nodes linked to ScienceQuestion nodes.",
+      "task_text": "Search the EOSS knowledge base for content about 'enabling tools for Earth observation', then run a structured Cypher query to retrieve all EnablingTool nodes linked to ScienceQuestion nodes.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: search_eopss for semantic context about enabling tools. Step 2: query_ontology to retrieve structured relationships between EnablingTool and ScienceQuestion nodes.",
+      "reference_solution_description": "Step 1: search_eoss for semantic context about enabling tools. Step 2: query_ontology to retrieve structured relationships between EnablingTool and ScienceQuestion nodes.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "enabling tools for Earth observation",
                 "k": 5
@@ -6660,7 +6664,7 @@
     },
     {
       "task_ID": "TASK_260713_000027_500006",
-      "task_text": "Search the EOdashboard for narratives related to 'climate change adaptation', then query the EOPSS knowledge graph to find which StrategicObjective nodes address adaptation themes.",
+      "task_text": "Search the EOdashboard for narratives related to 'climate change adaptation', then query the EOSS knowledge graph to find which StrategicObjective nodes address adaptation themes.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -6680,7 +6684,7 @@
               "arguments": {
                 "cypher": "MATCH (so:StrategicObjective) WHERE toLower(so.name) CONTAINS 'adapt' OR toLower(so.description) CONTAINS 'adapt' RETURN so.id, so.name, so.description"
               },
-              "comment": "Retrieve strategic objectives related to adaptation from EOPSS ontology"
+              "comment": "Retrieve strategic objectives related to adaptation from EOSS ontology"
             }
           ]
         }
@@ -6697,7 +6701,7 @@
     },
     {
       "task_ID": "TASK_260713_000028_500007",
-      "task_text": "Query the EOPSS ontology to find KnowledgeAdvancementObjective nodes linked to sea-level rise, then search ArXiv for recent papers on those topics.",
+      "task_text": "Query the EOSS ontology to find KnowledgeAdvancementObjective nodes linked to sea-level rise, then search ArXiv for recent papers on those topics.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -6735,11 +6739,11 @@
     },
     {
       "task_ID": "TASK_260713_000029_500008",
-      "task_text": "Use the EOPSS knowledge graph to find all science questions related to land surface temperature monitoring.",
+      "task_text": "Use the EOSS knowledge graph to find all science questions related to land surface temperature monitoring.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "The query_ontology tool queries the EOPSS scientific strategy ontology, not Earth observation data archives. It cannot retrieve satellite measurements or land surface temperature readings. The correct response is a Cypher query for ScienceQuestion nodes related to land surface temperature as a scientific topic — not actual temperature data.",
+      "reference_solution_description": "The query_ontology tool queries the EOSS scientific strategy ontology, not Earth observation data archives. It cannot retrieve satellite measurements or land surface temperature readings. The correct response is a Cypher query for ScienceQuestion nodes related to land surface temperature as a scientific topic — not actual temperature data.",
       "reference_solutions": [
         {
           "steps": [
@@ -6765,7 +6769,7 @@
     },
     {
       "task_ID": "TASK_260713_000030_500009",
-      "task_text": "List all ScienceTheme nodes in the EOPSS knowledge graph.",
+      "task_text": "List all ScienceTheme nodes in the EOSS knowledge graph.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -6778,7 +6782,7 @@
               "arguments": {
                 "label": "ScienceTheme"
               },
-              "comment": "Returns all ScienceTheme nodes from the EOPSS ontology"
+              "comment": "Returns all ScienceTheme nodes from the EOSS ontology"
             }
           ]
         }
@@ -6795,7 +6799,7 @@
     },
     {
       "task_ID": "TASK_260713_000031_500010",
-      "task_text": "Enumerate all TippingPoint nodes registered in the EOPSS knowledge graph to understand which Earth system tipping points are covered by the ESA science strategy.",
+      "task_text": "Enumerate all TippingPoint nodes registered in the EOSS knowledge graph to understand which Earth system tipping points are covered by the ESA science strategy.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -6825,7 +6829,7 @@
     },
     {
       "task_ID": "TASK_260713_000032_500011",
-      "task_text": "Get an overview of all node types and their counts in the EOPSS knowledge graph without filtering by any specific label.",
+      "task_text": "Get an overview of all node types and their counts in the EOSS knowledge graph without filtering by any specific label.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -6853,11 +6857,11 @@
     },
     {
       "task_ID": "TASK_260713_000033_500012",
-      "task_text": "First enumerate all Treaty nodes in the EOPSS knowledge graph, then use one of the treaty names to search for its strategic context in the EOPSS knowledge base.",
+      "task_text": "First enumerate all Treaty nodes in the EOSS knowledge graph, then use one of the treaty names to search for its strategic context in the EOSS knowledge base.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: list_ontology_nodes with label='Treaty' to get all treaty names. Step 2: search_eopss using one of the treaty names as a query.",
+      "reference_solution_description": "Step 1: list_ontology_nodes with label='Treaty' to get all treaty names. Step 2: search_eoss using one of the treaty names as a query.",
       "reference_solutions": [
         {
           "steps": [
@@ -6869,12 +6873,12 @@
               "comment": "Enumerate all Treaty nodes"
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "Paris Agreement ESA Earth observation obligations",
                 "k": 5
               },
-              "comment": "Search EOPSS knowledge base for strategic context around the Paris Agreement treaty"
+              "comment": "Search EOSS knowledge base for strategic context around the Paris Agreement treaty"
             }
           ]
         }
@@ -6891,7 +6895,7 @@
     },
     {
       "task_ID": "TASK_260713_000034_500013",
-      "task_text": "List all ScienceQuestion nodes in the EOPSS graph, then run a Cypher query to count how many strategic objectives each science question informs.",
+      "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many strategic objectives each science question informs.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -6928,7 +6932,7 @@
     },
     {
       "task_ID": "TASK_260713_000035_500014",
-      "task_text": "Enumerate all KnowledgeAdvancementObjective nodes from the EOPSS graph, then search the EOdashboard for narratives that match one of the major EO advancement themes found.",
+      "task_text": "Enumerate all KnowledgeAdvancementObjective nodes from the EOSS graph, then search the EOdashboard for narratives that match one of the major EO advancement themes found.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -6941,7 +6945,7 @@
               "arguments": {
                 "label": "KnowledgeAdvancementObjective"
               },
-              "comment": "List all knowledge advancement objectives from the EOPSS ontology"
+              "comment": "List all knowledge advancement objectives from the EOSS ontology"
             },
             {
               "function_name": "search_narratives",
@@ -6965,7 +6969,7 @@
     },
     {
       "task_ID": "TASK_260713_000036_500015",
-      "task_text": "List all NationalPolicy nodes in the EOPSS knowledge graph, then search ArXiv for recent papers analysing the role of national EO policies in supporting the ESA science strategy.",
+      "task_text": "List all NationalPolicy nodes in the EOSS knowledge graph, then search ArXiv for recent papers analysing the role of national EO policies in supporting the ESA science strategy.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -7769,11 +7773,11 @@
     },
     {
       "task_ID": "TASK_260713_000059_500038",
-      "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, then search the ESA EOPSS knowledge base for how cloud monitoring relates to the ESA science strategy.",
+      "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, then search the ESA EOSS knowledge base for how cloud monitoring relates to the ESA science strategy.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: download_eumetsat_product for MTG FCI Level 2 cloud mask. Step 2: search_eopss for cloud monitoring in the science strategy.",
+      "reference_solution_description": "Step 1: download_eumetsat_product for MTG FCI Level 2 cloud mask. Step 2: search_eoss for cloud monitoring in the science strategy.",
       "reference_solutions": [
         {
           "steps": [
@@ -7792,11 +7796,11 @@
               "comment": "Download MTG FCI Level 2 cloud mask products over Spain"
             },
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "cloud monitoring Earth observation science strategy enabling tools"
               },
-              "comment": "Find EOPSS context on cloud monitoring in the ESA science strategy"
+              "comment": "Find EOSS context on cloud monitoring in the ESA science strategy"
             }
           ]
         }
@@ -8136,11 +8140,11 @@
     },
     {
       "task_ID": "TASK_260713_000069_500048",
-      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 over Europe.",
+      "task_text": "Retrieve the ERA5 monthly mean geopotential at the 500 hPa pressure level over Europe for January 2023. Describe the main large-scale circulation patterns visible in the data.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_pressure_levels with variable='geopotential', pressure_level=500, year='2023', month='01'.",
+      "reference_solution_description": "Step 1: fetch_era5_pressure_levels to download 500 hPa geopotential. Step 2: inspect_netcdf to ground the circulation-pattern description in the actual file structure.",
       "reference_solutions": [
         {
           "steps": [
@@ -8154,7 +8158,14 @@
                 "output_filename": "/data/era5/z500_2023_01.nc",
                 "area": "<inferred>"
               },
-              "comment": "Downloads ERA5 monthly mean geopotential at 500 hPa for January 2023 and returns file inspection summary"
+              "comment": "Download ERA5 500 hPa geopotential for January 2023"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/z500_2023_01.nc"
+              },
+              "comment": "Inspect the field before describing ridge/trough circulation patterns"
             }
           ]
         }
@@ -8171,11 +8182,11 @@
     },
     {
       "task_ID": "TASK_260713_000070_500049",
-      "task_text": "Download ERA5 monthly mean temperature at 850 hPa for the boreal summer months (June, July, August) of 2022 in a single call over Europe.",
+      "task_text": "Retrieve ERA5 monthly mean temperature at 850 hPa for June, July, and August 2022 over Europe using a single data request. Identify the warmest regions and describe any month-to-month changes.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_pressure_levels with year as a list ['2022'] and month='06', or use multiple years — the year parameter accepts a list. Pass all three summer months by using a list for year or separate calls. Here use year=['2022'] and month='06' as a representative single-month call.",
+      "reference_solution_description": "Step 1: a single fetch_era5_pressure_levels call with month=['06','07','08'] (the tool now accepts a list of months, like it already did for years). Step 2: inspect_netcdf to confirm the resulting time dimension covers all three months before comparing them.",
       "reference_solutions": [
         {
           "steps": [
@@ -8184,14 +8195,23 @@
               "arguments": {
                 "variable": "temperature",
                 "pressure_level": 850,
-                "year": [
-                  "2022"
+                "year": "2022",
+                "month": [
+                  "06",
+                  "07",
+                  "08"
                 ],
-                "month": "07",
-                "output_filename": "/data/era5/t850_2022_07.nc",
+                "output_filename": "/data/era5/t850_2022_jja.nc",
                 "area": "<inferred>"
               },
-              "comment": "Downloads ERA5 monthly mean 850 hPa temperature for July 2022"
+              "comment": "Single multi-month request for June, July, August 2022"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/t850_2022_jja.nc"
+              },
+              "comment": "Verify the time dimension has 3 monthly steps before comparing months"
             }
           ]
         }
@@ -8208,11 +8228,11 @@
     },
     {
       "task_ID": "TASK_260713_000071_500050",
-      "task_text": "Download ERA5 monthly mean U-component of wind at 250 hPa for December 2021 to study jet stream positioning over North Atlantic.",
+      "task_text": "I want to examine the winter jet stream over the North Atlantic. Retrieve the ERA5 monthly mean U-component of wind at 250 hPa for December 2021 and summarize the dominant upper-level wind patterns.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_pressure_levels for u_component_of_wind at 250 hPa.",
+      "reference_solution_description": "Step 1: fetch_era5_pressure_levels for u_component_of_wind at 250 hPa. Step 2: inspect_netcdf to ground the jet-stream summary in the actual file.",
       "reference_solutions": [
         {
           "steps": [
@@ -8227,6 +8247,13 @@
                 "area": "<inferred>"
               },
               "comment": "Downloads ERA5 monthly mean u-wind at 250 hPa for December 2021"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/u250_2021_12.nc"
+              },
+              "comment": "Inspect before summarizing upper-level wind patterns"
             }
           ]
         }
@@ -8285,20 +8312,20 @@
     },
     {
       "task_ID": "TASK_260713_000073_500052",
-      "task_text": "Search the EOPSS knowledge base for ESA science strategy content about atmospheric dynamics. Based on the identified science objectives, download a relevant ERA5 pressure-level variable to illustrate atmospheric dynamics over an appropriate region.",
+      "task_text": "Search the EOSS knowledge base for ESA science strategy content about atmospheric dynamics. Based on the identified science objectives, download a relevant ERA5 pressure-level variable to illustrate atmospheric dynamics over an appropriate region.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: search_eopss for atmospheric dynamics context. Step 2: fetch_era5_pressure_levels for relative vorticity at 500 hPa.",
+      "reference_solution_description": "Step 1: search_eoss for atmospheric dynamics context. Step 2: fetch_era5_pressure_levels for relative vorticity at 500 hPa.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "atmospheric dynamics weather prediction science questions"
               },
-              "comment": "Retrieve EOPSS strategy context about atmospheric dynamics"
+              "comment": "Retrieve EOSS strategy context about atmospheric dynamics"
             },
             {
               "function_name": "fetch_era5_pressure_levels",
@@ -8416,11 +8443,11 @@
     },
     {
       "task_ID": "TASK_260713_000077_500056",
-      "task_text": "Download ERA5 monthly mean 2-metre temperature for July 2021 to analyse the summer heat anomaly over Europe.",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2021. Identify the warmest regions and summarize the overall temperature pattern across the continent.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_single_levels with variable='2m_temperature', year='2021', month='07'.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='2m_temperature'. Step 2: inspect_netcdf to ground the temperature-pattern description.",
       "reference_solutions": [
         {
           "steps": [
@@ -8434,6 +8461,13 @@
                 "area": "<inferred>"
               },
               "comment": "Downloads ERA5 monthly mean 2m temperature for July 2021"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/t2m_2021_07.nc"
+              },
+              "comment": "Inspect before identifying warmest regions"
             }
           ]
         }
@@ -8450,11 +8484,11 @@
     },
     {
       "task_ID": "TASK_260713_000078_500057",
-      "task_text": "Download ERA5 monthly mean total precipitation for January 2023 to study winter rainfall patterns over Europe.",
+      "task_text": "Retrieve ERA5 monthly mean total precipitation over Europe for January 2023. Describe the spatial distribution of winter rainfall patterns and identify regions with the highest precipitation.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_single_levels with variable='total_precipitation' for January 2023.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='total_precipitation'. Step 2: inspect_netcdf to ground the rainfall-pattern description.",
       "reference_solutions": [
         {
           "steps": [
@@ -8468,6 +8502,13 @@
                 "area": "<inferred>"
               },
               "comment": "Downloads ERA5 monthly mean total precipitation for January 2023"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/tp_2023_01.nc"
+              },
+              "comment": "Inspect before describing winter rainfall distribution"
             }
           ]
         }
@@ -8484,11 +8525,11 @@
     },
     {
       "task_ID": "TASK_260713_000079_500058",
-      "task_text": "Download ERA5 monthly mean sea surface temperature for August 2022 to investigate North Atlantic SST anomalies.",
+      "task_text": "Retrieve ERA5 monthly mean sea surface temperature over the North Atlantic for August 2022. Describe the spatial distribution of SST and identify regions with relatively warmer and cooler ocean conditions.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_single_levels with variable='sea_surface_temperature' for August 2022.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='sea_surface_temperature'. Step 2: inspect_netcdf to ground the SST-pattern description.",
       "reference_solutions": [
         {
           "steps": [
@@ -8502,6 +8543,13 @@
                 "area": "<inferred>"
               },
               "comment": "Downloads ERA5 monthly mean sea surface temperature for August 2022"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "/data/era5/sst_2022_08.nc"
+              },
+              "comment": "Inspect before describing SST spatial pattern"
             }
           ]
         }
@@ -8559,20 +8607,20 @@
     },
     {
       "task_ID": "TASK_260713_000081_500060",
-      "task_text": "Search the EOPSS knowledge base for content on extreme heat events in the ESA science strategy, then download ERA5 2-metre temperature for July 2022 to contextualise the European heatwave over Mediterranean.",
+      "task_text": "Search the EOSS knowledge base for content on extreme heat events in the ESA science strategy, then download ERA5 2-metre temperature for July 2022 to contextualise the European heatwave over Mediterranean.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: search_eopss for extreme heat events. Step 2: fetch_era5_single_levels for 2m temperature in July 2022.",
+      "reference_solution_description": "Step 1: search_eoss for extreme heat events. Step 2: fetch_era5_single_levels for 2m temperature in July 2022.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "question": "extreme heat events Earth observation science strategy"
               },
-              "comment": "Retrieve EOPSS context on monitoring extreme heat"
+              "comment": "Retrieve EOSS context on monitoring extreme heat"
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -8942,16 +8990,16 @@
     },
     {
       "task_ID": "TASK_260713_000009_600009",
-      "task_text": "Search the EOPSS knowledge base for ESA mission objectives related to upper-tropospheric wind monitoring. Using the relevant science objectives as context, download ERA5 u-component of wind at 250 hPa for a winter month over the North Atlantic jet-stream corridor.",
+      "task_text": "Search the EOSS knowledge base for ESA mission objectives related to upper-tropospheric wind monitoring. Using the relevant science objectives as context, download ERA5 u-component of wind at 250 hPa for a winter month over the North Atlantic jet-stream corridor.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eopss for upper-tropospheric wind, then list_era5_pressure_level_variables to confirm 'u_component_of_wind', then fetch_era5_pressure_levels at 250 hPa.",
+      "reference_solution_description": "search_eoss for upper-tropospheric wind, then list_era5_pressure_level_variables to confirm 'u_component_of_wind', then fetch_era5_pressure_levels at 250 hPa.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "query": "upper troposphere wind jet stream monitoring"
               },
@@ -9142,11 +9190,11 @@
     },
     {
       "task_ID": "TASK_260713_000016_600016",
-      "task_text": "Download hourly ERA5 total precipitation for all of August 2021 over Europe.",
+      "task_text": "Retrieve hourly ERA5 total precipitation over Europe for August 2021. Aggregate the hourly data to monthly totals and describe the main rainfall patterns across Europe.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='total_precipitation', year='2021', month='08', days='all', times='all'.",
+      "reference_solution_description": "Step 1: fetch_era5_hourly_single_levels for total_precipitation, all days/hours of August 2021. Step 2: resample_temporal with freq='ME', method='sum' to aggregate hourly precipitation to monthly totals (precipitation aggregates by summing, not averaging).",
       "reference_solutions": [
         {
           "steps": [
@@ -9160,6 +9208,17 @@
                 "area": "<inferred>"
               },
               "comment": "Download all hours and days for August 2021"
+            },
+            {
+              "function_name": "resample_temporal",
+              "arguments": {
+                "input_filepath": "data/tp_hourly_aug2021.nc",
+                "output_filepath": "data/tp_monthly_aug2021.nc",
+                "freq": "ME",
+                "method": "sum",
+                "variable": "tp"
+              },
+              "comment": "Aggregate hourly precipitation to a monthly total via summation"
             }
           ]
         }
@@ -9176,11 +9235,11 @@
     },
     {
       "task_ID": "TASK_260713_000017_600017",
-      "task_text": "Download hourly ERA5 2 m temperature over Europe for 10–15 January 2023, retrieving only the 00:00 and 12:00 UTC time steps.",
+      "task_text": "Download ERA5 2 m temperature over Europe for 10–15 January 2023 at 00:00 and 12:00 UTC only. Calculate the mean temperature over the period and describe the spatial distribution of average conditions.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='2m_temperature', the six-day date range, times=['00:00','12:00'], and an area covering Europe.",
+      "reference_solution_description": "Step 1: fetch_era5_hourly_single_levels subset to days 10-15 and times 00:00/12:00. Step 2: resample_temporal with freq='6D', method='mean' — with pandas' default origin at the first timestamp's day, a 6-day bucket exactly collapses the entire requested window into one time-mean map.",
       "reference_solutions": [
         {
           "steps": [
@@ -9206,6 +9265,17 @@
                 "area": "<inferred>"
               },
               "comment": "Subset to specific days and synoptic hours"
+            },
+            {
+              "function_name": "resample_temporal",
+              "arguments": {
+                "input_filepath": "data/t2m_6days_jan2023.nc",
+                "output_filepath": "data/t2m_mean_jan2023.nc",
+                "freq": "6D",
+                "method": "mean",
+                "variable": "t2m"
+              },
+              "comment": "Collapse the 6-day/2x-daily subset into a single period-mean map"
             }
           ]
         }
@@ -9222,11 +9292,11 @@
     },
     {
       "task_ID": "TASK_260713_000018_600018",
-      "task_text": "Download hourly ERA5 10 m u-component of wind over the Mediterranean region for June 2020.",
+      "task_text": "Download hourly ERA5 10 m u-component of wind over the Mediterranean region for June 2020. Identify periods and locations with unusually strong zonal winds during the month.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels with variable='10m_u_component_of_wind', month='06', year='2020', and an area covering the Mediterranean.",
+      "reference_solution_description": "Step 1: fetch_era5_hourly_single_levels with variable='10m_u_component_of_wind' over the Mediterranean. Step 2: inspect_netcdf to ground the search for anomalously strong zonal wind periods/locations.",
       "reference_solutions": [
         {
           "steps": [
@@ -9240,6 +9310,13 @@
                 "area": "<inferred>"
               },
               "comment": "Clip to Mediterranean at download time"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "data/u10_med_jun2020.nc"
+              },
+              "comment": "Inspect before identifying periods/locations of unusually strong zonal wind"
             }
           ]
         }
@@ -9405,11 +9482,11 @@
     },
     {
       "task_ID": "TASK_260713_000024_600024",
-      "task_text": "Download hourly ERA5 geopotential at 500 hPa over Europe for 15 January 2023.",
+      "task_text": "Retrieve hourly ERA5 geopotential at 500 hPa over Europe for 15 January 2023. Analyse how the mid-tropospheric circulation evolves throughout the day.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_pressure_levels with variable='geopotential', pressure_level='500', the single-day date, and an area covering Europe.",
+      "reference_solution_description": "Step 1: fetch_era5_hourly_pressure_levels for geopotential at 500 hPa, single day (all 24 hourly steps by default). Step 2: inspect_netcdf to confirm the hourly time dimension before describing the diurnal evolution.",
       "reference_solutions": [
         {
           "steps": [
@@ -9427,6 +9504,13 @@
                 "area": "<inferred>"
               },
               "comment": "Single-day hourly geopotential at 500 hPa"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "data/z500_20230115.nc"
+              },
+              "comment": "Verify the 24 hourly steps before describing diurnal evolution"
             }
           ]
         }
@@ -9443,11 +9527,11 @@
     },
     {
       "task_ID": "TASK_260713_000025_600025",
-      "task_text": "Download hourly ERA5 temperature at 850 hPa for December 2022 at 00:00 and 12:00 UTC over the North Atlantic.",
+      "task_text": "Retrieve hourly ERA5 temperature at 850 hPa over the North Atlantic for December 2022, using only the 00:00 and 12:00 UTC time steps. Describe the spatial distribution of lower-tropospheric temperatures and identify regions with the warmest and coldest air masses.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_hourly_pressure_levels with times=['00:00','12:00'] and area=[70,-60,30,0].",
+      "reference_solution_description": "Step 1: fetch_era5_hourly_pressure_levels with times=['00:00','12:00']. Step 2: inspect_netcdf to ground the description of warmest/coldest air masses.",
       "reference_solutions": [
         {
           "steps": [
@@ -9466,6 +9550,13 @@
                 "area": "<inferred>"
               },
               "comment": "Synoptic-hour temperature at 850 hPa over North Atlantic"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "data/t850_natl_dec2022.nc"
+              },
+              "comment": "Inspect before identifying warmest/coldest air masses"
             }
           ]
         }
@@ -9482,11 +9573,11 @@
     },
     {
       "task_ID": "TASK_260713_000026_600026",
-      "task_text": "Download hourly ERA5 u-component and v-component of wind at 250 hPa for January 2023 over the Northern Hemisphere.",
+      "task_text": "Retrieve hourly ERA5 u-component and v-component of wind at 250 hPa over the Northern Hemisphere for January 2023. Calculate the wind speed and describe the location and evolution of the main jet stream features during the month.",
       "task_labels": [
-        "Tool Grounding"
+        "Sequential Reasoning"
       ],
-      "reference_solution_description": "Two calls to fetch_era5_hourly_pressure_levels, one per wind component, or a single call if the tool accepts a list for variable (it doesn't; call twice).",
+      "reference_solution_description": "Step 1 & 2: fetch_era5_hourly_pressure_levels once per component (u_component_of_wind, v_component_of_wind — the tool accepts one variable per call). Step 3: compute_wind_speed to combine the two files into a wind speed magnitude field for jet-stream analysis.",
       "reference_solutions": [
         {
           "steps": [
@@ -9513,6 +9604,15 @@
                 "area": "<inferred>"
               },
               "comment": "Download meridional wind at 250 hPa"
+            },
+            {
+              "function_name": "compute_wind_speed",
+              "arguments": {
+                "u_filepath": "data/u250_nh_jan2023.nc",
+                "v_filepath": "data/v250_nh_jan2023.nc",
+                "output_filepath": "data/windspeed250_nh_jan2023.nc"
+              },
+              "comment": "Combine u/v components into wind speed magnitude to locate the jet stream core"
             }
           ]
         }
@@ -9621,16 +9721,16 @@
     },
     {
       "task_ID": "TASK_260713_000029_600029",
-      "task_text": "Query the EOPSS knowledge base for ESA mission objectives related to atmospheric thermodynamic profiling. Based on the target atmospheric layers identified, download hourly ERA5 temperature at the relevant pressure levels to contextualise the mission science.",
+      "task_text": "Query the EOSS knowledge base for ESA mission objectives related to atmospheric thermodynamic profiling. Based on the target atmospheric layers identified, download hourly ERA5 temperature at the relevant pressure levels to contextualise the mission science.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eopss for atmospheric sounding, then two calls to fetch_era5_hourly_pressure_levels at 500 and 850 hPa.",
+      "reference_solution_description": "search_eoss for atmospheric sounding, then two calls to fetch_era5_hourly_pressure_levels at 500 and 850 hPa.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "query": "atmospheric thermodynamic profiling sounding"
               },
@@ -10271,16 +10371,16 @@
     },
     {
       "task_ID": "TASK_260713_000046_600046",
-      "task_text": "Use the EOPSS knowledge base to identify ESA missions monitoring the hydrological cycle. Based on a notable recent drought event in the knowledge base, download ERA5 daily total precipitation for the affected region and the drought months.",
+      "task_text": "Use the EOSS knowledge base to identify ESA missions monitoring the hydrological cycle. Based on a notable recent drought event in the knowledge base, download ERA5 daily total precipitation for the affected region and the drought months.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eopss for hydrological cycle, then three calls to fetch_era5_daily_statistics (one per month) over the Horn of Africa.",
+      "reference_solution_description": "search_eoss for hydrological cycle, then three calls to fetch_era5_daily_statistics (one per month) over the Horn of Africa.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "query": "hydrological cycle water monitoring precipitation"
               },
@@ -10552,16 +10652,16 @@
     },
     {
       "task_ID": "TASK_260713_000051_600051",
-      "task_text": "Search the EOPSS knowledge base for ESA activities related to climate change monitoring. Then use fetch_cds_dataset to download CMIP6 near-surface air temperature projections under the SSP2-4.5 scenario for 2040-2060.",
+      "task_text": "Search the EOSS knowledge base for ESA activities related to climate change monitoring. Then download CMIP6 near-surface air temperature projections under the SSP2-4.5 scenario for 2040-2060.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eopss for climate change activities, then fetch_cds_dataset for CMIP6 projections.",
+      "reference_solution_description": "search_eoss for climate change activities, then fetch_cds_dataset for CMIP6 projections.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "query": "climate change monitoring long-term projections"
               },
@@ -11935,16 +12035,16 @@
     },
     {
       "task_ID": "TASK_260713_000087_600087",
-      "task_text": "Query the EOPSS knowledge base for ESA monitoring activities related to the 2022 Pakistan floods. Based on the event geography and peak flood period identified, download ERA5 daily precipitation for Pakistan, convert to daily totals, and clip to the most-affected region.",
+      "task_text": "Query the EOSS knowledge base for ESA monitoring activities related to the 2022 Pakistan floods. Based on the event geography and peak flood period identified, download ERA5 daily precipitation for Pakistan, convert to daily totals, and clip to the most-affected region.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eopss for Pakistan floods, then fetch_era5_daily_statistics → clip_to_bbox.",
+      "reference_solution_description": "search_eoss for Pakistan floods, then fetch_era5_daily_statistics → clip_to_bbox.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eopss",
+              "function_name": "search_eoss",
               "arguments": {
                 "query": "Pakistan floods 2022 disaster monitoring"
               },
@@ -12279,6 +12379,246 @@
                 "preset": "no2"
               },
               "comment": "Download S5P NO₂ map during COVID-19 lockdown"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260715_000001_700010",
+      "task_text": "Assess offshore wind resource potential over the North Sea by retrieving ERA5 monthly mean 10-metre u-component and v-component of wind for March 2023, then calculate the wind speed.",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Step 1 & 2: fetch_era5_single_levels once per component (10m_u_component_of_wind, 10m_v_component_of_wind — the tool accepts one variable per call). Step 3: compute_wind_speed to combine them into a monthly-mean surface wind speed field for wind-resource assessment.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "fetch_era5_single_levels",
+              "arguments": {
+                "variable": "10m_u_component_of_wind",
+                "year": "2023",
+                "month": "03",
+                "output_filename": "/data/era5/u10_northsea_2023_03.nc",
+                "area": "<inferred>"
+              },
+              "comment": "Download monthly mean 10m zonal wind for March 2023"
+            },
+            {
+              "function_name": "fetch_era5_single_levels",
+              "arguments": {
+                "variable": "10m_v_component_of_wind",
+                "year": "2023",
+                "month": "03",
+                "output_filename": "/data/era5/v10_northsea_2023_03.nc",
+                "area": "<inferred>"
+              },
+              "comment": "Download monthly mean 10m meridional wind for March 2023"
+            },
+            {
+              "function_name": "compute_wind_speed",
+              "arguments": {
+                "u_filepath": "/data/era5/u10_northsea_2023_03.nc",
+                "v_filepath": "/data/era5/v10_northsea_2023_03.nc",
+                "output_filepath": "/data/era5/windspeed10_northsea_2023_03.nc"
+              },
+              "comment": "Combine 10m u/v components into surface wind speed for resource assessment"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260715_000002_700011",
+      "task_text": "Search the EOSS knowledge base for ESA strategy content about wind energy and atmospheric monitoring. Based on the region of interest identified, download ERA5 monthly mean u-component and v-component of wind at 850 hPa for that period and calculate the wind speed to characterize the low-level wind field.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Step 1: search_eoss on eoss_graphrag for wind energy / atmospheric monitoring context. Steps 2 & 3: fetch_era5_pressure_levels once per component at 850 hPa (one variable per call). Step 4: compute_wind_speed to combine them into a low-level wind speed field.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_eoss",
+              "arguments": {
+                "question": "wind energy atmospheric monitoring Earth observation ESA Science Strategy"
+              },
+              "comment": "Find ESA strategy context on wind energy monitoring"
+            },
+            {
+              "function_name": "fetch_era5_pressure_levels",
+              "arguments": {
+                "variable": "u_component_of_wind",
+                "pressure_level": 850,
+                "year": "2023",
+                "month": "03",
+                "output_filename": "/data/era5/u850_windenergy_2023_03.nc",
+                "area": "<inferred>"
+              },
+              "comment": "Download 850 hPa zonal wind for the identified region/period"
+            },
+            {
+              "function_name": "fetch_era5_pressure_levels",
+              "arguments": {
+                "variable": "v_component_of_wind",
+                "pressure_level": 850,
+                "year": "2023",
+                "month": "03",
+                "output_filename": "/data/era5/v850_windenergy_2023_03.nc",
+                "area": "<inferred>"
+              },
+              "comment": "Download 850 hPa meridional wind for the identified region/period"
+            },
+            {
+              "function_name": "compute_wind_speed",
+              "arguments": {
+                "u_filepath": "/data/era5/u850_windenergy_2023_03.nc",
+                "v_filepath": "/data/era5/v850_windenergy_2023_03.nc",
+                "output_filepath": "/data/era5/windspeed850_windenergy_2023_03.nc"
+              },
+              "comment": "Combine 850 hPa u/v components into low-level wind speed"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {}
+    },
+    {
+      "task_ID": "TASK_260715_000003_700012",
+      "task_text": "Search the EO Dashboard for a narrative about flooding. Identify the referenced STAC collections, retrieve sample data items from one collection, and download Sentinel-1 SAR images of the affected area before and after the flood event. Analyse changes in radar backscatter to identify newly inundated areas and describe the spatial extent of flooding.",
+      "task_labels": [
+        "Cross-agent Synthesis"
+      ],
+      "reference_solution_description": "Search EO Dashboard for flood narratives, get STAC collections and sample items, geocode the affected area (Sindh, Pakistan — 2022 monsoon floods), then download two Sentinel-1 GRD SAR images (VV/VH pseudo-RGB): pre-flood (June 2022) and post-flood (Aug–Sep 2022 peak inundation). Compare backscatter between the two images — standing water typically appears as smooth, low-backscatter (dark) regions in VV — to identify newly inundated areas and describe the flood extent.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "flood"
+              },
+              "comment": "Find flood narratives via keyword 'flood'"
+            },
+            {
+              "function_name": "get_narrative_indicators",
+              "arguments": {
+                "narrative_title": "<any matching narrative title>"
+              },
+              "comment": "Get STAC collection codes"
+            },
+            {
+              "function_name": "get_collection_items",
+              "arguments": {
+                "collection_code": "<inferred>",
+                "limit": 5
+              },
+              "comment": "Retrieve sample items"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Sindh, Pakistan"
+              }
+            },
+            {
+              "function_name": "fetch_sentinel1_grd",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2022-06-01",
+                "end_date": "2022-06-30",
+                "preset": "vv_vh_rgb"
+              },
+              "comment": "Pre-flood SAR backscatter baseline"
+            },
+            {
+              "function_name": "fetch_sentinel1_grd",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2022-08-15",
+                "end_date": "2022-09-15",
+                "preset": "vv_vh_rgb"
+              },
+              "comment": "Post-flood SAR backscatter for inundation comparison"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "flooding"
+              },
+              "comment": "Find flood narratives via keyword 'flooding'"
+            },
+            {
+              "function_name": "get_narrative_indicators",
+              "arguments": {
+                "narrative_title": "<any matching narrative title>"
+              },
+              "comment": "Get STAC collection codes"
+            },
+            {
+              "function_name": "get_collection_items",
+              "arguments": {
+                "collection_code": "<inferred>",
+                "limit": 5
+              },
+              "comment": "Retrieve sample items"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Sindh, Pakistan"
+              }
+            },
+            {
+              "function_name": "fetch_sentinel1_grd",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2022-06-01",
+                "end_date": "2022-06-30",
+                "preset": "vv_vh_rgb"
+              },
+              "comment": "Pre-flood SAR backscatter baseline"
+            },
+            {
+              "function_name": "fetch_sentinel1_grd",
+              "arguments": {
+                "bbox": "<inferred from geocode_place>",
+                "start_date": "2022-08-15",
+                "end_date": "2022-09-15",
+                "preset": "vv_vh_rgb"
+              },
+              "comment": "Post-flood SAR backscatter for inundation comparison"
             }
           ]
         }

@@ -401,13 +401,16 @@ async def inspect_netcdf(filepath: str) -> str:
 # ---------------------------------------------------------------------------
 
 @mcp.tool
-async def fetch_era5_single_levels(variable: str, year: str, month: str, output_filename: str) -> str:
+async def fetch_era5_single_levels(
+    variable: str, year: str, month: Union[str, List[str]], output_filename: str
+) -> str:
     """
     Downloads ERA5 monthly mean surface data (product: monthly_averaged_reanalysis).
 
     :param variable: The surface variable (e.g., '2m_temperature'). Use list_era5_single_level_variables() for valid names.
     :param year: The year for the data (e.g., '2023').
-    :param month: The month for the data (e.g., '01', '12').
+    :param month: The month(s) for the data (e.g., '01', '12', or ['06', '07', '08'] to fetch
+        multiple months in a single request instead of one call per month).
     :param output_filename: The local filename for the downloaded data (e.g., 'data/2m_temp_2023_01.nc').
     """
     request = {
@@ -426,7 +429,7 @@ async def fetch_era5_pressure_levels(
     variable: str,
     pressure_level: int,
     year: Union[str, List[str]],
-    month: str,
+    month: Union[str, List[str]],
     output_filename: str,
 ) -> str:
     """
@@ -435,7 +438,8 @@ async def fetch_era5_pressure_levels(
     :param variable: The variable (e.g., 'geopotential', 'temperature'). Use list_era5_pressure_level_variables() for valid names.
     :param pressure_level: The pressure level in hPa (e.g., 500, 850, 1000).
     :param year: The year(s) for the data (e.g., '2023' or ['2021', '2022', '2023']).
-    :param month: The month for the data (e.g., '01', '12').
+    :param month: The month(s) for the data (e.g., '01', '12', or ['06', '07', '08'] to fetch
+        multiple months in a single request instead of one call per month).
     :param output_filename: The local filename for the downloaded data.
     """
     request = {
@@ -863,6 +867,59 @@ async def clip_to_bbox(
             )
         except Exception as e:
             return f"Error during spatial clip: {e}"
+
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, _sync)
+
+
+@mcp.tool
+async def compute_wind_speed(
+    u_filepath: str,
+    v_filepath: str,
+    output_filepath: str,
+    u_variable: Optional[str] = None,
+    v_variable: Optional[str] = None,
+) -> str:
+    """
+    Computes wind speed magnitude (sqrt(u^2 + v^2)) from separate u- and v-component
+    NetCDF files and writes a new NetCDF file containing a 'wind_speed' variable.
+    fetch_era5_* tools only accept one variable per call, so fetch u_component_of_wind
+    and v_component_of_wind (or their 10m surface equivalents) separately first, then
+    combine them here.
+
+    :param u_filepath: Path to the NetCDF file containing the u-component (zonal wind).
+    :param v_filepath: Path to the NetCDF file containing the v-component (meridional wind).
+    :param output_filepath: Path to write the output NetCDF file with the computed wind_speed variable.
+    :param u_variable: Name of the u-component variable in u_filepath. If omitted, the first data variable is used.
+    :param v_variable: Name of the v-component variable in v_filepath. If omitted, the first data variable is used.
+    """
+    def _sync():
+        try:
+            if not Path(u_filepath).exists():
+                return f"Error: File not found at '{u_filepath}'"
+            if not Path(v_filepath).exists():
+                return f"Error: File not found at '{v_filepath}'"
+            with xr.open_dataset(u_filepath) as ds_u, xr.open_dataset(v_filepath) as ds_v:
+                u_name = u_variable or list(ds_u.data_vars)[0]
+                v_name = v_variable or list(ds_v.data_vars)[0]
+                if u_name not in ds_u.data_vars:
+                    return f"Error: variable '{u_name}' not found in u_filepath. Available: {list(ds_u.data_vars)}"
+                if v_name not in ds_v.data_vars:
+                    return f"Error: variable '{v_name}' not found in v_filepath. Available: {list(ds_v.data_vars)}"
+                u = ds_u[u_name]
+                v = ds_v[v_name]
+                wind_speed = (u ** 2 + v ** 2) ** 0.5
+                wind_speed.name = "wind_speed"
+                wind_speed.attrs["units"] = u.attrs.get("units", "m s**-1")
+                wind_speed.attrs["long_name"] = "wind speed"
+                wind_speed.to_dataset().to_netcdf(output_filepath)
+                dims = dict(wind_speed.sizes)
+            return (
+                f"Computed wind speed from '{u_name}' ({u_filepath}) and '{v_name}' ({v_filepath}), "
+                f"saved to '{output_filepath}'.\nDimensions: {dims}"
+            )
+        except Exception as e:
+            return f"Error computing wind speed: {e}"
 
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _sync)

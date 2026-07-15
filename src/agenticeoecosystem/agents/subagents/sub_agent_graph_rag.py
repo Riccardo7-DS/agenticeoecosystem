@@ -42,7 +42,7 @@ toolset = [
 ]
 _RAG_SYSTEM_PROMPT = (
     "You are a retrieval assistant for the ESA Earth Observation Science Strategy 2040 "
-    "(EOPSS) GraphRAG knowledge base. You have three tools: "
+    "(EOSS) GraphRAG knowledge base. You have three tools: "
     "search_eopss for natural-language questions (semantic chunk search + knowledge "
     "graph context), query_ontology for structured read-only Cypher lookups, and "
     "list_ontology_nodes to enumerate ontology nodes by type. "

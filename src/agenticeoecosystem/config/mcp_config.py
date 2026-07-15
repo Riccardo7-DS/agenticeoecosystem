@@ -38,7 +38,7 @@ def _check_geos_ops_env() -> None:
 
 
 def _check_eoss_graphrag_env() -> None:
-    """Raise RuntimeError if EOPSS GraphRAG connection details are missing."""
+    """Raise RuntimeError if EOSS GraphRAG connection details are missing."""
     missing = [v for v in ("GRAPHRAG_MCP_URL", "GRAPHRAG_AUTH_HEADER") if not os.getenv(v)]
     if missing:
         raise RuntimeError(f"eoss_graphrag env vars not set: {', '.join(missing)} (check .env)")

@@ -15,20 +15,23 @@ The skill helper script lives at `~/.claude/skills/eomcpevaluation/scripts/analy
 
 ## Step 1 — Inventory all MCP servers
 
-Read `src/agenticeoecosystem/config/mcp_config.py`. Extract every key registered inside `get_mcp_servers()` — these are the canonical server names.
+Read `src/agenticeoecosystem/config/mcp_config.py`. Extract every key registered inside `get_mcp_servers()` — but this function is **not the complete picture**: some servers are wired up per-agent instead (see note below). Cross-check against `src/agenticeoecosystem/agents/subagents/*.py` for any MCP server a subagent connects to that isn't in `get_mcp_servers()`.
 
 For each server that has a local Python file, read that file and extract the tools:
 
-| Server key       | Server file (relative to project root)                                          |
-|------------------|---------------------------------------------------------------------------------|
-| eodashboard      | `src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py`             |
-| gee-mcp          | `src/agenticeoecosystem/servers/gee/server.py`                                 |
-| hybridrag        | `src/agenticeoecosystem/servers/hybridrag/server.py`                           |
-| moocs            | `src/agenticeoecosystem/servers/moocs/server.py`                               |
+| Server key       | Server file (relative to project root)                                          | Notes |
+|------------------|---------------------------------------------------------------------------------|-------|
+| eodashboard      | `src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py`             | registered in `get_mcp_servers()` |
+| gee-mcp          | `src/agenticeoecosystem/servers/gee/server.py`                                 | registered in `get_mcp_servers()` |
+| moocs            | `src/agenticeoecosystem/servers/moocs/server.py`                               | registered in `get_mcp_servers()` |
+| geos_ops         | `src/agenticeoecosystem/servers/eumetsat/server.py`                            | registered in `get_mcp_servers()`; folder is `eumetsat`, FastMCP app name is `"eumetsat-mcp"`, config key is `geos_ops` |
+| climate          | `src/agenticeoecosystem/servers/climate/server.py`                             | registered in `get_mcp_servers()` |
+| eoss_graphrag    | `src/eoss_graphrag/05_mcp_server.py`                                           | registered in `get_mcp_servers()` as `transport: streamable_http` (remote). Source lives in a separate GitLab repo checked out at `src/eoss_graphrag/` — it has its own nested `.git` and is excluded via this repo's `.gitignore` (`src/eoss_graphrag/`), but is present on disk and readable for inventory purposes. |
+| cdse             | `src/agenticeoecosystem/servers/cdse_geocode/server.py`                        | **not present in `get_mcp_servers()`** — wired independently in `src/agenticeoecosystem/agents/subagents/sub_agent_cdse.py`, which builds its own `McpToolset` pointing at this file. Still an active, benchmarked server — just registered outside the shared config. |
 
 For third-party servers (`arxiv-mcp-server`, `gis-mcp`, `eve_retrieval`) note the server name but do not try to read their tool list — just record them as "external".
 
-From each server file, collect every `@mcp.tool()`-decorated function: its **exact name** (as Python defines it), its parameter names and types, and the first line of its docstring.
+From each server file, collect every `@mcp.tool(...)`-decorated function's **MCP-registered name** — this is the Python function name *unless* the decorator passes a `name=` kwarg, in which case that overrides it (e.g. `cdse_geocode/server.py` defines `def tool_sentinel1_grd(...)` under `@mcp.tool(name="fetch_sentinel1_grd", ...)`; the registered tool name is `fetch_sentinel1_grd`, not `tool_sentinel1_grd`). Also collect parameter names/types and the first line of the docstring/description.
 
 Build an inventory table:
 ```
@@ -198,8 +201,11 @@ Do **not** modify existing tasks (do not fix `mooc_search` → `search_moocs` in
 |----------------|----------------------------------------------------------------------------------------------------|
 | eodashboard    | list_narratives, search_narratives, get_narrative_content, list_themes, get_narrative_indicators, search_collections, get_collection_items, find_narratives_for_indicator |
 | gee-mcp        | get_lat_lon, download_satellite_image                                                              |
-| hybridrag      | hybrid_rag_retrieve                                                                                |
 | moocs          | search_moocs                                                                                       |
+| geos_ops       | list_eumetsat_products, search_eumetsat_products, download_eumetsat_product                        |
+| climate        | list_era5_single_level_variables, list_era5_pressure_level_variables, list_cds_datasets, inspect_netcdf, fetch_era5_single_levels, fetch_era5_pressure_levels, fetch_era5_hourly_single_levels, fetch_era5_hourly_pressure_levels, fetch_era5_land, fetch_era5_daily_statistics, fetch_cds_dataset, convert_hourly_to_daily, convert_daily_to_monthly, resample_temporal, convert_units, clip_to_bbox |
+| eoss_graphrag  | search_eopss, query_ontology, list_ontology_nodes (remote; source in separate `src/eoss_graphrag/` repo) |
+| cdse           | fetch_sentinel1_grd, fetch_sentinel2, fetch_sentinel3_olci, fetch_sentinel3_slstr, fetch_sentinel3_syn_l2, fetch_sentinel5p_l2, fetch_landsat_ot_l1, fetch_dem, geocode_place, reverse_geocode_place (not in `get_mcp_servers()` — see Step 1 note) |
 | arxiv-mcp-server | search_papers, download_paper, read_paper, get_abstract, citation_graph, semantic_search, list_papers (external) |
 | gis-mcp        | metadata_raster, raster_band_statistics, compute_s2_ndvi, compute_ndvi, reproject_raster, clip_raster_with_shapefile, transform_coordinates, get_utm_crs, get_utm_zone, calculate_geodetic_distance, buffer, calculate_geodetic_area, sjoin_gpd, point_in_polygon, raster_histogram, create_map, zonal_statistics (external) |
 | eve_retrieval  | (external — HTTP — EVE knowledge base retrieval; tools not yet inventoried)                       |

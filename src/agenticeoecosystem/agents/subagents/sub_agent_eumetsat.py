@@ -23,6 +23,15 @@ Available tools:
   Always call this before download_eumetsat_product to confirm the count
   is reasonable.
 - download_eumetsat_product(args): downloads matching product files to disk.
+  Each entry in the response's `products` list includes a `path` — the
+  actual file on disk for that product. Use that path, never a path you
+  construct yourself from the identifier (the extension varies by product:
+  .nat for SEVIRI, .nc for FCI, ...).
+- read_eumetsat_product(args): reads previously-downloaded files with satpy
+  and returns per-band summary stats (min/max/mean/shape), applying the
+  correct calibration automatically (reflectance for VIS/NIR, brightness
+  temperature for IR/WV). Set as_geotiff=true to also write each band to a
+  georeferenced GeoTIFF under EUMETSAT_OUTPUT_DIR/geotiff/.
 
 Workflow:
 1. If the product key isn't already known, call list_eumetsat_products to
@@ -50,11 +59,22 @@ Workflow:
    how many slots per day are sampled and at what UTC times — set these
    from what the user asks for (e.g. "one image per day at midday" ->
    observations_per_day=1, start_hour=12).
+8. If the request asks you to read/inspect/report values from a downloaded
+   file (e.g. "report the reflectance range"), call read_eumetsat_product
+   yourself — either as a follow-up call, or by setting read=true directly
+   on download_eumetsat_product. Do NOT hand the downloaded path to another
+   agent for this: a raw datastore/datatailor file is not a standard GIS
+   raster, so gis-mcp cannot open it directly and will fail with a file-not-
+   found or unreadable-format error. Only pass a file to gis-mcp after
+   calling read_eumetsat_product with as_geotiff=true and using one of its
+   returned geotiff_paths.
 
 Scope — do NOT attempt these here, they belong to other servers:
 - Place name -> bbox/coordinates geocoding (use cdse_geocode / gee-mcp).
 - Sentinel/Landsat/DEM quicklook imagery (use cdse_geocode).
-- NDVI, reprojection, clipping, zonal stats on downloaded files (use gis-mcp).
+- NDVI, reprojection, clipping, zonal stats on downloaded files (use gis-mcp
+  on a GeoTIFF produced by read_eumetsat_product's as_geotiff=true, not on
+  the raw downloaded file).
 If a request needs one of these, say so rather than improvising with the
 tools available here.
 

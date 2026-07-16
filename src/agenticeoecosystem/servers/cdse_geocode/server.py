@@ -58,6 +58,8 @@ from helper import (
     fetch_dem,
 )
 
+from agenticeoecosystem.definitions import ROOT_DIR
+
 load_dotenv()
 
 logging.basicConfig(
@@ -87,7 +89,9 @@ mcp = FastMCP(
 # Output directory / default save-path handling
 # ---------------------------------------------------------------------------
 
-OUTPUT_DIR = pathlib.Path(os.environ.get("CDSE_OUTPUT_DIR", "./sentinel_output"))
+OUTPUT_DIR = pathlib.Path(
+    os.environ.get("CDSE_OUTPUT_DIR", str(ROOT_DIR / "output" / "cdse_geocode"))
+)
 
 
 def _default_save_path(collection: str, ext: str = "jpg") -> str:

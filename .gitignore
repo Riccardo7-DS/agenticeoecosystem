@@ -49,4 +49,7 @@ src/eoss_graphrag/
 
 docs/eo_dashboard_narratives.mk
 docs/MOOC.jsonl
+docs/benchmark_dataset_description.md
+docs/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
+
 scripts/vlm.sh

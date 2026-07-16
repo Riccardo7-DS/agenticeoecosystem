@@ -115,7 +115,7 @@ requires-dist = [
     { name = "dask", specifier = ">=2025.7.0" },
     { name = "datasets", specifier = ">=4.7.0" },
     { name = "earthengine-api", specifier = ">=1.7.22" },
-    { name = "eumetsearch", specifier = ">=0.1.0" },
+    { name = "eumetsearch", editable = "../eumetsearch" },
     { name = "fastapi", specifier = ">=0.128.0" },
     { name = "fastmcp", specifier = ">=2.14.0" },
     { name = "fastparquet", specifier = ">=2024.11.0" },
@@ -1173,7 +1173,7 @@ wheels = [
 [[package]]
 name = "eumetsearch"
 version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../eumetsearch" }
 dependencies = [
     { name = "dask" },
     { name = "earthengine-api" },
@@ -1208,9 +1208,59 @@ dependencies = [
     { name = "xarray" },
     { name = "zarr" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/05/fd393112e45ee87997085de2aa9db16e662fccc9f2b0b32dc9a3408e60bb/eumetsearch-0.1.0.tar.gz", hash = "sha256:bd1eacff30b383a5fe193a9fda4432b9217f10919701268e62762214b9907b39", size = 7296579, upload-time = "2026-07-13T11:24:38.967Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/d0/eebb1bdd75f14fb4548132a82e6dcd01054a9d2987ffd8c1be237f58ccd0/eumetsearch-0.1.0-py3-none-any.whl", hash = "sha256:fd4a0e1a448d2bfc412aed66f185a448cfb16084388224309d51f73f402fa053", size = 72890, upload-time = "2026-07-13T11:24:41.054Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "dask", specifier = ">=2025.7.0" },
+    { name = "dask", marker = "extra == 'transform'", specifier = ">=2024.0" },
+    { name = "earthengine-api", specifier = ">=1.7.26" },
+    { name = "eodag", specifier = ">=3.10.0" },
+    { name = "eumdac", specifier = ">=3.0.0,<4.0.0" },
+    { name = "fastparquet", specifier = ">=2024.11.0" },
+    { name = "filelock", specifier = ">=3.20.0" },
+    { name = "folium", specifier = ">=0.20.0" },
+    { name = "geopandas", specifier = ">=1.1.1" },
+    { name = "geopandas", marker = "extra == 'transform'", specifier = ">=1.0" },
+    { name = "h5netcdf", specifier = ">=1.6.3" },
+    { name = "h5py", specifier = ">=3.16.0" },
+    { name = "huggingface-hub", specifier = ">=0.24.0" },
+    { name = "ipykernel", specifier = ">=6.30.0" },
+    { name = "matplotlib", specifier = ">=3.10.3" },
+    { name = "matplotlib", marker = "extra == 'transform'", specifier = ">=3.7" },
+    { name = "memory-profiler", specifier = ">=0.61.0" },
+    { name = "minio", specifier = ">=7.2.18" },
+    { name = "netcdf4", specifier = ">=1.7.2" },
+    { name = "numpy", marker = "extra == 'transform'", specifier = ">=1.24" },
+    { name = "pandas", marker = "extra == 'transform'", specifier = ">=2.0" },
+    { name = "phidown", specifier = ">=0.1.22" },
+    { name = "pyarrow", specifier = ">=22.0.0" },
+    { name = "pydantic", specifier = ">=2.11.7" },
+    { name = "pydantic", marker = "extra == 'transform'", specifier = ">=2.0" },
+    { name = "pydwca", specifier = ">=0.5.1" },
+    { name = "pyproj", specifier = ">=3.7.2,<4.0.0" },
+    { name = "pyproj", marker = "extra == 'transform'", specifier = ">=3.6" },
+    { name = "pyresample", specifier = ">=1.34.2" },
+    { name = "pystac", specifier = ">=1.14.1" },
+    { name = "pystac-client", specifier = ">=0.9.0" },
+    { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
+    { name = "rioxarray", specifier = ">=0.19.0" },
+    { name = "rioxarray", marker = "extra == 'transform'", specifier = ">=0.15" },
+    { name = "s3fs", specifier = ">=2025.9.0" },
+    { name = "satpy", specifier = ">=0.57.0" },
+    { name = "scipy", marker = "extra == 'transform'", specifier = ">=1.11" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "tqdm", marker = "extra == 'transform'", specifier = ">=4.0" },
+    { name = "xarray", specifier = ">=2025.7.1,<2026.0.0" },
+    { name = "xarray", marker = "extra == 'transform'", specifier = ">=2024.0" },
+    { name = "zarr", specifier = ">=2.18.7" },
+    { name = "zarr", marker = "extra == 'transform'", specifier = ">=2.18" },
+]
+provides-extras = ["transform"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "py-spy", specifier = ">=0.4.1" },
+    { name = "pytest", specifier = ">=8.0.0" },
 ]
 
 [[package]]

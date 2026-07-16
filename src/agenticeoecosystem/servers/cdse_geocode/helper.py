@@ -32,6 +32,8 @@ from requests_oauthlib import OAuth2Session
 
 import requests
 
+from agenticeoecosystem.utils.output_paths import resolve_run_path
+
 logger = logging.getLogger(__name__)
 
 import os, requests
@@ -156,9 +158,7 @@ def _fetch(
     # Optionally save to disk
     saved_path: Optional[str] = None
     if save_path:
-        import pathlib
-        p = pathlib.Path(save_path)
-        p.parent.mkdir(parents=True, exist_ok=True)
+        p = resolve_run_path(save_path)
         p.write_bytes(image_bytes)
         saved_path = str(p.resolve())
         logger.info("Saved to %s", saved_path)

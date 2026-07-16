@@ -202,9 +202,9 @@ Do **not** modify existing tasks (do not fix `mooc_search` → `search_moocs` in
 | eodashboard    | list_narratives, search_narratives, get_narrative_content, list_themes, get_narrative_indicators, search_collections, get_collection_items, find_narratives_for_indicator |
 | gee-mcp        | get_lat_lon, download_gee_product                                                                   |
 | moocs          | search_moocs                                                                                       |
-| geos_ops       | list_eumetsat_products, search_eumetsat_products, download_eumetsat_product                        |
+| geos_ops       | list_eumetsat_products, search_eumetsat_products, download_eumetsat_product, read_eumetsat_product |
 | climate        | list_era5_single_level_variables, list_era5_pressure_level_variables, list_cds_datasets, inspect_netcdf, fetch_era5_single_levels, fetch_era5_pressure_levels, fetch_era5_hourly_single_levels, fetch_era5_hourly_pressure_levels, fetch_era5_land, fetch_era5_daily_statistics, fetch_cds_dataset, convert_hourly_to_daily, convert_daily_to_monthly, resample_temporal, convert_units, clip_to_bbox, compute_wind_speed |
-| eoss_graphrag  | search_eopss, query_ontology, list_ontology_nodes (remote; source in separate `src/eoss_graphrag/` repo) |
+| eoss_graphrag  | search_eoss, query_ontology, list_ontology_nodes (remote; source in separate `src/eoss_graphrag/` repo) |
 | cdse           | fetch_sentinel1_grd, fetch_sentinel2, fetch_sentinel3_olci, fetch_sentinel3_slstr, fetch_sentinel3_syn_l2, fetch_sentinel5p_l2, fetch_landsat_ot_l1, fetch_dem, geocode_place, reverse_geocode_place, resolve_named_region (not in `get_mcp_servers()` — see Step 1 note) |
 | arxiv-mcp-server | search_papers, download_paper, read_paper, get_abstract, citation_graph, semantic_search, list_papers (external) |
 | gis-mcp        | metadata_raster, raster_band_statistics, compute_s2_ndvi, compute_ndvi, reproject_raster, clip_raster_with_shapefile, clip_raster_with_bbox, transform_coordinates, get_utm_crs, get_utm_zone, calculate_geodetic_distance, buffer, calculate_geodetic_area, sjoin_gpd, point_in_polygon, raster_histogram, create_map, zonal_statistics (external) |

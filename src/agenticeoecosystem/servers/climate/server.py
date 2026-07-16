@@ -11,6 +11,7 @@ import logging
 import sys
 
 from agenticeoecosystem.definitions import ROOT_DIR
+from agenticeoecosystem.utils.output_paths import resolve_run_path
 
 # --- Logging Setup ---
 log_file_path = os.path.join(os.path.dirname(__file__), "era5_server.log")
@@ -284,11 +285,12 @@ def _resolve_times(times: Union[str, List[str]]) -> List[str]:
 
 async def _internal_inspect_netcdf(filepath: str) -> str:
     def _sync_inspect():
-        if not Path(filepath).exists():
+        resolved = resolve_run_path(filepath)
+        if not resolved.exists():
             return f"Error: File not found at '{filepath}'"
         try:
-            with xr.open_dataset(filepath) as ds:
-                summary = [f"--- NetCDF Inspection Summary for {Path(filepath).name} ---", "\n[Dimensions]"]
+            with xr.open_dataset(resolved) as ds:
+                summary = [f"--- NetCDF Inspection Summary for {resolved.name} ---", "\n[Dimensions]"]
                 summary.extend(f"- {dim}: {size}" for dim, size in ds.dims.items())
                 summary.append("\n[Coordinates]")
                 summary.extend(
@@ -310,7 +312,7 @@ async def _internal_inspect_netcdf(filepath: str) -> str:
 
 
 async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filename: str) -> str:
-    output_path = Path(output_filename).resolve()
+    output_path = resolve_run_path(output_filename)
 
     def _blocking_download():
         logger.info("Initializing cdsapi.Client...")
@@ -654,19 +656,21 @@ async def convert_hourly_to_daily(
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
     def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(input_filepath).exists():
+            if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
             valid_methods = {'sum', 'mean', 'max', 'min'}
             if method not in valid_methods:
                 return f"Error: method must be one of {sorted(valid_methods)}, got '{method}'."
-            with xr.open_dataset(input_filepath) as ds:
+            with xr.open_dataset(resolved_input) as ds:
                 if variable:
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
                 resampled = getattr(ds.resample(time="1D"), method)()
-                resampled.to_netcdf(output_filepath)
+                resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
             return (
@@ -697,19 +701,21 @@ async def convert_daily_to_monthly(
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
     def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(input_filepath).exists():
+            if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
             valid_methods = {'sum', 'mean', 'max', 'min'}
             if method not in valid_methods:
                 return f"Error: method must be one of {sorted(valid_methods)}, got '{method}'."
-            with xr.open_dataset(input_filepath) as ds:
+            with xr.open_dataset(resolved_input) as ds:
                 if variable:
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
                 resampled = getattr(ds.resample(time="ME"), method)()
-                resampled.to_netcdf(output_filepath)
+                resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
             return (
@@ -742,19 +748,21 @@ async def resample_temporal(
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
     def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(input_filepath).exists():
+            if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
             valid_methods = {'sum', 'mean', 'max', 'min'}
             if method not in valid_methods:
                 return f"Error: method must be one of {sorted(valid_methods)}, got '{method}'."
-            with xr.open_dataset(input_filepath) as ds:
+            with xr.open_dataset(resolved_input) as ds:
                 if variable:
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
                 resampled = getattr(ds.resample(time=freq), method)()
-                resampled.to_netcdf(output_filepath)
+                resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
             return (
@@ -797,8 +805,10 @@ async def convert_units(
     :param to_unit: The target unit string.
     """
     def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(input_filepath).exists():
+            if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
             key = (from_unit, to_unit)
             if key not in _UNIT_CONVERSIONS:
@@ -807,7 +817,7 @@ async def convert_units(
                     from_unit, to_unit, "\n".join(supported)
                 )
             op, factor = _UNIT_CONVERSIONS[key]
-            with xr.open_dataset(input_filepath) as ds:
+            with xr.open_dataset(resolved_input) as ds:
                 if variable not in ds.data_vars:
                     return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                 ds_out = ds.copy(deep=True)
@@ -816,7 +826,7 @@ async def convert_units(
                 elif op == "multiply":
                     ds_out[variable] = ds_out[variable] * factor
                 ds_out[variable].attrs['units'] = to_unit
-                ds_out.to_netcdf(output_filepath)
+                ds_out.to_netcdf(resolved_output)
             return f"Converted '{variable}' from '{from_unit}' to '{to_unit}' and saved to '{output_filepath}'."
         except Exception as e:
             return f"Error during unit conversion: {e}"
@@ -846,10 +856,12 @@ async def clip_to_bbox(
     :param west: Western boundary in decimal degrees (e.g., -10.0).
     """
     def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(input_filepath).exists():
+            if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
-            with xr.open_dataset(input_filepath) as ds:
+            with xr.open_dataset(resolved_input) as ds:
                 lat_name = next((c for c in ds.coords if 'lat' in c.lower()), None)
                 lon_name = next((c for c in ds.coords if 'lon' in c.lower()), None)
                 if not lat_name or not lon_name:
@@ -859,7 +871,7 @@ async def clip_to_bbox(
                 # Fallback for ascending latitude order
                 if clipped[lat_name].size == 0:
                     clipped = ds.sel({lat_name: slice(south, north), lon_name: slice(west, east)})
-                clipped.to_netcdf(output_filepath)
+                clipped.to_netcdf(resolved_output)
                 dims = dict(clipped.dims)
             return (
                 f"Clipped to bbox [N={north}, S={south}, E={east}, W={west}] "
@@ -894,12 +906,15 @@ async def compute_wind_speed(
     :param v_variable: Name of the v-component variable in v_filepath. If omitted, the first data variable is used.
     """
     def _sync():
+        resolved_u = resolve_run_path(u_filepath)
+        resolved_v = resolve_run_path(v_filepath)
+        resolved_output = resolve_run_path(output_filepath)
         try:
-            if not Path(u_filepath).exists():
+            if not resolved_u.exists():
                 return f"Error: File not found at '{u_filepath}'"
-            if not Path(v_filepath).exists():
+            if not resolved_v.exists():
                 return f"Error: File not found at '{v_filepath}'"
-            with xr.open_dataset(u_filepath) as ds_u, xr.open_dataset(v_filepath) as ds_v:
+            with xr.open_dataset(resolved_u) as ds_u, xr.open_dataset(resolved_v) as ds_v:
                 u_name = u_variable or list(ds_u.data_vars)[0]
                 v_name = v_variable or list(ds_v.data_vars)[0]
                 if u_name not in ds_u.data_vars:
@@ -912,7 +927,7 @@ async def compute_wind_speed(
                 wind_speed.name = "wind_speed"
                 wind_speed.attrs["units"] = u.attrs.get("units", "m s**-1")
                 wind_speed.attrs["long_name"] = "wind speed"
-                wind_speed.to_dataset().to_netcdf(output_filepath)
+                wind_speed.to_dataset().to_netcdf(resolved_output)
                 dims = dict(wind_speed.sizes)
             return (
                 f"Computed wind speed from '{u_name}' ({u_filepath}) and '{v_name}' ({v_filepath}), "

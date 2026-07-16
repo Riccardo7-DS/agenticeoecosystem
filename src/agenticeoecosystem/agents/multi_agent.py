@@ -120,8 +120,26 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "- Use the ERA5 sub-agent, as usual, for atmospheric/climate reanalysis "
     "variables (temperature, wind, geopotential, precipitation, etc.) rather "
     "than imagery.\n"
-    "- EUMETSAT and CDSE do not do NDVI, reprojection, clipping, or zonal "
-    "stats on downloaded files — route that to the GIS analysis server.\n"
+    "- EUMETSAT downloads (MTG FCI, MSG SEVIRI) are raw geostationary formats "
+    "(.nat, segmented HRIT, ...) that the GIS analysis server cannot open "
+    "directly — never hand a raw EUMETSAT file path to the GIS sub-agent. "
+    "The EUMETSAT sub-agent reads/processes its own downloads internally "
+    "(band reflectance/brightness-temperature stats, calibration, GeoTIFF "
+    "export) — route any 'read/inspect/report values from' request on a "
+    "EUMETSAT file back to the EUMETSAT sub-agent, not to GIS. Only pass a "
+    "EUMETSAT product to the GIS sub-agent for genuinely custom GIS "
+    "operations (NDVI, zonal stats, reprojecting to a different CRS than "
+    "geographic, ...), and only after the EUMETSAT sub-agent has exported "
+    "it to GeoTIFF. The EUMETSAT sub-agent is single-turn and has no memory "
+    "of a previous call — if a request needs both a download and a read of "
+    "the same file, put both in the SAME eumetsat_agent call (e.g. 'download "
+    "X and report the reflectance range'), not two separate calls; a "
+    "second call describing a file path from a prior call's response will "
+    "not work.\n"
+    "- CDSE downloads (Sentinel/Landsat/DEM quicklooks) are already standard "
+    "georeferenced rasters (GeoTIFF/COG) — for reprojection, clipping, NDVI, "
+    "zonal stats, or any other spatial processing on them, route to the GIS "
+    "analysis server as usual; CDSE does not do this itself.\n"
     "\n"
     "OUTPUT RULES:\n"
     "- Return tool results directly and completely, word for word — no added "
@@ -299,9 +317,8 @@ async def get_ans_tool_path(query: str) -> str:
     })
 if __name__ == "__main__":
     try:
-        # ans = asyncio.run(get_ans_tool_path("Download the geopotential height at 500 hPa for January 2023, and tell me what the file looks like once it's downloaded."))
-        # ans = asyncio.run(get_ans_tool_path("Download a VIIRS image over Naples, Italy for the first week of March 2024."))
-        ans = asyncio.run(get_ans_tool_path("Search EO Dashboard narratives about sea surface temperature anomalies. Based on the region and season highlighted, download ERA5 monthly mean skin temperature for the relevant period and convert from Kelvin to Celsius."))
+        query = input("Enter your question: ")
+        ans = asyncio.run(get_ans_tool_path(query))
         print(ans)
     except Exception as e:
-        print(f"An error occurred: {e}")    
+        print(f"An error occurred: {e}")

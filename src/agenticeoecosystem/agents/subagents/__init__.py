@@ -24,3 +24,4 @@ for _, module_name, _ in pkgutil.iter_modules([_PKG_DIR]):
 
 if not ALL_SUB_AGENTS:
     logger.warning("No sub-agents were initialized — check MCP toolset/env configs.")
+print(f"Loaded {len(ALL_SUB_AGENTS)} sub-agents: {[agent.name for agent in ALL_SUB_AGENTS]}")

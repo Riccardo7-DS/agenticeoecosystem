@@ -20,13 +20,6 @@ def _try_register(servers: dict, key: str, build_fn) -> None:
         logger.warning("%s MCP disabled: %s", key, exc)
 
 
-def _check_moocs_env() -> None:
-    """Raise RuntimeError if required MOOC RAG env vars are missing."""
-    missing = [v for v in ("QDRANT_URL", "QDRANT_KEY") if not os.getenv(v)]
-    if missing:
-        raise RuntimeError(f"MOOC RAG env vars not set: {', '.join(missing)} (check .env)")
-
-
 def _check_geos_ops_env() -> None:
     """Raise RuntimeError if EUMETSAT Data Store credentials are missing."""
     missing = [
@@ -131,13 +124,12 @@ def get_mcp_servers() -> dict:
         "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
     })
 
-    _try_register(servers, "moocs", lambda: (
-        _check_moocs_env() or {
-            "transport": "stdio",
-            "command": "python",
-            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
-        }
-    ))
+    _try_register(servers, "moocs", lambda: {
+        # Local, file-based Qdrant store — no credentials required.
+        "transport": "stdio",
+        "command": "python",
+        "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/moocs/server.py"],
+    })
 
     _try_register(servers, "eoss_graphrag", lambda: (
         _check_eoss_graphrag_env() or {

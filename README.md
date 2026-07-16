@@ -13,10 +13,9 @@ The primary goal is to enable EVE to connect ESA's EO platforms and data cluster
 2. [Repository Layout](#repository-layout)
 3. [Installation](#installation)
 4. [Running the Client](#running-the-client)
-5. [Running with Apptainer](#running-with-apptainer)
-6. [MCP Servers](#mcp-servers)
-7. [Benchmarking](#benchmarking)
-8. [Adding Custom Sub-agents](#adding-custom-sub-agents)
+5. [MCP Servers](#mcp-servers)
+6. [Benchmarking](#benchmarking)
+7. [Adding Custom Sub-agents](#adding-custom-sub-agents)
 
 ---
 
@@ -27,9 +26,12 @@ This project implements a **multi-agent supervisor architecture** in which a sup
 - **EO Dashboard agent** — browses narratives, themes, and STAC collections from the ESA/NASA/JAXA [EO Dashboard](https://eodashboard.org/)
 - **GEE agent** — downloads satellite images via the Google Earth Engine Python API
 - **EVE retrieval agent** — retrieves knowledge from the EVE knowledge base (AWS Bedrock)
-- **EOSS RAG agent** — retrieves from the ESA EO Science Strategy via semantic vector search (Qdrant) and a Neo4j knowledge graph
+- **EOSS GraphRAG agent** — retrieves from the ESA EO Science Strategy via GraphRAG: semantic vector search plus a Memgraph knowledge graph (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, KAOs). Backed by a remote MCP server (the `graphrag` sibling repo)
+- **MOOCs agent** — semantic search over Earth Observation MOOC (online course) transcripts, backed by a local Qdrant store
 - **ArXiv agent** — searches and retrieves scientific papers from ArXiv (semantic search, abstracts, full-text download)
 - **GIS agent** — performs spatial analysis, raster processing, coordinate transforms, map visualization, and geospatial data downloads (ESA WorldCover, Sentinel-2 NDVI, OSM street networks, GADM boundaries)
+
+Two further MCP servers — **EUMETSAT Data Store** (`geos_ops`) and **Climate/CDS** (`climate`) — are defined in `mcp_config.py` and load when their credentials are present, but are not yet wired to a dedicated sub-agent.
 
 Using the **[MCP protocol](https://modelcontextprotocol.io/)**, agents can perform multi-step reasoning: for example, searching for a narrative, linking it to a STAC collection, retrieving satellite data for the relevant indicator, and computing NDVI over the area of interest.
 
@@ -45,6 +47,7 @@ graph TD
     Supervisor --> GEE[gee_agent]
     Supervisor --> EVE[eve_retrieval_agent]
     Supervisor --> RAG[eoss_rag_agent]
+    Supervisor --> MOOC[moocs_agent]
     Supervisor --> ArXiv[arxiv_agent]
     Supervisor --> GIS[gis_agent]
 
@@ -57,8 +60,11 @@ graph TD
     EVE --> EVE_MCP["EVE Document Retrieval MCP\n(AWS Bedrock / EVE knowledge base)"]
     EVE_MCP --> EVE
 
-    RAG --> HYBRIDRAG_MCP["EO Science Strategy MCP\n(Qdrant vector search + Neo4j knowledge graph)"]
-    HYBRIDRAG_MCP --> RAG
+    RAG --> GRAPHRAG_MCP["EOSS GraphRAG MCP\n(vector search + Memgraph knowledge graph)"]
+    GRAPHRAG_MCP --> RAG
+
+    MOOC --> MOOC_MCP["MOOCs MCP\n(local Qdrant, course transcripts)"]
+    MOOC_MCP --> MOOC
 
     ArXiv --> ARXIV_MCP["ArXiv MCP\n(papers, abstracts, semantic search)"]
     ARXIV_MCP --> ArXiv
@@ -70,6 +76,7 @@ graph TD
     GEE --> Supervisor
     EVE --> Supervisor
     RAG --> Supervisor
+    MOOC --> Supervisor
     ArXiv --> Supervisor
     GIS --> Supervisor
 
@@ -85,15 +92,16 @@ The supervisor routes each user query to one or more specialised agents. Each ag
 ```
 AgenticEOEcosystem/
 ├── agenticeoecosystem/     ← this repo
-└── hybridrag_pipeline/     ← separate repo, clone as sibling
+└── graphrag/               ← EOSS GraphRAG pipeline + MCP server (sibling)
 ```
 
-The `hybridrag_pipeline` repository must be cloned as a sibling directory. If it is absent or its `.env` is incomplete, the Hybrid RAG MCP server is skipped gracefully at startup — the other three servers continue to work.
+The `graphrag` repository hosts the EOSS GraphRAG MCP server, which the client reaches over HTTP (not as a local subprocess). If `GRAPHRAG_MCP_URL` / `GRAPHRAG_AUTH_HEADER` are unset or the server is unreachable, the EOSS GraphRAG server is skipped gracefully at startup — every other server continues to work. Each optional server is registered independently, so a missing credential only disables that one tool.
 
 ```
 agenticeoecosystem/
 ├── src/agenticeoecosystem/
-│   ├── client/         ← supervisor + sub-agents
+│   ├── agents/         ← sub-agent definitions and system prompts
+│   ├── client/         ← supervisor + interactive client
 │   ├── config/         ← MCP config, credentials
 │   ├── evaluation/     ← benchmarking framework
 │   ├── servers/        ← MCP server implementations
@@ -170,52 +178,9 @@ Each session writes a timestamped log to `logs/client_YYYYMMDD_HHMMSS.log`.
 
 ---
 
-## Running with Apptainer
-
-On NFS-mounted home directories, Python startup is slow because the OS performs a permission check for every file in `.venv/` (thousands of files). An Apptainer container bundles the entire Python environment into a single `.sif` image file, bypassing this overhead entirely.
-
-### Prerequisites
-
-Apptainer must be installed (`apptainer --version` to check).
-
-### Build the container (one-time)
-
-```bash
-export APPTAINER_TMPDIR=$HOME/var/tmp
-export APPTAINER_CACHEDIR=$HOME/var/tmp/apptainer-cache
-mkdir -p $APPTAINER_CACHEDIR $APPTAINER_TMPDIR
-
-apptainer build agenticeoecosystem.sif container.def
-```
-
-The build takes ~10–20 minutes on first run. The resulting `.sif` is excluded from git.
-
-### Run the client
-
-```bash
-apptainer exec \
-  --bind /path/to/agenticeoecosystem:/project \
-  --bind /path/to/hybridrag_pipeline:/hybridrag_pipeline \
-  /path/to/agenticeoecosystem/agenticeoecosystem.sif \
-  python /project/src/agenticeoecosystem/client/client.py --llm eve
-```
-
-- `--bind .../agenticeoecosystem:/project` mounts source code live — code changes are reflected immediately, no rebuild needed
-- `--bind .../hybridrag_pipeline:/hybridrag_pipeline` is required for the Hybrid RAG MCP server
-
-### Update dependencies
-
-When `pyproject.toml` changes:
-```bash
-uv lock
-apptainer build agenticeoecosystem.sif container.def
-```
-
----
-
 ## MCP Servers
 
-The client connects to six MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py).
+The client registers up to nine MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py). Seven back a dedicated sub-agent (EO Dashboard, GEE, EVE retrieval, EOSS GraphRAG, MOOCs, ArXiv, GIS); two more (EUMETSAT Data Store and Climate/CDS) load their tools when credentials are present but are not yet exposed through a sub-agent. Each server is registered independently — if its dependency or credential is missing, that one server is skipped with a warning and the client still starts.
 
 ### EO Dashboard
 
@@ -250,37 +215,30 @@ EVE_RETRIEVAL_CLIENT_SECRET=your-client-secret
 
 Contact the EVE platform team to obtain these. If not set, the server is skipped and `get_eve_knowledge` will be unavailable.
 
-### EO Science Strategy (Hybrid RAG)
+### EO Science Strategy (EOSS GraphRAG)
 
-Provides hybrid retrieval over the **ESA Earth Observation Science Strategy** documents — combining semantic vector search (Qdrant) with a Neo4j knowledge graph that links document chunks to domain concepts (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties).
+Provides GraphRAG retrieval over the **ESA Earth Observation Science Strategy** — combining semantic vector search with a **Memgraph** knowledge graph that links document chunks to domain concepts (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, and KAOs). It exposes three tools: `search_eoss` (natural-language GraphRAG search), `query_ontology` (read-only Cypher), and `list_ontology_nodes` (enumerate nodes by label).
 
-The RAG pipeline lives in `../hybridrag_pipeline/` (sibling directory). Its `.env` must contain:
+Unlike the other servers, this one runs as a **standalone HTTP MCP server** in the `graphrag` sibling repo, and the client connects to it remotely. Point the client at it via `.env`:
 
 ```env
-QDRANT_URL=https://...
-QDRANT_KEY=your-qdrant-api-key
-QDRANT_COLLECTION=hybridrag_chunks   # optional, this is the default
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USERNAME=neo4j
-NEO4J_PASSWORD=your-neo4j-password
+GRAPHRAG_MCP_URL=https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/12000/mcp
+GRAPHRAG_AUTH_HEADER=Basic <base64(user:pass)>
 ```
 
-**One-time index build** (run from `hybridrag_pipeline/`):
+`GRAPHRAG_MCP_URL` is the gateway URL of the running GraphRAG server (must end in `/mcp`). `GRAPHRAG_AUTH_HEADER` is the full `Authorization` header value; use `graphrag/gen_auth_header.py` to generate it.
+
+**Start the server** (from the `graphrag` repo, e.g. inside a `screen` session), after loading the Memgraph graph via the numbered pipeline scripts (`00_schema.py` … `03_link_chunks.py`):
 
 ```bash
-# 1. Ingest PDFs → Qdrant
-uv run python build_qdrant.py
-
-# 2. Build the Neo4j knowledge graph
-uv run python build_neo4j.py
+uv run python 05_mcp_server.py            # listens on 0.0.0.0:12000
 ```
 
-Use `--use-cache` on subsequent runs to skip PDF re-extraction:
-```bash
-uv run python build_qdrant.py --use-cache
-```
+If the server is unreachable or the env vars are unset, the EOSS GraphRAG tools are skipped and the client starts without them.
 
-Once the indexes are built the server starts automatically with the client.
+### EO MOOCs
+
+Provides semantic search over Earth Observation MOOC (online course) transcripts via the `search_moocs` tool. The server uses a **local, file-based Qdrant store** bundled in `src/agenticeoecosystem/servers/moocs/qdrant_storage/` — no cloud service or credentials required. On first launch it embeds and indexes the bundled `data/MOOC.jsonl`; subsequent starts reuse the existing collection. It starts automatically as a stdio subprocess with the client.
 
 ### ArXiv
 
@@ -309,6 +267,24 @@ uv tool install "gis-mcp[climate]"                     # ERA5 climate data (requ
 ```
 
 No additional `.env` variables are required for the core tools.
+
+### EUMETSAT Data Store (optional)
+
+Registered when EUMETSAT Data Store credentials are present. Loads its tools but is **not yet wired to a sub-agent**, so it is not reachable from the supervisor.
+
+```env
+EUMETSAT_CONSUMER_KEY=your-consumer-key
+EUMETSAT_CONSUMER_SECRET=your-consumer-secret
+```
+
+### Climate / CDS (optional)
+
+Registered when Copernicus Climate Data Store credentials are present. As with EUMETSAT, its tools load but are **not yet exposed through a sub-agent**.
+
+```env
+CDS_URL=https://cds.climate.copernicus.eu/api
+CDS_KEY=your-cds-api-key
+```
 
 ---
 
@@ -523,7 +499,7 @@ supervisor_agent = create_agent(
     model,
     tools=[
         get_eo_stac_data, get_gee_data, get_eve_knowledge,
-        get_hybrid_rag_context, get_arxiv_data, get_gis_analysis,
+        get_eossgraphrag_context, get_arxiv_data, get_gis_analysis,
         my_agent_as_tool,
     ],
     system_prompt=(

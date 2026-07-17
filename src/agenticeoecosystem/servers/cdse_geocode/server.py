@@ -26,8 +26,19 @@ the tool returns only a TextContent block with JSON metadata, including
 blobs through the MCP transport / model context.
 
 Pass return_image=True on any fetch_* tool to additionally get an
-ImageContent block with the base64 JPEG inline (old behaviour), on top of
+ImageContent block with the base64 image inline (old behaviour), on top of
 the file still being saved to disk.
+
+GeoTIFF support
+-----------------
+Every fetch_* tool now accepts as_geotiff=True, which:
+  - saves a georeferenced GeoTIFF (CRS/transform embedded from bbox) with
+    raw, analysis-ready FLOAT32 values instead of an 8-bit display JPEG.
+  - automatically picks a ".tif" default filename extension instead of
+    ".jpg" when save_path isn't explicitly given.
+Use as_geotiff=True whenever the output will feed a raster-analysis tool
+(metadata_raster, raster_band_statistics, reproject_raster, ...) rather
+than being viewed directly.
 """
 
 from __future__ import annotations
@@ -47,7 +58,7 @@ from geopy.geocoders import Nominatim
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent, TextContent
 
-from helper import (
+from agenticeoecosystem.servers.cdse_geocode.helper import (
     fetch_sentinel1_grd,
     fectch_sentinel2,
     fetch_sentinel3_olci,
@@ -76,7 +87,9 @@ mcp = FastMCP(
         "Each fetch_* tool retrieves a clipped AOI image for a specific satellite "
         "collection and SAVES IT TO DISK by default (see `saved_path` in the "
         "returned metadata) instead of returning the image inline — pass "
-        "return_image=true to also get the base64 JPEG in the response. "
+        "return_image=true to also get the base64 image in the response. "
+        "Pass as_geotiff=true to save a georeferenced GeoTIFF with raw "
+        "FLOAT32 analysis-ready values instead of an 8-bit display JPEG. "
         "Always pass bbox as [west, south, east, north] in WGS-84 decimal degrees. "
         "Dates are ISO-8601 strings: YYYY-MM-DD. "
         "Use geocode_place to turn a place name into a bbox before calling a "
@@ -108,15 +121,17 @@ def _to_content(result: dict, return_image: bool = False) -> list[ImageContent |
     Convert a sentinel_hub fetch result dict into MCP content blocks.
 
     Always returns:
-      - TextContent with JSON metadata (collection, dims, saved_path, evalscript)
+      - TextContent with JSON metadata (collection, dims, format, saved_path,
+        evalscript)
 
     Only returns (in addition), when return_image=True:
-      - ImageContent with the JPEG as base64
+      - ImageContent with the image bytes as base64
     """
     meta = {
         "collection":  result["collection"],
         "width_px":    result["width"],
         "height_px":   result["height"],
+        "media_type":  result["media_type"],
         "saved_path":  result["saved_path"],
         "evalscript":  result["evalscript"],
     }
@@ -148,7 +163,11 @@ def _to_content(result: dict, return_image: bool = False) -> list[ImageContent |
         "Presets: 'vv_vh_rgb' (pseudo-RGB from VV+VH, dual-pol IW mode), "
         "'hh_hv_rgb' (pseudo-RGB from HH+HV, dual-pol EW mode), "
         "Use custom_bands to select any polarisation(s) manually. "
-        "back_coeff options: GAMMA0_ELLIPSOID (default), GAMMA0_TERRAIN (RTC), SIGMA0_ELLIPSOID."
+        "back_coeff options: GAMMA0_ELLIPSOID (default), GAMMA0_TERRAIN (RTC), SIGMA0_ELLIPSOID. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "linear backscatter values per polarisation (instead of an 8-bit "
+        "display JPEG with dB scaling/RGB compositing) for feeding into "
+        "raster analysis tools (metadata_raster, raster_band_statistics, ...)."
     ),
 )
 def tool_sentinel1_grd(
@@ -195,16 +214,21 @@ def tool_sentinel1_grd(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 linear "
+        "backscatter values instead of an 8-bit display JPEG. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel1_grd")
+    save_path = save_path or _default_save_path("sentinel1_grd", ext="tif" if as_geotiff else "jpg")
     result = fetch_sentinel1_grd(
         bbox=bbox,
         start_date=start_date,
@@ -221,7 +245,8 @@ def tool_sentinel1_grd(
         resolution=resolution,
         width=width,
         height=height,
-        save_path=save_path
+        save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -317,8 +342,12 @@ def tool_sentinel2(
         "Fetch a Sentinel-3 OLCI ocean/land colour image at ~300 m resolution. "
         "Saved to disk by default (see save_path/return_image). "
         "21 spectral bands from 400 nm (B01) to 1020 nm (B21). "
-        "Preset: 'true_color' (B08 red / B06 green / B04 blue). "
-        "Good for large-area overviews, ocean colour, vegetation at continental scale."
+        "Preset: 'true_color' (B08 red / B06 green / B04 blue), 'otci' (Terrestrial "
+        "Chlorophyll Index colour ramp). "
+        "Good for large-area overviews, ocean colour, vegetation at continental scale. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "reflectance (or raw OTCI index) values instead of an 8-bit display JPEG "
+        "for feeding into raster analysis tools."
     ),
 )
 def tool_sentinel3_olci(
@@ -338,16 +367,21 @@ def tool_sentinel3_olci(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 values instead "
+        "of an 8-bit display JPEG. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel3_olci")
+    save_path = save_path or _default_save_path("sentinel3_olci", ext="tif" if as_geotiff else "jpg")
     result = fetch_sentinel3_olci(
         bbox=bbox,
         start_date=start_date,
@@ -358,6 +392,7 @@ def tool_sentinel3_olci(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -373,9 +408,11 @@ def tool_sentinel3_olci(
         "return_image). "
         "Shortwave bands S1–S6 (0.55–2.25 µm) at 500 m–1 km; "
         "thermal bands S7–S9, F1–F2 (3.7–12 µm). "
-        "Preset: 'false_color' (S3n/S2n/S1n approximate visible composite) or ndvi."
+        "Preset: 'false_color' (S3n/S2n/S1n approximate visible composite) or ndvi. "
         "Append the view suffix to custom band names (e.g. S2n, S2o), "
-        "or omit suffix and set view= to apply it automatically."
+        "or omit suffix and set view= to apply it automatically. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "values instead of an 8-bit display JPEG."
     ),
 )
 def tool_sentinel3_slstr(
@@ -384,7 +421,7 @@ def tool_sentinel3_slstr(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "true_color. Omit if supplying custom_bands or evalscript.",
+        "false_color or ndvi. Omit if supplying custom_bands or evalscript.",
     ] = None,
     custom_bands: Annotated[
         Optional[list[str]],
@@ -396,16 +433,21 @@ def tool_sentinel3_slstr(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 values instead "
+        "of an 8-bit display JPEG. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel3_slstr")
+    save_path = save_path or _default_save_path("sentinel3_slstr", ext="tif" if as_geotiff else "jpg")
     result = fetch_sentinel3_slstr(
         bbox=bbox,
         start_date=start_date,
@@ -416,6 +458,7 @@ def tool_sentinel3_slstr(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -431,7 +474,9 @@ def tool_sentinel3_slstr(
         "Saved to disk by default (see save_path/return_image). "
         "Surface reflectance product. "
         "OLCI channels: B01–B12, B16-B18, B21. SLSTR channels: S1–S6. "
-        "Preset: 'true_color' (B08 / B06 / B04), NDVI "
+        "Preset: 'true_color' (B08 / B06 / B04), 'ndvi'. "
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
+        "values instead of an 8-bit display JPEG."
     ),
 )
 def tool_sentinel3_syn_l2(
@@ -440,7 +485,7 @@ def tool_sentinel3_syn_l2(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "true_color. Omit if supplying custom_bands or evalscript.",
+        "true_color or ndvi. Omit if supplying custom_bands or evalscript.",
     ] = None,
     custom_bands: Annotated[
         Optional[list[str]],
@@ -451,16 +496,21 @@ def tool_sentinel3_syn_l2(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with raw FLOAT32 values instead "
+        "of an 8-bit display JPEG. Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel3_syn_l2")
+    save_path = save_path or _default_save_path("sentinel3_syn_l2", ext="tif" if as_geotiff else "jpg")
     result = fetch_sentinel3_syn_l2(
         bbox=bbox,
         start_date=start_date,
@@ -471,6 +521,7 @@ def tool_sentinel3_syn_l2(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 
@@ -484,9 +535,12 @@ def tool_sentinel3_syn_l2(
     description=(
         "Fetch a Sentinel-5P TROPOMI L2 trace-gas product at ~3.5 × 5.5 km resolution. "
         "Saved to disk by default (see save_path/return_image). "
-        "Each band is a geophysical quantity (mol/m², DU, etc.), visualised as greyscale. "
+        "Each band is a geophysical quantity (mol/m², DU, etc.), visualised as greyscale "
+        "by default. "
         "Presets: no2 | co | o3 | so2 | ch4 | hcho | aer_ai_340_380 | cloud_fraction. "
-        "For quantitative retrieval (FLOAT32 values) supply a custom evalscript."
+        "Set as_geotiff=True to get a georeferenced GeoTIFF with the raw, unscaled "
+        "physical value as FLOAT32 (instead of the 0-1 clamped/scaled display "
+        "greyscale) — required for any quantitative use of the values."
     ),
 )
 def tool_sentinel5p_l2(
@@ -507,16 +561,22 @@ def tool_sentinel5p_l2(
     height: Annotated[int, "Output image height in pixels"] = 512,
     save_path: Annotated[
         Optional[str],
-        "Local file path to save the JPEG. Defaults to an auto-generated path "
+        "Local file path to save the image. Defaults to an auto-generated path "
         "under CDSE_OUTPUT_DIR if omitted.",
     ] = None,
     return_image: Annotated[
         bool,
-        "If True, also include the raw base64 JPEG inline in the response "
+        "If True, also include the raw base64 image inline in the response "
         "(in addition to saving it to disk). Default False.",
     ] = False,
+    as_geotiff: Annotated[
+        bool,
+        "If True, save a georeferenced GeoTIFF with the raw unscaled FLOAT32 "
+        "physical value instead of the 0-1 clamped display greyscale JPEG. "
+        "Default False.",
+    ] = False,
 ) -> list[ImageContent | TextContent]:
-    save_path = save_path or _default_save_path("sentinel5p_l2")
+    save_path = save_path or _default_save_path("sentinel5p_l2", ext="tif" if as_geotiff else "jpg")
     result = fetch_sentinel5p_l2(
         bbox=bbox,
         start_date=start_date,
@@ -527,6 +587,7 @@ def tool_sentinel5p_l2(
         width=width,
         height=height,
         save_path=save_path,
+        as_geotiff=as_geotiff,
     )
     return _to_content(result, return_image=return_image)
 

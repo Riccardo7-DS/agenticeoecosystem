@@ -16,6 +16,16 @@ Sentinel-3 SYN L2   → "sentinel-3-synergy-l2"
 Sentinel-5P L2      → "sentinel-5p-l2"
 Landsat OT L1       → "landsat-ot-l1"
 DEM                 → "dem"
+
+GeoTIFF support
+----------------
+Every fetch_* function now accepts `as_geotiff: bool = False`. When True:
+  - output_format is set to "tiff" (georeferenced GeoTIFF, CRS/transform
+    embedded from the request bbox) instead of the default 8-bit "jpeg".
+  - The evalscript switches to a raw, undisplayed-scaled FLOAT32 path
+    (no gain multiplication, no 0-1 clamping, no colormap visualizers) so
+    the pixel values are analysis-ready physical quantities, suitable for
+    metadata_raster / raster_band_statistics / reproject_raster etc.
 """
 
 from __future__ import annotations
@@ -130,8 +140,8 @@ def _fetch(
     }
 
     logger.info(
-        "Fetching collection=%s  bbox=%s  %dx%d px",
-        collection_type, bbox, width, height,
+        "Fetching collection=%s  bbox=%s  %dx%d px  format=%s",
+        collection_type, bbox, width, height, output_format,
     )
     resp = requests.post(_PROCESS_URL, headers=headers, json=body, timeout=90)
 
@@ -153,6 +163,8 @@ def _fetch(
         img = PILImage.open(io.BytesIO(image_bytes))
         actual_w, actual_h = img.size
     except Exception:
+        # Pillow can fail to introspect some multi-band FLOAT32 GeoTIFFs —
+        # fall back silently to the requested width/height.
         pass
 
     # Optionally save to disk
@@ -187,6 +199,32 @@ def _es_rgb(r: str, g: str, b: str, gain: float = 2.5, sample_type: str = "AUTO"
         "//VERSION=3\n"
         f'function setup(){{return{{input:["{r}","{g}","{b}"],output:{{bands:3,sampleType:"{sample_type}"}}}}}}\n'
         f"function evaluatePixel(s){{return[{gain}*s.{r},{gain}*s.{g},{gain}*s.{b}]}}"
+    )
+
+
+def _es_raw_bands(bands: list[str], units: Optional[str] = None) -> str:
+    """
+    Generic raw FLOAT32 evalscript for an arbitrary band list — no gain, no
+    clamping, no colormap. Use this as the `as_geotiff=True` path for any
+    collection that doesn't otherwise define its own raw builder.
+
+    units: optional Sentinel Hub `units` string (e.g. "REFLECTANCE"). Leave
+    None for sensors where that constraint doesn't apply (e.g. SAR, thermal).
+    """
+    n = len(bands)
+    bands_js = ", ".join(f'"{b}"' for b in bands)
+    returns = ", ".join(f"s.{b}" for b in bands)
+    if units:
+        input_block = f'input:[{{bands:[{bands_js}],units:"{units}"}}],'
+    else:
+        input_block = f"input:[{bands_js}],"
+    return (
+        "//VERSION=3\n"
+        "function setup(){return{"
+        f"{input_block}"
+        f'output:{{bands:{n},sampleType:"FLOAT32"}}'
+        "}}\n"
+        f"function evaluatePixel(s){{return[{returns}]}}"
     )
 
 
@@ -239,6 +277,21 @@ def _es_s1_pseudo_rgb(pol_a: str, pol_b: str) -> str:
     )
 
 
+def _es_s1_raw(bands: list[str]) -> str:
+    """
+    Raw linear backscatter FLOAT32, one output band per requested
+    polarisation — no dB conversion, no averaging, no RGB compositing.
+    This is the analysis-ready path used when as_geotiff=True.
+    """
+    bands_js = ", ".join(f'"{b}"' for b in bands)
+    returns = ", ".join(f"s.{b}" for b in bands)
+    return (
+        "//VERSION=3\n"
+        f'function setup(){{return{{input:[{bands_js}],output:{{bands:{len(bands)},sampleType:"FLOAT32"}}}}}}\n'
+        f"function evaluatePixel(s){{return[{returns}]}}"
+    )
+
+
 def fetch_sentinel1_grd(
     bbox: list[float],
     start_date: str,
@@ -258,7 +311,8 @@ def fetch_sentinel1_grd(
     resolution: Optional[str] = None,        # "HIGH" | "MEDIUM"
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Sentinel-1 GRD image from the Sentinel Hub Process API.
@@ -281,24 +335,28 @@ def fetch_sentinel1_grd(
     dem_instance  : DEM used for orthorectification, e.g. "COPERNICUS_30"
     acquisition_mode, polarization, orbit_direction, resolution :
                     filter the input scenes (see Sentinel Hub docs).
+
+    as_geotiff: when True, returns a georeferenced GeoTIFF with raw FLOAT32
+    linear backscatter values per requested polarisation (no dB conversion,
+    no RGB compositing) instead of an 8-bit display JPEG — use this for
+    downstream raster-analysis tools.
     """
     # ---- resolve evalscript ----
     if evalscript is None:
         if custom_bands:
-            if validate_bands(custom_bands, _S1_POLS):
-                evalscript = _es_s1_custom(custom_bands)
-            else:
+            if not validate_bands(custom_bands, _S1_POLS):
                 raise ValueError(f"Unidentifed band in Sentinel-1, Choose from the followinfg bands : {_S1_POLS}")
+            evalscript = _es_s1_raw(custom_bands) if as_geotiff else _es_s1_custom(custom_bands)
         elif preset:
             p = preset.lower()
             if p == "vv_vh_rgb":
-                evalscript = _es_s1_pseudo_rgb("VV", "VH")
+                evalscript = _es_s1_raw(["VV", "VH"]) if as_geotiff else _es_s1_pseudo_rgb("VV", "VH")
             elif p == "hh_hv_rgb":
-                evalscript = _es_s1_pseudo_rgb("HH", "HV")
+                evalscript = _es_s1_raw(["HH", "HV"]) if as_geotiff else _es_s1_pseudo_rgb("HH", "HV")
             else:
                 # Fallback to custom bands
-                if validate_bands(custom_bands, _S1_POLS):
-                    evalscript = _es_s1_custom(custom_bands)
+                if custom_bands and validate_bands(custom_bands, _S1_POLS):
+                    evalscript = _es_s1_raw(custom_bands) if as_geotiff else _es_s1_custom(custom_bands)
                 else:
                     raise ValueError(f"Unidentifed band in Sentinel-1, Choose from the followinfg bands : {_S1_POLS}")
         else:
@@ -332,7 +390,8 @@ def fetch_sentinel1_grd(
         height=height,
         data_filter_extra=df_extra or None,
         processing_options=proc,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 
@@ -346,12 +405,12 @@ _S2_BANDS = (
     "B07", "B08", "B8A", "B09", "B10", "B11", "B12",
 )
 
-def _es_s2_ndvi(nir: str = "B08", r: str = "B04") -> str:
+def _es_s2_ndvi(nir: str = "B08", r: str = "B04", sample_type: str = "AUTO") -> str:
     return (
         "//VERSION=3\n"
         "function setup(){return{"
         f'input:[{{bands:["{r}","{nir}"],units:"REFLECTANCE"}}],'
-        'output:{id:"default",bands:1,sampleType:SampleType.AUTO}'
+        f'output:{{id:"default",bands:1,sampleType:SampleType.{sample_type}}}'
         "}}\n"
         f"function evaluatePixel(s){{return[(s.{nir}-s.{r})/(s.{nir}+s.{r})]}}"
     )
@@ -395,7 +454,8 @@ def fectch_sentinel2(
     embedded from bbox) with raw, unstretched FLOAT32 reflectance values
     instead of a display-oriented 8-bit JPEG — use this when the output
     feeds a raster-analysis tool (metadata_raster, raster_band_statistics,
-    reproject_raster, etc.) rather than being viewed directly.
+    reproject_raster, etc.) rather than being viewed directly. Applies to
+    both the true_color and ndvi presets.
     """
     if evalscript is None:
         if custom_bands:
@@ -412,10 +472,10 @@ def fectch_sentinel2(
                     sample_type="FLOAT32" if as_geotiff else "AUTO",
                 )
             elif p == "ndvi":
-                 evalscript = _es_s2_ndvi("B08", "B04")
+                 evalscript = _es_s2_ndvi("B08", "B04", sample_type="FLOAT32" if as_geotiff else "AUTO")
 
             else:
-                if validate_bands(custom_bands, _S2_BANDS):
+                if custom_bands and validate_bands(custom_bands, _S2_BANDS):
                     evalscript = _es_s2_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
                 else:
                     raise ValueError(f"Unidentifed band in Sentinel-2, Choose from the followinfg bands : {_S2_BANDS}")
@@ -452,16 +512,19 @@ def _es_s3_otci(h: str = "B10", m: str = "B11", l: str = "B12") -> str:
         "var cm=new ColorMapVisualizer([[0,[0,0,0.5]],[1,[0,0.3,0.8]],[1.8,[1,0.2,0.2]],[2.5,[1,0.9,0]],[4,[0,0.8,0.1]],[4.5,[0,0.6,0.2]],[5,[1,1,1]]]);\n"
         f"function evaluatePixel(s){{let OTCI=(s.{l}-s.{m})/(s.{m}-s.{h});return cm.process(OTCI)}}"
     )
-# def _es_s3_custom_bands(bands: list[str]) -> str:
-#     n = len(bands)
-#     bands_js = ", ".join(f'"{b}"' for b in bands)
-#     returns = ",".join(f"s.{b}" for b in bands)
-#     return (
-#         "//VERSION=3\n"
-#         f'function setup(){{return{{input:[{bands_js}], units:"REFLECTANCE,output:{{bands:{n},sampleType:"AUTO"}}}}}}\n'
-#         f"function evaluatePixel(s){{return[{returns}]}}"
-#     )
-def _es_s3_custom_bands(bands: list[str]) -> str:
+
+
+def _es_s3_otci_raw(h: str = "B10", m: str = "B11", l: str = "B12") -> str:
+    """Raw single-band FLOAT32 OTCI value (no colormap visualizer) — used
+    for as_geotiff=True instead of the display colour-ramp version."""
+    return (
+        "//VERSION=3\n"
+        f'function setup(){{return{{input:[{{bands:["{h}","{m}","{l}"],units:"REFLECTANCE"}}],output:{{bands:1,sampleType:"FLOAT32"}}}}}}\n'
+        f"function evaluatePixel(s){{let OTCI=(s.{l}-s.{m})/(s.{m}-s.{h});return[OTCI]}}"
+    )
+
+
+def _es_s3_custom_bands(bands: list[str], sample_type: str = "AUTO") -> str:
     n = len(bands)
     bands_js = ", ".join(f'"{b}"' for b in bands)
     returns = ", ".join(f"s.{b}" for b in bands)
@@ -470,7 +533,7 @@ def _es_s3_custom_bands(bands: list[str]) -> str:
         "//VERSION=3\n"
         "function setup(){return{"
         f'input:[{{bands:[{bands_js}],units:"REFLECTANCE"}}],'
-        f'output:{{bands:{n},sampleType:SampleType.AUTO}}'
+        f'output:{{bands:{n},sampleType:SampleType.{sample_type}}}'
         "}}\n"
         f"function evaluatePixel(s){{return[{returns}]}}"
     )
@@ -490,7 +553,8 @@ def fetch_sentinel3_olci(
     evalscript: Optional[str] = None,
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Sentinel-3 OLCI (Ocean and Land Colour Instrument) image.
@@ -499,27 +563,38 @@ def fetch_sentinel3_olci(
     Presets
     -------
     "true_color"  – Approximate RGB using B08 (red), B06 (green), B04 (blue)
+    "otci"        – Terrestrial Chlorophyll Index colour-ramp visualisation
 
     Custom bands
     ------------
     21 spectral bands: B01 (400 nm) … B21 (1020 nm), plus quality bands.
     custom_bands=["B17","B08","B04"]  → NIR false colour
+
+    as_geotiff: when True, returns a georeferenced GeoTIFF with raw FLOAT32
+    reflectance values (or the raw OTCI index for the "otci" preset, no
+    colormap) instead of an 8-bit display JPEG.
     """
     if evalscript is None:
         if custom_bands:
             if validate_bands(custom_bands, _S3_OLCI_BANDS):
-                evalscript = _es_s3_custom_bands(custom_bands)
+                evalscript = _es_s3_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
             else:
                 raise ValueError(f"Unidentifed band in Sentinel-3 OLCI, Choose from the followinfg bands : {_S3_OLCI_BANDS}")
         elif preset:
             p = preset.lower()
             if p == "true_color":
-                evalscript = _es_rgb("B08", "B06", "B04")
+                evalscript = (
+                    _es_s3_custom_bands(["B08", "B06", "B04"], sample_type="FLOAT32")
+                    if as_geotiff else _es_rgb("B08", "B06", "B04")
+                )
             elif p == "otci":
-                evalscript = _es_s3_otci("B10", "B11", "B12")
+                evalscript = (
+                    _es_s3_otci_raw("B10", "B11", "B12")
+                    if as_geotiff else _es_s3_otci("B10", "B11", "B12")
+                )
             else:
                 raise ValueError(
-                    f"Unknown S3 OLCI preset '{preset}'. Choose: true_color"
+                    f"Unknown S3 OLCI preset '{preset}'. Choose: true_color | otci"
                 )
         else:
             raise ValueError("Provide preset=, custom_bands=, or evalscript=.")
@@ -532,7 +607,8 @@ def fetch_sentinel3_olci(
         end_date=end_date,
         width=width,
         height=height,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 
@@ -545,7 +621,7 @@ def fetch_sentinel3_olci(
 # Better visible RGB: S3/S2/S1 with gain ~3.5 for approximate true colour.
 # ---------------------------------------------------------------------------
 _S3_SLSTR_BANDS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "F1", "F2"]
-def _es_s3_slstr_custom_bands(bands: list[str]) -> str:
+def _es_s3_slstr_custom_bands(bands: list[str], sample_type: str = "AUTO") -> str:
     """SLSTR-safe custom bands — no units constraint (thermal bands aren't reflectance)."""
     n = len(bands)
     bands_js = ", ".join(f'"{b}"' for b in bands)
@@ -554,7 +630,7 @@ def _es_s3_slstr_custom_bands(bands: list[str]) -> str:
         "//VERSION=3\n"
         "function setup(){return{"
         f'input:[{{bands:[{bands_js}]}}],'   # <-- no units:"REFLECTANCE"
-        f'output:{{bands:{n},sampleType:SampleType.AUTO}}'
+        f'output:{{bands:{n},sampleType:SampleType.{sample_type}}}'
         "}}\n"
         f"function evaluatePixel(s){{return[{returns}]}}"
     )
@@ -563,7 +639,7 @@ def _es_s3_slstr_ndvi(nir: str = "S3", r: str = "S2") -> str:
     return (
         "//VERSION=3\n"
         "function setup(){return{"
-        f'input:[{{bands:["{r}","{nir}"]}}],'
+        f'input:["{r}","{nir}"],'
         'output:{bands:3,sampleType:"AUTO"}'
         "}}\n"
         f"function evaluatePixel(s){{"
@@ -572,6 +648,20 @@ def _es_s3_slstr_ndvi(nir: str = "S3", r: str = "S2") -> str:
         "return viz.process(NDVI)"
         "}"
     )
+
+
+def _es_s3_slstr_ndvi_raw(nir: str = "S3", r: str = "S2") -> str:
+    """Raw single-band FLOAT32 NDVI (no colour-gradient visualizer)."""
+    return (
+        "//VERSION=3\n"
+        "function setup(){return{"
+        f'input:["{r}","{nir}"],'
+        'output:{bands:1,sampleType:"FLOAT32"}'
+        "}}\n"
+        f"function evaluatePixel(s){{return[index(s.{nir},s.{r})]}}"
+    )
+
+
 def fetch_sentinel3_slstr(
     bbox: list[float],
     start_date: str,
@@ -582,7 +672,8 @@ def fetch_sentinel3_slstr(
     evalscript: Optional[str] = None,
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Sentinel-3 SLSTR (Sea and Land Surface Temperature Radiometer) image.
@@ -592,24 +683,30 @@ def fetch_sentinel3_slstr(
     -------
     "false_color"  – Approximate visible RGB: S3 (SWIR-ish), S2 (red), S1 (green)
                     Note: SLSTR has no dedicated blue band; S1 stands in.
+    "ndvi"         – Colour-gradient NDVI visualisation
 
-
+    as_geotiff: when True, returns a georeferenced GeoTIFF with raw FLOAT32
+    band/index values (no gain, no colour visualizer) instead of an 8-bit
+    display JPEG.
     """
     if evalscript is None:
         if custom_bands:
             if validate_bands(custom_bands, _S3_SLSTR_BANDS):
-                evalscript = _es_s3_slstr_custom_bands(custom_bands)
+                evalscript = _es_s3_slstr_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
             else:
                 raise ValueError(f"Unidentifed band in Sentinel-3 SLSTR, Choose from the followinfg bands : {_S3_SLSTR_BANDS}")
         elif preset:
             p = preset.lower()
             if p == "false_color":
-                evalscript = _es_rgb("S3", "S2", "S1", gain=2)
+                evalscript = (
+                    _es_s3_slstr_custom_bands(["S3", "S2", "S1"], sample_type="FLOAT32")
+                    if as_geotiff else _es_rgb("S3", "S2", "S1", gain=2)
+                )
             elif p == "ndvi":
-                evalscript = _es_s3_slstr_ndvi("S3", "S2")
+                evalscript = _es_s3_slstr_ndvi_raw("S3", "S2") if as_geotiff else _es_s3_slstr_ndvi("S3", "S2")
             else:
                 raise ValueError(
-                    f"Unknown S3 SLSTR preset '{preset}'. Choose: false_color"
+                    f"Unknown S3 SLSTR preset '{preset}'. Choose: false_color | ndvi"
                 )
         else:
             raise ValueError("Provide preset=, custom_bands=, or evalscript=.")
@@ -622,7 +719,8 @@ def fetch_sentinel3_slstr(
         end_date=end_date,
         width=width,
         height=height,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 
@@ -635,12 +733,12 @@ def fetch_sentinel3_slstr(
 _S3_SLSYN_BANDS  = ["B01","B02","B03","B04","B05","B06","B07","B08","B09","B10","B11",
           "B12","B16","B17","B18", "B21","S1", "S2", "S3", "S4", "S5", "S6"]
 
-def _es_s3_ndvi(nir: str = "S3", r: str = "S2") -> str:
+def _es_s3_ndvi(nir: str = "S3", r: str = "S2", sample_type: str = "AUTO") -> str:
     return (
         "//VERSION=3\n"
         "function setup(){return{"
         f'input:["{r}","{nir}"],'
-        'output:{bands:1,sampleType:SampleType.AUTO}'
+        f'output:{{bands:1,sampleType:SampleType.{sample_type}}}'
         "}}\n"
         f"function evaluatePixel(s){{return[(s.{nir}-s.{r})/(s.{nir}+s.{r})]}}"
     )
@@ -657,7 +755,8 @@ def fetch_sentinel3_syn_l2(
     evalscript: Optional[str] = None,
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Sentinel-3 SYN L2 (Synergy OLCI+SLSTR combined) image.
@@ -666,27 +765,34 @@ def fetch_sentinel3_syn_l2(
     Presets
     -------
     "true_color"  – RGB using Syn_Oa08 (665 nm), Syn_Oa06 (560 nm), Syn_Oa04 (490 nm)
+    "ndvi"        – (NIR - Red) / (NIR + Red) using SLSTR-derived S3/S2 channels
 
     Custom bands
     ------------
     OLCI synergy channels: Syn_Oa01 … Syn_Oa21
     SLSTR synergy channels: Syn_S1 … Syn_S6
+
+    as_geotiff: when True, returns a georeferenced GeoTIFF with raw FLOAT32
+    values instead of an 8-bit display JPEG.
     """
     if evalscript is None:
         if custom_bands:
             if validate_bands(custom_bands, _S3_SLSYN_BANDS):
-                    evalscript = _es_s2_custom_bands(custom_bands)
+                evalscript = _es_s3_custom_bands(custom_bands, sample_type="FLOAT32" if as_geotiff else "AUTO")
             else:
                 raise ValueError(f"Unidentifed band in Sentinel-3 SLSYN, Choose from the followinfg bands : {_S3_SLSYN_BANDS}")
         elif preset:
             p = preset.lower()
             if p == "true_color":
-                evalscript = _es_rgb("B08", "B06", "B04")
+                evalscript = (
+                    _es_s3_custom_bands(["B08", "B06", "B04"], sample_type="FLOAT32")
+                    if as_geotiff else _es_rgb("B08", "B06", "B04")
+                )
             elif p == "ndvi":
-                evalscript = _es_s3_ndvi("S3", "S2")
+                evalscript = _es_s3_ndvi("S3", "S2", sample_type="FLOAT32" if as_geotiff else "AUTO")
             else:
                 raise ValueError(
-                    f"Unknown S3 SYN L2 preset '{preset}'. Choose: true_color"
+                    f"Unknown S3 SYN L2 preset '{preset}'. Choose: true_color | ndvi"
                 )
         else:
             raise ValueError("Provide preset=, custom_bands=, or evalscript=.")
@@ -699,7 +805,8 @@ def fetch_sentinel3_syn_l2(
         end_date=end_date,
         width=width,
         height=height,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 def _es_custom_bands(bands: list[str], gain: float = 2.5, force_raw: bool = False) -> str:
@@ -769,6 +876,20 @@ def _es_s5p_single(band_name: str, scale: float = 1e4) -> str:
     )
 
 
+def _es_s5p_raw(band_name: str) -> str:
+    """
+    Raw, unscaled, unclamped physical value for a single S5P band — used for
+    as_geotiff=True instead of the scaled/clamped display visualisation
+    (_es_s5p_single), which would otherwise silently corrupt the values in
+    a "GeoTIFF" output.
+    """
+    return (
+        "//VERSION=3\n"
+        f'function setup(){{return{{input:["{band_name}"],output:{{bands:1,sampleType:"FLOAT32"}}}}}}\n'
+        f"function evaluatePixel(s){{return[s.{band_name}]}}"
+    )
+
+
 def fetch_sentinel5p_l2(
     bbox: list[float],
     start_date: str,
@@ -779,13 +900,14 @@ def fetch_sentinel5p_l2(
     evalscript: Optional[str] = None,
     width: int = 512,
     height: int = 512,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    as_geotiff: bool = False,
 ) -> dict:
     """
     Fetch a Sentinel-5P L2 trace-gas product.
     Resolution ~3.5 × 5.5 km (TROPOMI footprint).
 
-    Presets (greyscale single-band visualisations)
+    Presets (greyscale single-band visualisations, or raw values if as_geotiff)
     -------
     "no2"             – NO₂ tropospheric column
     "co"              – CO total column
@@ -799,11 +921,14 @@ def fetch_sentinel5p_l2(
     Custom bands
     ------------
     Supply any valid S5P band name directly, e.g. custom_bands=["NO2"].
-    For quantitative retrieval write your own evalscript= returning FLOAT32.
+
+    as_geotiff: when True, returns a georeferenced GeoTIFF with the raw,
+    unscaled physical value (mol/m², DU, etc.) as FLOAT32 instead of the
+    0-1 clamped/scaled display greyscale — required for quantitative use.
     """
     if evalscript is None:
         if custom_bands:
-            evalscript = _es_custom_bands(custom_bands)
+            evalscript = _es_custom_bands(custom_bands, force_raw=as_geotiff)
         elif preset:
             p = preset.lower()
             band = _S5P_BAND_MAP.get(p)
@@ -812,7 +937,7 @@ def fetch_sentinel5p_l2(
                     f"Unknown S5P preset '{preset}'. "
                     f"Choose: {', '.join(_S5P_BAND_MAP.keys())}"
                 )
-            evalscript = _es_s5p_single(band)
+            evalscript = _es_s5p_raw(band) if as_geotiff else _es_s5p_single(band)
         else:
             raise ValueError("Provide preset=, custom_bands=, or evalscript=.")
 
@@ -824,7 +949,8 @@ def fetch_sentinel5p_l2(
         end_date=end_date,
         width=width,
         height=height,
-        save_path=save_path
+        save_path=save_path,
+        output_format="tiff" if as_geotiff else "jpeg",
     )
 
 

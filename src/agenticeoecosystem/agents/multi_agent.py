@@ -292,7 +292,7 @@ async def get_ans_tool_path(query: str) -> str:
 
         if event.content and event.content.parts:
             for part in event.content.parts:
-                if getattr(part, 'function_call', None):
+                if getattr(part, 'function_call', None) and not part.function_call.name.endswith('agent'):
                     tools_called.append(part.function_call.name)
 
         if event.is_final_response():

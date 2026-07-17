@@ -82,6 +82,8 @@ _ARXIV_TOOL_NAMES = {
 
 _MOOC_TOOL_NAMES = {"search_moocs"}
 
+_EOSS_TOOL_NAMES = {"search_eoss", "query_ontology", "list_ontology_nodes"}
+
 _GIS_TOOL_NAMES = {
     # Shapely geometry
     "buffer", "intersection", "union", "difference", "symmetric_difference",
@@ -188,9 +190,16 @@ _EVE_RETRIEVAL_SYSTEM_PROMPT = (
 )
 
 _RAG_SYSTEM_PROMPT = (
-    "You are a retrieval assistant for ESA Earth Observation Science Strategy. "
-    "Use the search_eopss tool to fetch relevant document chunks and "
-    "knowledge graph context, then return the raw context to the caller."
+    "You are a retrieval assistant for the ESA Earth Observation Science Strategy "
+    "knowledge graph. Choose the right tool for the request:\n"
+    "- search_eoss: natural-language questions; returns relevant document chunks "
+    "plus their knowledge-graph context.\n"
+    "- query_ontology: structured, read-only Cypher lookups (MATCH ... RETURN) "
+    "over the graph.\n"
+    "- list_ontology_nodes: enumerate nodes of a given label (e.g. "
+    "StrategicObjective, ScienceQuestion, KnowledgeAdvancementObjective), or "
+    "list all node types with counts when no label is given.\n"
+    "Call the appropriate tool, then return the raw context to the caller."
 )
 
 _ARXIV_SYSTEM_PROMPT = (
@@ -295,7 +304,7 @@ model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
 gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
 eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
+eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name in _EOSS_TOOL_NAMES], system_prompt=_RAG_SYSTEM_PROMPT)
 moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
 gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
@@ -378,32 +387,32 @@ async def get_eve_knowledge(request: str) -> str:
 
 
 @tool
-async def get_hybrid_rag_context(request: str) -> str:
+async def get_eossgraphrag_context(request: str) -> str:
     """Retrieve relevant context from the ESA EO Science Strategy knowledge base.
 
     Uses hybrid retrieval (semantic vector search + ESA knowledge graph) over PDF documents.
     Use for questions about science themes, strategic objectives, enabling tools, and other ESA EO topics.
     """
-    logger.info("[TOOL CALL] get_hybrid_rag_context: %s", request)
+    logger.info("[TOOL CALL] get_eossgraphrag_context: %s", request)
     try:
         result = await eoss_rag_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
         _extract_steps_from_messages(result["messages"])
         for msg in result["messages"]:
             for tc in getattr(msg, "tool_calls", []):
-                logger.debug("[eoss_rag_agent -> search_eopss] args: %s", tc.get("args", {}))
+                logger.debug("[eoss_rag_agent -> search_eoss] args: %s", tc.get("args", {}))
             if getattr(msg, "type", None) == "tool":
                 content = msg.content
                 if isinstance(content, list):
                     content = "\n".join(
                         c.get("text", str(c)) if isinstance(c, dict) else str(c) for c in content
                     )
-                logger.debug("[search_eopss raw output]\n%s", content)
+                logger.debug("[search_eoss raw output]\n%s", content)
         text_output = result["messages"][-1].text
         if isinstance(text_output, tuple):
             text_output = " ".join(str(t) for t in text_output)
         return str(text_output)
     except Exception as e:
-        logger.error("[TOOL ERROR] get_hybrid_rag_context: %s", e)
+        logger.error("[TOOL ERROR] get_eossgraphrag_context: %s", e)
         return f"Error: {e}"
 
 
@@ -454,7 +463,7 @@ async def get_gis_analysis(request: str) -> str:
 
 supervisor_agent = create_agent(
     model,
-    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis],
+    tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_eossgraphrag_context, get_mooc_context, get_arxiv_data, get_gis_analysis],
     system_prompt=_SUPERVISOR_SYSTEM_PROMPT,
 )
 
@@ -488,11 +497,11 @@ def rebuild_agents(
     eo_stac_agent       = create_agent(_llm("eo_stac"),    tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
     gee_agent           = create_agent(_llm("gee"),        tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
     eve_retrieval_agent = create_agent(_llm("eve"),        tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-    eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name == "search_eopss"], system_prompt=_RAG_SYSTEM_PROMPT)
+    eoss_rag_agent      = create_agent(_llm("eoss_rag"),   tools=[t for t in mcp_tools if t.name in _EOSS_TOOL_NAMES], system_prompt=_RAG_SYSTEM_PROMPT)
     moocs_agent         = create_agent(_llm("moocs"),      tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
     arxiv_agent         = create_agent(_llm("arxiv"),      tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
     gis_agent           = create_agent(_llm("gis"),        tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
-    supervisor_agent    = create_agent(_llm("supervisor"), tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_hybrid_rag_context, get_mooc_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
+    supervisor_agent    = create_agent(_llm("supervisor"), tools=[get_eo_stac_data, get_gee_data, get_eve_knowledge, get_eossgraphrag_context, get_mooc_context, get_arxiv_data, get_gis_analysis], system_prompt=_SUPERVISOR_SYSTEM_PROMPT)
     logger.info(
         "Agents rebuilt — model=%s  provider=%s  temperature=%s  overrides=%s",
         model_name, provider, temperature, list((agent_models or {}).keys()),

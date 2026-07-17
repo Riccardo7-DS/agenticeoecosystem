@@ -39,7 +39,7 @@ _AGENT_LABELS: dict[str, str] = {
     "get_eo_stac_data":       "EO Dashboard / STAC",
     "get_gee_data":           "Google Earth Engine",
     "get_eve_knowledge":      "EVE Knowledge Base",
-    "get_hybrid_rag_context": "ESA EO Science Strategy RAG",
+    "get_eossgraphrag_context": "ESA EO Science Strategy RAG",
     "get_arxiv_data":         "ArXiv Papers",
     "get_gis_analysis":       "GIS Analysis",
 }

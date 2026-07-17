@@ -32,7 +32,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000002_100002",
@@ -109,7 +110,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000003_100003",
@@ -162,7 +164,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000004_100004",
@@ -258,7 +261,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000006_100006",
@@ -383,7 +387,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000009_100009",
@@ -436,7 +441,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000010_100010",
@@ -490,7 +496,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000012_100012",
@@ -649,7 +656,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000017_100017",
@@ -702,7 +710,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000018_100018",
@@ -754,7 +763,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000019_100019",
@@ -833,7 +843,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000020_100020",
@@ -906,7 +917,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000021_100021",
@@ -969,7 +981,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000022_100022",
@@ -1042,7 +1055,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000023_100023",
@@ -1094,7 +1108,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000024_100024",
@@ -1153,7 +1168,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000025_100025",
@@ -1240,7 +1256,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000026_100026",
@@ -1392,7 +1409,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000028_100028",
@@ -1559,7 +1577,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000032_100032",
@@ -1612,7 +1631,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000033_100033",
@@ -1689,7 +1709,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 0
     },
     {
       "task_ID": "TASK_260419_000034_100034",
@@ -1742,7 +1763,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 1
     },
     {
       "task_ID": "TASK_260419_000035_100035",
@@ -1849,7 +1871,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000036_100036",
@@ -2074,7 +2097,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000040_100040",
@@ -2127,7 +2151,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000041_100041",
@@ -2204,7 +2229,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000042_100042",
@@ -2283,7 +2309,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000043_100043",
@@ -2356,7 +2383,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000044_100044",
@@ -2451,7 +2479,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260419_000045_100045",
@@ -2594,7 +2623,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1  
     },
     {
       "task_ID": "TASK_260419_000046_100046",
@@ -2705,7 +2735,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000047_100047",
@@ -2786,7 +2817,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000048_100048",
@@ -3201,7 +3233,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000068_100068",
@@ -3236,7 +3269,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000069_100069",
@@ -3299,7 +3333,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000074_100074",
@@ -3334,7 +3369,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260419_000077_100077",
@@ -3369,7 +3405,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000001_300001",
@@ -3397,7 +3434,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000003_300003",
@@ -3425,7 +3463,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000004_300004",
@@ -3460,7 +3499,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000005_300005",
@@ -3495,7 +3535,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000006_300006",
@@ -3547,7 +3588,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260619_000007_300007",
@@ -3601,7 +3643,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260619_000008_300008",
@@ -3671,7 +3714,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000002_200002",
@@ -3718,7 +3762,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000003_200003",
@@ -3777,7 +3822,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000004_200004",
@@ -3846,7 +3892,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000005_200005",
@@ -3872,7 +3919,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000006_200006",
@@ -3918,7 +3966,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000007_200007",
@@ -3961,7 +4010,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000008_200008",
@@ -4597,7 +4647,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000021_200021",
@@ -4661,7 +4712,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260427_000024_200024",
@@ -4718,7 +4770,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000025_200025",
@@ -4775,7 +4828,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1  
     },
     {
       "task_ID": "TASK_260427_000026_200026",
@@ -4819,7 +4873,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1  
     },
     {
       "task_ID": "TASK_260427_000027_200027",
@@ -4890,7 +4945,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000028_200028",
@@ -4941,7 +4997,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000029_200029",
@@ -4998,7 +5055,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000030_200030",
@@ -5050,7 +5108,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260427_000031_200031",
@@ -5742,7 +5801,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 1
     },
     {
       "task_ID": "TASK_260619_000010_300010",
@@ -5775,7 +5835,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 1
     },
     {
       "task_ID": "TASK_260619_000011_300011",
@@ -5822,7 +5883,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 0
     },
     {
       "task_ID": "TASK_260619_000012_300012",
@@ -5867,7 +5929,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 1
     },
     {
       "task_ID": "TASK_260619_000013_300013",
@@ -5915,7 +5978,8 @@
       "match_reasoning_LLM": null,
       "match_score_LLM": null,
       "match_reasoning_Human": null,
-      "match_score_Human": null
+      "match_score_Human": null,
+      "GT": 1
     },
     {
       "task_ID": "TASK_260619_000014_300014",
@@ -6201,7 +6265,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000007_400007",
@@ -7214,7 +7279,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT" : 0
     },
     {
       "task_ID": "TASK_260713_000028_500007",
@@ -7722,7 +7788,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 0
     },
     {
       "task_ID": "TASK_260713_000044_500023",
@@ -7767,7 +7834,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000045_500024",
@@ -8041,7 +8109,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000052_500031",
@@ -8348,7 +8417,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 0
     },
     {
       "task_ID": "TASK_260713_000059_500038",
@@ -8696,7 +8766,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {}, 
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000067_500046",
@@ -8745,7 +8816,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000069_500048",
@@ -9033,7 +9105,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000075_500054",
@@ -9076,7 +9149,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000077_500056",
@@ -9357,7 +9431,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000083_500062",
@@ -9399,7 +9474,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000001_600001",
@@ -9547,7 +9623,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000005_600005",
@@ -9858,7 +9935,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260713_000015_600015",
@@ -10143,7 +10221,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000022_600022",
@@ -10184,7 +10263,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260713_000023_600023",
@@ -10576,7 +10656,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 0
     },
     {
       "task_ID": "TASK_260713_000031_600031",
@@ -10867,7 +10948,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000038_600038",
@@ -10908,7 +10990,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT"
     },
     {
       "task_ID": "TASK_260713_000039_600039",
@@ -11750,7 +11833,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 0
     },
     {
       "task_ID": "TASK_260713_000059_600059",
@@ -11800,7 +11884,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000061_600061",
@@ -12060,7 +12145,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000067_600067",
@@ -12324,7 +12410,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT" : 1
     },
     {
       "task_ID": "TASK_260713_000073_600073",
@@ -12621,7 +12708,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 0
     },
     {
       "task_ID": "TASK_260713_000079_600079",
@@ -12673,7 +12761,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000081_600081",
@@ -12913,7 +13002,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000087_600087",
@@ -13485,7 +13575,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260716_000001_700013",
@@ -13868,7 +13959,8 @@
       "match_reasoning_Human": null,
       "match_score_Human": null,
       "evaluator_scores": {},
-      "evaluator_reasoning": {}
+      "evaluator_reasoning": {},
+      "GT": 1
     },
     {
       "task_ID": "TASK_260716_000007_700019",

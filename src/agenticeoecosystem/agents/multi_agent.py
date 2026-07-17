@@ -135,6 +135,11 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "- EUMETSAT and CDSE do not do NDVI, reprojection, clipping, or zonal "
     "stats on downloaded files — route that to the GIS analysis server.\n"
     "\n"
+    "- When delegating an imagery request to CDSE, state whether the output "
+    "is for visual inspection (viewing, VLM) or for downstream quantitative "
+    "use (GIS analysis server, NDVI/band math, zonal stats, more than 3 "
+    "bands). CDSE should fetch a JPEG quicklook (≤3 bands, true-color/preset) "
+    "for the former, and a GeoTIFF (as_geotiff=True) for the latter.\n"
     "OUTPUT RULES:\n"
     "- Return tool results directly and completely, word for word — no added "
     "introductions, summaries, or commentary.\n"
@@ -258,12 +263,7 @@ async def call_agent_async(query: str, runner, user_id, session_id):
     print(f"\n<<< Agent Response: {final_response_text}")
 
 
-async def run_conversation():
-    await call_agent_async(
-        "Get me two papers on sea-ice from arxiv, also fetch me similar "
-        "information from any course material you have access to.",
-        runner, USER_ID, SESSION_ID,
-    )
+
 
 
 async def get_ans_tool_path(query: str) -> str:
@@ -309,10 +309,66 @@ async def get_ans_tool_path(query: str) -> str:
         "tools_called": tools_called,
         "agents_called": agents_called,
     })
+
+import json
+from collections import Counter
+
+async def debug_agent_async(query: str, runner, user_id, session_id):
+    """Verbose event dumper for diagnosing repeated/looping sub-agent or tool calls."""
+    print(f"\n{'='*80}\n>>> USER QUERY: {query}\n{'='*80}")
+
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    call_log = []  # (author, name, args) for every function_call seen
+
+    i = 0
+    async for event in runner.run_async(
+        user_id=user_id, session_id=session_id, new_message=content
+    ):
+        print(f"\n--- event #{i} | author={event.author} | "
+              f"final={event.is_final_response()} ---")
+
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if getattr(part, 'text', None):
+                    print(f"  [TEXT] {part.text}")
+                fc = getattr(part, 'function_call', None)
+                if fc:
+                    args = dict(fc.args)
+                    print(f"  [CALL] {fc.name}({json.dumps(args, indent=2, default=str)})")
+                    call_log.append((event.author, fc.name, args))
+                fr = getattr(part, 'function_response', None)
+                if fr:
+                    print(f"  [RESULT] {fr.name} -> "
+                          f"{json.dumps(fr.response, indent=2, default=str)[:1500]}")
+
+        # Sub-agent handoffs show up here, not as a normal function_call
+        if event.actions:
+            if getattr(event.actions, 'transfer_to_agent', None):
+                print(f"  [TRANSFER] -> {event.actions.transfer_to_agent}")
+            if getattr(event.actions, 'escalate', None):
+                print(f"  [ESCALATE] {event.error_message}")
+
+        i += 1
+
+    print(f"\n{'='*80}\nCALL SUMMARY\n{'='*80}")
+    counts = Counter((a, n) for a, n, _ in call_log)
+    for (author, name), n in counts.items():
+        print(f"  {author:>20} -> {name:<25} called {n}x")
+        if n > 1:
+            for a, nm, args in call_log:
+                if (a, nm) == (author, name):
+                    print(f"      args: {args}")
+
+async def run_conversation():
+    await debug_agent_async(
+        "Enter your question: Download a Sentinel-2 image of the Niamey, Niger region for July 2023 with all bands. Compute NDVI (NIR = band 4, Red = band 3) and save the result. Report the mean and maximum NDVI values across the scene to assess overall vegetation productivity.",
+        # "Download pre-computed daily mean 2m temperature for January 2023 over Europe without downloading raw hourly data.",
+        runner, USER_ID, SESSION_ID,
+    )
 if __name__ == "__main__":
     try:
-        query = input("Enter your question: ")
-        ans = asyncio.run(get_ans_tool_path(query))
+        # query = input("Enter your question: ")
+        ans = asyncio.run(run_conversation())
         print(ans)
     except Exception as e:
         print(f"An error occurred: {e}")

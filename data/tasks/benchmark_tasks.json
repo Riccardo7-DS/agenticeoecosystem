@@ -55,9 +55,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New South Wales, Australia"
+                "place_name": "<inferred place>"
               },
-              "comment": "Region most affected by the 2019-2020 bushfires"
+              "comment": "The narrative names no specific study area; New South Wales (hardest-hit by the real 2019-2020 fires) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -85,9 +85,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New South Wales, Australia"
+                "place_name": "<inferred place>"
               },
-              "comment": "Region most affected by the 2019-2020 bushfires"
+              "comment": "The narrative names no specific study area; New South Wales (hardest-hit by the real 2019-2020 fires) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -599,9 +599,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Kalimantan, Indonesia"
+                "place_name": "<inferred place>"
               },
-              "comment": "Study area from the narrative"
+              "comment": "The narrative names no specific study area; Kalimantan, Indonesia (a well-documented forest-cover-change hotspot) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -630,9 +630,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Kalimantan, Indonesia"
+                "place_name": "<inferred place>"
               },
-              "comment": "Study area from the narrative"
+              "comment": "The narrative names no specific study area; Kalimantan, Indonesia (a well-documented forest-cover-change hotspot) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -866,9 +866,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Utqiagvik, Alaska, USA"
+                "place_name": "<inferred place>"
               },
-              "comment": "Representative Arctic coastal study site"
+              "comment": "The narrative names no specific study area; Utqiagvik, Alaska is one defensible inferred Arctic coastal example"
             },
             {
               "function_name": "fetch_sentinel1_grd",
@@ -894,9 +894,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Longyearbyen, Svalbard, Norway"
+                "place_name": "<inferred place>"
               },
-              "comment": "An equally valid representative Arctic coastal site — the narrative does not name one location, so a different Arctic site is an acceptable alternative to Utqiagvik"
+              "comment": "Longyearbyen, Svalbard is an equally valid inferred Arctic coastal example — the narrative names no specific location"
             },
             {
               "function_name": "fetch_sentinel1_grd",
@@ -1191,9 +1191,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Port of Rotterdam, Netherlands"
+                "place_name": "<inferred place>"
               },
-              "comment": "Study area identified from the narrative"
+              "comment": "The narrative names no specific study area; Port of Rotterdam (a major industrial/shipping hub) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel5p_l2",
@@ -1226,9 +1226,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Port of Rotterdam, Netherlands"
+                "place_name": "<inferred place>"
               },
-              "comment": "Study area identified from the narrative"
+              "comment": "The narrative names no specific study area; Port of Rotterdam (a major industrial/shipping hub) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel5p_l2",
@@ -1492,9 +1492,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Beijing, China"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative city within one of the countries discussed (China)"
+              "comment": "The narrative names India, China and the U.S. but no specific city; Beijing is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1522,9 +1522,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Beijing, China"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative city within one of the countries discussed (China)"
+              "comment": "The narrative names India, China and the U.S. but no specific city; Beijing is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1552,9 +1552,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New Delhi, India"
+                "place_name": "<inferred place>"
               },
-              "comment": "An equally valid representative city — India is also named in the narrative, so New Delhi is an acceptable alternative to Beijing"
+              "comment": "New Delhi is an equally valid inferred city — India is also named in the narrative"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1636,11 +1636,11 @@
     },
     {
       "task_ID": "TASK_260419_000033_100033",
-      "task_text": "Find the EO Dashboard narrative about using satellites to monitor land cover and track aboveground biomass, identify a study region it discusses, and download the MODIS annual land-cover product for that area — Gabon is a whole country, so a 500 m global land-cover classification is a more appropriate scale than a single Sentinel-2 tile.",
+      "task_text": "Find the EO Dashboard narrative about using satellites to monitor land cover and aboveground biomass, identify the study region it discusses, and retrieve the MODIS annual land-cover product covering that area. Summarize the dominant land-cover classes and explain how they relate to the biomass monitoring described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the land-cover/biomass-monitoring narrative, geocode Gabon (a Congo Basin biomass study region), then download the MODIS Land Cover Type product (MCD12Q1, 500 m, annual) via GEE for a country-scale land-cover classification.",
+      "reference_solution_description": "Search EO Dashboard for the real 'A view from space monitors land cover and tree to track aboveground biomass and carbon content' narrative. Its STAC layers span more than one forested biomass region (e.g. nceo_africa_2017 for African biomass and RECCAP2_1_AGC_LVOD_amazonia for the Amazon), so a defensible study region could be the Congo Basin (e.g. Gabon) or the Amazon Basin (e.g. Amazonas, Brazil). Geocode the chosen region, then download the MODIS Land Cover Type product (MCD12Q1, 500 m, annual) for it and summarize the dominant land-cover classes in relation to the narrative's biomass tracking.",
       "reference_solutions": [
         {
           "steps": [
@@ -1654,9 +1654,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Gabon"
+                "place_name": "<inferred place>"
               },
-              "comment": "Congo Basin forest region relevant to the narrative's biomass tracking"
+              "comment": "The narrative's STAC layers span Africa (nceo_africa_2017) among other pantropical regions but name no specific country; Gabon (Congo Basin) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -1668,7 +1668,7 @@
                 "bands": "LC_Type1",
                 "dataset": "MODIS/061/MCD12Q1"
               },
-              "comment": "MODIS Land Cover Type (500 m, annual) — country-scale classification"
+              "comment": "MODIS Land Cover Type (500 m, annual) — country-scale classification, summarized against the narrative's biomass discussion"
             }
           ]
         },
@@ -1679,14 +1679,14 @@
               "arguments": {
                 "keyword": "tree"
               },
-              "comment": "Alternative keyword — land use"
+              "comment": "Alternative keyword — real substring of the narrative title"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Gabon"
+                "place_name": "<inferred place>"
               },
-              "comment": "Congo Basin forest region relevant to the narrative's biomass tracking"
+              "comment": "Amazonas, Brazil is an equally valid inferred region — the narrative's RECCAP2 AGC LVOD Amazonia layer covers the Amazon too"
             },
             {
               "function_name": "download_gee_product",
@@ -1698,7 +1698,7 @@
                 "bands": "LC_Type1",
                 "dataset": "MODIS/061/MCD12Q1"
               },
-              "comment": "MODIS Land Cover Type (500 m, annual) — country-scale classification"
+              "comment": "MODIS Land Cover Type (500 m, annual) — Amazon-scale classification, summarized against the narrative's biomass discussion"
             }
           ]
         }
@@ -1786,9 +1786,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Suez Canal, Egypt"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative example of a major global shipping chokepoint"
+              "comment": "The narrative names no specific location; Suez Canal is one defensible inferred example of a major global shipping chokepoint"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1816,9 +1816,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Suez Canal, Egypt"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative example of a major global shipping chokepoint"
+              "comment": "The narrative names no specific location; Suez Canal is one defensible inferred example of a major global shipping chokepoint"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1846,9 +1846,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Panama Canal, Panama"
+                "place_name": "<inferred place>"
               },
-              "comment": "An equally valid representative chokepoint — the narrative names no specific location, so a different major global shipping chokepoint is an acceptable alternative to the Suez Canal"
+              "comment": "Panama Canal is an equally valid inferred chokepoint"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2012,9 +2012,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Lahore, Pakistan"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative city in one of the countries named (Pakistan), frequently affected by the winter smog events described"
+              "comment": "The narrative names Northern India and Pakistan but no specific city; Lahore is one defensible inferred example, frequently affected by the winter smog events described"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2042,9 +2042,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Lahore, Pakistan"
+                "place_name": "<inferred place>"
               },
-              "comment": "A representative city in one of the countries named (Pakistan), frequently affected by the winter smog events described"
+              "comment": "The narrative names Northern India and Pakistan but no specific city; Lahore is one defensible inferred example, frequently affected by the winter smog events described"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2072,9 +2072,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New Delhi, India"
+                "place_name": "<inferred place>"
               },
-              "comment": "An equally valid representative city — India is also named in the narrative, so New Delhi is an acceptable alternative to Lahore"
+              "comment": "New Delhi is an equally valid inferred city — India is also named in the narrative"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2252,9 +2252,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Galápagos Islands, Ecuador"
+                "place_name": "<inferred place>"
               },
-              "comment": "Coastal region strongly affected by El Niño sea-surface warming"
+              "comment": "The narrative names no specific coastal study area; the Galápagos Islands (strongly affected by El Niño sea-surface warming) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -2283,9 +2283,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Galápagos Islands, Ecuador"
+                "place_name": "<inferred place>"
               },
-              "comment": "Coastal region strongly affected by El Niño sea-surface warming"
+              "comment": "The narrative names no specific coastal study area; the Galápagos Islands (strongly affected by El Niño sea-surface warming) is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -2488,7 +2488,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for deforestation narratives (the real 'Forests on the Brink: Satellite Imagery unveiling Loss and Shifting Forest Landscapes' narrative — its linked datasets are pantropical/global forest-change products, not tied to one named place), geocode 'Rondônia, Brazil' with geocode_place as a representative area of well-documented Amazon deforestation, then download two Sentinel-2 true-colour images in matching dry seasons (low cloud cover): before (Jul–Aug 2018) and after (Jul–Aug 2020) reported forest loss. Compare the two images and describe visible land-cover change (e.g. reduced forest canopy, new clearings).",
+      "reference_solution_description": "Search EO Dashboard by a keyword related to deforestation or forest loss (e.g. 'forest' or 'biomass') and accept any real narrative the search returns on that topic — the EO Dashboard catalog may add further forest-loss narratives over time, and none of them need be tied to one named place, since forest-change datasets are typically pantropical/global products. Geocode any well-documented deforestation hotspot as a representative area (e.g. Rondônia, Brazil or Kalimantan, Indonesia), then download two Sentinel-2 true-colour images in matching low-cloud seasons: one before and one after a period of well-documented forest loss there. Compare the two images and describe visible land-cover change (e.g. reduced forest canopy, new clearings).",
       "reference_solutions": [
         {
           "steps": [
@@ -2502,9 +2502,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Rondônia, Brazil"
+                "place_name": "<inferred place>"
               },
-              "comment": "Representative area of well-documented forest loss (Amazon/Rondônia)"
+              "comment": "The narrative names no specific location; Rondônia, Brazil (a well-documented Amazon deforestation frontier) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2539,14 +2539,14 @@
               "arguments": {
                 "keyword": "biomass"
               },
-              "comment": "Alternative keyword — matches via the narrative's 'biomass' theme, not the title"
+              "comment": "Alternative keyword — matches via the shared 'biomass' theme rather than title, broadening the search to any forest/biomass-related narrative"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Rondônia, Brazil"
+                "place_name": "<inferred place>"
               },
-              "comment": "Representative area of well-documented forest loss (Amazon/Rondônia)"
+              "comment": "The narrative names no specific location; Rondônia, Brazil (a well-documented Amazon deforestation frontier) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2586,9 +2586,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Kalimantan, Indonesia"
+                "place_name": "<inferred place>"
               },
-              "comment": "An equally valid representative area — the narrative's linked datasets are pantropical/global, so a different well-documented deforestation hotspot is an acceptable alternative to Rondônia"
+              "comment": "Kalimantan, Indonesia is an equally valid inferred deforestation hotspot — forest-loss narratives' linked datasets are typically pantropical/global"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -4118,7 +4118,7 @@
     },
     {
       "task_ID": "TASK_260427_000010_200010",
-      "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022 and save the result to /tmp/ndvi_po_valley.tif.",
+      "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022 and save the result.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -4297,7 +4297,7 @@
     },
     {
       "task_ID": "TASK_260427_000013_200013",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 and B8 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save it to /tmp/ndvi_ukraine.tif. Report the mean and maximum NDVI values using raster band statistics.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 and B8 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (Red = B4 = band 1, NIR = B8 = band 2) and save the result. Report the mean and maximum NDVI values using raster band statistics.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -5113,7 +5113,7 @@
     },
     {
       "task_ID": "TASK_260427_000031_200031",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save it to /output/ndvi_po_valley_2023.tif.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover, then compute NDVI from the downloaded image and save the result.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5288,7 +5288,7 @@
     },
     {
       "task_ID": "TASK_260427_000034_200034",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 10 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save it to /output/ndvi_nile_delta_utm.tif.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 10 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save the result.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -5353,9 +5353,9 @@
     },
     {
       "task_ID": "TASK_260427_000035_200035",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save it to /tmp/ndvi_ukraine_inner.tif. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save as /tmp/ndvi_ukraine_utm.tif. Finally report band statistics (mean, max, std) for the reprojected raster.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save the result. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save the reprojected result. Finally report band statistics (mean, max, std) for the reprojected raster.",
       "task_labels": [
-        "Sequential Reasoning"
+        "Cross-agent Synthesis"
       ],
       "reference_solution_description": "Geocode 'Yahotyn, Kyiv Oblast, Ukraine' with geocode_place, then fetch_sentinel2 (as_geotiff=True), compute_ndvi, reproject_raster, then raster_band_statistics.",
       "reference_solutions": [
@@ -5490,7 +5490,7 @@
     },
     {
       "task_ID": "TASK_260427_000037_200037",
-      "task_text": "Download a Sentinel-2 image of central Rome, Italy for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster (using a red-yellow-green colormap) to /output/maps/ndvi_rome_2023.png.",
+      "task_text": "Download a Sentinel-2 image of central Rome, Italy for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster using a red-yellow-green colormap.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5536,7 +5536,7 @@
               "arguments": {
                 "layers": [
                   {
-                    "data": "/output/ndvi_rome_2023.tif",
+                    "data": "output/TASK_260427_000037_200037/ndvi_rome_2023.tif",
                     "style": {
                       "cmap": "RdYlGn"
                     }
@@ -5840,11 +5840,11 @@
     },
     {
       "task_ID": "TASK_260619_000011_300011",
-      "task_text": "Find an EO Dashboard narrative about satellite-based agricultural monitoring, identify a key farming region it discusses, and download a MODIS NDVI vegetation-index product for that region to assess crop conditions — Punjab is a large agricultural state, matching the scale MODIS-based crop monitoring (e.g. GEOGLAM) is designed for.",
+      "task_text": "Find an EO Dashboard narrative about satellite-based agricultural monitoring, identify the key farming region discussed, and retrieve a MODIS NDVI vegetation-index product covering that area. Describe the vegetation patterns observed in the NDVI product and explain how they relate to the agricultural conditions discussed in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the agricultural-monitoring narrative, geocode Punjab, India (a major crop-monitoring region), then download the MODIS NDVI product (MOD13Q1, 250 m, 16-day composite) via GEE to assess crop conditions at state scale.",
+      "reference_solution_description": "Search EO Dashboard for the real 'Satellites are providing insights into agricultural production, crop conditions, and food supply' narrative — its GEOGLAM (N6_geoglam) STAC layer spans multiple major crop-producing regions rather than naming one, so a defensible farming region could be Punjab, India or the Iowa Corn Belt, USA. Geocode the chosen region, then download the MODIS NDVI product (MOD13Q1, 250 m, 16-day composite) via GEE and describe the observed vegetation patterns in relation to the narrative's crop-monitoring discussion.",
       "reference_solutions": [
         {
           "steps": [
@@ -5858,9 +5858,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Punjab, India"
+                "place_name": "<inferred place>"
               },
-              "comment": "Major crop-monitoring region"
+              "comment": "The narrative's GEOGLAM layer spans multiple crop-producing regions but names no specific one; Punjab, India is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -5872,7 +5872,37 @@
                 "bands": "NDVI",
                 "dataset": "MODIS/061/MOD13Q1"
               },
-              "comment": "MODIS NDVI (250 m, 16-day composite) — state-scale crop-condition assessment"
+              "comment": "MODIS NDVI (250 m, 16-day composite) — regional crop-condition assessment, described against the narrative's agricultural-monitoring discussion"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "crop conditions"
+              },
+              "comment": "Alternative keyword — real substring of the narrative title"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "<inferred place>"
+              },
+              "comment": "Iowa, USA (the Corn Belt) is an equally valid inferred crop-monitoring region"
+            },
+            {
+              "function_name": "download_gee_product",
+              "arguments": {
+                "bounding_box": "<derived from previous step>",
+                "start_date": "2023-06-01",
+                "end_date": "2023-08-31",
+                "scale": 250,
+                "bands": "NDVI",
+                "dataset": "MODIS/061/MOD13Q1"
+              },
+              "comment": "MODIS NDVI (250 m, 16-day composite) — Corn Belt growing-season crop-condition assessment, described against the narrative's agricultural-monitoring discussion"
             }
           ]
         }
@@ -5906,9 +5936,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Beledweyne, Somalia"
+                "place_name": "<inferred place>"
               },
-              "comment": "One of the towns worst hit by the East Africa floods"
+              "comment": "The narrative names no specific town; Beledweyne, Somalia (one of the towns worst hit by the East Africa floods) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel1_grd",
@@ -5934,11 +5964,11 @@
     },
     {
       "task_ID": "TASK_260619_000013_300013",
-      "task_text": "Find EO Dashboard narratives about forest loss and shifting forest landscapes, identify a study area it discusses, then download a MODIS surface-reflectance image of that area to look for visible signs of forest disturbance — the Congo Basin spans a continental scale that a single Sentinel-2 tile cannot cover.",
+      "task_text": "Find an EO Dashboard narrative about forest loss and changing forest landscapes, identify the study area discussed, and retrieve a MODIS surface-reflectance product covering that region. Describe the regional-scale vegetation patterns visible in the imagery and explain how they relate to the forest changes described in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the forest-loss narrative, geocode the Congo Basin, Democratic Republic of Congo (a major deforestation frontier), then download MODIS Terra surface-reflectance bands (MOD09GA, 500 m) via GEE — a continental-scale product appropriate for the size of the Congo Basin.",
+      "reference_solution_description": "Search EO Dashboard for the real 'Forests on the Brink: Satellite Imagery unveiling Loss and Shifting Forest Landscapes' narrative — its STAC layers (FNF_Palsar, RECCAP2 deforested/degraded biomass) are pantropical rather than naming one country, so a defensible study area could be the Congo Basin, DR Congo or the Amazon deforestation frontier in Rondônia, Brazil. Geocode the chosen region, then download MODIS Terra surface-reflectance bands (MOD09GA, 500 m) via GEE and describe the regional-scale vegetation patterns in relation to the narrative's forest-loss discussion.",
       "reference_solutions": [
         {
           "steps": [
@@ -5952,9 +5982,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Congo Basin, Democratic Republic of Congo"
+                "place_name": "<inferred place>"
               },
-              "comment": "Major deforestation frontier"
+              "comment": "The narrative's STAC layers are pantropical and name no specific country; Congo Basin, DR Congo is one defensible inferred example"
             },
             {
               "function_name": "download_gee_product",
@@ -5967,7 +5997,38 @@
                 "dataset": "MODIS/061/MOD09GA",
                 "max_cloud_cover": 30
               },
-              "comment": "MODIS Terra surface reflectance (500 m) — continental-scale coverage"
+              "comment": "MODIS Terra surface reflectance (500 m) — continental-scale coverage, described against the narrative's forest-loss discussion"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "Shifting Forest Landscapes"
+              },
+              "comment": "Alternative keyword — real substring of the narrative title"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "<inferred place>"
+              },
+              "comment": "Rondônia, Brazil (Amazon deforestation frontier) is an equally valid inferred region"
+            },
+            {
+              "function_name": "download_gee_product",
+              "arguments": {
+                "bounding_box": "<derived from previous step>",
+                "start_date": "2023-08-01",
+                "end_date": "2023-09-30",
+                "scale": 500,
+                "bands": "sur_refl_b01,sur_refl_b04,sur_refl_b03",
+                "dataset": "MODIS/061/MOD09GA",
+                "max_cloud_cover": 30
+              },
+              "comment": "MODIS Terra surface reflectance (500 m), Amazon dry-season window — continental-scale coverage, described against the narrative's forest-loss discussion"
             }
           ]
         }
@@ -6364,11 +6425,11 @@
     },
     {
       "task_ID": "TASK_260713_000010_400010",
-      "task_text": "Download a Landsat 8 surface reflectance image of central California for July 2022, then read its metadata to verify its CRS and band structure and compute per-band statistics to summarise the reflectance distribution.",
+      "task_text": "Download a Landsat 8 surface reflectance image of central California from July 2013, then read its metadata to verify its CRS and band structure and compute per-band statistics to summarise the reflectance distribution.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call download_gee_product with dataset='LANDSAT/LC08/C02/T1_L2' (true surface reflectance, not available via CDSE), then metadata_raster and raster_band_statistics on the returned file path.",
+      "reference_solution_description": "Call download_gee_product with dataset='LANDSAT/LC08/C02/T1_L2' (true surface reflectance, not available via CDSE). July 2013 also predates Sentinel-2's June 2015 launch, so Landsat is the only viable sensor for this timeframe regardless of format — then metadata_raster and raster_band_statistics on the returned file path.",
       "reference_solutions": [
         {
           "steps": [
@@ -6380,12 +6441,12 @@
                 "buffer_m": 30000,
                 "dataset": "LANDSAT/LC08/C02/T1_L2",
                 "bands": "SR_B4,SR_B3,SR_B2,SR_B5",
-                "start_date": "2022-07-01",
-                "end_date": "2022-07-31",
+                "start_date": "2013-07-01",
+                "end_date": "2013-07-31",
                 "scale": 30,
                 "max_cloud_cover": 20
               },
-              "comment": "download_gee_product is the only tool with true Landsat surface-reflectance (L2) data — CDSE's fetch_landsat_ot_l1 is L1/TOA only. No output_path argument exists; the tool returns {'files': [...], 'message': ...}."
+              "comment": "download_gee_product is the only tool with true Landsat surface-reflectance (L2) data — CDSE's fetch_landsat_ot_l1 is L1/TOA only. Also, July 2013 predates Sentinel-2 (launched June 2015), so Landsat is the only sensor option for this period. No output_path argument exists; the tool returns {'files': [...], 'message': ...}."
             },
             {
               "function_name": "metadata_raster",
@@ -6416,7 +6477,7 @@
     },
     {
       "task_ID": "TASK_260713_000011_400011",
-      "task_text": "Compute NDVI for the Congo Basin rainforest using Sentinel-2 imagery for August 2023 and save the result to /tmp/ndvi_congo_2023.tif.",
+      "task_text": "Compute NDVI for the Congo Basin rainforest using Sentinel-2 imagery for August 2023 and save the result.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -6982,7 +7043,7 @@
     },
     {
       "task_ID": "TASK_260713_000025_400025",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save it to /output/ndvi_po_valley.tif. Then calculate zonal statistics (mean, max, and standard deviation of NDVI) for the agricultural field parcels at /data/po_fields.shp.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June–August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save the result. Then calculate zonal statistics (mean, max, and standard deviation of NDVI) for the agricultural field parcels at /data/po_fields.shp.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -7025,7 +7086,7 @@
               "function_name": "zonal_statistics",
               "arguments": {
                 "raster_path": "output/TASK_260713_000025_400025/ndvi_po_valley.tif",
-                "vector_path": "output/TASK_260713_000025_400025/po_fields.shp",
+                "vector_path": "/data/po_fields.shp",
                 "stats": [
                   "mean",
                   "max",
@@ -7053,16 +7114,16 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "geocode_place for a Sahel location, fetch_sentinel2 (as_geotiff=True) for the bbox, compute_ndvi, then raster_band_statistics.",
+      "reference_solution_description": "resolve_named_region for the Sahel macro-region (a real gazetteer entry — Niger/Mali/Chad-scale, not a single city), fetch_sentinel2 (as_geotiff=True) for the bbox, compute_ndvi, then raster_band_statistics.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "geocode_place",
+              "function_name": "resolve_named_region",
               "arguments": {
-                "place_name": "Niamey, Niger"
+                "region_name": "Sahel"
               },
-              "comment": "Representative Sahel location"
+              "comment": "'Sahel' is explicitly named in the task and isn't a single administrative unit a place geocoder resolves well, so use the named-region gazetteer rather than an arbitrary city within it"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -7246,11 +7307,11 @@
     },
     {
       "task_ID": "TASK_260713_000027_500006",
-      "task_text": "Search the EOdashboard for narratives related to 'climate change adaptation', then query the EOSS knowledge graph to find which StrategicObjective nodes address adaptation themes.",
+      "task_text": "Search the EO Dashboard for narratives related to climate change adaptation, then identify the ESA Earth Observation Science Strategy objectives that align most closely with the adaptation themes discussed in those narratives.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for climate adaptation context. Step 2: query_ontology to retrieve relevant StrategicObjective nodes.",
+      "reference_solution_description": "Search EO Dashboard for real climate-change narratives via keyword 'climate'. In the EOSS ontology, none of the 16 real StrategicObjective nodes mention adaptation at all (they're programme-management objectives — frontier science, partnerships, AI — not topical ones), so querying that node type returns nothing. The real adaptation link lives on the ScienceQuestion→Treaty relationship: 4 ScienceQuestion nodes (SQ-02 Land biosphere responses, SQ-05 Coastal sea level, SQ-20 Ice mass balance, SQ-44 Water cycle) have an INFORMS edge to the Paris Agreement (PARIS) whose 'detail' property literally mentions 'adaptation' (Art 7). Each of those ScienceQuestions HAS_KAO relationships to real KnowledgeAdvancementObjective nodes — the ontology's actual 'objective' entities. SQ-44 (Water cycle) and its KAOs (e.g. 'Quantify anthropogenic forcing of water availability') align most closely with the water-themed narratives found in step 1.",
       "reference_solutions": [
         {
           "steps": [
@@ -7259,14 +7320,14 @@
               "arguments": {
                 "keyword": "climate"
               },
-              "comment": "Find EOdashboard narratives on climate adaptation"
+              "comment": "Find the two real climate-change narratives (both oceans-themed, both about water resources)"
             },
             {
               "function_name": "query_ontology",
               "arguments": {
-                "cypher": "MATCH (so:StrategicObjective) WHERE toLower(so.name) CONTAINS 'adapt' OR toLower(so.description) CONTAINS 'adapt' RETURN so.id, so.name, so.description"
+                "cypher": "MATCH (sq:ScienceQuestion)-[r:INFORMS]->(t:Treaty {id:'PARIS'}) WHERE toLower(r.detail) CONTAINS 'adapt' MATCH (sq)-[:HAS_KAO]->(kao:KnowledgeAdvancementObjective) RETURN sq.id, sq.name, kao.id, kao.name"
               },
-              "comment": "Retrieve strategic objectives related to adaptation from EOSS ontology"
+              "comment": "StrategicObjective nodes never mention adaptation in this ontology — the real adaptation link is the INFORMS edge from ScienceQuestion to the Paris Agreement (Art 7), so traverse from there to each ScienceQuestion's KnowledgeAdvancementObjective nodes, the ontology's actual 'objective' entities"
             }
           ]
         }
@@ -7284,11 +7345,11 @@
     },
     {
       "task_ID": "TASK_260713_000028_500007",
-      "task_text": "Query the EOSS ontology to find KnowledgeAdvancementObjective nodes linked to sea-level rise, then search ArXiv for recent papers on those topics.",
+      "task_text": "Identify the ESA Earth Observation Science Strategy research priorities related to sea-level rise, then search arXiv for recent papers addressing those topics. Summarize how the recent research supports or expands on the identified ESA priorities.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: query_ontology for KAO nodes related to sea-level rise. Step 2: search_papers on ArXiv for each topic found.",
+      "reference_solution_description": "Query the EOSS ontology for the real ScienceQuestion node SQ-05 ('Coastal sea level'), the only real node whose name matches 'sea level', then traverse to its 2 real KnowledgeAdvancementObjective nodes (KAO-SQ05-5A 'Reduce uncertainties in coastal water level observations', KAO-SQ05-5B 'Characterise contributions to coastal sea level changes') — these are the ESA research priorities the task asks for. Then search arXiv for recent papers on sea-level rise and summarize how they support or expand on those two KAOs.",
       "reference_solutions": [
         {
           "steps": [
@@ -7297,7 +7358,7 @@
               "arguments": {
                 "cypher": "MATCH (k:KnowledgeAdvancementObjective)-[r]-(sq:ScienceQuestion) WHERE toLower(sq.name) CONTAINS 'sea level' OR toLower(sq.name) CONTAINS 'sea-level' RETURN k.id, k.name ORDER BY k.id"
               },
-              "comment": "Find KAOs linked to sea-level rise science questions"
+              "comment": "Find the real research priorities (KAOs) linked to the 'Coastal sea level' science question (SQ-05)"
             },
             {
               "function_name": "search_papers",
@@ -7305,7 +7366,7 @@
                 "query": "sea level rise Earth observation knowledge advancement",
                 "max_results": 5
               },
-              "comment": "Search ArXiv for papers matching the KAO topics found"
+              "comment": "Search arXiv for recent papers to compare against the identified ESA priorities"
             }
           ]
         }
@@ -7515,11 +7576,11 @@
     },
     {
       "task_ID": "TASK_260713_000035_500014",
-      "task_text": "Enumerate all KnowledgeAdvancementObjective nodes from the EOSS graph, then search the EOdashboard for narratives that match one of the major EO advancement themes found.",
+      "task_text": "Retrieve the main knowledge advancement objectives from the ESA Earth Observation Science Strategy, then search the EO Dashboard for narratives that illustrate one of these scientific priorities. Explain how the selected narrative relates to the identified objective.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: list_ontology_nodes with KnowledgeAdvancementObjective to discover ESA KAO topics. Step 2: search_narratives on EOdashboard for a matching theme.",
+      "reference_solution_description": "list_ontology_nodes(label='KnowledgeAdvancementObjective') returns the real 70+ KAO nodes, including KAO-SQ02-2B 'Quantify roles of climate and disturbances on land carbon sink'. Searching EO Dashboard by keyword 'carbon' surfaces the real narrative 'A view from space monitors land cover and tree to track aboveground biomass and carbon content' (biomass theme), which genuinely illustrates that KAO's land-carbon-sink priority — explain that link.",
       "reference_solutions": [
         {
           "steps": [
@@ -7528,14 +7589,14 @@
               "arguments": {
                 "label": "KnowledgeAdvancementObjective"
               },
-              "comment": "List all knowledge advancement objectives from the EOSS ontology"
+              "comment": "List the real knowledge advancement objectives from the EOSS ontology"
             },
             {
               "function_name": "search_narratives",
               "arguments": {
                 "keyword": "carbon"
               },
-              "comment": "Find EOdashboard narratives related to carbon cycle KAO themes"
+              "comment": "Find the real EO Dashboard narrative that illustrates the land-carbon-sink KAO (KAO-SQ02-2B)"
             }
           ]
         }
@@ -7552,11 +7613,11 @@
     },
     {
       "task_ID": "TASK_260713_000036_500015",
-      "task_text": "List all NationalPolicy nodes in the EOSS knowledge graph, then search ArXiv for recent papers analysing the role of national EO policies in supporting the ESA science strategy.",
+      "task_text": "Review the national policy priorities described in the ESA Earth Observation Science Strategy, then find recent arXiv papers on Earth observation governance and national EO programmes. Explain how the research supports or complements these policy priorities.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: list_ontology_nodes with NationalPolicy to get ESA national policy nodes. Step 2: search_papers on ArXiv.",
+      "reference_solution_description": "list_ontology_nodes(label='NationalPolicy') returns the 6 real NationalPolicy nodes in the EOSS ontology (Energy and climate action, Environment, Agriculture/fisheries/food security, Transport and infrastructure, Civil protection and humanitarian aid, Public health). Then search arXiv for recent papers on EO governance and national programmes, and explain how the research supports or complements those 6 real policy priorities.",
       "reference_solutions": [
         {
           "steps": [
@@ -7565,7 +7626,7 @@
               "arguments": {
                 "label": "NationalPolicy"
               },
-              "comment": "Enumerate all national policy nodes"
+              "comment": "Enumerate the real national policy nodes from the EOSS ontology"
             },
             {
               "function_name": "search_papers",
@@ -7573,7 +7634,7 @@
                 "query": "national Earth observation policy ESA science strategy",
                 "max_results": 5
               },
-              "comment": "Find ArXiv papers on national EO policy frameworks"
+              "comment": "Find arXiv papers on national EO policy/governance frameworks to compare against the identified priorities"
             }
           ]
         }
@@ -10953,31 +11014,67 @@
     },
     {
       "task_ID": "TASK_260713_000038_600038",
-      "task_text": "Search EO Dashboard collections related to drought indicators. Based on the geographic focus of the collection, download ERA5-Land runoff for the corresponding region and period to corroborate the drought signal.",
+      "task_text": "Find the EO Dashboard narrative about El Niño's impacts on food security. Identify the affected study region and the associated drought period, then retrieve ERA5-Land runoff data for that area and time frame. Explain how the runoff anomalies support or contradict the drought impacts reported in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_collections with keyword='drought', then fetch_era5_land for runoff.",
+      "reference_solution_description": "Search EO Dashboard for the real 'El Niño 2023-2024: Impacts on food security' narrative (agriculture theme, linked to the global GEOGLAM crop-monitoring collection N6_geoglam — not tied to one named place, so the study region must be inferred). El Niño is a well-documented driver of drought-linked food-security impacts; Southern Africa (Zambia, Zimbabwe, Malawi) experienced a severe, nationally-declared El Niño-induced drought in the 2023-2024 season, so any of these is a defensible study region with the drought period centred on Feb-Mar 2024 (the month of the national disaster declarations). Geocode the chosen country, then download ERA5-Land runoff for that period and explain how low/anomalous runoff values corroborate the drought impacts described in the narrative.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_collections",
+              "function_name": "search_narratives",
               "arguments": {
-                "keyword": "drought"
+                "keyword": "food security"
               },
-              "comment": "Find drought-related EO Dashboard collections"
+              "comment": "Find the real El Niño / food-security narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "<inferred place>"
+              },
+              "comment": "The narrative's GEOGLAM layer is global and names no specific country; Zambia (which declared a national disaster over the 2023-2024 El Niño-induced drought) is one defensible inferred example"
             },
             {
               "function_name": "fetch_era5_land",
               "arguments": {
                 "variable": "runoff",
-                "year": "2022",
-                "month": "07",
-                "output_filename": "output/TASK_260713_000038_600038/era5land_ro_weur_jul2022.nc",
-                "area": "<inferred>"
+                "year": "2024",
+                "month": "02",
+                "output_filename": "output/TASK_260713_000038_600038/era5land_ro_zambia_feb2024.nc",
+                "area": "<derived from previous step>"
               },
-              "comment": "Download ERA5-Land runoff"
+              "comment": "Download ERA5-Land runoff for the drought period (reorder geocode_place's [west,south,east,north] bbox to climate's [north,west,south,east] before use) — reduced runoff corroborates the drought signal behind Zambia's Feb 2024 disaster declaration"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "El Niño"
+              },
+              "comment": "Alternative keyword — real substring of the narrative title"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "<inferred place>"
+              },
+              "comment": "Zimbabwe is an equally valid inferred country — it also declared a national disaster over the same drought"
+            },
+            {
+              "function_name": "fetch_era5_land",
+              "arguments": {
+                "variable": "runoff",
+                "year": "2024",
+                "month": "02",
+                "output_filename": "output/TASK_260713_000038_600038/era5land_ro_zimbabwe_feb2024.nc",
+                "area": "<derived from previous step>"
+              },
+              "comment": "Download ERA5-Land runoff for the drought period (reorder geocode_place's [west,south,east,north] bbox to climate's [north,west,south,east] before use) — reduced runoff corroborates the drought signal behind Zimbabwe's Feb 2024 disaster declaration"
             }
           ]
         }
@@ -10991,7 +11088,7 @@
       "match_score_Human": null,
       "evaluator_scores": {},
       "evaluator_reasoning": {},
-      "GT"
+      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000039_600039",
@@ -13490,7 +13587,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for flood narratives, geocode the affected area (Sindh, Pakistan — 2022 monsoon floods), then download two Sentinel-1 GRD SAR images (VV/VH pseudo-RGB): pre-flood (June 2022) and post-flood (Aug–Sep 2022 peak inundation). Compare backscatter between the two images — standing water typically appears as smooth, low-backscatter (dark) regions in VV — to identify newly inundated areas and describe the flood extent.",
+      "reference_solution_description": "Search EO Dashboard by a keyword related to flooding (e.g. 'flood' or 'cyclone') and accept any real narrative the search returns on that topic — the EO Dashboard catalog may add further flood-related narratives over time, and none of them need be tied to one named place. Geocode a real, well-documented flood-affected area as a representative example (e.g. Sindh, Pakistan's 2022 monsoon floods), then download two Sentinel-1 GRD SAR images (VV/VH pseudo-RGB): pre-flood and post-flood during the identified event. Compare backscatter between the two images — standing water typically appears as smooth, low-backscatter (dark) regions in VV — to identify newly inundated areas and describe the flood extent.",
       "reference_solutions": [
         {
           "steps": [
@@ -13499,13 +13596,14 @@
               "arguments": {
                 "keyword": "flood"
               },
-              "comment": "Find flood narratives via keyword 'flood'"
+              "comment": "Find a real flood-related narrative via keyword 'flood'"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Sindh, Pakistan"
-              }
+                "place_name": "<inferred place>"
+              },
+              "comment": "The narrative names no specific location; Sindh, Pakistan (site of severe, well-documented 2022 monsoon flooding) is one defensible inferred example"
             },
             {
               "function_name": "fetch_sentinel1_grd",
@@ -13536,13 +13634,14 @@
               "arguments": {
                 "keyword": "cyclone"
               },
-              "comment": "Find flood narratives via keyword 'flooding'"
+              "comment": "Alternative keyword — broadens the search to any flood/cyclone-related narrative"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "Sindh, Pakistan"
-              }
+                "place_name": "<inferred place>"
+              },
+              "comment": "Sindh, Pakistan is an equally valid inferred flood-affected example — no real flood narrative is tied to one named location"
             },
             {
               "function_name": "fetch_sentinel1_grd",

@@ -1,11 +1,14 @@
 import os
+import re
 import cdsapi
 from dotenv import load_dotenv
 import xarray as xr
+import pathlib
+import time
+import uuid
 from pathlib import Path
 from fastmcp import FastMCP
 import asyncio
-import time
 from typing import Union, List, Optional
 import logging
 import sys
@@ -34,6 +37,70 @@ env_path = os.path.join(ROOT_DIR, ".env")
 load_dotenv(env_path)
 URL = os.getenv("CDS_URL")
 KEY = os.getenv("CDS_KEY")
+
+# ---------------------------------------------------------------------------
+# Output directory / default save-path handling
+#
+# Every write from this server is forced onto disk under OUTPUT_DIR, no
+# matter what path the caller supplies:
+#   - output_filename omitted            -> auto-generated name under OUTPUT_DIR
+#   - a relative path (e.g. "data/x.nc") -> re-rooted under OUTPUT_DIR
+#   - an absolute path elsewhere         -> re-rooted under OUTPUT_DIR
+#   - "output/<subfolder>/x.nc"          -> re-rooted to OUTPUT_DIR/<subfolder>/x.nc,
+#                                            preserving any subfolder structure
+#                                            below a leading "output/" segment
+#                                            (matches this benchmark's own
+#                                            "output/<task_id>/file.nc" convention)
+#
+# This also fixes a real bug: previously nothing ever created the parent
+# directory of output_filename, so any path whose directory didn't already
+# exist (e.g. a relative "data/..." the model invented) failed with a
+# generic "Error during CDS API request: [Errno 2] No such file or
+# directory", which the model then "fixed" by blindly retrying with a
+# different path (e.g. /tmp, since that happens to already exist) instead
+# of the retry actually being necessary.
+# ---------------------------------------------------------------------------
+
+OUTPUT_DIR = pathlib.Path(
+    os.environ.get("ERA5_OUTPUT_DIR", str(ROOT_DIR / "output" / "era5"))
+)
+
+
+def _default_output_path(label: str, ext: str = "nc") -> str:
+    """Build a unique default filename (no caller-supplied path) under OUTPUT_DIR."""
+    ts = time.strftime("%Y%m%dT%H%M%S")
+    uid = uuid.uuid4().hex[:6]
+    safe_label = "".join(c if (c.isalnum() or c in "-_") else "_" for c in label)
+    return f"{safe_label}_{ts}_{uid}.{ext}"
+
+
+def _coerce_output_path(output_filename: Optional[str], label: str, ext: str = "nc") -> str:
+    """
+    Resolve any output path (missing, relative, absolute, or elsewhere) to a
+    concrete path rooted under OUTPUT_DIR, and make sure its parent
+    directory exists before anything tries to write to it.
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not output_filename:
+        rel_parts = [_default_output_path(label, ext=ext)]
+    else:
+        s = str(output_filename).replace("\\", "/")
+        s = re.sub(r"^[A-Za-z]:", "", s)  # strip a Windows drive letter, if any
+        s = s.lstrip("/")                  # strip a leading absolute-path slash
+        parts = [seg for seg in s.split("/") if seg not in ("", ".")]
+        # Drop a single leading "output" segment (e.g. "output/TASK_ID/file.nc")
+        # so it doesn't become OUTPUT_DIR/output/TASK_ID/file.nc.
+        if parts and parts[0].lower() == "output":
+            parts = parts[1:]
+        if not parts:
+            parts = [Path(output_filename).name or _default_output_path(label, ext=ext)]
+        rel_parts = parts
+
+    dest = OUTPUT_DIR.joinpath(*rel_parts)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    return str(dest)
+
 
 # ---------------------------------------------------------------------------
 # Static catalogue data
@@ -312,7 +379,13 @@ async def _internal_inspect_netcdf(filepath: str) -> str:
 
 
 async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filename: str) -> str:
+    # output_filename has already been forced under OUTPUT_DIR (with its
+    # parent directory created) by _coerce_output_path at the call site —
+    # resolve_run_path is still applied for consistency with the rest of
+    # the codebase, and we defensively re-create the parent dir here too
+    # in case resolve_run_path maps it somewhere unexpected.
     output_path = resolve_run_path(output_filename)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _blocking_download():
         logger.info("Initializing cdsapi.Client...")
@@ -404,7 +477,7 @@ async def inspect_netcdf(filepath: str) -> str:
 
 @mcp.tool
 async def fetch_era5_single_levels(
-    variable: str, year: str, month: Union[str, List[str]], output_filename: str
+    variable: str, year: str, month: Union[str, List[str]], output_filename: Optional[str] = None
 ) -> str:
     """
     Downloads ERA5 monthly mean surface data (product: monthly_averaged_reanalysis).
@@ -413,8 +486,12 @@ async def fetch_era5_single_levels(
     :param year: The year for the data (e.g., '2023').
     :param month: The month(s) for the data (e.g., '01', '12', or ['06', '07', '08'] to fetch
         multiple months in a single request instead of one call per month).
-    :param output_filename: The local filename for the downloaded data (e.g., 'data/2m_temp_2023_01.nc').
+    :param output_filename: Desired filename/path (e.g. 'output/TASK_ID/2m_temp_2023_01.nc').
+        Always saved under ERA5_OUTPUT_DIR regardless of what's passed here — a leading
+        "output/" segment is preserved as a subfolder, everything else is re-rooted.
+        If omitted, a unique filename is auto-generated.
     """
+    output_filename = _coerce_output_path(output_filename, f"single_levels_monthly_{variable}")
     request = {
         'product_type': 'monthly_averaged_reanalysis',
         'variable': variable,
@@ -432,7 +509,7 @@ async def fetch_era5_pressure_levels(
     pressure_level: int,
     year: Union[str, List[str]],
     month: Union[str, List[str]],
-    output_filename: str,
+    output_filename: Optional[str] = None,
 ) -> str:
     """
     Downloads ERA5 monthly mean data on specific pressure levels.
@@ -442,8 +519,11 @@ async def fetch_era5_pressure_levels(
     :param year: The year(s) for the data (e.g., '2023' or ['2021', '2022', '2023']).
     :param month: The month(s) for the data (e.g., '01', '12', or ['06', '07', '08'] to fetch
         multiple months in a single request instead of one call per month).
-    :param output_filename: The local filename for the downloaded data.
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     """
+    output_filename = _coerce_output_path(output_filename, f"pressure_levels_monthly_{variable}_{pressure_level}")
     request = {
         'product_type': 'monthly_averaged_reanalysis',
         'variable': variable,
@@ -465,7 +545,7 @@ async def fetch_era5_hourly_single_levels(
     variable: str,
     year: str,
     month: str,
-    output_filename: str,
+    output_filename: Optional[str] = None,
     days: Union[str, List[str]] = "all",
     times: Union[str, List[str]] = "all",
     area: Optional[List[float]] = None,
@@ -476,11 +556,14 @@ async def fetch_era5_hourly_single_levels(
     :param variable: The surface variable (e.g., 'total_precipitation', '2m_temperature'). Use list_era5_single_level_variables() for valid names.
     :param year: The year for the data (e.g., '2023').
     :param month: The month for the data (e.g., '01').
-    :param output_filename: The local filename for the downloaded data (e.g., 'data/precip_hourly_2023_01.nc').
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     :param days: List of days (e.g., ['01','02','03']) or 'all' for the full month. Default: 'all'.
     :param times: List of times (e.g., ['00:00','06:00','12:00','18:00']) or 'all' for all 24 hours. Default: 'all'.
     :param area: Optional bounding box [north, west, south, east] in decimal degrees (e.g., [71.0, -25.0, 35.0, 45.0] for Europe).
     """
+    output_filename = _coerce_output_path(output_filename, f"single_levels_hourly_{variable}_{year}{month}")
     request = {
         'product_type': 'reanalysis',
         'variable': variable,
@@ -501,7 +584,7 @@ async def fetch_era5_hourly_pressure_levels(
     pressure_level: Union[int, List[int]],
     year: str,
     month: str,
-    output_filename: str,
+    output_filename: Optional[str] = None,
     days: Union[str, List[str]] = "all",
     times: Union[str, List[str]] = "all",
     area: Optional[List[float]] = None,
@@ -513,11 +596,14 @@ async def fetch_era5_hourly_pressure_levels(
     :param pressure_level: The pressure level(s) in hPa (e.g., 500, or [500, 850, 1000]).
     :param year: The year for the data (e.g., '2023').
     :param month: The month for the data (e.g., '01').
-    :param output_filename: The local filename for the downloaded data.
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     :param days: List of days (e.g., ['01','02','03']) or 'all' for the full month. Default: 'all'.
     :param times: List of times (e.g., ['00:00','06:00','12:00','18:00']) or 'all' for all 24 hours. Default: 'all'.
     :param area: Optional bounding box [north, west, south, east] in decimal degrees.
     """
+    output_filename = _coerce_output_path(output_filename, f"pressure_levels_hourly_{variable}_{year}{month}")
     levels = [str(pressure_level)] if isinstance(pressure_level, int) else [str(lv) for lv in pressure_level]
     request = {
         'product_type': 'reanalysis',
@@ -539,7 +625,7 @@ async def fetch_era5_land(
     variable: str,
     year: str,
     month: str,
-    output_filename: str,
+    output_filename: Optional[str] = None,
     days: Union[str, List[str]] = "all",
     times: Union[str, List[str]] = "all",
     area: Optional[List[float]] = None,
@@ -551,11 +637,14 @@ async def fetch_era5_land(
     :param variable: A land variable (e.g., 'total_precipitation', 'volumetric_soil_water_layer_1').
     :param year: The year for the data (e.g., '2023').
     :param month: The month for the data (e.g., '01').
-    :param output_filename: The local filename for the downloaded data.
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     :param days: List of days or 'all'. Default: 'all'.
     :param times: List of times or 'all'. Default: 'all'.
     :param area: Optional bounding box [north, west, south, east] in decimal degrees.
     """
+    output_filename = _coerce_output_path(output_filename, f"land_{variable}_{year}{month}")
     request = {
         'variable': variable,
         'year': year,
@@ -579,7 +668,7 @@ async def fetch_era5_daily_statistics(
     statistic: str,
     year: str,
     month: str,
-    output_filename: str,
+    output_filename: Optional[str] = None,
     days: Union[str, List[str]] = "all",
     area: Optional[List[float]] = None,
 ) -> str:
@@ -591,13 +680,16 @@ async def fetch_era5_daily_statistics(
     :param statistic: The daily statistic: 'daily_mean', 'daily_maximum', 'daily_minimum', or 'daily_sum'.
     :param year: The year for the data (e.g., '2023').
     :param month: The month for the data (e.g., '01').
-    :param output_filename: The local filename for the downloaded data.
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     :param days: List of days or 'all'. Default: 'all'.
     :param area: Optional bounding box [north, west, south, east] in decimal degrees.
     """
     valid_stats = {'daily_mean', 'daily_maximum', 'daily_minimum', 'daily_sum'}
     if statistic not in valid_stats:
         return f"Error: statistic must be one of {sorted(valid_stats)}, got '{statistic}'."
+    output_filename = _coerce_output_path(output_filename, f"daily_stats_{statistic}_{variable}_{year}{month}")
     request = {
         'product_type': 'reanalysis',
         'variable': variable,
@@ -619,7 +711,7 @@ async def fetch_era5_daily_statistics(
 # ---------------------------------------------------------------------------
 
 @mcp.tool
-async def fetch_cds_dataset(dataset_name: str, request_dict: dict, output_filename: str) -> str:
+async def fetch_cds_dataset(dataset_name: str, request_dict: dict, output_filename: Optional[str] = None) -> str:
     """
     Generic CDS API fetch for any dataset not covered by the specific fetch tools
     (e.g., CMIP6, seasonal forecasts, ERA5-complete, agrometeorological indicators).
@@ -628,8 +720,11 @@ async def fetch_cds_dataset(dataset_name: str, request_dict: dict, output_filena
 
     :param dataset_name: The CDS dataset identifier (e.g., 'projections-cmip6').
     :param request_dict: A dictionary with the CDS API request parameters.
-    :param output_filename: The local filename for the downloaded data.
+    :param output_filename: Desired filename/path. Always saved under ERA5_OUTPUT_DIR
+        regardless of what's passed here (see fetch_era5_single_levels for the exact rule).
+        If omitted, a unique filename is auto-generated.
     """
+    output_filename = _coerce_output_path(output_filename, dataset_name)
     return await _internal_fetch_and_inspect(dataset_name, request_dict, output_filename)
 
 
@@ -640,7 +735,7 @@ async def fetch_cds_dataset(dataset_name: str, request_dict: dict, output_filena
 @mcp.tool
 async def convert_hourly_to_daily(
     input_filepath: str,
-    output_filepath: str,
+    output_filepath: Optional[str] = None,
     method: str = "sum",
     variable: Optional[str] = None,
 ) -> str:
@@ -651,13 +746,18 @@ async def convert_hourly_to_daily(
     For temperature use 'mean'; for extremes use 'max' or 'min'.
 
     :param input_filepath: Path to the input hourly NetCDF file.
-    :param output_filepath: Path to write the output daily NetCDF file.
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     :param method: Aggregation method: 'sum', 'mean', 'max', or 'min'. Default: 'sum'.
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
+    output_filepath = _coerce_output_path(output_filepath, f"hourly_to_daily_{method}")
+
     def _sync():
         resolved_input = resolve_run_path(input_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
@@ -688,7 +788,7 @@ async def convert_hourly_to_daily(
 @mcp.tool
 async def convert_daily_to_monthly(
     input_filepath: str,
-    output_filepath: str,
+    output_filepath: Optional[str] = None,
     method: str = "mean",
     variable: Optional[str] = None,
 ) -> str:
@@ -696,13 +796,18 @@ async def convert_daily_to_monthly(
     Aggregates a daily NetCDF file to monthly frequency using xarray resample.
 
     :param input_filepath: Path to the input daily NetCDF file.
-    :param output_filepath: Path to write the output monthly NetCDF file.
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     :param method: Aggregation method: 'sum', 'mean', 'max', or 'min'. Default: 'mean'.
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
+    output_filepath = _coerce_output_path(output_filepath, f"daily_to_monthly_{method}")
+
     def _sync():
         resolved_input = resolve_run_path(input_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
@@ -733,23 +838,28 @@ async def convert_daily_to_monthly(
 @mcp.tool
 async def resample_temporal(
     input_filepath: str,
-    output_filepath: str,
     freq: str,
     method: str,
+    output_filepath: Optional[str] = None,
     variable: Optional[str] = None,
 ) -> str:
     """
     General-purpose temporal resampling of a NetCDF file.
 
     :param input_filepath: Path to the input NetCDF file.
-    :param output_filepath: Path to write the resampled output.
     :param freq: Pandas-style resample frequency: 'h' (hourly), 'D' (daily), 'ME' (month-end), 'YE' (year-end).
     :param method: Aggregation method: 'sum', 'mean', 'max', or 'min'.
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     :param variable: If provided, process only this variable; otherwise all data variables.
     """
+    output_filepath = _coerce_output_path(output_filepath, f"resample_{freq}_{method}")
+
     def _sync():
         resolved_input = resolve_run_path(input_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
@@ -784,10 +894,10 @@ async def resample_temporal(
 @mcp.tool
 async def convert_units(
     input_filepath: str,
-    output_filepath: str,
     variable: str,
     from_unit: str,
     to_unit: str,
+    output_filepath: Optional[str] = None,
 ) -> str:
     """
     Converts the unit of a variable in a NetCDF file and writes a new file.
@@ -799,14 +909,19 @@ async def convert_units(
       - Radiation (accumulated):  'J m**-2' → 'W m**-2'  (divide by 3600)
 
     :param input_filepath: Path to the input NetCDF file.
-    :param output_filepath: Path to write the converted output.
     :param variable: The variable to convert (e.g., 'tp', 't2m', or the long name shown by inspect_netcdf).
     :param from_unit: The current unit string (must match exactly as listed above).
     :param to_unit: The target unit string.
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     """
+    output_filepath = _coerce_output_path(output_filepath, f"convert_units_{variable}_{from_unit}_to_{to_unit}")
+
     def _sync():
         resolved_input = resolve_run_path(input_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
@@ -838,26 +953,31 @@ async def convert_units(
 @mcp.tool
 async def clip_to_bbox(
     input_filepath: str,
-    output_filepath: str,
     north: float,
     south: float,
     east: float,
     west: float,
+    output_filepath: Optional[str] = None,
 ) -> str:
     """
     Clips a NetCDF file to a geographic bounding box and writes a new file.
     Works with ERA5 files which use 'latitude' and 'longitude' coordinate names.
 
     :param input_filepath: Path to the input NetCDF file.
-    :param output_filepath: Path to write the clipped output.
     :param north: Northern boundary in decimal degrees (e.g., 60.0).
     :param south: Southern boundary in decimal degrees (e.g., 35.0).
     :param east: Eastern boundary in decimal degrees (e.g., 30.0).
     :param west: Western boundary in decimal degrees (e.g., -10.0).
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     """
+    output_filepath = _coerce_output_path(output_filepath, "clip_to_bbox")
+
     def _sync():
         resolved_input = resolve_run_path(input_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_input.exists():
                 return f"Error: File not found at '{input_filepath}'"
@@ -888,7 +1008,7 @@ async def clip_to_bbox(
 async def compute_wind_speed(
     u_filepath: str,
     v_filepath: str,
-    output_filepath: str,
+    output_filepath: Optional[str] = None,
     u_variable: Optional[str] = None,
     v_variable: Optional[str] = None,
 ) -> str:
@@ -901,14 +1021,19 @@ async def compute_wind_speed(
 
     :param u_filepath: Path to the NetCDF file containing the u-component (zonal wind).
     :param v_filepath: Path to the NetCDF file containing the v-component (meridional wind).
-    :param output_filepath: Path to write the output NetCDF file with the computed wind_speed variable.
+    :param output_filepath: Desired filename/path for the output. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique filename
+        is auto-generated.
     :param u_variable: Name of the u-component variable in u_filepath. If omitted, the first data variable is used.
     :param v_variable: Name of the v-component variable in v_filepath. If omitted, the first data variable is used.
     """
+    output_filepath = _coerce_output_path(output_filepath, "wind_speed")
+
     def _sync():
         resolved_u = resolve_run_path(u_filepath)
         resolved_v = resolve_run_path(v_filepath)
         resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
         try:
             if not resolved_u.exists():
                 return f"Error: File not found at '{u_filepath}'"

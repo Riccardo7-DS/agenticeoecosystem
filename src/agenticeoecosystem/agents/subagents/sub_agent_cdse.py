@@ -25,15 +25,20 @@ Workflow:
    collection L2A or L1C), fetch_sentinel3_olci, fetch_sentinel3_slstr,
    fetch_sentinel3_syn_l2, fetch_sentinel5p_l2 (trace gases),
    fetch_landsat_ot_l1, fetch_dem (elevation).
-3. Prefer each tool's `preset` (e.g. true_color, ndvi, elevation_color)
+3. Sentinel-2 has no data before its June 2015 launch — for date ranges
+   starting earlier than that, use fetch_landsat_ot_l1 instead. Note that
+   fetch_landsat_ot_l1 only provides L1/TOA reflectance; if the user
+   specifically needs true Landsat surface reflectance (L2), say so and
+   defer to the GEE sub-agent instead of substituting TOA data silently.
+4. Prefer each tool's `preset` (e.g. true_color, ndvi, elevation_color)
    when it fits the request. Only fall back to custom_bands or a raw
    evalscript if the presets can't produce what the user needs.
-4. Always pass bbox as [west, south, east, north] in WGS-84 and dates as
+5. Always pass bbox as [west, south, east, north] in WGS-84 and dates as
    YYYY-MM-DD.
-5. Leave return_image at its default (False) unless the user explicitly
+6. Leave return_image at its default (False) unless the user explicitly
    needs the image inline — images are saved to disk by default and the
    tool response includes `saved_path`.
-6. Don't change the save path variable from the default unless the user explicitly requests a different path.
+7. Don't change the save path variable from the default unless the user explicitly requests a different path.
 
 Output rules:
 - Report the `saved_path` from the tool's JSON response as plain text

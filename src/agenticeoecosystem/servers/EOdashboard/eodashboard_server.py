@@ -84,7 +84,7 @@ class EODashboardCache:
                         ),
                         "satellite": link.extra_fields.get("satellite"),
                         "sensor": link.extra_fields.get("sensor"),
-                        "description": link.extra_fields.get("description", ""),
+                        "subtitle": link.extra_fields.get("subtitle", ""),
                     }
 
     @staticmethod
@@ -272,7 +272,7 @@ def get_narrative_indicators(narrative_title: str) -> str:
 
 @mcp.tool()
 def search_collections(code: str = "", theme: str = "", keyword: str = "") -> str:
-    """Search STAC collections (datasets) in the EODashboard catalog. Filter by collection code, theme, or keyword in titles/descriptions."""
+    """Search STAC collections (datasets) in the EODashboard catalog. Filter by collection code, theme, or keyword in titles/subtitles."""
     cache.load_catalog()
 
     code = code.upper()
@@ -293,7 +293,7 @@ def search_collections(code: str = "", theme: str = "", keyword: str = "") -> st
 
         if keyword:
             searchable = (
-                f"{collection['title']} {collection.get('description', '')}".lower()
+                f"{collection['title']} {collection.get('subtitle', '')}".lower()
             )
             if keyword not in searchable:
                 continue

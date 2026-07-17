@@ -36,7 +36,7 @@
     },
     {
       "task_ID": "TASK_260419_000002_100002",
-      "task_text": "Find the EO Dashboard narrative about the 2019-2020 Australian bushfires, identify the fire-affected region it describes, and download a MODIS burned-area product covering that area to map the burn scars — New South Wales is far too large for a single Sentinel-2 tile, so a coarser, wide-swath product is more appropriate.",
+      "task_text": "Search the EO Dashboard for the narrative on the 2019–2020 Australian bushfires. Identify the affected study area, select an appropriate Earth observation dataset for mapping burn scars, retrieve data covering the region, and explain why the chosen dataset is suitable and how it relates to the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -574,7 +574,7 @@
     },
     {
       "task_ID": "TASK_260419_000016_100016",
-      "task_text": "Find an EO Dashboard narrative about forest cover change, identify the study area it discusses, and download a representative Landsat true-colour image for that area — Kalimantan spans hundreds of kilometres, so a 30 m Landsat scene gives better regional coverage than a single Sentinel-2 tile. Describe whether the retrieved image provides visible evidence supporting the forest cover changes discussed in the narrative.",
+      "task_text": "Find an EO Dashboard narrative about forest cover change, identify the study area and time period it discusses, and retrieve a Landsat true-colour image covering that area. Describe whether the retrieved imagery provides visible evidence supporting the forest cover changes reported in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -870,6 +870,34 @@
               "comment": "SAR backscatter distinguishes sea ice from open water"
             }
           ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "Arctic"
+              },
+              "comment": "Find the real Arctic warming narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Longyearbyen, Svalbard, Norway"
+              },
+              "comment": "An equally valid representative Arctic coastal site — the narrative does not name one location, so a different Arctic site is an acceptable alternative to Utqiagvik"
+            },
+            {
+              "function_name": "fetch_sentinel1_grd",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2023-03-01",
+                "end_date": "2023-03-31",
+                "preset": "vv_vh_rgb"
+              },
+              "comment": "SAR backscatter distinguishes sea ice from open water"
+            }
+          ]
         }
       ],
       "generated_solution": null,
@@ -1129,11 +1157,11 @@
     },
     {
       "task_ID": "TASK_260419_000025_100025",
-      "task_text": "Find an EO Dashboard narrative about industrial activity or emissions monitoring. Identify the study area mentioned in the narrative, retrieve a suitable Earth observation dataset for that location, and search for relevant ESA educational resources about land-cover-based monitoring of industrial and urban footprints. Explain how the retrieved EO data can be used to investigate the environmental issue described in the narrative.",
+      "task_text": "Find an EO Dashboard narrative about greenhouse gas emissions from industrial activity. Identify the study area mentioned in the narrative, retrieve a suitable methane observation dataset (such as Sentinel-5P or another atmospheric composition product) for that location, and search for ESA educational resources on satellite monitoring of greenhouse gases. Explain how the retrieved observations relate to the emissions issue discussed in the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for industrial/shipping narratives, geocode the study area identified in the narrative (Port of Rotterdam, Netherlands) with geocode_place, fetch_sentinel2 for that area, then search_moocs for related educational content.",
+      "reference_solution_description": "Search EO Dashboard for industrial/shipping narratives, geocode the study area identified in the narrative (Port of Rotterdam, Netherlands) with geocode_place, fetch_sentinel5p_l2 (ch4 preset) for that area, then search_moocs for related educational content on greenhouse gas monitoring.",
       "reference_solutions": [
         {
           "steps": [
@@ -1152,26 +1180,21 @@
               "comment": "Study area identified from the narrative"
             },
             {
-              "function_name": "fetch_sentinel2",
+              "function_name": "fetch_sentinel5p_l2",
               "arguments": {
                 "bbox": "<derived from previous step>",
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
-                "collection": "L2A",
-                "custom_bands": [
-                  "B08",
-                  "B04",
-                  "B03"
-                ],
-                "max_cloud_cover": 20
-              }
+                "preset": "ch4"
+              },
+              "comment": "Sentinel-5P TROPOMI methane (CH4) column retrieval for the study area"
             },
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "urban industrial footprint land cover mapping global human settlement"
+                "query": "greenhouse gas emissions monitoring carbon accounting"
               },
-              "comment": "Real MOOC coverage: Urban Land Cover Mapping series (incl. Global Human Settlement Layers)"
+              "comment": "Real MOOC coverage: Carbon Accounting REDD+ Measuring Reporting and Verification (closest available ESA course content on greenhouse gas monitoring/reporting)"
             }
           ]
         },
@@ -1192,26 +1215,21 @@
               "comment": "Study area identified from the narrative"
             },
             {
-              "function_name": "fetch_sentinel2",
+              "function_name": "fetch_sentinel5p_l2",
               "arguments": {
                 "bbox": "<derived from previous step>",
                 "start_date": "2021-10-01",
                 "end_date": "2021-10-31",
-                "collection": "L2A",
-                "custom_bands": [
-                  "B08",
-                  "B04",
-                  "B03"
-                ],
-                "max_cloud_cover": 20
-              }
+                "preset": "ch4"
+              },
+              "comment": "Sentinel-5P TROPOMI methane (CH4) column retrieval for the study area"
             },
             {
               "function_name": "search_moocs",
               "arguments": {
-                "query": "urban industrial footprint land cover mapping global human settlement"
+                "query": "greenhouse gas emissions monitoring carbon accounting"
               },
-              "comment": "Real MOOC coverage: Urban Land Cover Mapping series (incl. Global Human Settlement Layers)"
+              "comment": "Real MOOC coverage: Carbon Accounting REDD+ Measuring Reporting and Verification (closest available ESA course content on greenhouse gas monitoring/reporting)"
             }
           ]
         }
@@ -1438,11 +1456,11 @@
     },
     {
       "task_ID": "TASK_260419_000031_100031",
-      "task_text": "Find the EO Dashboard narrative about air pollution changes in India, China and the U.S., identify a study area it discusses, and download a Sentinel-2 true-colour image of that city.",
+      "task_text": "Find the EO Dashboard narrative about air pollution changes in India, China and the U.S., identify a representative city within one of the countries it discusses, and download a Sentinel-2 true-colour image of that city.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the air-pollution narrative, geocode Beijing, China (one of the cities discussed), then download a Sentinel-2 true-colour image of the city.",
+      "reference_solution_description": "Search EO Dashboard for the air-pollution narrative, geocode Beijing, China (a representative city within one of the countries discussed — India, China, and the U.S. — the narrative names the countries, not a specific city), then download a Sentinel-2 true-colour image of the city.",
       "reference_solutions": [
         {
           "steps": [
@@ -1458,7 +1476,7 @@
               "arguments": {
                 "place_name": "Beijing, China"
               },
-              "comment": "One of the cities discussed in the narrative"
+              "comment": "A representative city within one of the countries discussed (China)"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1488,7 +1506,37 @@
               "arguments": {
                 "place_name": "Beijing, China"
               },
-              "comment": "One of the cities discussed in the narrative"
+              "comment": "A representative city within one of the countries discussed (China)"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2023-01-01",
+                "end_date": "2023-01-31",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 30
+              },
+              "comment": "True-colour image of the city"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "air pollution"
+              },
+              "comment": "Find the real air pollution narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "New Delhi, India"
+              },
+              "comment": "An equally valid representative city — India is also named in the narrative, so New Delhi is an acceptable alternative to Beijing"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1698,11 +1746,11 @@
     },
     {
       "task_ID": "TASK_260419_000035_100035",
-      "task_text": "Find the EO Dashboard narrative about COVID-19 travel restrictions disrupting global cargo shipping, identify a key shipping chokepoint it discusses, and download a Sentinel-2 true-colour image of that area.",
+      "task_text": "Find the EO Dashboard narrative about COVID-19 travel restrictions disrupting global cargo shipping, identify a representative global shipping chokepoint, and download a Sentinel-2 true-colour image of that area.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the shipping-disruption narrative, geocode the Suez Canal, Egypt (a major global shipping chokepoint), then download a Sentinel-2 true-colour image of the area.",
+      "reference_solution_description": "Search EO Dashboard for the shipping-disruption narrative, geocode the Suez Canal, Egypt (a representative example of a major global shipping chokepoint — the narrative discusses global supply chains broadly, without naming a specific location), then download a Sentinel-2 true-colour image of the area.",
       "reference_solutions": [
         {
           "steps": [
@@ -1718,7 +1766,7 @@
               "arguments": {
                 "place_name": "Suez Canal, Egypt"
               },
-              "comment": "Major global shipping chokepoint"
+              "comment": "A representative example of a major global shipping chokepoint"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1748,7 +1796,37 @@
               "arguments": {
                 "place_name": "Suez Canal, Egypt"
               },
-              "comment": "Major global shipping chokepoint"
+              "comment": "A representative example of a major global shipping chokepoint"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2020-04-01",
+                "end_date": "2020-04-30",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 20
+              },
+              "comment": "True-colour image of the shipping chokepoint"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "shipping"
+              },
+              "comment": "Find the real cargo-shipping disruption narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Panama Canal, Panama"
+              },
+              "comment": "An equally valid representative chokepoint — the narrative names no specific location, so a different major global shipping chokepoint is an acceptable alternative to the Suez Canal"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1893,11 +1971,11 @@
     },
     {
       "task_ID": "TASK_260419_000039_100039",
-      "task_text": "Find the EO Dashboard narrative about extreme air pollution episodes in Northern India and Pakistan, identify a city it discusses, and download a Sentinel-2 true-colour image of that city during the smog season.",
+      "task_text": "Find the EO Dashboard narrative about extreme air pollution episodes in Northern India and Pakistan, identify a representative city in one of these countries, and download a Sentinel-2 true-colour image of that city during the smog season.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the extreme air-pollution narrative, geocode Lahore, Pakistan (a city frequently affected), then download a Sentinel-2 true-colour image during the winter smog season.",
+      "reference_solution_description": "Search EO Dashboard for the extreme air-pollution narrative, geocode Lahore, Pakistan (a representative city in one of the two countries named — India and Pakistan — frequently affected by winter smog), then download a Sentinel-2 true-colour image during the winter smog season.",
       "reference_solutions": [
         {
           "steps": [
@@ -1913,7 +1991,7 @@
               "arguments": {
                 "place_name": "Lahore, Pakistan"
               },
-              "comment": "City frequently affected by the winter smog events described"
+              "comment": "A representative city in one of the countries named (Pakistan), frequently affected by the winter smog events described"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -1934,16 +2012,46 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "eruption"
+                "keyword": "pollution"
               },
-              "comment": "Alternative keyword — natural hazard"
+              "comment": "Alternative keyword — pollution"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "Lahore, Pakistan"
               },
-              "comment": "City frequently affected by the winter smog events described"
+              "comment": "A representative city in one of the countries named (Pakistan), frequently affected by the winter smog events described"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2021-11-01",
+                "end_date": "2021-11-30",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 40
+              },
+              "comment": "True-colour image during the winter smog season"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "extreme"
+              },
+              "comment": "Find the real extreme air-pollution episodes narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "New Delhi, India"
+              },
+              "comment": "An equally valid representative city — India is also named in the narrative, so New Delhi is an acceptable alternative to Lahore"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2027,7 +2135,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains EO Dashboard narrative search, geocode of the study area, and a Sentinel-2 true-colour fetch.",
+      "reference_solution_description": "Search EO Dashboard for the real 'Urban Health and Megacities: the case of New Delhi' narrative, geocode New Delhi, India (the specific city named in the narrative), then download a Sentinel-2 true-colour image of the city.",
       "reference_solutions": [
         {
           "steps": [
@@ -2043,7 +2151,7 @@
               "arguments": {
                 "place_name": "New Delhi, India"
               },
-              "comment": "Study area described in the narrative"
+              "comment": "The specific city named in the real narrative"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2064,16 +2172,16 @@
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "air pollution"
+                "keyword": "megacities"
               },
-              "comment": "Alternative keyword — air pollution"
+              "comment": "Alternative keyword — megacities"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "New Delhi, India"
               },
-              "comment": "Study area described in the narrative"
+              "comment": "The specific city named in the real narrative"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2347,11 +2455,11 @@
     },
     {
       "task_ID": "TASK_260419_000045_100045",
-      "task_text": "Search the EO Dashboard for a narrative about deforestation or forest loss. Identify the study area it discusses, then download two Sentinel-2 true-colour images of that area: one before and one after the reported forest change. Compare the images and describe visible land-cover changes.",
+      "task_text": "Search the EO Dashboard for a narrative about deforestation or forest loss. Identify a representative area of documented forest loss, then download two Sentinel-2 true-colour images of that area: one before and one after the reported forest change. Compare the images and describe visible land-cover changes.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for deforestation narratives, geocode 'Rondônia, Brazil' with geocode_place, then download two Sentinel-2 true-colour images in matching dry seasons (low cloud cover): before (Jul–Aug 2018) and after (Jul–Aug 2020) the reported forest loss. Compare the two images and describe visible land-cover change (e.g. reduced forest canopy, new clearings).",
+      "reference_solution_description": "Search EO Dashboard for deforestation narratives (the real 'Forests on the Brink: Satellite Imagery unveiling Loss and Shifting Forest Landscapes' narrative — its linked datasets are pantropical/global forest-change products, not tied to one named place), geocode 'Rondônia, Brazil' with geocode_place as a representative area of well-documented Amazon deforestation, then download two Sentinel-2 true-colour images in matching dry seasons (low cloud cover): before (Jul–Aug 2018) and after (Jul–Aug 2020) reported forest loss. Compare the two images and describe visible land-cover change (e.g. reduced forest canopy, new clearings).",
       "reference_solutions": [
         {
           "steps": [
@@ -2360,13 +2468,14 @@
               "arguments": {
                 "keyword": "forest"
               },
-              "comment": "Find deforestation narratives via keyword 'deforestation'"
+              "comment": "Find deforestation narratives via keyword 'forest'"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "Rondônia, Brazil"
-              }
+              },
+              "comment": "Representative area of well-documented forest loss (Amazon/Rondônia)"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2401,13 +2510,14 @@
               "arguments": {
                 "keyword": "biomass"
               },
-              "comment": "Find deforestation narratives via keyword 'forest loss'"
+              "comment": "Alternative keyword — matches via the narrative's 'biomass' theme, not the title"
             },
             {
               "function_name": "geocode_place",
               "arguments": {
                 "place_name": "Rondônia, Brazil"
-              }
+              },
+              "comment": "Representative area of well-documented forest loss (Amazon/Rondônia)"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2432,6 +2542,48 @@
                 "max_cloud_cover": 30
               },
               "comment": "Post-forest-loss true-colour image, same season for comparability"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "forest"
+              },
+              "comment": "Find deforestation narratives via keyword 'forest'"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Kalimantan, Indonesia"
+              },
+              "comment": "An equally valid representative area — the narrative's linked datasets are pantropical/global, so a different well-documented deforestation hotspot is an acceptable alternative to Rondônia"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2015-08-01",
+                "end_date": "2015-08-31",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 30
+              },
+              "comment": "Pre-fire-season true-colour baseline (dry season for low cloud cover)"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived from previous step>",
+                "start_date": "2019-08-01",
+                "end_date": "2019-08-31",
+                "collection": "L2A",
+                "preset": "true_color",
+                "max_cloud_cover": 30
+              },
+              "comment": "Post-fire-season true-colour image, same dry season for comparability — Kalimantan suffered major documented forest/peatland fires in the intervening years"
             }
           ]
         }

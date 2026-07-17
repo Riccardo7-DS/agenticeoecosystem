@@ -115,7 +115,7 @@ requires-dist = [
     { name = "dask", specifier = ">=2025.7.0" },
     { name = "datasets", specifier = ">=4.7.0" },
     { name = "earthengine-api", specifier = ">=1.7.22" },
-    { name = "eumetsearch", editable = "../eumetsearch" },
+    { name = "eumetsearch", specifier = ">=0.1.1" },
     { name = "fastapi", specifier = ">=0.128.0" },
     { name = "fastmcp", specifier = ">=2.14.0" },
     { name = "fastparquet", specifier = ">=2024.11.0" },
@@ -1172,8 +1172,8 @@ wheels = [
 
 [[package]]
 name = "eumetsearch"
-version = "0.1.0"
-source = { editable = "../eumetsearch" }
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask" },
     { name = "earthengine-api" },
@@ -1208,59 +1208,9 @@ dependencies = [
     { name = "xarray" },
     { name = "zarr" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "dask", specifier = ">=2025.7.0" },
-    { name = "dask", marker = "extra == 'transform'", specifier = ">=2024.0" },
-    { name = "earthengine-api", specifier = ">=1.7.26" },
-    { name = "eodag", specifier = ">=3.10.0" },
-    { name = "eumdac", specifier = ">=3.0.0,<4.0.0" },
-    { name = "fastparquet", specifier = ">=2024.11.0" },
-    { name = "filelock", specifier = ">=3.20.0" },
-    { name = "folium", specifier = ">=0.20.0" },
-    { name = "geopandas", specifier = ">=1.1.1" },
-    { name = "geopandas", marker = "extra == 'transform'", specifier = ">=1.0" },
-    { name = "h5netcdf", specifier = ">=1.6.3" },
-    { name = "h5py", specifier = ">=3.16.0" },
-    { name = "huggingface-hub", specifier = ">=0.24.0" },
-    { name = "ipykernel", specifier = ">=6.30.0" },
-    { name = "matplotlib", specifier = ">=3.10.3" },
-    { name = "matplotlib", marker = "extra == 'transform'", specifier = ">=3.7" },
-    { name = "memory-profiler", specifier = ">=0.61.0" },
-    { name = "minio", specifier = ">=7.2.18" },
-    { name = "netcdf4", specifier = ">=1.7.2" },
-    { name = "numpy", marker = "extra == 'transform'", specifier = ">=1.24" },
-    { name = "pandas", marker = "extra == 'transform'", specifier = ">=2.0" },
-    { name = "phidown", specifier = ">=0.1.22" },
-    { name = "pyarrow", specifier = ">=22.0.0" },
-    { name = "pydantic", specifier = ">=2.11.7" },
-    { name = "pydantic", marker = "extra == 'transform'", specifier = ">=2.0" },
-    { name = "pydwca", specifier = ">=0.5.1" },
-    { name = "pyproj", specifier = ">=3.7.2,<4.0.0" },
-    { name = "pyproj", marker = "extra == 'transform'", specifier = ">=3.6" },
-    { name = "pyresample", specifier = ">=1.34.2" },
-    { name = "pystac", specifier = ">=1.14.1" },
-    { name = "pystac-client", specifier = ">=0.9.0" },
-    { name = "python-dotenv", specifier = ">=1.1.1,<2.0.0" },
-    { name = "rioxarray", specifier = ">=0.19.0" },
-    { name = "rioxarray", marker = "extra == 'transform'", specifier = ">=0.15" },
-    { name = "s3fs", specifier = ">=2025.9.0" },
-    { name = "satpy", specifier = ">=0.57.0" },
-    { name = "scipy", marker = "extra == 'transform'", specifier = ">=1.11" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "tqdm", marker = "extra == 'transform'", specifier = ">=4.0" },
-    { name = "xarray", specifier = ">=2025.7.1,<2026.0.0" },
-    { name = "xarray", marker = "extra == 'transform'", specifier = ">=2024.0" },
-    { name = "zarr", specifier = ">=2.18.7" },
-    { name = "zarr", marker = "extra == 'transform'", specifier = ">=2.18" },
-]
-provides-extras = ["transform"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "py-spy", specifier = ">=0.4.1" },
-    { name = "pytest", specifier = ">=8.0.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/a4/36/cad1bb2ef9460c4bcbe259af3211efd519102cbc63fdb440e8f0c239cd9c/eumetsearch-0.1.1.tar.gz", hash = "sha256:d8b6107f2d4af808f0ce1771485eab6d429d49921359cad5c5aadf4c50a0c3ba", size = 7297603, upload-time = "2026-07-16T16:04:15.643Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2b/09/07543586455d737599c9c90a42e72773cc7908818d4a67b9a787297ccb25/eumetsearch-0.1.1-py3-none-any.whl", hash = "sha256:d911c3229f2c1c52c330d94e653d22828524f14f5a8ce28e742ae7fed40ff5f4", size = 73643, upload-time = "2026-07-16T16:04:17.541Z" },
 ]
 
 [[package]]

@@ -37,7 +37,7 @@ toolset  = [McpToolset(
                                     "run",
                                     "--python", "3.12",
                                     "arxiv-mcp-server",
-                                    "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
+                                    "--storage-path", f"{ROOT_DIR}/output/arxiv"
                                 ]),
                              timeout=300))]
 def _fetch_agent(toolset) -> Optional[Agent]:

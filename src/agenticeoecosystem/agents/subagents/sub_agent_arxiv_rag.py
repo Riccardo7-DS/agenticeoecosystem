@@ -5,6 +5,8 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from typing import Optional
+from pathlib import Path
+import shutil
 
 import logging
 logger = logging.getLogger(__name__)
@@ -25,18 +27,41 @@ _ARXIV_SYSTEM_PROMPT = (
     "  and will exceed the model's context window.\n"
     "- NEVER call 'get_abstract' for more than 5 papers in a single task; abstracts can still overflow context when batched too aggressively.\n"
     "- If the user only asks to find/fetch relevant papers, use discovery tools (e.g., search/list) and do not call 'get_abstract' or 'download_paper' unless explicitly requested.\n"
-    "- If asked to summarise or analyse multiple papers, use 'get_abstract' for all of them."
+    "- If asked to summarise or analyse multiple papers, use 'get_abstract' for all of them.\n"
+    "\n"
+    "BUILDING search_papers QUERIES (this tool's own category list is CS/ML-biased and "
+    "does not mention Earth Observation categories — do not copy it blindly):\n"
+    "- 'query', 'categories', and any date filter are combined with AND — every one of "
+    "them must match, and 'categories' itself is an OR across the list you give. Two "
+    "quoted phrases ANDed together (e.g. '\"sea-level rise\" AND \"satellite altimetry\"') "
+    "requires BOTH exact phrases to appear, which is often too strict and returns zero "
+    "results even when relevant papers exist. Prefer ORing related phrasings instead, "
+    "e.g. '\"sea level rise\" OR \"sea-level rise\"' or '\"satellite altimetry\" OR "
+    "\"radar altimetry\" OR \"ocean altimetry\"'.\n"
+    "- For Earth Observation / remote sensing / climate topics, the relevant arXiv "
+    "categories are usually physics.ao-ph (Atmospheric and Oceanic Physics), "
+    "physics.geo-ph (Geophysics), and sometimes eess.IV (Image/Video Processing) or "
+    "eess.SP (Signal Processing) if the paper is about a processing technique rather "
+    "than the science itself. Do NOT use eess.AS (Audio/Speech) or physics.data-an for "
+    "EO topics — those are irrelevant despite appearing in the tool's example list.\n"
+    "- If you are not confident which category fits, omit 'categories' entirely rather "
+    "than guessing — an irrelevant category filter is more likely to zero out real "
+    "results than to improve relevance.\n"
+    "- If a search returns total_results: 0, retry ONCE with a broadened query before "
+    "reporting no results to the user: switch any AND between phrases to OR, and/or "
+    "drop the categories filter. Only report 'no papers found' after that retry also "
+    "returns zero."
+)
+
+_ARXIV_MCP_BIN = shutil.which("arxiv-mcp-server") or str(
+    Path.home() / ".local" / "bin" / "arxiv-mcp-server"
 )
 
 toolset  = [McpToolset(
                      connection_params=StdioConnectionParams(
                          server_params = StdioServerParameters(
-                             command='uv',
+                             command=_ARXIV_MCP_BIN,
                              args=[
-                                    "tool",
-                                    "run",
-                                    "--python", "3.12",
-                                    "arxiv-mcp-server",
                                     "--storage-path", f"{ROOT_DIR}/output/arxiv"
                                 ]),
                              timeout=300))]

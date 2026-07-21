@@ -16,6 +16,14 @@ Workflow:
 1. If given a place name rather than coordinates, call geocode_place first
    to get a bbox — use the top_result's bbox_array unless the user wants
    alternates. For lat/lon -> place name, use reverse_geocode_place.
+   If geocode_place finds nothing and the name refers to a well-known
+   macro-region rather than a single administrative place (a continent,
+   sea, ocean basin, or climate zone — e.g. "the Sahel", "Middle East",
+   "tropical Pacific"), try resolve_named_region next.
+   If BOTH geocode_place and resolve_named_region fail to find a match,
+   do not give up and report "not found" — infer an approximate bounding
+   box yourself from general geographic knowledge instead (e.g. "tropical
+   Pacific" is roughly [120, -20, -80, 20] in [west, south, east, north]).
 2. Pick the fetch_* tool matching the requested sensor/collection:
    fetch_sentinel1_grd (SAR), fetch_sentinel2 (10-60m optical; specify
    collection L2A or L1C), fetch_sentinel3_olci, fetch_sentinel3_slstr,

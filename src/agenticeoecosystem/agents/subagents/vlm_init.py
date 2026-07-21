@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 # Using an SSH tunnel: ssh -L 18000:localhost:18000 <user>@<llava-vm-host>
 vlm = LiteLlm(
     model="openai/Qwen3-VL",
-    base_url=os.getenv("LLAVA_ENDPOINT", "http://localhost:18000/v1"),
+    base_url=os.getenv("LLAVA_ENDPOINT","http://10.0.0.118:18000/v1" ),
     api_key="EMPTY",   # vLLM doesn't check this, but LiteLLM requires something non-empty
     temperature=0,
 )
+#"http://localhost:18000/v1"

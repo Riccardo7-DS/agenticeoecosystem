@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 import ee
@@ -29,6 +31,17 @@ class DownloadParams(BaseModel):
 	)
 	max_cloud_cover: Optional[float] = Field(50.0, description="Maximum cloud cover percentage (0-100).")
 	image_count: Optional[int] = Field(1, description="Number of least cloudy images to download.")
+	as_geotiff: bool = Field(
+		True,
+		description=(
+			"If True (default), download a raw, georeferenced GeoTIFF with the "
+			"original band values — for downstream quantitative use (GIS analysis, "
+			"NDVI/band math, zonal stats). NOT viewable by the VLM sub-agent (TIFF "
+			"is unsupported there). If False, download an 8-bit, auto-contrast-"
+			"stretched PNG quicklook instead (≤3 bands) — for visual inspection "
+			"(e.g. passing to the VLM sub-agent), not quantitative analysis."
+		),
+	)
 
 	@model_validator(mode='before')
 	@classmethod
@@ -66,8 +79,15 @@ def _estimate_pixels(bbox: List[float], scale_m: int) -> float:
     """Rough pixel-count estimate for a lat/lon bounding box at the given scale."""
     import math
     min_lon, min_lat, max_lon, max_lat = bbox
+    # A bbox crossing the antimeridian (e.g. west=170, east=-170, describing the
+    # narrow strip that wraps through 180°) has max_lon < min_lon numerically.
+    # Without this, (max_lon - min_lon) goes negative, silently defeating the
+    # AOI-too-large check below instead of correctly flagging a huge region.
+    lon_span = max_lon - min_lon
+    if lon_span < 0:
+        lon_span += 360
     lat_c = (min_lat + max_lat) / 2
-    width_m  = (max_lon - min_lon) * 111_000 * math.cos(math.radians(lat_c))
+    width_m  = lon_span * 111_000 * math.cos(math.radians(lat_c))
     height_m = (max_lat - min_lat) * 111_000
     return (width_m / scale_m) * (height_m / scale_m)
 
@@ -267,6 +287,57 @@ def _download_with_fallback(selected_bands: ee.Image, region: ee.Geometry, scale
 		raise
 
 
+def _download_visual_quicklook(selected_bands: ee.Image, region: ee.Geometry, scale: int, prefix: str, dimensions: int = 768) -> Optional[str]:
+	"""Download an 8-bit PNG quicklook, auto-stretched to a 2nd-98th percentile
+	range per band (computed over the region) so it renders sensibly regardless
+	of the dataset's native value range (reflectance, radiance, temperature,
+	etc.) — GEE datasets vary too widely to hardcode a single min/max. Intended
+	for visual inspection (e.g. the VLM sub-agent), not quantitative analysis."""
+	download_dir = os.environ.get("GEE_OUTPUT_DIR", str(ROOT_DIR / "output" / "gee"))
+	os.makedirs(download_dir, exist_ok=True)
+
+	band_names = selected_bands.bandNames().getInfo()
+	vis_bands = band_names[:3]
+	img = selected_bands.select(vis_bands)
+
+	mins = maxs = None
+	try:
+		stats = img.reduceRegion(
+			reducer=ee.Reducer.percentile([2, 98]),
+			geometry=region,
+			scale=scale,
+			bestEffort=True,
+			maxPixels=1e9,
+		).getInfo()
+		mins = [stats.get(f"{b}_p2") for b in vis_bands]
+		maxs = [stats.get(f"{b}_p98") for b in vis_bands]
+	except Exception as e:
+		logging.warning(f"Could not compute auto-stretch stats for quicklook prefix={prefix}: {e}")
+
+	if not mins or any(v is None for v in mins) or any(v is None for v in maxs):
+		vis_image = img.visualize(bands=vis_bands)
+	else:
+		vis_image = img.visualize(bands=vis_bands, min=mins, max=maxs)
+
+	try:
+		url = vis_image.getThumbURL({
+			"region": region.bounds(),
+			"dimensions": dimensions,
+			"format": "png",
+		})
+		file_path = os.path.join(download_dir, f"{prefix}.png")
+		with requests.get(url, stream=True) as r:
+			r.raise_for_status()
+			with open(file_path, "wb") as f:
+				for chunk in r.iter_content(chunk_size=8192):
+					if chunk:
+						f.write(chunk)
+		return os.path.abspath(file_path)
+	except Exception as e:
+		logging.warning(f"Could not download PNG quicklook for prefix={prefix}: {e}")
+		return None
+
+
 app = FastMCP("gee-mcp")
 
 _gee_initialized = False
@@ -291,6 +362,201 @@ def _ensure_gee() -> None:
         _os.close(_saved_fd1)
         _sys.stdout = _os.fdopen(1, "w", buffering=1)
 	
+
+_GEE_CATALOG_ROOT = "https://storage.googleapis.com/earthengine-stac/catalog/catalog.json"
+_MAX_CATALOG_FETCH = 250  # cap on how many full dataset records we fetch per search call
+
+_catalog_index_cache: Optional[List[Dict[str, str]]] = None
+_provider_codes_cache: Optional[set] = None
+
+
+def _fetch_catalog_children(url: str) -> List[Dict[str, str]]:
+    try:
+        data = requests.get(url, timeout=15).json()
+    except Exception as e:
+        logging.warning(f"Could not fetch GEE catalog node {url}: {e}")
+        return []
+    return [
+        {"title": link["title"], "href": link["href"]}
+        for link in data.get("links", [])
+        if link.get("rel") == "child"
+    ]
+
+
+def _build_catalog_index() -> List[Dict[str, str]]:
+    """Fetch and cache a flat {title, href} index of every dataset in the official
+    GEE STAC catalog (one request per top-level provider, cached for the lifetime
+    of this server process). `title` here is the provider-prefixed asset slug
+    (e.g. "MODIS_061_MYD28M1"), not a human-readable name."""
+    global _catalog_index_cache, _provider_codes_cache
+    if _catalog_index_cache is not None:
+        return _catalog_index_cache
+
+    providers = _fetch_catalog_children(_GEE_CATALOG_ROOT)
+    _provider_codes_cache = {p["title"].lower() for p in providers}
+
+    index: List[Dict[str, str]] = []
+    with ThreadPoolExecutor(max_workers=20) as pool:
+        for children in pool.map(_fetch_catalog_children, [p["href"] for p in providers]):
+            index.extend(children)
+
+    logging.info(f"Built GEE catalog index with {len(index)} datasets.")
+    _catalog_index_cache = index
+    return index
+
+
+def _fetch_catalog_item(href: str) -> Optional[Dict[str, Any]]:
+    try:
+        return requests.get(href, timeout=15).json()
+    except Exception as e:
+        logging.warning(f"Could not fetch GEE catalog item {href}: {e}")
+        return None
+
+
+@app.tool()
+def search_gee_catalog(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
+    """Search the official Google Earth Engine STAC catalog for dataset IDs matching a
+    keyword query (e.g. a sensor name, variable, or product like 'MODIS land surface
+    temperature' or 'NOAA sea surface temperature').
+
+    Use this whenever you are not fully certain of the exact, current ImageCollection ID
+    to pass as `dataset` to download_gee_product. GEE dataset IDs get re-versioned over
+    time (e.g. a collection moving from .../006/... to .../061/...), so do not rely on a
+    memorized ID for anything beyond the handful of very common ones (Sentinel-2 SR,
+    Landsat 8/9 SR, Sentinel-5P NO2) — look it up here first instead.
+
+    Tip: include the sensor/agency name if you know it (e.g. "MODIS", "NOAA",
+    "COPERNICUS", "LANDSAT") — this narrows the search to that provider's catalog and
+    gives far more accurate results, since many products (e.g. from NASA/NOAA) are
+    identified by opaque codes rather than descriptive names.
+
+    An empty result means nothing matched — that can mean the exact product you're
+    thinking of isn't hosted on GEE at all (e.g. MODIS SST is not); try a different
+    provider or a broader/looser query before giving up.
+
+    Returns up to `max_results` candidate datasets, each with the real Earth Engine asset
+    `id` (pass this exact string as `dataset`), `title`, `type` (image or
+    image_collection), and a short `description`.
+    """
+    index = _build_catalog_index()
+    terms = [t for t in query.lower().replace("-", " ").split() if t]
+    if not terms:
+        return []
+
+    provider_codes = _provider_codes_cache or set()
+    matched_providers = {t for t in terms if t in provider_codes}
+
+    if matched_providers:
+        candidates = [
+            e for e in index
+            if e["title"].split("_")[0].lower() in matched_providers
+        ]
+    else:
+        def _slug_score(entry: Dict[str, str]) -> int:
+            slug_l = entry["title"].lower()
+            tokens = slug_l.replace("-", "_").split("_")
+            return sum(1 for t in terms if t in slug_l or any(t in tok for tok in tokens))
+
+        candidates = sorted(
+            (e for e in index if _slug_score(e) > 0),
+            key=_slug_score,
+            reverse=True,
+        )
+
+    if not candidates:
+        return []
+    candidates = candidates[:_MAX_CATALOG_FETCH]
+
+    def _fetch_and_score(entry: Dict[str, str]):
+        item = _fetch_catalog_item(entry["href"])
+        if not item:
+            return None
+        text = " ".join(filter(None, [
+            item.get("title"), item.get("description"), " ".join(item.get("keywords") or []),
+        ])).lower()
+        score = sum(text.count(t) for t in terms)
+        return score, item
+
+    scored_items = []
+    with ThreadPoolExecutor(max_workers=25) as pool:
+        for result in pool.map(_fetch_and_score, candidates):
+            if result:
+                scored_items.append(result)
+
+    # Different versions of the SAME product (e.g. .../V1, .../V2, .../V3, or
+    # MODIS/006/... vs MODIS/061/...) often score very differently on raw keyword
+    # count alone — older/more verbose descriptions can out-score a concise newer
+    # one — so text score can't be trusted to naturally surface the current
+    # version. Group by product family (id with version-like segments stripped)
+    # and, within each family, keep only the best version: not deprecated, then
+    # most recent temporal coverage — independent of text score. The family's
+    # best text score is kept for ranking families against each other.
+    def _version_pref_key(item: Dict[str, Any]) -> tuple:
+        not_deprecated = "[deprecated]" not in (item.get("title") or "").lower()
+        extent = _extract_temporal_extent(item)
+        end_date = extent[1] if extent and extent[1] else "9999-99-99"
+        return (not_deprecated, end_date)
+
+    def _family_key(dataset_id: str) -> str:
+        parts = (dataset_id or "").split("/")
+        kept = [p for p in parts if not re.fullmatch(r"[Vv]?\d+(?:_\d+)?", p)]
+        return "/".join(kept) if kept else dataset_id
+
+    families: Dict[str, Dict[str, Any]] = {}
+    for score, item in scored_items:
+        fam = _family_key(item.get("id") or "")
+        existing = families.get(fam)
+        if existing is None:
+            families[fam] = {"score": score, "item": item}
+        else:
+            existing["score"] = max(existing["score"], score)
+            if _version_pref_key(item) > _version_pref_key(existing["item"]):
+                existing["item"] = item
+
+    deduped = [(f["score"], f["item"]) for f in families.values()]
+    deduped.sort(key=lambda x: x[0], reverse=True)
+
+    top_items = [item for score, item in deduped if score > 0][:max_results]
+    return [
+        {
+            "id": item.get("id"),
+            "title": item.get("title"),
+            "type": item.get("gee:type"),
+            "description": (item.get("description") or "")[:300],
+            "temporal_extent": _extract_temporal_extent(item),
+        }
+        for item in top_items
+    ]
+
+
+def _extract_temporal_extent(item: Dict[str, Any]) -> Optional[List[Optional[str]]]:
+    """Pull [start, end] (ISO date strings, or None if open-ended/unavailable) out of
+    a GEE STAC item's `extent.temporal.interval`. Many datasets — especially older
+    sensor versions superseded by a newer one — only cover a fixed historical period;
+    querying outside it silently returns zero images, so this must be checked before
+    picking start_date/end_date."""
+    try:
+        interval = item.get("extent", {}).get("temporal", {}).get("interval", [])
+        if interval and interval[0]:
+            start, end = interval[0][0], interval[0][1]
+            return [start.split("T")[0] if start else None, end.split("T")[0] if end else None]
+    except Exception:
+        pass
+    return None
+
+
+def _dataset_id_to_catalog_url(dataset_id: str) -> str:
+    provider = dataset_id.split("/")[0]
+    slug = dataset_id.replace("/", "_")
+    return f"{_GEE_CATALOG_ROOT.rsplit('/', 1)[0]}/{provider}/{slug}.json"
+
+
+def _fetch_dataset_temporal_extent(dataset_id: str) -> Optional[List[Optional[str]]]:
+    """Look up a dataset's official temporal extent directly by id (used as a
+    fallback diagnostic when a date-range query returns zero images)."""
+    item = _fetch_catalog_item(_dataset_id_to_catalog_url(dataset_id))
+    return _extract_temporal_extent(item) if item else None
+
 
 @app.tool()
 def get_lat_lon(address: str) -> List[float]:
@@ -321,6 +587,11 @@ def get_lat_lon(address: str) -> List[float]:
 def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 	"""Download satellite images from GEE and return a dictionary with file paths and a status message.
 	Arguments include coordinates, date range, dataset, bands, scale, buffer, cloud cover, and image count.
+
+	Set `as_geotiff=True` (default) for a raw analysis-ready GeoTIFF (GIS/quantitative use).
+	Set `as_geotiff=False` for an 8-bit, auto-stretched PNG quicklook instead — use this when the
+	output is meant for visual inspection (e.g. passed to the VLM sub-agent), since TIFF isn't
+	viewable there.
 	"""
 	# Pre-flight AOI size check — reject immediately if the request would take forever.
 	if args.bounding_box:
@@ -346,15 +617,21 @@ def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 		try:
 			min_lon, min_lat, max_lon, max_lat = args.bounding_box
 			logging.info(f"Bounding box: {min_lon}, {min_lat}, {max_lon}, {max_lat}")
+			# A bbox crossing the antimeridian (e.g. west=170, east=-170, describing
+			# the narrow strip that wraps through 180°) has max_lon < min_lon
+			# numerically. Shifting the east edge by +360 keeps the vertices
+			# monotonically increasing so GEE builds the intended narrow polygon
+			# instead of interpreting it as wrapping the other way (~half the globe).
+			max_lon_adj = max_lon + 360 if max_lon < min_lon else max_lon
 			# Define the four corners of the rectangle to create a Polygon
 			coords = [
 				[min_lon, min_lat],
-				[max_lon, min_lat],
-				[max_lon, max_lat],
+				[max_lon_adj, min_lat],
+				[max_lon_adj, max_lat],
 				[min_lon, max_lat],
 				[min_lon, min_lat] # Close the polygon
 			]
-			region = ee.Geometry.Polygon(coords)
+			region = ee.Geometry.Polygon(coords, None, False)
 		except Exception as e:
 			raise ValueError(f"Invalid bounding_box provided. Ensure it is a list of four numbers. Error: {e}")
 	else:
@@ -369,6 +646,7 @@ def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 		logging.info(f"Region is too large for a single download. Splitting into {len(tiles)} tiles.")
 
 	downloaded_files = []
+	extent_note = None
 	for i, tile_region in enumerate(tiles):
 		if len(tiles) > 1:
 			logging.info(f"Processing tile {i + 1} of {len(tiles)}...")
@@ -387,6 +665,17 @@ def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 		collection_size = collection.size().getInfo()
 		if collection_size == 0:
 			logging.warning(f"No images found for tile {i + 1} that meet the specified cloud cover rate. Skipping.")
+			if extent_note is None:
+				extent = _fetch_dataset_temporal_extent(args.dataset)
+				if extent:
+					start, end = extent
+					extent_note = (
+						f"No images matched start_date={args.start_date}, end_date={args.end_date} for "
+						f"dataset '{args.dataset}' — this dataset's actual temporal coverage is "
+						f"{start or 'unknown'} to {end or 'present'}. If your requested range falls "
+						f"outside that, retry with dates inside it, or use search_gee_catalog to find "
+						f"a newer version of this product with more recent coverage."
+					)
 			continue
 
 		# Sort by cloud cover and limit to the number of images requested
@@ -409,29 +698,26 @@ def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 			else:
 				selected_bands = image
 			
-			# Use the region's bounds for the download area
-			download_region = tile_region.bounds().getInfo()["coordinates"]
-
-			download_params = {
-				"scale": args.scale,
-				"region": json.dumps(download_region),
-				"format": "GEO_TIFF",
-			}
-
 			# Generate a filename prefix including capture date and tile index
 			prefix = f"gee_image_{date_string}_t{i+1}_n{j+1}"
 
-			# Use robust fallback downloader (recursive split/scale backoff)
-			file_paths = _download_with_fallback(selected_bands, tile_region, args.scale, prefix)
+			if args.as_geotiff:
+				# Use robust fallback downloader (recursive split/scale backoff)
+				file_paths = _download_with_fallback(selected_bands, tile_region, args.scale, prefix)
+			else:
+				quicklook_path = _download_visual_quicklook(selected_bands, tile_region, args.scale, prefix)
+				file_paths = [quicklook_path] if quicklook_path else []
+
 			if not file_paths:
 				logging.warning(f"No files produced for tile {i+1}, image {j+1} after fallbacks.")
 			else:
 				downloaded_files.extend(file_paths)
-	
+
 	message = f"Successfully downloaded {len(downloaded_files)} image(s) across {len(tiles)} tile(s)."
 	if len(tiles) > 1:
 		message += f" (Note: Some images were skipped due to insufficient cloud cover or no images found in some tiles.)"
-
+	if extent_note:
+		message += " " + extent_note
 
 	return {"files": downloaded_files, "message": message}
 

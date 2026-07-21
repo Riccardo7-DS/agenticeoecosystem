@@ -1,6 +1,9 @@
 from agenticeoecosystem.agents.subagents.eve_patch import apply as apply_eve_patch
 apply_eve_patch()
 
+from agenticeoecosystem.agents.subagents.mcp_image_patch import apply as apply_mcp_image_patch
+apply_mcp_image_patch()
+
 from google.adk.agents.llm_agent import Agent
 
 from google.adk.models.lite_llm import LiteLlm
@@ -93,9 +96,10 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "- ESA EO Science Strategy knowledge base (Graph RAG)\n"
     "- GIS analysis server for spatial operations, raster analysis, visualization\n"
     "- GEE (Google Earth Engine) satellite imagery sub-agent, for downloading "
-    "specialized collections not available via CDSE (e.g. VIIRS, MODIS, or "
-    "other GEE-only datasets) for a given place, coordinate, bounding box, or "
-    "region over a date range\n"
+    "specialized collections not available via CDSE (e.g. NASA products like "
+    "VIIRS or MODIS, JAXA products like GPM/GSMaP or ALOS, or other GEE-only "
+    "datasets) for a given place, coordinate, bounding box, or region over a "
+    "date range\n"
     "- ERA5 climate sub-agent, for downloading and inspecting ERA5 reanalysis "
     "data (pressure-level or surface-level variables like temperature, "
     "geopotential, precipitation) as NetCDF files for a given year/month\n"
@@ -109,6 +113,14 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "ROUTING:\n"
     "- Break requests into the appropriate tool call(s) and coordinate results.\n"
     "- If a request needs multiple sources, call tools in sequence and combine their outputs.\n"
+    "- NEVER issue two calls to the SAME sub-agent in parallel/in the same "
+    "turn, even for genuinely different requests (e.g. a 'before' and "
+    "'after' image from the same source). Wait for the first call to that "
+    "sub-agent to fully return before issuing the second — concurrent calls "
+    "to the same sub-agent can cross-contaminate each other's request "
+    "context (e.g. both ending up using the second call's date range). "
+    "This restriction is specific to repeated calls to the same sub-agent; "
+    "calls to different sub-agents may still run in sequence as usual.\n"
     "- For general or 'sample' imagery requests (e.g. Sentinel-2, Sentinel-1, "
     "Landsat true-color images of a place), use the CDSE sub-agent by default.\n"
     "- Use the EUMETSAT sub-agent only for geostationary MTG FCI or MSG SEVIRI "
@@ -117,7 +129,8 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "rather than a bbox, geocode it via CDSE first and pass the resulting bbox "
     "to EUMETSAT.\n"
     "- Only use the GEE sub-agent when the requested collection is NOT "
-    "available through CDSE — e.g. VIIRS, MODIS, or other specialized/GEE-only "
+    "available through CDSE — e.g. NASA products (VIIRS, MODIS), JAXA "
+    "products (GPM/GSMaP precipitation, ALOS), or other specialized/GEE-only "
     "datasets. Do not use GEE for imagery CDSE or EUMETSAT already covers.\n"
     "- Use the ERA5 sub-agent, as usual, for atmospheric/climate reanalysis "
     "variables (temperature, wind, geopotential, precipitation, etc.) rather "
@@ -129,7 +142,8 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "'shows'. First obtain the image(s) via the relevant data source "
     "(CDSE, EUMETSAT, GEE, GIS analysis server, etc.), then pass the "
     "resulting local file or directory path and the user's question to the "
-    "VLM sub-agent. Do not use the VLM sub-agent for quantitative raster "
+    "VLM sub-agent. If there are multiple images to compare, pass them one by one "
+    "to the VLM sub-agent. Do not use the VLM sub-agent for quantitative raster "
     "analysis (NDVI, zonal stats, band math) — that stays on the GIS "
     "analysis server.\n"
     "- EUMETSAT and CDSE do not do NDVI, reprojection, clipping, or zonal "
@@ -140,6 +154,11 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "use (GIS analysis server, NDVI/band math, zonal stats, more than 3 "
     "bands). CDSE should fetch a JPEG quicklook (≤3 bands, true-color/preset) "
     "for the former, and a GeoTIFF (as_geotiff=True) for the latter.\n"
+    "- The same applies when delegating to GEE: state whether the output is "
+    "for visual inspection (VLM) or downstream quantitative use. GEE should "
+    "fetch a PNG quicklook (as_geotiff=False) for the former, and a raw "
+    "GeoTIFF (as_geotiff=True, the default) for the latter — GEE's GeoTIFF "
+    "output is not viewable by the VLM sub-agent.\n"
     "OUTPUT RULES:\n"
     "- Return tool results directly and completely, word for word — no added "
     "introductions, summaries, or commentary.\n"
@@ -190,7 +209,7 @@ async def init_session(app_name:str,user_id:str,session_id:str) -> InMemorySessi
         user_id=user_id,
         session_id=session_id
     )
-    print(f"Session created: App='{app_name}', User='{user_id}', Session='{session_id}'")
+    logger.info("Session created: App='%s', User='%s', Session='%s'", app_name, user_id, session_id)
     return session
 
 session = asyncio.run(init_session(APP_NAME,USER_ID,SESSION_ID))
@@ -199,7 +218,7 @@ runner = Runner(agent=root, # The agent we want to run
                 app_name=APP_NAME,   # Associates runs with our app
                 session_service=session_service # Uses our session manager
                 )
-print(f"Runner created for agent '{runner.agent.name}'.")
+logger.info("Runner created for agent '%s'.", runner.agent.name)
 
 import json
 import uuid
@@ -269,8 +288,9 @@ async def call_agent_async(query: str, runner, user_id, session_id):
 async def get_ans_tool_path(query: str) -> str:
     """
     Runs a query through the orchestrator in an isolated session and returns
-    a JSON string with the final answer plus the sequence of agents and
-    tools invoked to produce it.
+    a JSON string with the final answer, the sequence of agents invoked, the
+    leaf MCP tool calls (name + arguments) made to produce it, and total
+    token usage across the run.
     """
     session_id = f"session_{uuid.uuid4().hex}"
     await session_service.create_session(
@@ -283,6 +303,8 @@ async def get_ans_tool_path(query: str) -> str:
     final_answer = "Agent did not produce a final response."
     agents_called = []
     tools_called = []
+    input_tokens = 0
+    output_tokens = 0
 
     async for event in runner.run_async(
         user_id=USER_ID, session_id=session_id, new_message=content
@@ -290,10 +312,17 @@ async def get_ans_tool_path(query: str) -> str:
         if event.author and (not agents_called or agents_called[-1] != event.author):
             agents_called.append(event.author)
 
+        if event.usage_metadata:
+            input_tokens += event.usage_metadata.prompt_token_count or 0
+            output_tokens += event.usage_metadata.candidates_token_count or 0
+
         if event.content and event.content.parts:
             for part in event.content.parts:
-                if getattr(part, 'function_call', None) and not part.function_call.name.endswith('agent'):
-                    tools_called.append(part.function_call.name)
+                fc = getattr(part, 'function_call', None)
+                if fc and not fc.name.endswith('agent'):
+                    tools_called.append(
+                        {"function_name": fc.name, "arguments": dict(fc.args)}
+                    )
 
         if event.is_final_response():
             text = _extract_final_text(event)
@@ -308,7 +337,9 @@ async def get_ans_tool_path(query: str) -> str:
         "final_answer": final_answer,
         "tools_called": tools_called,
         "agents_called": agents_called,
-    })
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+    }, default=str)
 
 import json
 from collections import Counter
@@ -361,9 +392,9 @@ async def debug_agent_async(query: str, runner, user_id, session_id):
 
 async def run_conversation():
     await debug_agent_async(
-        "Enter your question: Download a Sentinel-2 image of the Niamey, Niger region for July 2023 with all bands. Compute NDVI (NIR = band 4, Red = band 3) and save the result. Report the mean and maximum NDVI values across the scene to assess overall vegetation productivity.",
-        # "Download pre-computed daily mean 2m temperature for January 2023 over Europe without downloading raw hourly data.",
-        runner, USER_ID, SESSION_ID,
+
+    "Search arXiv for papers on sea-level rise monitoring using satellite altimetry published since 2024 and return up to 15 results.",
+    runner, USER_ID, SESSION_ID,
     )
 if __name__ == "__main__":
     try:

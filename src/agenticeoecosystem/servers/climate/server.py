@@ -3,6 +3,7 @@ import re
 import cdsapi
 from dotenv import load_dotenv
 import xarray as xr
+import rioxarray  # noqa: F401 -- registers the .rio accessor used by netcdf_to_geotiff
 import pathlib
 import time
 import uuid
@@ -999,6 +1000,72 @@ async def clip_to_bbox(
             )
         except Exception as e:
             return f"Error during spatial clip: {e}"
+
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, _sync)
+
+
+@mcp.tool
+async def netcdf_to_geotiff(
+    input_filepath: str,
+    variable: str,
+    output_filepath: Optional[str] = None,
+    time_index: int = 0,
+    level_index: int = 0,
+) -> str:
+    """
+    Exports a single 2D (lat, lon) slice of a NetCDF variable as a georeferenced
+    GeoTIFF, so it can be viewed via the VLM server's resolve_images/load_images
+    (which auto-stretch GeoTIFFs into a viewable PNG). ERA5 files themselves are
+    never directly viewable — this is the required step in between.
+
+    :param input_filepath: Path to the input NetCDF file (e.g. from fetch_era5_*
+        or clip_to_bbox).
+    :param variable: Name of the variable to export (e.g. 'z' for geopotential,
+        't' for temperature, 'sst' for sea surface temperature). Check
+        inspect_netcdf for the exact variable name in the file.
+    :param output_filepath: Desired filename/path for the .tif. Always saved under
+        ERA5_OUTPUT_DIR regardless of what's passed here. If omitted, a unique
+        filename is auto-generated.
+    :param time_index: Index along the time dimension to export, if the variable
+        has one (default 0, the first time step).
+    :param level_index: Index along the pressure-level dimension to export, if
+        the variable has one (default 0, the first/only level).
+    """
+    output_filepath = _coerce_output_path(output_filepath, f"{variable}_geotiff", ext="tif")
+
+    def _sync():
+        resolved_input = resolve_run_path(input_filepath)
+        resolved_output = resolve_run_path(output_filepath)
+        resolved_output.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if not resolved_input.exists():
+                return f"Error: File not found at '{input_filepath}'"
+            with xr.open_dataset(resolved_input) as ds:
+                if variable not in ds.data_vars:
+                    return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
+                da = ds[variable]
+                lat_name = next((c for c in da.dims if 'lat' in c.lower()), None)
+                lon_name = next((c for c in da.dims if 'lon' in c.lower()), None)
+                if not lat_name or not lon_name:
+                    return f"Error: Could not find lat/lon dimensions. Available: {list(da.dims)}"
+
+                for dim in list(da.dims):
+                    if dim in (lat_name, lon_name):
+                        continue
+                    if dim in ('time', 'valid_time', 'date'):
+                        da = da.isel({dim: time_index})
+                    elif 'level' in dim.lower() or 'pressure' in dim.lower():
+                        da = da.isel({dim: level_index})
+                    else:
+                        da = da.isel({dim: 0})
+
+                da = da.rename({lat_name: "y", lon_name: "x"})
+                da.rio.write_crs("EPSG:4326", inplace=True)
+                da.rio.to_raster(resolved_output)
+            return f"Exported '{variable}' (time_index={time_index}, level_index={level_index}) to GeoTIFF at '{output_filepath}'."
+        except Exception as e:
+            return f"Error during GeoTIFF export: {e}"
 
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _sync)

@@ -25,7 +25,26 @@ _GIS_SYSTEM_PROMPT = (
     "To clip a raster to a region: use clip_raster_with_shapefile only if the "
     "caller already gave you a .shp path. If you only have a bounding box "
     "(west, south, east, north) and no shapefile, use clip_raster_with_bbox "
-    "directly — do not try to fabricate or guess a shapefile path."
+    "directly — do not try to fabricate or guess a shapefile path.\n"
+    "Spectral index tools (all take a local multi-band raster + 1-based band "
+    "indices and write a single-band float32 GeoTIFF): you must already have "
+    "that raster on disk (e.g. from the GEE sub-agent's download_gee_product) "
+    "before calling any of these — none of them fetch imagery themselves.\n"
+    "  - compute_ndvi(source, red_band_index, nir_band_index, destination): "
+    "(NIR-Red)/(NIR+Red) — general vegetation condition. Sentinel-2: B8=NIR, B4=Red.\n"
+    "  - compute_evi(source, red_band_index, nir_band_index, blue_band_index, "
+    "destination, scale_factor=0.0001): 2.5*(NIR-Red)/(NIR+6*Red-7.5*Blue+1) — "
+    "dense vegetation with atmospheric correction. Sentinel-2: B8=NIR, B4=Red, "
+    "B2=Blue. Keep scale_factor=0.0001 for Sentinel-2 SR (DN 0-10000); use 1.0 "
+    "only if the source raster is already reflectance (0-1).\n"
+    "  - compute_ndwi(source, green_band_index, nir_band_index, destination): "
+    "(Green-NIR)/(Green+NIR) — McFeeters water detection. Sentinel-2: B3=Green, B8=NIR.\n"
+    "  - compute_ndmi(source, nir_band_index, swir1_band_index, destination): "
+    "(NIR-SWIR1)/(NIR+SWIR1) — vegetation moisture / drought stress. Sentinel-2: "
+    "B8=NIR, B11=SWIR1.\n"
+    "  - compute_nbr(source, nir_band_index, swir2_band_index, destination): "
+    "(NIR-SWIR2)/(NIR+SWIR2) — burn severity; compare pre-/post-fire scenes as "
+    "dNBR (pre-NBR minus post-NBR). Sentinel-2: B8=NIR, B12=SWIR2."
 )
 
 
@@ -82,6 +101,196 @@ def clip_raster_with_bbox(
         "destination": str(dst_path),
         "message": f"Raster clipped to bbox and saved to '{dst_path}'.",
     }
+
+
+def compute_evi(
+    source: str,
+    red_band_index: int,
+    nir_band_index: int,
+    blue_band_index: int,
+    destination: str,
+    scale_factor: float = 0.0001,
+) -> dict:
+    """Compute EVI (Enhanced Vegetation Index) and save to GeoTIFF.
+
+    Improves on NDVI for dense vegetation canopies and corrects for
+    atmospheric and soil-background effects using the blue band.
+
+    Args:
+        source: Input multi-band raster path (e.g. Sentinel-2 bands B8, B4, B2).
+        red_band_index: Index of the red band (1-based).
+        nir_band_index: Index of the near-infrared band (1-based).
+        blue_band_index: Index of the blue band (1-based).
+        destination: Output EVI raster path.
+        scale_factor: Multiplier applied to raw band values to convert them to
+            reflectance (0-1) before applying the formula — EVI's "+1" constant
+            is only valid in reflectance units. Sentinel-2 SR products store
+            DN 0-10000, so the default 0.0001 is correct for them; pass 1.0 if
+            the source raster is already scaled to reflectance.
+
+    Returns:
+        dict with status, destination path, and a message.
+    """
+    import rasterio
+    import numpy as np
+
+    src_path = os.path.expanduser(source.replace("`", ""))
+    dst_path = os.path.expanduser(destination.replace("`", ""))
+
+    with rasterio.open(src_path) as src:
+        red = src.read(red_band_index).astype("float32") * scale_factor
+        nir = src.read(nir_band_index).astype("float32") * scale_factor
+        blue = src.read(blue_band_index).astype("float32") * scale_factor
+        denom = nir + 6 * red - 7.5 * blue + 1
+        evi = 2.5 * (nir - red) / np.where(denom == 0, np.nan, denom)
+        evi = np.nan_to_num(evi, nan=0.0).astype("float32")
+
+        profile = src.profile.copy()
+        profile.update(dtype="float32", count=1)
+
+    os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+    with rasterio.open(dst_path, "w", **profile) as dst:
+        dst.write(evi, 1)
+
+    return {
+        "status": "success",
+        "destination": str(dst_path),
+        "message": f"EVI calculated and saved to '{dst_path}'.",
+    }
+
+
+def compute_ndwi(
+    source: str,
+    green_band_index: int,
+    nir_band_index: int,
+    destination: str,
+) -> dict:
+    """Compute NDWI (McFeeters Normalized Difference Water Index) and save to GeoTIFF.
+
+    Detects open water bodies; higher values indicate water.
+
+    Args:
+        source: Input multi-band raster path (e.g. Sentinel-2 bands B3, B8).
+        green_band_index: Index of the green band (1-based).
+        nir_band_index: Index of the near-infrared band (1-based).
+        destination: Output NDWI raster path.
+
+    Returns:
+        dict with status, destination path, and a message.
+    """
+    import rasterio
+    import numpy as np
+
+    src_path = os.path.expanduser(source.replace("`", ""))
+    dst_path = os.path.expanduser(destination.replace("`", ""))
+
+    with rasterio.open(src_path) as src:
+        green = src.read(green_band_index).astype("float32")
+        nir = src.read(nir_band_index).astype("float32")
+        ndwi = (green - nir) / (green + nir + 1e-6)
+
+        profile = src.profile.copy()
+        profile.update(dtype="float32", count=1)
+
+    os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+    with rasterio.open(dst_path, "w", **profile) as dst:
+        dst.write(ndwi, 1)
+
+    return {
+        "status": "success",
+        "destination": str(dst_path),
+        "message": f"NDWI calculated and saved to '{dst_path}'.",
+    }
+
+
+def compute_ndmi(
+    source: str,
+    nir_band_index: int,
+    swir1_band_index: int,
+    destination: str,
+) -> dict:
+    """Compute NDMI (Normalized Difference Moisture Index) and save to GeoTIFF.
+
+    Indicates vegetation moisture content; useful for detecting drought stress.
+
+    Args:
+        source: Input multi-band raster path (e.g. Sentinel-2 bands B8, B11).
+        nir_band_index: Index of the near-infrared band (1-based).
+        swir1_band_index: Index of the SWIR1 band (1-based, ~1.6um; Sentinel-2 B11).
+        destination: Output NDMI raster path.
+
+    Returns:
+        dict with status, destination path, and a message.
+    """
+    import rasterio
+    import numpy as np
+
+    src_path = os.path.expanduser(source.replace("`", ""))
+    dst_path = os.path.expanduser(destination.replace("`", ""))
+
+    with rasterio.open(src_path) as src:
+        nir = src.read(nir_band_index).astype("float32")
+        swir1 = src.read(swir1_band_index).astype("float32")
+        ndmi = (nir - swir1) / (nir + swir1 + 1e-6)
+
+        profile = src.profile.copy()
+        profile.update(dtype="float32", count=1)
+
+    os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+    with rasterio.open(dst_path, "w", **profile) as dst:
+        dst.write(ndmi, 1)
+
+    return {
+        "status": "success",
+        "destination": str(dst_path),
+        "message": f"NDMI calculated and saved to '{dst_path}'.",
+    }
+
+
+def compute_nbr(
+    source: str,
+    nir_band_index: int,
+    swir2_band_index: int,
+    destination: str,
+) -> dict:
+    """Compute NBR (Normalized Burn Ratio) and save to GeoTIFF.
+
+    Used to identify burned areas and assess burn severity; often compared
+    pre-/post-fire as dNBR (pre-fire NBR minus post-fire NBR).
+
+    Args:
+        source: Input multi-band raster path (e.g. Sentinel-2 bands B8, B12).
+        nir_band_index: Index of the near-infrared band (1-based).
+        swir2_band_index: Index of the SWIR2 band (1-based, ~2.2um; Sentinel-2 B12).
+        destination: Output NBR raster path.
+
+    Returns:
+        dict with status, destination path, and a message.
+    """
+    import rasterio
+    import numpy as np
+
+    src_path = os.path.expanduser(source.replace("`", ""))
+    dst_path = os.path.expanduser(destination.replace("`", ""))
+
+    with rasterio.open(src_path) as src:
+        nir = src.read(nir_band_index).astype("float32")
+        swir2 = src.read(swir2_band_index).astype("float32")
+        nbr = (nir - swir2) / (nir + swir2 + 1e-6)
+
+        profile = src.profile.copy()
+        profile.update(dtype="float32", count=1)
+
+    os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+    with rasterio.open(dst_path, "w", **profile) as dst:
+        dst.write(nbr, 1)
+
+    return {
+        "status": "success",
+        "destination": str(dst_path),
+        "message": f"NBR calculated and saved to '{dst_path}'.",
+    }
+
 
 _GIS_TOOL_NAMES = {
     # Shapely geometry
@@ -150,7 +359,13 @@ def _fetch_agent(toolset) -> Optional[Agent]:
                 name='gis_agent',
                 description='A helpful assistant for performing GIS analysis, spatial operations, raster analysis, and map visualization.',
                 instruction=_GIS_SYSTEM_PROMPT,
-                tools=toolset + [clip_raster_with_bbox],
+                tools=toolset + [
+                    clip_raster_with_bbox,
+                    compute_evi,
+                    compute_ndwi,
+                    compute_ndmi,
+                    compute_nbr,
+                ],
                 mode='single_turn'
             )
         else:

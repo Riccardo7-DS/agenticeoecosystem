@@ -24,7 +24,9 @@ def run_pipeline(
 
     Args:
         task_text: The natural-language task prompt.
-        pipeline : "multi" (supervisor + sub-agents) or "single" (one agent, all tools).
+        pipeline : "multi" (LangGraph supervisor + sub-agents), "single" (one
+                   LangGraph agent, all tools), or "adk" (google-adk
+                   orchestrator + native sub-agents, see agents/multi_agent.py).
 
     Returns:
         solution     : Solution with one Step per MCP tool call made.
@@ -33,6 +35,23 @@ def run_pipeline(
     """
     import nest_asyncio
     nest_asyncio.apply()
+
+    if pipeline == "adk":
+        import json as _json
+        import agenticeoecosystem.agents.multi_agent as _adk
+
+        loop = asyncio.get_event_loop()
+        raw = loop.run_until_complete(_adk.get_ans_tool_path(task_text))
+        data = _json.loads(raw)
+        steps = [
+            Step(function_name=t["function_name"], arguments=t.get("arguments", {}))
+            for t in data.get("tools_called", [])
+        ]
+        return (
+            Solution(steps=steps),
+            data.get("input_tokens", 0),
+            data.get("output_tokens", 0),
+        )
 
     if pipeline == "single":
         import agenticeoecosystem.client.client_single_agent as _module
@@ -93,9 +112,13 @@ def generate_solutions(
         output_folder    : Directory for intermediate saves (default: GEOBENCH_RESULTS).
         skip_solved      : Skip tasks that already have a generated_solution.
         wait_between_tasks: Seconds to wait between API calls (rate-limit guard).
-        pipeline         : "multi" (supervisor + sub-agents) or "single" (one agent, all tools).
+        pipeline         : "multi" (LangGraph supervisor + sub-agents), "single"
+                           (one LangGraph agent, all tools), or "adk" (google-adk
+                           orchestrator, always runs EVE-Instruct — model/provider
+                           overrides are not yet supported for this pipeline).
         agent_models     : Per-agent model overrides for pipeline="multi", e.g.
-                           {"gis": ("mistral-small-24b", "vllm")}. Ignored for pipeline="single".
+                           {"gis": ("mistral-small-24b", "vllm")}. Ignored for
+                           pipeline="single" or pipeline="adk".
 
     Returns:
         tasks        : Same TaskSet with generated_solution fields populated.
@@ -116,6 +139,16 @@ def generate_solutions(
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='single'")
         _single.rebuild_agent(model, provider=model_provider, temperature=temperature)
+    elif pipeline == "adk":
+        if agent_models:
+            logger.warning("agent_models is ignored when pipeline='adk'")
+        if model != "EVE-Instruct" or model_provider != "eve":
+            logger.warning(
+                "pipeline='adk' does not support model/provider overrides yet — "
+                "it always runs EVE-Instruct via the EVE endpoint regardless of "
+                "model=%s provider=%s", model, model_provider,
+            )
+        import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
     else:
         import agenticeoecosystem.client.client as _client
         _client.rebuild_agents(model, provider=model_provider, temperature=temperature, agent_models=agent_models)

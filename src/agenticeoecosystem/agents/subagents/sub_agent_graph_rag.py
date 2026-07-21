@@ -7,9 +7,42 @@ from mcp import StdioServerParameters
 from typing import Optional
 
 import os
+import httpx
 from dotenv import load_dotenv
 import logging
 logger = logging.getLogger(__name__)
+
+
+_MCP_REQUEST_TIMEOUT_SEC = 30.0
+_MCP_SSE_READ_TIMEOUT_SEC = 300.0
+_MCP_CONNECT_RETRIES = 3
+
+
+def _create_retrying_mcp_http_client(
+    headers: dict[str, str] | None = None,
+    timeout: httpx.Timeout | None = None,
+    auth: httpx.Auth | None = None,
+) -> httpx.AsyncClient:
+    """Create MCP HTTP client with retries for transient gateway/connect errors."""
+    kwargs: dict = {
+        "follow_redirects": True,
+        "transport": httpx.AsyncHTTPTransport(retries=_MCP_CONNECT_RETRIES),
+    }
+
+    if timeout is None:
+        kwargs["timeout"] = httpx.Timeout(
+            _MCP_REQUEST_TIMEOUT_SEC,
+            read=_MCP_SSE_READ_TIMEOUT_SEC,
+        )
+    else:
+        kwargs["timeout"] = timeout
+
+    if headers is not None:
+        kwargs["headers"] = headers
+    if auth is not None:
+        kwargs["auth"] = auth
+
+    return httpx.AsyncClient(**kwargs)
 
 
 
@@ -37,16 +70,23 @@ toolset = [
         connection_params=StreamableHTTPConnectionParams(
             url=graphrag_config["url"],
             headers=graphrag_config["headers"],
+            timeout=_MCP_REQUEST_TIMEOUT_SEC,
+            sse_read_timeout=_MCP_SSE_READ_TIMEOUT_SEC,
+            httpx_client_factory=_create_retrying_mcp_http_client,
         )
     )
 ]
 _RAG_SYSTEM_PROMPT = (
-    "You are a retrieval assistant for the ESA Earth Observation Science Strategy 2040 "
-    "(EOSS) GraphRAG knowledge base. You have three tools: "
-    "search_eopss for natural-language questions (semantic chunk search + knowledge "
-    "graph context), query_ontology for structured read-only Cypher lookups, and "
-    "list_ontology_nodes to enumerate ontology nodes by type. "
-    "Pick the appropriate tool, then return the raw retrieved context to the caller."
+    "You are a retrieval assistant for the ESA Earth Observation Science Strategy "
+    "knowledge graph. Choose the right tool for the request:\n"
+    "- search_eoss: natural-language questions; returns relevant document chunks "
+    "plus their knowledge-graph context.\n"
+    "- query_ontology: structured, read-only Cypher lookups (MATCH ... RETURN) "
+    "over the graph.\n"
+    "- list_ontology_nodes: enumerate nodes of a given label (e.g. "
+    "StrategicObjective, ScienceQuestion, KnowledgeAdvancementObjective), or "
+    "list all node types with counts when no label is given.\n"
+    "Call the appropriate tool, then return the raw context to the caller."
 )
 
 def _fetch_agent(toolset) -> Optional[Agent]:

@@ -22,8 +22,9 @@ _ARXIV_SYSTEM_PROMPT = (
     "- Prefer 'get_abstract' over 'download_paper' unless the user explicitly requests the full text. "
     "  Abstracts contain enough information for most questions and avoid context overflows.\n"
     "- NEVER call 'download_paper' for more than one paper in a single task — full PDFs are very large "
-    "Never call 'get_abstract' for more than 5 papers at a time, as even abstracts can add up in length and never call it if user asks just to fetch or find relevant papers"
     "  and will exceed the model's context window.\n"
+    "- NEVER call 'get_abstract' for more than 5 papers in a single task; abstracts can still overflow context when batched too aggressively.\n"
+    "- If the user only asks to find/fetch relevant papers, use discovery tools (e.g., search/list) and do not call 'get_abstract' or 'download_paper' unless explicitly requested.\n"
     "- If asked to summarise or analyse multiple papers, use 'get_abstract' for all of them."
 )
 

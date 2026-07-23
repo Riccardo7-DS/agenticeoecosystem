@@ -424,7 +424,7 @@ def _es_s2_custom_bands(bands: list[str], sample_type: str = "AUTO") -> str:
         f"function evaluatePixel(s){{return[{returns}]}}"
     )
 
-def fectch_sentinel2(
+def fetch_sentinel2(
     bbox: list[float],
     start_date: str,
     end_date: str,

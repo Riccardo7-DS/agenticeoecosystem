@@ -60,7 +60,7 @@ from mcp.types import ImageContent, TextContent
 
 from agenticeoecosystem.servers.cdse_geocode.helper import (
     fetch_sentinel1_grd,
-    fectch_sentinel2,
+    fetch_sentinel2,
     fetch_sentinel3_olci,
     fetch_sentinel3_slstr,
     fetch_sentinel3_syn_l2,
@@ -313,7 +313,7 @@ def tool_sentinel2(
     ] = False,
 ) -> list[ImageContent | TextContent]:
     save_path = save_path or _default_save_path("sentinel2", ext="tif" if as_geotiff else "jpg")
-    result = fectch_sentinel2(
+    result = fetch_sentinel2(
         bbox=bbox,
         start_date=start_date,
         end_date=end_date,

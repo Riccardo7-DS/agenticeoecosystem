@@ -7,6 +7,7 @@ from mcp import StdioServerParameters
 from typing import Optional
 from pathlib import Path
 import shutil
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -57,27 +58,57 @@ _ARXIV_MCP_BIN = shutil.which("arxiv-mcp-server") or str(
     Path.home() / ".local" / "bin" / "arxiv-mcp-server"
 )
 
-toolset  = [McpToolset(
-                     connection_params=StdioConnectionParams(
-                         server_params = StdioServerParameters(
-                             command=_ARXIV_MCP_BIN,
-                             args=[
-                                    "--storage-path", f"{ROOT_DIR}/output/arxiv"
-                                ]),
-                             timeout=300))]
+
+def _build_server_params() -> StdioServerParameters:
+    """
+    If the arxiv-mcp-server binary is already installed/discoverable, launch it
+    directly (fast path). Otherwise — first run, or the package isn't installed
+    yet — fall back to `uv tool run`, which will install it on demand before
+    starting the server.
+    """
+    if os.path.isfile(_ARXIV_MCP_BIN) and os.access(_ARXIV_MCP_BIN, os.X_OK):
+        logger.info(f"Found existing arxiv-mcp-server binary at {_ARXIV_MCP_BIN}; loading directly.")
+        return StdioServerParameters(
+            command=_ARXIV_MCP_BIN,
+            args=["--storage-path", f"{ROOT_DIR}/output/arxiv"],
+        )
+
+    logger.info("arxiv-mcp-server binary not found; installing/running via 'uv tool run'.")
+    return StdioServerParameters(
+        command="uv",
+        args=[
+            "tool",
+            "run",
+            "--python", "3.12",
+            "arxiv-mcp-server",
+            "--storage-path", f"{ROOT_DIR}/output/arxiv",
+        ],
+    )
+
+
+toolset = [
+    McpToolset(
+        connection_params=StdioConnectionParams(
+            server_params=_build_server_params(),
+            timeout=300,
+        )
+    )
+]
+
+
 def _fetch_agent(toolset) -> Optional[Agent]:
-        if toolset:
-            return Agent(
-                model=llm,
-                name='arxiv_rag_agent',
-                description='A helpful assistant for answering user questions related to ArXiv paper retrieval.',
-                instruction=_ARXIV_SYSTEM_PROMPT,
-                tools=toolset,
-                mode='single_turn'
-            )
-        else:
-            logger.warning("ArXiv RAG agent not initialized due to missing toolset.")
-            return None
+    if toolset:
+        return Agent(
+            model=llm,
+            name='arxiv_rag_agent',
+            description='A helpful assistant for answering user questions related to ArXiv paper retrieval.',
+            instruction=_ARXIV_SYSTEM_PROMPT,
+            tools=toolset,
+            mode='single_turn'
+        )
+    else:
+        logger.warning("ArXiv RAG agent not initialized due to missing toolset.")
+        return None
 
 
 arxiv_rag_agent = _fetch_agent(toolset)

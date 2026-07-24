@@ -6,6 +6,7 @@ from mcp import StdioServerParameters
 from typing import Optional
 from pathlib import Path
 import os
+import shutil 
 
 import logging
 logger = logging.getLogger(__name__)
@@ -337,19 +338,46 @@ _GIS_DOWNLOAD_TOOL_NAMES = {
 }
 
 _GIS_ALLOWED_TOOL_NAMES = sorted(_GIS_TOOL_NAMES - _GIS_DOWNLOAD_TOOL_NAMES)
+_GIS_MCP_BIN = shutil.which("gis-mcp") or str(
+    Path.home() / ".local" / "bin" / "gis-mcp"
+)
 
-toolset = [McpToolset(
-                     connection_params=StdioConnectionParams(
-                         server_params=StdioServerParameters(
-                             command='uv',
-                             args=[
-                                    "tool",
-                                    "run",
-                                    "--python", "3.12",
-                                    "gis-mcp"
-                                ]),
-                             timeout=300),
-                     tool_filter=_GIS_ALLOWED_TOOL_NAMES)]
+
+def _build_server_params() -> StdioServerParameters:
+    """
+    If the gis-mcp binary is already installed/discoverable, launch it
+    directly (fast path). Otherwise — first run, or the package isn't
+    installed yet — fall back to `uv tool run`, which installs it on
+    demand before starting the server.
+    """
+    if os.path.isfile(_GIS_MCP_BIN) and os.access(_GIS_MCP_BIN, os.X_OK):
+        logger.info(f"Found existing gis-mcp binary at {_GIS_MCP_BIN}; loading directly.")
+        return StdioServerParameters(
+            command=_GIS_MCP_BIN,
+            args=[],
+        )
+
+    logger.info("gis-mcp binary not found; installing/running via 'uv tool run'.")
+    return StdioServerParameters(
+        command="uv",
+        args=[
+            "tool",
+            "run",
+            "--python", "3.12",
+            "gis-mcp",
+        ],
+    )
+
+
+toolset = [
+    McpToolset(
+        connection_params=StdioConnectionParams(
+            server_params=_build_server_params(),
+            timeout=300,
+        ),
+        tool_filter=_GIS_ALLOWED_TOOL_NAMES,
+    )
+]
 
 
 def _fetch_agent(toolset) -> Optional[Agent]:

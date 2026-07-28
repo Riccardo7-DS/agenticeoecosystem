@@ -53,11 +53,11 @@
     },
     {
       "task_ID": "TASK_260427_000002_200002",
-      "task_text": "Search arXiv for papers on deep-learning-based land cover classification from satellite imagery, then download the first result and read its full content.",
+      "task_text": "Search arXiv for papers on deep-learning-based land cover classification from satellite imagery, download the top result, and skim enough of it (e.g. the abstract and introduction) to summarize the deep learning approach and satellite data it uses \u2014 no need to read the entire paper.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Agent searches for land cover classification papers, picks the top result, downloads the PDF/markdown, then reads it.",
+      "reference_solution_description": "Agent searches for land cover classification papers, picks the top result, downloads it, then skims a capped excerpt (not the full text) to summarize the approach and data used, avoiding a large paper blowing out the context window.",
       "reference_solutions": [
         {
           "steps": [
@@ -83,9 +83,10 @@
             {
               "function_name": "read_paper",
               "arguments": {
-                "paper_id": "<same paper_id>"
+                "paper_id": "<same paper_id>",
+                "max_chars": 5000
               },
-              "comment": "Read the downloaded paper content"
+              "comment": "Read just enough of the paper (capped, not the full text) to summarize its deep learning approach and data"
             }
           ]
         }
@@ -793,11 +794,11 @@
     },
     {
       "task_ID": "TASK_260427_000020_200020",
-      "task_text": "Search arXiv for papers on SAR-based flood extent mapping published since 2023, download the most relevant result, read its full content to identify the study area, then compute the geodetic distance between that study area centroid and Rome, Italy (12.5\u00b0E, 41.9\u00b0N).",
+      "task_text": "Search arXiv for papers on SAR-based flood extent mapping published since 2023, download the most relevant result, and skim enough of it (e.g. the abstract and introduction) to identify the study area \u2014 no need to read the entire paper \u2014 then compute the geodetic distance between that study area centroid and Rome, Italy.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent retrieves a recent SAR flood paper from arXiv, reads it to extract a study area location, then uses the GIS server to compute the geodetic distance from that location to Rome.",
+      "reference_solution_description": "Search arXiv for a SAR flood-mapping paper, geocode 'Rome, Italy' with geocode_place, then calculate_geodetic_distance between the paper's study area and Rome. Only skim the paper (a capped excerpt) rather than reading it in full, to avoid a large paper blowing out the context window.",
       "reference_solutions": [
         {
           "steps": [
@@ -820,9 +821,10 @@
             {
               "function_name": "read_paper",
               "arguments": {
-                "paper_id": "<same paper_id>"
+                "paper_id": "<same paper_id>",
+                "max_chars": 5000
               },
-              "comment": "Read the paper to identify the study area location"
+              "comment": "Read just enough of the paper (capped, not the full text) to identify the study area location"
             },
             {
               "function_name": "calculate_geodetic_distance",

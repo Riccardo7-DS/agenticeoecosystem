@@ -41,7 +41,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the Australian bushfires narrative, geocode New South Wales, Australia (the region most affected), then download the MODIS Burned Area product (MCD64A1, 500 m) via GEE — its wide swath and burn-date band suit a state-scale fire assessment better than a single 10 m Sentinel-2 tile.",
+      "reference_solution_description": "Search EO Dashboard for the Australian bushfires narrative, geocode New South Wales, Australia (the region most affected), then download the MODIS Burned Area product (MCD64A1, 500 m) via GEE — its wide swath and burn-date band suit a state-scale fire assessment better than a single 10 m Sentinel-2 tile. A tiled Sentinel-2 + NBR (Normalized Burn Ratio) approach is an equally valid alternative — NBR is a standard, purpose-built burn-severity index — provided the agent actually splits the affected area into sub-tiles small enough to stay within Sentinel Hub's resolution limits and successfully retrieves data for each one; an attempt that never gets past resolution-limit errors does not count as a successful alternative.",
       "reference_solutions": [
         {
           "steps": [
@@ -100,6 +100,49 @@
                 "dataset": "MODIS/061/MCD64A1"
               },
               "comment": "MODIS Burned Area (500 m) — state-scale burn-date mapping"
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "function_name": "search_narratives",
+              "arguments": {
+                "keyword": "bushfire"
+              },
+              "comment": "Find the real Australian bushfires narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "<inferred place>"
+              },
+              "comment": "The narrative names no specific study area; New South Wales (hardest-hit by the real 2019-2020 fires) is one defensible inferred example"
+            },
+            {
+              "function_name": "fetch_sentinel2",
+              "arguments": {
+                "bbox": "<derived: one of several smaller sub-tiles covering the affected area, small enough to avoid exceeding Sentinel Hub's resolution limit>",
+                "start_date": "2020-01-01",
+                "end_date": "2020-02-29",
+                "collection": "L2A",
+                "custom_bands": [
+                  "B08",
+                  "B12"
+                ],
+                "as_geotiff": true
+              },
+              "comment": "Fetch NIR+SWIR2 for one sub-tile of the affected area — the region must be split into multiple smaller bboxes (rather than one huge request) so each stays within Sentinel Hub's resolution limit; repeat for each sub-tile"
+            },
+            {
+              "function_name": "compute_nbr",
+              "arguments": {
+                "source": "<derived from previous step: this sub-tile's downloaded raster>",
+                "nir_band_index": 1,
+                "swir2_band_index": 2,
+                "destination": "<derived: this sub-tile's NBR output path>"
+              },
+              "comment": "NBR (Normalized Burn Ratio) — a standard, purpose-built burn-severity index; repeat for each sub-tile"
             }
           ]
         }
@@ -363,7 +406,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the Cairo CO2 narrative, geocode the Nile Delta farmland north of Cairo, Egypt, then download a Sentinel-2 true-colour image of the region.",
+      "reference_solution_description": "Search EO Dashboard for the Cairo CO2 narrative, geocode the Nile Delta farmland north of Cairo, Egypt, then download a Sentinel-2 true-colour image of the region. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -385,8 +428,8 @@
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<derived from previous step>",
-                "start_date": "2023-03-01",
-                "end_date": "2023-05-31",
+                "start_date": "<any representative recent date with low cloud cover>",
+                "end_date": "<any representative recent date with low cloud cover, ~2-3 months after start>",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_cover": 20
@@ -415,8 +458,8 @@
               "function_name": "fetch_sentinel2",
               "arguments": {
                 "bbox": "<derived from previous step>",
-                "start_date": "2023-03-01",
-                "end_date": "2023-05-31",
+                "start_date": "<any representative recent date with low cloud cover>",
+                "end_date": "<any representative recent date with low cloud cover, ~2-3 months after start>",
                 "collection": "L2A",
                 "preset": "true_color",
                 "max_cloud_cover": 20
@@ -968,7 +1011,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the Arctic warming narrative, geocode Utqiagvik, Alaska (a representative Arctic coastal site), then download a Sentinel-1 GRD SAR image — sea ice and open water have strongly different backscatter, making SAR well suited to ice-extent inspection.",
+      "reference_solution_description": "Search EO Dashboard for the Arctic warming narrative, geocode Utqiagvik, Alaska (a representative Arctic coastal site), then download a Sentinel-1 GRD SAR image — sea ice and open water have strongly different backscatter, making SAR well suited to ice-extent inspection. The specific date(s) and the 'vv_vh_rgb' preset shown in this reference are illustrative examples, not strict requirements — any date and any Sentinel-1 preset that shows polarimetric/backscatter contrast between ice and open water (e.g. vv_vh_rgb, or a single-polarization VV/VH grayscale) is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -990,9 +1033,9 @@
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
                 "bbox": "<derived from previous step>",
-                "start_date": "2023-03-01",
-                "end_date": "2023-03-31",
-                "preset": "vv_vh_rgb"
+                "start_date": "<any representative recent date>",
+                "end_date": "<any representative recent date, ~1 month after start>",
+                "preset": "<any preset showing polarimetric/backscatter contrast between ice and open water, e.g. vv_vh_rgb>"
               },
               "comment": "SAR backscatter distinguishes sea ice from open water"
             },
@@ -1032,9 +1075,9 @@
               "function_name": "fetch_sentinel1_grd",
               "arguments": {
                 "bbox": "<derived from previous step>",
-                "start_date": "2023-03-01",
-                "end_date": "2023-03-31",
-                "preset": "vv_vh_rgb"
+                "start_date": "<any representative recent date>",
+                "end_date": "<any representative recent date, ~1 month after start>",
+                "preset": "<any preset showing polarimetric/backscatter contrast between ice and open water, e.g. vv_vh_rgb>"
               },
               "comment": "SAR backscatter distinguishes sea ice from open water"
             }
@@ -1321,7 +1364,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for industrial/shipping narratives, geocode the study area identified in the narrative (Port of Rotterdam, Netherlands) with geocode_place, fetch_sentinel5p_l2 (ch4 preset) for that area, then search_moocs for related educational content on greenhouse gas monitoring.",
+      "reference_solution_description": "Search EO Dashboard for industrial/shipping narratives, geocode the study area identified in whichever real narrative the search surfaces with geocode_place — Port of Rotterdam, Netherlands is one illustrative example, not a requirement; the actual location depends on the real narrative retrieved, fetch_sentinel5p_l2 (ch4 preset) for that area, then search_moocs for related educational content on greenhouse gas monitoring.",
       "reference_solutions": [
         {
           "steps": [
@@ -2567,7 +2610,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the real 'Urban Health and Megacities: the case of New Delhi' narrative, geocode New Delhi, India (the specific city named in the narrative), then download a Sentinel-2 true-colour image of the city.",
+      "reference_solution_description": "Search EO Dashboard for whichever real urban NO2/air-pollution narrative the search surfaces, geocode the specific city that narrative names — New Delhi, India is the current real match ('Urban Health and Megacities: the case of New Delhi'), but geocode whatever city the actual retrieved narrative names — then download a Sentinel-2 true-colour image of the city.",
       "reference_solutions": [
         {
           "steps": [
@@ -2581,9 +2624,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New Delhi, India"
+                "place_name": "<the specific city named in the actual narrative found>"
               },
-              "comment": "The specific city named in the real narrative"
+              "comment": "New Delhi is the current real match, but geocode whatever city the retrieved narrative actually names"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -2625,9 +2668,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New Delhi, India"
+                "place_name": "<the specific city named in the actual narrative found>"
               },
-              "comment": "The specific city named in the real narrative"
+              "comment": "New Delhi is the current real match, but geocode whatever city the retrieved narrative actually names"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -4319,7 +4362,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Agent chains narrative search for urban content, geocode + Sentinel-2 fetch for the study area, and MOOC search for urban remote sensing lectures.",
+      "reference_solution_description": "Agent chains narrative search for urban content, geocode + Sentinel-2 fetch for whichever city the actual retrieved narrative discusses (not necessarily New Delhi — any city genuinely named by a real urban-expansion narrative is valid), and MOOC search for urban remote sensing lectures.",
       "reference_solutions": [
         {
           "steps": [
@@ -4333,9 +4376,9 @@
             {
               "function_name": "geocode_place",
               "arguments": {
-                "place_name": "New Delhi, India"
+                "place_name": "<the city discussed in whichever real urban-expansion narrative is found>"
               },
-              "comment": "City discussed in the urban narrative"
+              "comment": "New Delhi is one real match, but geocode whatever city the actual retrieved narrative discusses"
             },
             {
               "function_name": "fetch_sentinel2",
@@ -5886,7 +5929,7 @@
     },
     {
       "task_ID": "TASK_260427_000031_200031",
-      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia, Lombardy, Italy during June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the selected image, save the resulting raster, and report the mean NDVI value and the range of vegetation conditions observed across the study area.",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia, Lombardy, Italy during June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the selected image, save the resulting raster, and report the mean, minimum, and maximum NDVI values, then state whether these values indicate predominantly healthy vegetation, sparse or stressed vegetation, or a mix of both across the study area.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -5948,11 +5991,11 @@
     },
     {
       "task_ID": "TASK_260427_000032_200032",
-      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for July-September 2022 with bands B4, B8, and B11 at 10-20 m resolution. Compute NDVI and NDMI, save the results, and report raster statistics to compare vegetation greenness and moisture conditions across the study area.",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for July-September 2022 with bands B3, B4, and B8, all at native 10 m resolution. Compute NDVI and NDWI, save the results, report raster statistics for each index, and state whether the statistics indicate dense, dry vegetation or a wetter, water-influenced landscape across the study area.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Geocode 'Zinder, Niger' with geocode_place, then fetch_sentinel2 (as_geotiff=True) for B08 (NIR, 10m), B04 (Red, 10m), and B11 (SWIR1, 20m, resampled to the common output grid). Computes NDVI via compute_ndvi(red=B04, nir=B08) and NDMI via the dedicated compute_ndmi(nir=B08, swir1=B11) tool. Reports raster_band_statistics on both indices to compare vegetation greenness (NDVI) and moisture conditions (NDMI).",
+      "reference_solution_description": "Geocode 'Zinder, Niger' with geocode_place, then fetch_sentinel2 (as_geotiff=True) for B08 (NIR, 10m), B04 (Red, 10m), and B03 (Green, 10m) — all native 10 m, no resampling needed. Computes NDVI via compute_ndvi(red=B04, nir=B08) and NDWI via the dedicated compute_ndwi(green=B03, nir=B08) tool. Reports raster_band_statistics on both indices, then interprets the mean/min/max values to state whether the study area shows dense, dry vegetation (high NDVI, low NDWI) or a wetter, water-influenced landscape (elevated NDWI) — the interpretation must be grounded in the reported numbers, not just a repeat of them.",
       "reference_solutions": [
         {
           "steps": [
@@ -5973,13 +6016,13 @@
                 "custom_bands": [
                   "B08",
                   "B04",
-                  "B11"
+                  "B03"
                 ],
                 "max_cloud_cover": 30,
                 "as_geotiff": true,
                 "save_path": "output/TASK_260427_000032_200032/sentinel2_zinder.tif"
               },
-              "comment": "band1=B08 (NIR, 10m), band2=B04 (Red, 10m), band3=B11 (SWIR, 20m, resampled)"
+              "comment": "band1=B08 (NIR, 10m), band2=B04 (Red, 10m), band3=B03 (Green, 10m) — all native 10 m"
             },
             {
               "function_name": "compute_ndvi",
@@ -5992,14 +6035,14 @@
               "comment": "NDVI = (B08-B04)/(B08+B04)"
             },
             {
-              "function_name": "compute_ndmi",
+              "function_name": "compute_ndwi",
               "arguments": {
                 "source": "output/TASK_260427_000032_200032/sentinel2_zinder.tif",
+                "green_band_index": 3,
                 "nir_band_index": 1,
-                "swir1_band_index": 3,
-                "destination": "output/TASK_260427_000032_200032/ndmi_zinder.tif"
+                "destination": "output/TASK_260427_000032_200032/ndwi_zinder.tif"
               },
-              "comment": "NDMI = (B08-B11)/(B08+B11) via the dedicated compute_ndmi tool"
+              "comment": "NDWI = (B03-B08)/(B03+B08) via the dedicated compute_ndwi tool"
             },
             {
               "function_name": "raster_band_statistics",
@@ -6011,9 +6054,9 @@
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "output/TASK_260427_000032_200032/ndmi_zinder.tif"
+                "source": "output/TASK_260427_000032_200032/ndwi_zinder.tif"
               },
-              "comment": "NDMI statistics to characterise moisture conditions"
+              "comment": "NDWI statistics to characterise surface wetness"
             }
           ]
         }
@@ -6647,7 +6690,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the real 'Satellites are providing insights into agricultural production, crop conditions, and food supply' narrative — its GEOGLAM (N6_geoglam) STAC layer spans multiple major crop-producing regions rather than naming one, so a defensible farming region could be Punjab, India or the Iowa Corn Belt, USA. Geocode the chosen region, then download the MODIS NDVI product (MOD13Q1, 250 m, 16-day composite) via GEE as an 8-bit PNG quicklook (as_geotiff=False) so it can be viewed. Loads it into the VLM sub-agent's context to describe the spatial patterns of vegetation activity — areas of higher and lower vegetation response — and relate them to the narrative's crop-monitoring discussion.",
+      "reference_solution_description": "Search EO Dashboard for the real 'Satellites are providing insights into agricultural production, crop conditions, and food supply' narrative — its GEOGLAM (N6_geoglam) STAC layer spans multiple major crop-producing regions rather than naming one, so a defensible farming region could be Punjab, India or the Iowa Corn Belt, USA. Geocode the chosen region, then download a MODIS NDVI vegetation-index product via GEE as an 8-bit PNG quicklook (as_geotiff=False) so it can be viewed — MOD13Q1 (250 m) is used below as one example, but any MODIS NDVI product (e.g. MOD13A1 at 500 m) is equally valid; the exact resolution tier doesn't matter as long as it's genuinely usable for regional crop-condition assessment. Loads it into the VLM sub-agent's context to describe the spatial patterns of vegetation activity — areas of higher and lower vegetation response — and relate them to the narrative's crop-monitoring discussion.",
       "reference_solutions": [
         {
           "steps": [
@@ -6671,12 +6714,12 @@
                 "bounding_box": "<derived from previous step>",
                 "start_date": "2023-10-01",
                 "end_date": "2023-11-30",
-                "scale": 250,
+                "scale": "<matching the chosen dataset's native resolution, e.g. 250 or 500>",
                 "bands": "NDVI",
-                "dataset": "MODIS/061/MOD13Q1",
+                "dataset": "<any MODIS NDVI vegetation-index product, e.g. MODIS/061/MOD13Q1 (250m) or MODIS/061/MOD13A1 (500m)>",
                 "as_geotiff": false
               },
-              "comment": "MODIS NDVI (250 m, 16-day composite) — regional crop-condition assessment, saved as a viewable PNG quicklook, described against the narrative's agricultural-monitoring discussion"
+              "comment": "MODIS NDVI vegetation-index product (any resolution tier, 16-day composite) — regional crop-condition assessment, saved as a viewable PNG quicklook, described against the narrative's agricultural-monitoring discussion"
             },
             {
               "function_name": "resolve_images",
@@ -6716,12 +6759,12 @@
                 "bounding_box": "<derived from previous step>",
                 "start_date": "2023-06-01",
                 "end_date": "2023-08-31",
-                "scale": 250,
+                "scale": "<matching the chosen dataset's native resolution, e.g. 250 or 500>",
                 "bands": "NDVI",
-                "dataset": "MODIS/061/MOD13Q1",
+                "dataset": "<any MODIS NDVI vegetation-index product, e.g. MODIS/061/MOD13Q1 (250m) or MODIS/061/MOD13A1 (500m)>",
                 "as_geotiff": false
               },
-              "comment": "MODIS NDVI (250 m, 16-day composite) — Corn Belt growing-season crop-condition assessment, saved as a viewable PNG quicklook, described against the narrative's agricultural-monitoring discussion"
+              "comment": "MODIS NDVI vegetation-index product (any resolution tier, 16-day composite) — Corn Belt growing-season crop-condition assessment, saved as a viewable PNG quicklook, described against the narrative's agricultural-monitoring discussion"
             },
             {
               "function_name": "resolve_images",
@@ -6755,7 +6798,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard for the East Africa floods narrative, geocode Beledweyne, Somalia (one of the worst-hit towns), then download a Sentinel-1 GRD SAR image — standing floodwater appears as smooth, low-backscatter regions in VV.",
+      "reference_solution_description": "Search EO Dashboard for the East Africa floods narrative, then geocode a small representative area within East Africa affected by the 2023-2024 floods — it does not need to be the exact town named or implied by the narrative; Beledweyne, Somalia (one of the worst-hit towns) is one valid example, but any small, genuinely flood-affected East African locality is acceptable — then download a Sentinel-1 GRD SAR image; standing floodwater appears as smooth, low-backscatter regions in VV.",
       "reference_solutions": [
         {
           "steps": [
@@ -6771,7 +6814,7 @@
               "arguments": {
                 "place_name": "<inferred place>"
               },
-              "comment": "The narrative names no specific town; Beledweyne, Somalia (one of the towns worst hit by the East Africa floods) is one defensible inferred example"
+              "comment": "Any small representative area within East Africa genuinely affected by the 2023-2024 floods is acceptable — it does not need to be this specific town; Beledweyne, Somalia is just one valid example"
             },
             {
               "function_name": "fetch_sentinel1_grd",
@@ -10510,7 +10553,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for jet stream context. Step 2: fetch_era5_pressure_levels for u-wind at 250 hPa for multiple winter months.",
+      "reference_solution_description": "Step 1: search_narratives on eodashboard for jet stream context. Step 2: fetch_era5_pressure_levels for u-wind at 250 hPa for multiple winter months. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -10526,12 +10569,8 @@
               "arguments": {
                 "variable": "u_component_of_wind",
                 "pressure_level": 250,
-                "year": [
-                  "2020",
-                  "2021",
-                  "2022"
-                ],
-                "month": "01",
+                "year": "<any representative recent years>",
+                "month": "<any representative winter month, e.g. Dec-Feb>",
                 "output_filename": "output/TASK_260713_000074_500053/u250_winters.nc",
                 "area": "<inferred>"
               },
@@ -10557,7 +10596,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 pressure-level accuracy papers. Step 2: fetch_era5_pressure_levels for temperature at 500 hPa.",
+      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 pressure-level accuracy papers. Step 2: fetch_era5_pressure_levels for temperature at 500 hPa. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -10574,8 +10613,8 @@
               "arguments": {
                 "variable": "temperature",
                 "pressure_level": "500",
-                "year": "2021",
-                "month": "01",
+                "year": "<derived from the reference period stated in the actual paper found>",
+                "month": "<derived from the reference period stated in the actual paper found>",
                 "output_filename": "output/TASK_260713_000075_500054/era5_t500_jan2021.nc",
                 "area": "<inferred>"
               },
@@ -10846,7 +10885,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives for SST and ocean heat context on eodashboard. Step 2: fetch_era5_single_levels for SST.",
+      "reference_solution_description": "Step 1: search_narratives for SST and ocean heat context on eodashboard. Step 2: fetch_era5_single_levels for SST, for whichever ocean region the actual retrieved narrative highlights — the area/region is narrative-dependent, not fixed to any single ocean basin.",
       "reference_solutions": [
         {
           "steps": [
@@ -10863,10 +10902,10 @@
                 "variable": "sea_surface_temperature",
                 "year": "2023",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000082_500061/sst_north_atlantic_2023_07.nc",
+                "output_filename": "<any output filename>",
                 "area": "<inferred>"
               },
-              "comment": "Download ERA5 monthly mean SST for July 2023"
+              "comment": "Download ERA5 monthly mean SST for the ocean region highlighted by the actual narrative found (any ocean basin is valid, not just North Atlantic)"
             }
           ]
         }
@@ -11676,54 +11715,12 @@
       "GT": 99
     },
     {
-      "task_ID": "TASK_260713_000021_600021",
-      "task_text": "Search EO Dashboard narratives about European floods or extreme rainfall. Based on the flood event described — its location and time period — download hourly ERA5 total precipitation to characterise the rainfall event.",
-      "task_labels": [
-        "Cross-agent Synthesis"
-      ],
-      "reference_solution_description": "search_narratives for flood/rainfall, then fetch_era5_hourly_single_levels for the event period.",
-      "reference_solutions": [
-        {
-          "steps": [
-            {
-              "function_name": "search_narratives",
-              "arguments": {
-                "keyword": "flood"
-              },
-              "comment": "Find flood-related EO Dashboard narratives"
-            },
-            {
-              "function_name": "fetch_era5_hourly_single_levels",
-              "arguments": {
-                "variable": "total_precipitation",
-                "year": "2021",
-                "month": "07",
-                "output_filename": "output/TASK_260713_000021_600021/tp_weur_jul2021.nc",
-                "area": "<inferred>"
-              },
-              "comment": "Download hourly precipitation for the flood period"
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null,
-      "evaluator_scores": {},
-      "evaluator_reasoning": {},
-      "GT": 1
-    },
-    {
       "task_ID": "TASK_260713_000022_600022",
       "task_text": "Search MOOC content about urban heat islands and land surface temperature monitoring. Based on the geographic examples and season discussed, download hourly ERA5 2m temperature for a representative area and a few representative days to support a case study.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_moocs for urban heat island / LST content, then fetch_era5_hourly_single_levels for 2m temperature restricted to a small representative area and a few representative days (not a full month over a large region) for the relevant season.",
+      "reference_solution_description": "search_moocs for urban heat island / LST content, then fetch_era5_hourly_single_levels for 2m temperature restricted to a small representative area and a few representative days (not a full month over a large region) for the relevant season. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -11738,8 +11735,8 @@
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
-                "year": "2023",
-                "month": "07",
+                "year": "<derived from the season discussed in the actual MOOC content found>",
+                "month": "<derived from the season discussed in the actual MOOC content found>",
                 "output_filename": "output/TASK_260713_000022_600022/t2m_seur_jul2023.nc",
                 "area": "<derived: a small representative area relevant to the MOOC case study>",
                 "days": [
@@ -12137,7 +12134,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eoss for atmospheric sounding instruments (grounded via the real IASI and GNSS-RO acronym entries — Infrared Atmospheric Sounding Interferometer and GNSS Receiver for Atmospheric Sounding), resolve a representative area (Europe), then two calls to fetch_era5_hourly_pressure_levels at 500 and 850 hPa restricted to a few representative days (not a full month).",
+      "reference_solution_description": "search_eoss for atmospheric sounding instruments (grounded via the real IASI and GNSS-RO acronym entries — Infrared Atmospheric Sounding Interferometer and GNSS Receiver for Atmospheric Sounding), resolve a representative area (Europe), then two calls to fetch_era5_hourly_pressure_levels at 500 and 850 hPa restricted to a few representative days (not a full month). The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -12160,8 +12157,8 @@
               "arguments": {
                 "variable": "temperature",
                 "pressure_level": 500,
-                "year": "2022",
-                "month": "01",
+                "year": "<any representative recent year>",
+                "month": "<any representative recent month>",
                 "days": [
                   "01",
                   "02",
@@ -12177,8 +12174,8 @@
               "arguments": {
                 "variable": "temperature",
                 "pressure_level": 850,
-                "year": "2022",
-                "month": "01",
+                "year": "<any representative recent year>",
+                "month": "<any representative recent month>",
                 "days": [
                   "01",
                   "02",
@@ -12508,7 +12505,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_moocs for soil moisture/vegetation stress, then fetch_era5_land for soil water.",
+      "reference_solution_description": "search_moocs for soil moisture/vegetation stress, then fetch_era5_land for soil water. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -12523,8 +12520,8 @@
               "function_name": "fetch_era5_land",
               "arguments": {
                 "variable": "volumetric_soil_water_layer_1",
-                "year": "2022",
-                "month": "08",
+                "year": "<derived from the region/period discussed in the actual MOOC content found>",
+                "month": "<derived from the region/period discussed in the actual MOOC content found>",
                 "output_filename": "output/TASK_260713_000037_600037/era5land_swvl1_med_aug2022.nc",
                 "area": "<inferred>"
               },
@@ -12884,7 +12881,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for heat/heatwave, then fetch_era5_daily_statistics with statistic='daily_maximum'.",
+      "reference_solution_description": "search_narratives for heat/heatwave, then fetch_era5_daily_statistics with statistic='daily_maximum'. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -12900,8 +12897,8 @@
               "arguments": {
                 "variable": "2m_temperature",
                 "statistic": "daily_maximum",
-                "year": "2023",
-                "month": "07",
+                "year": "<derived from the time period described in the actual narrative found>",
+                "month": "<derived from the time period described in the actual narrative found>",
                 "output_filename": "output/TASK_260713_000045_600045/t2m_dailymax_seur_jul2023.nc",
                 "area": "<inferred>"
               },
@@ -13529,11 +13526,11 @@
     },
     {
       "task_ID": "TASK_260713_000058_600058",
-      "task_text": "Search EO Dashboard narratives about European flooding events. Based on the specific event location and time period described in the narrative, download hourly ERA5 precipitation and convert to daily totals to quantify the event.",
+      "task_text": "Search EO Dashboard narratives about flooding events in East Africa. Based on the specific event location and time period described in the narrative, download hourly ERA5 precipitation for a 2° × 2° region around the affected area and convert to daily totals to quantify the event.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for flood, then fetch_era5_hourly_single_levels, then convert_hourly_to_daily.",
+      "reference_solution_description": "search_narratives for 'flood' surfaces the real 'El Niño 2023–2024 (Part 4): Floods and Cyclone impacts in East Africa' narrative, which describes exceptional short-rains flooding across the Horn of Africa during October–December 2023. Geocode a representative flood-affected location within that region (Beledweyne, Somalia, where the Shabelle River's November 2023 flooding was among the most severe and widely reported) to a center point, then build a 2°×2° area as center_lat ± 1, center_lon ± 1 (geocode_place returns a larger admin-boundary bbox, not a fixed-size box). fetch_era5_hourly_single_levels for total_precipitation in November 2023 — within the narrative's described Oct–Dec 2023 window — passing that 2°×2° box directly via its own `area` parameter, then convert_hourly_to_daily for daily totals.",
       "reference_solutions": [
         {
           "steps": [
@@ -13542,24 +13539,36 @@
               "arguments": {
                 "keyword": "flood"
               },
-              "comment": "Find flood-related narratives"
+              "comment": "Find the real 'El Niño 2023-2024 (Part 4): Floods and Cyclone impacts in East Africa' narrative"
+            },
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Beledweyne, Somalia"
+              },
+              "comment": "Geocode a representative flood-affected location in the Horn of Africa described by the narrative's Oct-Dec 2023 short-rains flooding; the 2°×2° area passed to fetch_era5_hourly_single_levels is built as center_lat ± 1, center_lon ± 1 from this point"
             },
             {
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
-                "year": "2021",
-                "month": "07",
-                "output_filename": "output/TASK_260713_000058_600058/tp_flood_jul2021.nc",
-                "area": "<inferred>"
+                "year": "2023",
+                "month": "<any month within Oct-Dec 2023, the narrative's real described short-rains window>",
+                "area": [
+                  "<derived: center latitude + 1>",
+                  "<derived: center longitude - 1>",
+                  "<derived: center latitude - 1>",
+                  "<derived: center longitude + 1>"
+                ],
+                "output_filename": "output/TASK_260713_000058_600058/tp_flood_nov2023.nc"
               },
-              "comment": "Download hourly precipitation for the flood event"
+              "comment": "Download hourly precipitation for November 2023 — within the real narrative's described Oct-Dec 2023 short-rains flood period — clipped directly via the area parameter to a 2°×2° box around Beledweyne"
             },
             {
               "function_name": "convert_hourly_to_daily",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000058_600058/tp_flood_jul2021.nc",
-                "output_filepath": "output/TASK_260713_000058_600058/tp_flood_jul2021_daily.nc",
+                "input_filepath": "output/TASK_260713_000058_600058/tp_flood_nov2023.nc",
+                "output_filepath": "output/TASK_260713_000058_600058/tp_flood_nov2023_daily.nc",
                 "method": "sum"
               },
               "comment": "Aggregate to daily totals"
@@ -13584,7 +13593,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_moocs for extreme precipitation / disaster, then fetch_era5_hourly_single_levels, then convert_hourly_to_daily.",
+      "reference_solution_description": "search_moocs for extreme precipitation / disaster content, then fetch_era5_hourly_single_levels for the affected region and period, then convert_hourly_to_daily. The 2022 Pakistan floods are used below as one illustrative example case study, not a requirement — any major flood case genuinely discussed in the actual retrieved MOOC content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -13599,18 +13608,18 @@
               "function_name": "fetch_era5_hourly_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
-                "year": "2022",
-                "month": "08",
-                "output_filename": "output/TASK_260713_000059_600059/tp_pakistan_aug2022.nc",
+                "year": "<derived from the flood case study discussed in the actual MOOC content found>",
+                "month": "<derived from the flood case study discussed in the actual MOOC content found>",
+                "output_filename": "output/TASK_260713_000059_600059/tp_flood_case.nc",
                 "area": "<inferred>"
               },
-              "comment": "Download hourly precipitation for Pakistan floods"
+              "comment": "Download hourly precipitation for whichever major flood case the actual MOOC content discusses"
             },
             {
               "function_name": "convert_hourly_to_daily",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000059_600059/tp_pakistan_aug2022.nc",
-                "output_filepath": "output/TASK_260713_000059_600059/tp_pakistan_aug2022_daily.nc",
+                "input_filepath": "output/TASK_260713_000059_600059/tp_flood_case.nc",
+                "output_filepath": "output/TASK_260713_000059_600059/tp_flood_case_daily.nc",
                 "method": "sum"
               },
               "comment": "Aggregate to daily totals"
@@ -14173,11 +14182,11 @@
     },
     {
       "task_ID": "TASK_260713_000071_600071",
-      "task_text": "Search EO Dashboard narratives about sea surface temperature trends. Based on the geographic focus of the narrative, download ERA5 monthly mean sea surface temperature for three representative years from different decades, then compute the multi-year mean to illustrate long-term temperature patterns.",
+      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative, retrieve ERA5 monthly mean sea surface temperature within a 2° × 2° region around that location for three representative years from different decades, and compute the multi-year mean SST field to characterize typical ocean temperature conditions.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for SST-trend narratives, geocode_place on the narrative's study area, then for each of three representative years (1990, 2005, 2020) fetch_era5_single_levels (this tool has no area parameter — it always returns the global field, and only accepts one year string at a time) followed by clip_to_bbox to crop to the narrative's region. No tool exists to merge multiple yearly NetCDF files into one series, so the multi-year mean is computed by reasoning over the three inspected fields, grounded via inspect_netcdf on each clipped file.",
+      "reference_solution_description": "search_narratives for SST-related narratives, geocode_place on the narrative's coastal study area to get a center point, then construct a 2°×2° bbox by taking that center's lat/lon ± 1° in each direction (geocode_place returns an administrative-boundary bbox, not a fixed-size box, so the ±1° span must be built from the returned center coordinates). For each of three representative years (e.g. 1990, 2005, 2020) fetch_era5_single_levels (this tool has no area parameter — it always returns the global field, and only accepts one year string at a time) followed by clip_to_bbox to crop to that 2°×2° box. No tool exists to merge multiple yearly NetCDF files into one series, so the multi-year mean is computed by reasoning over the three inspected fields, grounded via inspect_netcdf on each clipped file.",
       "reference_solutions": [
         {
           "steps": [
@@ -14193,7 +14202,7 @@
               "arguments": {
                 "place_name": "<derived from narrative's study area>"
               },
-              "comment": "Geocode the narrative's geographic focus to a bounding box"
+              "comment": "Geocode the narrative's coastal location to a center point; the 2°×2° bbox is built as center_lat ± 1, center_lon ± 1, not taken directly from geocode_place's own (larger, admin-boundary-shaped) bbox"
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -14209,13 +14218,13 @@
               "function_name": "clip_to_bbox",
               "arguments": {
                 "input_filepath": "output/TASK_260713_000071_600071/sst_1990_07_global.nc",
-                "north": "<derived from previous step: north bound of narrative region bbox>",
-                "south": "<derived from previous step: south bound of narrative region bbox>",
-                "east": "<derived from previous step: east bound of narrative region bbox>",
-                "west": "<derived from previous step: west bound of narrative region bbox>",
+                "north": "<derived: geocoded center latitude + 1>",
+                "south": "<derived: geocoded center latitude - 1>",
+                "east": "<derived: geocoded center longitude + 1>",
+                "west": "<derived: geocoded center longitude - 1>",
                 "output_filepath": "output/TASK_260713_000071_600071/sst_1990_07_region.nc"
               },
-              "comment": "Crop to the narrative's study area"
+              "comment": "Crop to the fixed 2°×2° box around the narrative's coastal location"
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -14231,13 +14240,13 @@
               "function_name": "clip_to_bbox",
               "arguments": {
                 "input_filepath": "output/TASK_260713_000071_600071/sst_2005_07_global.nc",
-                "north": "<derived from previous step: north bound of narrative region bbox>",
-                "south": "<derived from previous step: south bound of narrative region bbox>",
-                "east": "<derived from previous step: east bound of narrative region bbox>",
-                "west": "<derived from previous step: west bound of narrative region bbox>",
+                "north": "<derived: geocoded center latitude + 1>",
+                "south": "<derived: geocoded center latitude - 1>",
+                "east": "<derived: geocoded center longitude + 1>",
+                "west": "<derived: geocoded center longitude - 1>",
                 "output_filepath": "output/TASK_260713_000071_600071/sst_2005_07_region.nc"
               },
-              "comment": "Crop to the narrative's study area"
+              "comment": "Crop to the fixed 2°×2° box around the narrative's coastal location"
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -14253,13 +14262,13 @@
               "function_name": "clip_to_bbox",
               "arguments": {
                 "input_filepath": "output/TASK_260713_000071_600071/sst_2020_07_global.nc",
-                "north": "<derived from previous step: north bound of narrative region bbox>",
-                "south": "<derived from previous step: south bound of narrative region bbox>",
-                "east": "<derived from previous step: east bound of narrative region bbox>",
-                "west": "<derived from previous step: west bound of narrative region bbox>",
+                "north": "<derived: geocoded center latitude + 1>",
+                "south": "<derived: geocoded center latitude - 1>",
+                "east": "<derived: geocoded center longitude + 1>",
+                "west": "<derived: geocoded center longitude - 1>",
                 "output_filepath": "output/TASK_260713_000071_600071/sst_2020_07_region.nc"
               },
-              "comment": "Crop to the narrative's study area"
+              "comment": "Crop to the fixed 2°×2° box around the narrative's coastal location"
             },
             {
               "function_name": "inspect_netcdf",
@@ -14545,7 +14554,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_moocs for Arctic amplification, then fetch_era5_single_levels for multiple months over the Arctic, then convert_units K→C.",
+      "reference_solution_description": "search_moocs for Arctic amplification, then fetch_era5_single_levels for multiple months over the Arctic, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -14560,8 +14569,8 @@
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
-                "year": "2022",
-                "month": "07",
+                "year": "<derived from the recent period discussed in the actual MOOC content found>",
+                "month": "<derived from the recent period discussed in the actual MOOC content found>",
                 "output_filename": "output/TASK_260713_000078_600078/t2m_arctic_2022_07.nc",
                 "area": "<inferred>"
               },
@@ -14598,7 +14607,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for ocean/SST, then fetch_era5_single_levels for skin temperature, then convert_units K→C.",
+      "reference_solution_description": "search_narratives for ocean/SST, then fetch_era5_single_levels for skin temperature, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -14613,8 +14622,8 @@
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "skin_temperature",
-                "year": "2023",
-                "month": "07",
+                "year": "<derived from the region and season highlighted in the actual narrative found>",
+                "month": "<derived from the region and season highlighted in the actual narrative found>",
                 "output_filename": "output/TASK_260713_000079_600079/skt_med_2023_07.nc",
                 "area": "<inferred>"
               },
@@ -14843,59 +14852,6 @@
       "evaluator_scores": {},
       "evaluator_reasoning": {},
       "GT": 99
-    },
-    {
-      "task_ID": "TASK_260713_000086_600086",
-      "task_text": "Search EO Dashboard narratives about floods in East Africa. Based on the flood period described in the narrative, download ERA5 monthly mean total precipitation for the relevant months and clip to the affected region.",
-      "task_labels": [
-        "Cross-agent Synthesis"
-      ],
-      "reference_solution_description": "search_narratives for drought/Africa, then three fetch_era5_single_levels calls clipped to Horn of Africa.",
-      "reference_solutions": [
-        {
-          "steps": [
-            {
-              "function_name": "search_narratives",
-              "arguments": {
-                "keyword": "east africa"
-              },
-              "comment": "Find drought-related EO Dashboard narratives"
-            },
-            {
-              "function_name": "fetch_era5_single_levels",
-              "arguments": {
-                "variable": "total_precipitation",
-                "year": "2022",
-                "month": "03",
-                "output_filename": "output/TASK_260713_000086_600086/tp_horn_of_afri_2022_03.nc",
-                "area": "<inferred>"
-              },
-              "comment": "Download March 2022 global"
-            },
-            {
-              "function_name": "fetch_era5_single_levels",
-              "arguments": {
-                "variable": "total_precipitation",
-                "year": "2022",
-                "month": "04",
-                "output_filename": "output/TASK_260713_000086_600086/tp_horn_of_afri_2022_04.nc",
-                "area": "<inferred>"
-              },
-              "comment": "Download April 2022 global"
-            }
-          ]
-        }
-      ],
-      "generated_solution": null,
-      "generated_solution_input_tokens": null,
-      "generated_solution_output_tokens": null,
-      "match_reasoning_LLM": null,
-      "match_score_LLM": null,
-      "match_reasoning_Human": null,
-      "match_score_Human": null,
-      "evaluator_scores": {},
-      "evaluator_reasoning": {},
-      "GT": 1
     },
     {
       "task_ID": "TASK_260713_000087_600087",
@@ -15451,7 +15407,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_eoss for ESA coastal renewable energy / coastal exchange processes context (grounded via SQ-07's real National Policy tag 'Coastal renewable sources (tide, wind)'). Steps 2 & 3: fetch_era5_pressure_levels once per component at 850 hPa (one variable per call). Step 4: compute_wind_speed to combine them into a low-level wind speed field.",
+      "reference_solution_description": "Step 1: search_eoss for ESA coastal renewable energy / coastal exchange processes context (grounded via SQ-07's real National Policy tag 'Coastal renewable sources (tide, wind)'). Steps 2 & 3: fetch_era5_pressure_levels once per component at 850 hPa (one variable per call). Step 4: compute_wind_speed to combine them into a low-level wind speed field. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
       "reference_solutions": [
         {
           "steps": [
@@ -15467,8 +15423,8 @@
               "arguments": {
                 "variable": "u_component_of_wind",
                 "pressure_level": 850,
-                "year": "2023",
-                "month": "03",
+                "year": "<any representative recent year>",
+                "month": "<any representative recent month>",
                 "output_filename": "output/TASK_260715_000002_700011/u850_windenergy_2023_03.nc",
                 "area": "<inferred>"
               },
@@ -15479,8 +15435,8 @@
               "arguments": {
                 "variable": "v_component_of_wind",
                 "pressure_level": 850,
-                "year": "2023",
-                "month": "03",
+                "year": "<any representative recent year>",
+                "month": "<any representative recent month>",
                 "output_filename": "output/TASK_260715_000002_700011/v850_windenergy_2023_03.nc",
                 "area": "<inferred>"
               },

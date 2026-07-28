@@ -4,6 +4,8 @@ pipeline_runner.py — Runs your agentic pipeline on a TaskSet and records resul
 
 import asyncio
 import logging
+import os
+import sys
 import time
 from typing import Optional
 
@@ -13,6 +15,22 @@ from agenticeoecosystem.definitions import GEOBENCH_RESULTS
 from .dataclasses import Solution, Step, TaskSet
 
 logger = logging.getLogger(__name__)
+
+_TOOL_ERROR_PREFIX = "TOOL ERROR:"
+
+
+def ended_in_error(solution: Optional[Solution]) -> bool:
+    """
+    True if a solution's last recorded step is a tool call that errored out —
+    i.e. the trace was cut short by a failure rather than reaching a real
+    answer. Distinguishes a "silently degraded" solve (e.g. a timed-out or
+    404'd MCP call left as the final step) from a genuine solve, since
+    `generated_solution is not None` alone can't tell them apart.
+    """
+    if not solution or not solution.steps:
+        return False
+    comment = solution.steps[-1].comment
+    return bool(comment) and comment.startswith(_TOOL_ERROR_PREFIX)
 
 
 def run_pipeline(
@@ -24,9 +42,12 @@ def run_pipeline(
 
     Args:
         task_text: The natural-language task prompt.
-        pipeline : "multi" (LangGraph supervisor + sub-agents), "single" (one
-                   LangGraph agent, all tools), or "adk" (google-adk
-                   orchestrator + native sub-agents, see agents/multi_agent.py).
+        pipeline : "multi" (google-adk orchestrator + native sub-agents — the
+                   current multi-agent system, see agents/multi_agent.py),
+                   "single" (one LangGraph agent, all tools), or
+                   "multi_legacy" (older LangGraph supervisor + sub-agents in
+                   client.py — superseded by "multi"; missing cdse, eumetsat,
+                   and vlm sub-agents).
 
     Returns:
         solution     : Solution with one Step per MCP tool call made.
@@ -36,7 +57,7 @@ def run_pipeline(
     import nest_asyncio
     nest_asyncio.apply()
 
-    if pipeline == "adk":
+    if pipeline == "multi":
         import json as _json
         import agenticeoecosystem.agents.multi_agent as _adk
 
@@ -44,11 +65,15 @@ def run_pipeline(
         raw = loop.run_until_complete(_adk.get_ans_tool_path(task_text))
         data = _json.loads(raw)
         steps = [
-            Step(function_name=t["function_name"], arguments=t.get("arguments", {}))
+            Step(
+                function_name=t["function_name"],
+                arguments=t.get("arguments", {}),
+                comment=(f"{_TOOL_ERROR_PREFIX} {t['error']}" if t.get("error") else None),
+            )
             for t in data.get("tools_called", [])
         ]
         return (
-            Solution(steps=steps),
+            Solution(steps=steps, final_answer=data.get("final_answer")),
             data.get("input_tokens", 0),
             data.get("output_tokens", 0),
         )
@@ -56,7 +81,7 @@ def run_pipeline(
     if pipeline == "single":
         import agenticeoecosystem.client.client_single_agent as _module
         _agent = _module.agent
-    else:
+    else:  # "multi_legacy"
         import agenticeoecosystem.client.client as _module
         _agent = _module.supervisor_agent
 
@@ -68,10 +93,20 @@ def run_pipeline(
             config={"recursion_limit": 50},
         ):
             for update in chunk.values():
-                for msg in update.get("messages", []):
-                    if hasattr(msg, "usage_metadata") and msg.usage_metadata:
-                        _module._token_counts["input"] += msg.usage_metadata.get("input_tokens", 0)
-                        _module._token_counts["output"] += msg.usage_metadata.get("output_tokens", 0)
+                messages = update.get("messages", [])
+                if pipeline == "single":
+                    # Single agent calls MCP tools directly, so its own top-level
+                    # messages carry the real tool_calls — log them here, mirroring
+                    # how client.py's sub-agent wrappers log steps for "multi".
+                    _module._extract_steps_from_messages(messages)
+                else:
+                    # For "multi_legacy", each sub-agent wrapper already logs its
+                    # own MCP-level steps via _extract_steps_from_messages(); only
+                    # the supervisor's token usage needs picking up here.
+                    for msg in messages:
+                        if hasattr(msg, "usage_metadata") and msg.usage_metadata:
+                            _module._token_counts["input"] += msg.usage_metadata.get("input_tokens", 0)
+                            _module._token_counts["output"] += msg.usage_metadata.get("output_tokens", 0)
         return _module._token_counts["input"], _module._token_counts["output"]
 
     loop = asyncio.get_event_loop()
@@ -112,13 +147,16 @@ def generate_solutions(
         output_folder    : Directory for intermediate saves (default: GEOBENCH_RESULTS).
         skip_solved      : Skip tasks that already have a generated_solution.
         wait_between_tasks: Seconds to wait between API calls (rate-limit guard).
-        pipeline         : "multi" (LangGraph supervisor + sub-agents), "single"
-                           (one LangGraph agent, all tools), or "adk" (google-adk
-                           orchestrator, always runs EVE-Instruct — model/provider
-                           overrides are not yet supported for this pipeline).
-        agent_models     : Per-agent model overrides for pipeline="multi", e.g.
-                           {"gis": ("mistral-small-24b", "vllm")}. Ignored for
-                           pipeline="single" or pipeline="adk".
+        pipeline         : "multi" (google-adk orchestrator, the current
+                           multi-agent system — all sub-agents share whatever
+                           model `model` names, served from the EVE gateway;
+                           model_provider is ignored, it's always "eve"),
+                           "single" (one LangGraph agent, all tools), or
+                           "multi_legacy" (older LangGraph supervisor +
+                           sub-agents in client.py — superseded by "multi").
+        agent_models     : Per-agent model overrides for pipeline="multi_legacy",
+                           e.g. {"gis": ("mistral-small-24b", "vllm")}. Ignored
+                           for pipeline="single" or pipeline="multi".
 
     Returns:
         tasks        : Same TaskSet with generated_solution fields populated.
@@ -139,17 +177,23 @@ def generate_solutions(
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='single'")
         _single.rebuild_agent(model, provider=model_provider, temperature=temperature)
-    elif pipeline == "adk":
+    elif pipeline == "multi":
         if agent_models:
-            logger.warning("agent_models is ignored when pipeline='adk'")
-        if model != "EVE-Instruct" or model_provider != "eve":
+            logger.warning("agent_models is ignored when pipeline='multi' (ADK orchestrator)")
+        if model_provider != "eve":
             logger.warning(
-                "pipeline='adk' does not support model/provider overrides yet — "
-                "it always runs EVE-Instruct via the EVE endpoint regardless of "
-                "model=%s provider=%s", model, model_provider,
+                "pipeline='multi' only supports provider='eve' (the internal EVE "
+                "gateway) — ignoring model_provider=%s", model_provider,
             )
+        if "agenticeoecosystem.agents.multi_agent" in sys.modules:
+            logger.warning(
+                "agenticeoecosystem.agents.multi_agent was already imported earlier "
+                "in this process with a different MULTI_AGENT_MODEL — model=%s will "
+                "have no effect. Each model needs its own fresh process.", model,
+            )
+        os.environ["MULTI_AGENT_MODEL"] = model
         import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
-    else:
+    else:  # "multi_legacy"
         import agenticeoecosystem.client.client as _client
         _client.rebuild_agents(model, provider=model_provider, temperature=temperature, agent_models=agent_models)
 
@@ -200,9 +244,11 @@ def generate_solutions(
     if output_filename:
         tasks.save_to_file(output_filename, folder=_save_folder)
 
+    attempted = sum(1 for t in tasks if t.generated_solution is not None)
+    degraded = sum(1 for t in tasks if ended_in_error(t.generated_solution))
     logger.info(
-        "Generation complete — solved %d/%d  total tokens: %d in / %d out",
-        sum(1 for t in tasks if t.generated_solution is not None),
-        n_total, total_input, total_output,
+        "Generation complete — attempted %d/%d (%d ended in a tool error, "
+        "not real solves)  total tokens: %d in / %d out",
+        attempted, n_total, degraded, total_input, total_output,
     )
     return tasks, total_input, total_output

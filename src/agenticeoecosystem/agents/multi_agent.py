@@ -4,6 +4,12 @@ apply_eve_patch()
 from agenticeoecosystem.agents.subagents.mcp_image_patch import apply as apply_mcp_image_patch
 apply_mcp_image_patch()
 
+from agenticeoecosystem.agents.subagents import orphaned_tool_call_guard as _orphan_guard
+_orphan_guard.apply()
+
+from agenticeoecosystem.agents.subagents import arxiv_rate_limit_retry as _arxiv_retry
+_arxiv_retry.apply()
+
 from google.adk.agents.llm_agent import Agent
 
 from google.adk.models.lite_llm import LiteLlm
@@ -113,6 +119,12 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "ROUTING:\n"
     "- Break requests into the appropriate tool call(s) and coordinate results.\n"
     "- If a request needs multiple sources, call tools in sequence and combine their outputs.\n"
+    "- When a request contains multiple clauses (e.g. 'do X, then use the "
+    "result to do Y'), identify all clauses before acting, and do not "
+    "produce a final answer until every clause has been addressed by an "
+    "appropriate sub-agent call. A sub-agent's response to only the first "
+    "clause is not a complete answer — continue routing to the next "
+    "required sub-agent.\n"
     "- NEVER issue two calls to the SAME sub-agent in parallel/in the same "
     "turn, even for genuinely different requests (e.g. a 'before' and "
     "'after' image from the same source). Wait for the first call to that "
@@ -148,6 +160,19 @@ _SUPERVISOR_SYSTEM_PROMPT = (
     "analysis server.\n"
     "- EUMETSAT and CDSE do not do NDVI, reprojection, clipping, or zonal "
     "stats on downloaded files — route that to the GIS analysis server.\n"
+    "- Only route to the GIS analysis server when a raster/vector file has "
+    "already been produced earlier in THIS conversation (e.g. by CDSE, GEE, "
+    "EUMETSAT, or ERA5) — never call a GIS tool (clip, reproject, zonal "
+    "stats, band math, etc.) on a file path that no prior tool result "
+    "actually returned. For a request that is purely a narrative/text "
+    "search (e.g. EO Dashboard, arXiv, MOOCs, ESA EOSS knowledge base), do "
+    "not invoke the GIS sub-agent at all.\n"
+    "- Before clipping a raster to a boundary (e.g. an administrative "
+    "region's shapefile/GeoJSON), make sure that boundary file was actually "
+    "fetched or created earlier in this conversation — do not invent or "
+    "guess a boundary file path. If no boundary file exists yet, geocode "
+    "the region (bbox) via CDSE first and clip to that bbox instead, or "
+    "obtain the boundary through a dedicated tool if one is available.\n"
     "\n"
     "- When delegating an imagery request to CDSE, state whether the output "
     "is for visual inspection (viewing, VLM) or for downstream quantitative "
@@ -292,6 +317,8 @@ async def get_ans_tool_path(query: str) -> str:
     leaf MCP tool calls (name + arguments) made to produce it, and total
     token usage across the run.
     """
+    _orphan_guard.reset()
+
     session_id = f"session_{uuid.uuid4().hex}"
     await session_service.create_session(
         app_name=APP_NAME,
@@ -324,6 +351,24 @@ async def get_ans_tool_path(query: str) -> str:
                         {"function_name": fc.name, "arguments": dict(fc.args)}
                     )
 
+                fr = getattr(part, 'function_response', None)
+                if fr is not None:
+                    resp = fr.response
+                    error_text = None
+                    if isinstance(resp, dict):
+                        if resp.get("error"):
+                            error_text = str(resp["error"])
+                        elif resp.get("isError"):
+                            error_text = str(resp.get("content") or resp)
+                    # Attach to the most recent still-unresolved call to this
+                    # same tool name (matches by name since concurrent calls to
+                    # the same sub-agent are disallowed by the system prompt).
+                    for entry in reversed(tools_called):
+                        if entry["function_name"] == fr.name and "error" not in entry:
+                            if error_text:
+                                entry["error"] = error_text
+                            break
+
         if event.is_final_response():
             text = _extract_final_text(event)
             if text is not None:
@@ -333,8 +378,11 @@ async def get_ans_tool_path(query: str) -> str:
                     f"Agent escalated: {event.error_message or 'No specific message.'}"
                 )
 
+    ended_in_error = bool(tools_called) and "error" in tools_called[-1]
+
     return json.dumps({
         "final_answer": final_answer,
+        "ended_in_error": ended_in_error,
         "tools_called": tools_called,
         "agents_called": agents_called,
         "input_tokens": input_tokens,

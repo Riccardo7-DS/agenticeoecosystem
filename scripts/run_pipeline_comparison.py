@@ -9,7 +9,7 @@ Example — full benchmark:
     python scripts/run_pipeline_comparison.py \
         --model EVE-Instruct \
         --provider eve \
-        --tasks-file eo_benchmark_tasks.json arxiv_gis_benchmark_tasks.json \
+        --tasks-file benchmark_tasks.json \
         --evaluator-model Nemotron-2-12B \
         --evaluator-provider eve \
         --output-dir output/pipeline_comparison
@@ -18,18 +18,20 @@ Example — smoke test (2 tasks, Tool Grounding only):
     python scripts/run_pipeline_comparison.py \
         --model EVE-Instruct \
         --provider eve \
-        --tasks-file eo_benchmark_tasks.json \
+        --tasks-file benchmark_tasks.json \
         --evaluator-model Nemotron-2-12B \
         --evaluator-provider eve \
         --output-dir output/pipeline_comparison \
         --smoke-test
 
-Example — multi-agent with per-agent model overrides:
+Example — per-agent model overrides (routes the multi-agent run through the
+older "multi_legacy" pipeline, since the default "multi" ADK orchestrator
+always runs EVE-Instruct and doesn't support per-agent overrides):
     python scripts/run_pipeline_comparison.py \
         --model EVE-Instruct \
         --provider eve \
         --agent-models '{"gis": ["mistral-small-24b", "vllm"], "arxiv": ["qwen2.5-14b", "vllm"]}' \
-        --tasks-file eo_benchmark_tasks.json \
+        --tasks-file benchmark_tasks.json \
         --evaluator-model Nemotron-2-12B \
         --evaluator-provider eve \
         --output-dir output/pipeline_comparison
@@ -59,7 +61,9 @@ def main() -> int:
     parser.add_argument("--provider",           default="eve",  help="LangChain provider: eve, vllm, openai, ollama, …")
     parser.add_argument("--temperature",        type=float, default=0.0)
     parser.add_argument("--agent-models",       default=None,
-                        help='JSON per-agent model overrides applied to the multi-agent run only. '
+                        help='JSON per-agent model overrides for the multi-agent run. Only honored by '
+                             'the "multi_legacy" pipeline, so setting this routes that run through '
+                             '"multi_legacy" instead of the default "multi" ADK orchestrator. '
                              'e.g. \'{"gis": ["mistral-small-24b", "vllm"], "arxiv": ["qwen2.5-14b", "vllm"]}\'')
     parser.add_argument("--tasks-file",         required=True, nargs="+",
                         help="Tasks JSON filename(s) inside --tasks-folder; multiple files are merged")
@@ -101,15 +105,24 @@ def main() -> int:
 
     logger.info("Loaded %d task(s) from %d file(s)", len(tasks), len(args.tasks_file))
 
-    # Parse per-agent model overrides (multi pipeline only)
+    # Parse per-agent model overrides. Only "multi_legacy" (the older LangGraph
+    # supervisor) honors these — "multi" (the ADK orchestrator) always runs
+    # EVE-Instruct and ignores per-agent overrides — so requesting overrides
+    # routes the multi-agent run through "multi_legacy" instead.
     agent_models = None
+    multi_pipeline = "multi"
     if args.agent_models:
         raw = json.loads(args.agent_models)
         agent_models = {k: tuple(v) for k, v in raw.items()}
-        logger.info("Per-agent overrides (multi only): %s", agent_models)
+        multi_pipeline = "multi_legacy"
+        logger.info(
+            "Per-agent overrides requested — routing the multi-agent run through "
+            "pipeline='multi_legacy' (pipeline='multi' doesn't support them): %s",
+            agent_models,
+        )
 
     # Build the two pipeline runs with the same base model
-    multi_label  = f"{args.model} [multi]"
+    multi_label  = f"{args.model} [{multi_pipeline}]"
     single_label = f"{args.model} [single]"
 
     runs = [
@@ -118,7 +131,7 @@ def main() -> int:
             model=args.model,
             provider=args.provider,
             temperature=args.temperature,
-            pipeline="multi",
+            pipeline=multi_pipeline,
             agent_models=agent_models,
         ),
         ModelRun(

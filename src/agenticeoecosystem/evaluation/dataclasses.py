@@ -47,8 +47,11 @@ class Step(BaseModel):
 
 
 class Solution(BaseModel):
-    """Ordered sequence of steps produced by an agent run."""
+    """Ordered sequence of steps produced by an agent run, plus the agent's
+    final natural-language answer (needed to judge the answer itself, not
+    just whether the right tools were called)."""
     steps: List[Step] = Field(default_factory=list)
+    final_answer: Optional[str] = None
 
     def __len__(self):
         return len(self.steps)
@@ -61,6 +64,8 @@ class Solution(BaseModel):
             if s.comment:
                 line += f"  # {s.comment}"
             lines.append(line)
+        if self.final_answer:
+            lines.append(f"\nFinal answer: {self.final_answer}")
         return "\n".join(lines)
 
     __repr__ = __str__

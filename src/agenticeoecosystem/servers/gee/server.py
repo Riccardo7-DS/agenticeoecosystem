@@ -694,6 +694,14 @@ def download_gee_product(args: DownloadParams) -> Dict[str, Any]:
 			selected_bands = None
 			if args.bands:
 				band_list = [b.strip() for b in args.bands.split(",") if b.strip()]
+				available_bands = image.bandNames().getInfo()
+				missing = [b for b in band_list if b not in available_bands]
+				if missing:
+					raise ValueError(
+						f"Band(s) {missing} not found in dataset '{args.dataset}'. "
+						f"Available bands for this image: {available_bands}. "
+						f"Retry with one of these exact band names instead of guessing."
+					)
 				selected_bands = image.select(band_list)
 			else:
 				selected_bands = image

@@ -4,6 +4,14 @@
 # Each model runs in its own Python process; GPU memory is explicitly freed
 # between runs via pkill, so no vLLM state leaks across models.
 #
+# Two pipeline architectures are exercised:
+#   - "multi"  : the google-adk orchestrator (agents/multi_agent.py) — the
+#                current multi-agent system. It always runs EVE-Instruct via
+#                the EVE endpoint regardless of --model/--provider, so it is
+#                generated ONCE (not swept across every model below).
+#   - "single" : one LangGraph agent with all tools, swept across every model
+#                in the Phase 1 list below, same as before.
+#
 # Usage:
 #   cd /path/to/agenticeoecosystem
 #   bash scripts/benchmark.sh
@@ -15,9 +23,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 # ---------------------------------------------------------------------------
-# Argument parsing — mirrors benchmarking.py's --subset / --no-subset flag
+# Argument parsing
 #   bash scripts/benchmark.sh           → all runnable tasks (default)
-#   bash scripts/benchmark.sh --subset  → curated 9-task subset only
+#   bash scripts/benchmark.sh --subset  → quick smoke run (Tool Grounding only —
+#                                         see NOTE below on the curated subset)
 # ---------------------------------------------------------------------------
 
 SUBSET=false
@@ -32,37 +41,22 @@ done
 # Configuration — edit these to match your run
 # ---------------------------------------------------------------------------
 
-# Both task files are loaded and merged for every run
-TASKS_FILES=("eo_benchmark_tasks.json" "arxiv_gis_benchmark_tasks.json")
+# Single merged, actively-maintained dataset (superseded eo_benchmark_tasks.json /
+# arxiv_gis_benchmark_tasks.json, which are now stale and no longer updated).
+TASKS_FILES=("benchmark_tasks.json")
 
-# ---------------------------------------------------------------------------
-# 30-task curated subset — diverse coverage of all 6 MCP servers
-#   EO Dashboard (STAC/narrative)  : 000001, 000016, 000005
-#   GEE satellite download          : 000004, 000043, AG-000013, AG-000035, AG-000037
-#   HybridRAG (ESA science strategy): 000014, 000064, 000066, 000072
-#   ArXiv paper search              : AG-000001, AG-000002, AG-000005
-#   GIS (geometry/raster/analysis)  : AG-000008, AG-000010, AG-000011, AG-000014, AG-000017, AG-000019
-#   Cross-server (2+ agents)        : 000005, 000024, AG-000020–021, AG-000024, AG-000027, AG-000035–037
-#   Scope Awareness                 : 000028, AG-000022
-# ---------------------------------------------------------------------------
-EO_STAC_IDS="TASK_260419_000001_100001,TASK_260419_000002_100002,TASK_260419_000004_100004,TASK_260419_000005_100005"
-EO_RAG_IDS="TASK_260419_000014_100014,TASK_260419_000064_100064,TASK_260419_000066_100066,TASK_260419_000072_100072"
-EO_SEQ_IDS="TASK_260419_000016_100016,TASK_260419_000043_100043"
-EO_CROSS_IDS="TASK_260419_000024_100024"
-EO_SCOPE_IDS="TASK_260419_000028_100028"
-AG_ARXIV_IDS="TASK_260427_000001_200001,TASK_260427_000002_200002,TASK_260427_000005_200005"
-AG_GIS_IDS="TASK_260427_000008_200008,TASK_260427_000010_200010,TASK_260427_000011_200011,TASK_260427_000014_200014,TASK_260427_000017_200017,TASK_260427_000019_200019"
-AG_GEE_IDS="TASK_260427_000013_200013,TASK_260427_000035_200035,TASK_260427_000037_200037"
-AG_CROSS_IDS="TASK_260427_000020_200020,TASK_260427_000021_200021,TASK_260427_000024_200024,TASK_260427_000027_200027,TASK_260427_000036_200036"
-AG_SCOPE_IDS="TASK_260427_000022_200022"
-SUBSET_TASK_IDS="${EO_STAC_IDS},${EO_RAG_IDS},${EO_SEQ_IDS},${EO_CROSS_IDS},${EO_SCOPE_IDS},${AG_ARXIV_IDS},${AG_GIS_IDS},${AG_GEE_IDS},${AG_CROSS_IDS},${AG_SCOPE_IDS}"
-
-# All runnable task labels (excludes Placeholder / MOOC) — applied across both files
+# All runnable task labels (excludes Placeholder / MOOC)
 ALL_TASK_LABELS="Tool Grounding,Sequential Reasoning,Cross-agent Synthesis,Scope Awareness"
 
+# NOTE: the old 30-task curated --subset (TASK_260419_*/TASK_260427_* IDs) referenced
+# an earlier task-ID scheme that no longer exists in benchmark_tasks.json — those IDs
+# would silently resolve to an empty TaskSet. Until a curated subset is re-picked from
+# the current dataset, --subset falls back to a quick label-filtered smoke run instead
+# of failing silently.
 if [ "$SUBSET" = true ]; then
-    TASK_SELECTOR_ARGS=(--task-ids "$SUBSET_TASK_IDS")
-    TASK_MODE="subset (30 curated tasks)"
+    echo "⚠ --subset curated task-ID list is stale for the current benchmark_tasks.json — falling back to a 'Tool Grounding' smoke run instead." >&2
+    TASK_SELECTOR_ARGS=(--task-labels "Tool Grounding")
+    TASK_MODE="smoke (Tool Grounding only — curated subset needs regenerating)"
 else
     TASK_SELECTOR_ARGS=(--task-labels "$ALL_TASK_LABELS")
     TASK_MODE="all runnable tasks"
@@ -84,22 +78,45 @@ cleanup_gpu() {
     sleep 5
 }
 
-run_generate() {
+run_generate_single() {
     local label="$1" model="$2" provider="$3" timeout="${4:-$TIMEOUT}"
-    log "▶ Generate: $label  (model=$model, provider=$provider, timeout=${timeout}s)"
+    local run_label="${label} [single]"
+    log "▶ Generate: $run_label  (model=$model, provider=$provider, timeout=${timeout}s)"
     if python "$SCRIPT_DIR/run_generate.py" \
-            --label            "$label"    \
+            --label            "$run_label" \
             --model            "$model"    \
             --provider         "$provider" \
+            --pipeline         single \
             --tasks-file       "${TASKS_FILES[@]}" \
             "${TASK_SELECTOR_ARGS[@]}" \
             --output-dir       "$OUTPUT_DIR" \
             --vllm-startup-timeout "$timeout"; then
-        log "  ✓ Generate complete: $label"
+        log "  ✓ Generate complete: $run_label"
     else
-        log "  ✗ Generate FAILED: $label (continuing with next model)"
+        log "  ✗ Generate FAILED: $run_label (continuing with next model)"
     fi
     cleanup_gpu
+}
+
+run_generate_multi_once() {
+    # pipeline="multi" (google-adk orchestrator) always runs EVE-Instruct via
+    # the EVE endpoint regardless of --model/--provider — sweeping it across
+    # every model in the loop below would just relaunch vLLM for nothing and
+    # silently re-run EVE-Instruct each time, so it's generated once here.
+    local run_label="EVE-Instruct [multi]"
+    log "▶ Generate: $run_label  (google-adk orchestrator, EVE-Instruct only)"
+    if python "$SCRIPT_DIR/run_generate.py" \
+            --label      "$run_label" \
+            --model      "EVE-Instruct" \
+            --provider   "eve" \
+            --pipeline   multi \
+            --tasks-file "${TASKS_FILES[@]}" \
+            "${TASK_SELECTOR_ARGS[@]}" \
+            --output-dir "$OUTPUT_DIR"; then
+        log "  ✓ Generate complete: $run_label"
+    else
+        log "  ✗ Generate FAILED: $run_label"
+    fi
 }
 
 run_evaluate() {
@@ -133,22 +150,26 @@ log "━━━━━━━━━━━━━━━━━━━━━━━━━
 log "Phase 1/2: Generating solutions"
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+# Multi-agent (google-adk orchestrator) — EVE-Instruct only, runs once
+run_generate_multi_once
+
+# Single-agent sweep across models
 # External API — always available, no vLLM needed
-run_generate "EVE-Instruct"      "EVE-Instruct"      "eve"
+run_generate_single "EVE-Instruct"      "EVE-Instruct"      "eve"
 
 # Free models via vLLM
-run_generate "Nemotron-2-12B"    "nemotron-2-12b"    "vllm" $TIMEOUT
-run_generate "Phi4-Mini"         "phi4-mini"         "vllm" $TIMEOUT
-run_generate "Qwen3-14B"         "qwen3-14b"         "vllm" $TIMEOUT_LARGE
-run_generate "Qwen2.5-14B"       "qwen2.5-14b"       "vllm" $TIMEOUT_LARGE
-run_generate "DeepSeek-R1-14B"   "deepseek-r1-14b"   "vllm" $TIMEOUT_LARGE
+run_generate_single "Nemotron-2-12B"    "nemotron-2-12b"    "vllm" $TIMEOUT
+run_generate_single "Phi4-Mini"         "phi4-mini"         "vllm" $TIMEOUT
+run_generate_single "Qwen3-14B"         "qwen3-14b"         "vllm" $TIMEOUT_LARGE
+run_generate_single "Qwen2.5-14B"       "qwen2.5-14b"       "vllm" $TIMEOUT_LARGE
+run_generate_single "DeepSeek-R1-14B"   "deepseek-r1-14b"   "vllm" $TIMEOUT_LARGE
 
 # Gated models (comment out if licence not accepted on huggingface.co)
-run_generate "Gemma3-12B"        "gemma3-12b"        "vllm" $TIMEOUT
+run_generate_single "Gemma3-12B"        "gemma3-12b"        "vllm" $TIMEOUT
 # INT8-quantized via bitsandbytes (weights ~44 GiB exceed A6000 in BF16)
-# run_generate "Mistral-Small-24B" "mistral-small-24b" "vllm" $TIMEOUT_LARGE
-# run_generate "Llama3.1-8B"       "llama3.1-8b"       "vllm" $TIMEOUT_LARGE
-# run_generate "Llama3.2-3B"       "llama3.2-3b"       "vllm" $TIMEOUT_LARGE
+# run_generate_single "Mistral-Small-24B" "mistral-small-24b" "vllm" $TIMEOUT_LARGE
+# run_generate_single "Llama3.1-8B"       "llama3.1-8b"       "vllm" $TIMEOUT_LARGE
+# run_generate_single "Llama3.2-3B"       "llama3.2-3b"       "vllm" $TIMEOUT_LARGE
 
 # ---------------------------------------------------------------------------
 # Phase 2: Evaluate solutions

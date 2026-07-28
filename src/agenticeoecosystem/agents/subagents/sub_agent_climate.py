@@ -91,6 +91,26 @@ CDS (Copernicus Climate Data Store) MCP server.
    instead of fetch_era5_hourly_single_levels.
 5. Always supply a descriptive output_filename (e.g.
    'data/precip_daily_2023_01.nc').
+6. Always set `area` to a bounding box for a regional request — never leave
+   it unset unless the user actually wants global coverage. An unbounded
+   hourly/global request takes far longer to queue and download on CDS's
+   side and is more likely to time out or fail partway through.
+7. If a request is very large (e.g. a full month of hourly data at
+   all times, or many years of data), issue it as-is first rather than
+   preemptively splitting it — the tools already retry transient download
+   failures internally, and a single well-scoped request is more efficient
+   than several smaller ones. Only split into smaller sequential calls
+   (e.g. by week or by year) if a request actually times out or fails
+   after retrying — and when you do split, keep the pieces reasonably
+   large rather than shrinking repeatedly step by step, and tell the user
+   clearly if the final result only covers part of what they asked for.
+8. Do not stop as soon as a fetch/download tool returns a file — that file
+   is raw input, not necessarily the answer. Before producing your final
+   response, re-check the user's request for every derived step it implies
+   (aggregation, unit conversion, clipping to a region, combining variables,
+   computing an index or statistic, etc.) and confirm you actually called
+   the corresponding processing tool for each one. Only stop once every
+   step implied by the request is done, not once data merely exists on disk.
 
 === OUTPUT RULES ===
 - Relay tool response text as-is (includes file path + NetCDF summary).
@@ -102,7 +122,13 @@ toolset  = [McpToolset(
                          server_params = StdioServerParameters(
                              command='python',
                              args=[f"{ROOT_DIR}/src/agenticeoecosystem/servers/climate/server.py"]),
-                             timeout=300))]
+                             # CDS queues large/hourly requests server-side and cdsapi's own
+                             # client is built to poll for a long time (retry_max=500,
+                             # sleep_max=120s) — a 300s MCP timeout kills the connection
+                             # long before cdsapi would ever give up on its own, which was
+                             # the actual cause of repeated "MCP tool execution ... Timed
+                             # out" failures on ERA5 fetches, not request size.
+                             timeout=1800))]
 def _fetch_agent(toolset) -> Optional[Agent]:
         if toolset:
             return Agent(

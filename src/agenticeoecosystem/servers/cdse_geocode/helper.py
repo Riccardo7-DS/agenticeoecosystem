@@ -114,6 +114,26 @@ def _fetch(
     if processing_options:
         data_entry["processing"] = processing_options
 
+    # A bbox crossing the antimeridian (e.g. west=160, east=-150, describing
+    # the narrow strip that wraps through 180°) has max_lon < min_lon
+    # numerically. Sent as-is, Sentinel Hub computes the extent "the wrong
+    # way around" (~310° instead of the intended ~50°), which produces a
+    # nonsensical ground-sample-distance and a spurious "exceeds resolution
+    # limit" error no matter how small the true area or how few pixels are
+    # requested. Shifting the east edge by +360 keeps the bbox monotonically
+    # increasing so Sentinel Hub resolves the intended narrow extent instead
+    # — mirrors the same fix already used for antimeridian bboxes in
+    # servers/gee/server.py's _estimate_pixels/download_gee_product.
+    min_lon, min_lat, max_lon, max_lat = bbox
+    if max_lon < min_lon:
+        logger.info(
+            "Antimeridian-crossing bbox detected (min_lon=%s > max_lon=%s); "
+            "shifting east edge by +360 to %s",
+            min_lon, max_lon, max_lon + 360,
+        )
+        max_lon += 360
+        bbox = [min_lon, min_lat, max_lon, max_lat]
+
     body = {
         "input": {
             "bounds": {

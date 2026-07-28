@@ -379,6 +379,18 @@ async def _internal_inspect_netcdf(filepath: str) -> str:
     return await loop.run_in_executor(None, _sync_inspect)
 
 
+# CDS's new (datastores/multiurl-backed) download path does a bare
+# `assert os.path.getsize(download) == size` after the transfer completes,
+# with no retry of its own — a truncated/corrupted stream (progress bar
+# reaches 100% but bytes don't match Content-Length) is a hard failure.
+# Retrying the whole retrieve() here, inside the tool call, fixes most of
+# these transiently instead of surfacing a "File size mismatch" error for
+# the agent to notice and retry itself (which costs a full LLM round-trip
+# and often a fresh CDS queue wait each time).
+_DOWNLOAD_MAX_ATTEMPTS = 3
+_DOWNLOAD_RETRY_BACKOFF_S = 15
+
+
 async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filename: str) -> str:
     # output_filename has already been forced under OUTPUT_DIR (with its
     # parent directory created) by _coerce_output_path at the call site —
@@ -392,17 +404,45 @@ async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filena
         logger.info("Initializing cdsapi.Client...")
         try:
             c = cdsapi.Client(url=URL, key=KEY)
-            logger.info(f"Starting download for dataset '{dataset}' to '{output_path}'...")
-            start_time = time.time()
-            c.retrieve(dataset, request, str(output_path))
-            elapsed = time.time() - start_time
-            logger.info(f"Download completed in {elapsed:.2f}s.")
-            inspection = asyncio.run(_internal_inspect_netcdf(str(output_path)))
-            return f"Successfully downloaded data to '{output_path}'.\n\n{inspection}"
         except Exception as e:
             error_message = f"Error during CDS API request: {e}"
             logger.error(error_message)
             return error_message
+
+        last_error: Optional[Exception] = None
+        for attempt in range(1, _DOWNLOAD_MAX_ATTEMPTS + 1):
+            logger.info(
+                f"Starting download for dataset '{dataset}' to '{output_path}' "
+                f"(attempt {attempt}/{_DOWNLOAD_MAX_ATTEMPTS})..."
+            )
+            start_time = time.time()
+            try:
+                c.retrieve(dataset, request, str(output_path))
+                elapsed = time.time() - start_time
+                logger.info(f"Download completed in {elapsed:.2f}s.")
+                inspection = asyncio.run(_internal_inspect_netcdf(str(output_path)))
+                return f"Successfully downloaded data to '{output_path}'.\n\n{inspection}"
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"Download attempt {attempt}/{_DOWNLOAD_MAX_ATTEMPTS} failed after "
+                    f"{time.time() - start_time:.1f}s: {e}"
+                )
+                # Drop any partial/corrupt bytes so the next attempt starts
+                # clean instead of resuming from a bad file.
+                try:
+                    if output_path.exists():
+                        output_path.unlink()
+                except OSError:
+                    pass
+                if attempt < _DOWNLOAD_MAX_ATTEMPTS:
+                    time.sleep(_DOWNLOAD_RETRY_BACKOFF_S)
+
+        error_message = (
+            f"Error during CDS API request after {_DOWNLOAD_MAX_ATTEMPTS} attempts: {last_error}"
+        )
+        logger.error(error_message)
+        return error_message
 
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _blocking_download)

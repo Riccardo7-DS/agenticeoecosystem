@@ -34,7 +34,7 @@ from typing import Any, Optional
 
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS
 from .dataclasses import TaskSet
-from .pipeline_runner import generate_solutions
+from .pipeline_runner import generate_solutions, ended_in_error
 from .evaluator import evaluate_solutions
 
 logger = logging.getLogger(__name__)
@@ -65,11 +65,15 @@ class ModelRun:
                       or a raw HuggingFace model ID.
         provider    : LangChain provider — "eve", "openai", "custom", "vllm", "ollama", …
         temperature : Sampling temperature.
-        pipeline    : "multi" (supervisor + sub-agents) or "single" (one agent, all tools).
-        agent_models: Per-agent model overrides for pipeline="multi", e.g.
+        pipeline    : "multi" (google-adk orchestrator, the current multi-agent system —
+                      EVE-Instruct only), "single" (one agent, all tools), or
+                      "multi_legacy" (older LangGraph supervisor + sub-agents, superseded
+                      by "multi").
+        agent_models: Per-agent model overrides for pipeline="multi_legacy", e.g.
                       {"gis": ("mistral-small-24b", "vllm"), "arxiv": ("qwen2.5-14b", "vllm")}.
                       Valid keys: eo_stac, gee, eve, eoss_rag, moocs, arxiv, gis, supervisor.
-                      Missing keys fall back to (model, provider). Ignored for pipeline="single".
+                      Missing keys fall back to (model, provider). Ignored for pipeline="single"
+                      or pipeline="multi".
         launch_vllm         : If True, start a local vLLM server for this model before running
                               and shut it down afterwards.  Only meaningful when provider="vllm".
         vllm_port           : Port for the vLLM server (default 8000).  Ignored unless launch_vllm=True.
@@ -232,8 +236,14 @@ def _evaluate_one(
     task_copy.save_to_file(output_filename, folder=str(output_dir))
     logger.info("[%s] Results saved → %s/%s", label, output_dir, output_filename)
 
-    # Build result row
-    solved = sum(1 for t in task_copy if t.generated_solution is not None)
+    # Build result row.
+    # "tasks_attempted" counts any run that produced a generated_solution at
+    # all; "tasks_degraded" is the subset of those where the trace's last
+    # step is a tool call that errored out (e.g. an MCP timeout or 404 left
+    # as the final step) rather than a real answer — these get silently
+    # counted as solved unless called out separately.
+    attempted = sum(1 for t in task_copy if t.generated_solution is not None)
+    degraded = sum(1 for t in task_copy if ended_in_error(t.generated_solution))
     n_steps_list = [len(t.generated_solution) for t in task_copy if t.generated_solution]
     avg_steps = sum(n_steps_list) / len(n_steps_list) if n_steps_list else 0.0
 
@@ -241,7 +251,8 @@ def _evaluate_one(
         "model": label,
         "provider": run.provider,
         "pipeline": run.pipeline,
-        "tasks_attempted": solved,
+        "tasks_attempted": attempted,
+        "tasks_degraded": degraded,
         "avg_steps": round(avg_steps, 1),
         "total_input_tokens": in_tok,
         "total_output_tokens": out_tok,

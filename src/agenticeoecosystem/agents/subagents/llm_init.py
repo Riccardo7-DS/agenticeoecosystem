@@ -32,4 +32,4 @@ def _basic_auth_header(username_env: str = "EVE_USERNAME",
 
 _MODEL_NAME = os.getenv("MULTI_AGENT_MODEL", "EVE-Instruct")
 
-llm=LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=os.getenv("EVE_ENDPOINT"), headers=_basic_auth_header(), api_key="EMPTY", temperature=0, max_tokens=1024)
+llm=LiteLlm(model=f'openai/{_MODEL_NAME}', base_url="http://localhost:18000/v1", api_key="EMPTY", temperature=0)

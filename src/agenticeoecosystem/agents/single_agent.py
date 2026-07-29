@@ -115,8 +115,8 @@ logger = logging.getLogger(__name__)
 # Same model/endpoint as agents/subagents/vlm_init.py's `vlm` — called
 # directly via litellm here since describe_images makes one self-contained
 # completion, not a stateful multi-turn agent.
-_VLM_MODEL = os.getenv("VLM_MODEL_NAME", "Qwen3-VL")
-_VLM_ENDPOINT = os.getenv("LLAVA_ENDPOINT", "http://10.0.0.118:18000/v1")
+_VLM_MODEL = os.getenv("VLM_MODEL_NAME", "Qwen3-VL-8B-Instruct")
+_VLM_ENDPOINT = os.getenv("LLAVA_ENDPOINT", "http://localhost:18001/v1")
 
 
 def _encode_image_for_vlm(path) -> tuple[str, str]:

@@ -3,6 +3,7 @@ pipeline_runner.py — Runs your agentic pipeline on a TaskSet and records resul
 """
 
 import asyncio
+import importlib
 import logging
 import os
 import sys
@@ -44,10 +45,15 @@ def run_pipeline(
         task_text: The natural-language task prompt.
         pipeline : "multi" (google-adk orchestrator + native sub-agents — the
                    current multi-agent system, see agents/multi_agent.py),
-                   "single" (one LangGraph agent, all tools), or
-                   "multi_legacy" (older LangGraph supervisor + sub-agents in
-                   client.py — superseded by "multi"; missing cdse, eumetsat,
-                   and vlm sub-agents).
+                   "single_adk" (google-adk, ONE agent with every sub-agent's
+                   toolset attached directly, no routing — see
+                   agents/single_agent.py; same EVE-Instruct-only model as
+                   "multi", so it isolates the effect of removing the
+                   supervisor/sub-agent split), "single" (one LangChain/
+                   LangGraph agent, all tools, sweepable across any model),
+                   or "multi_legacy" (older LangGraph supervisor + sub-agents
+                   in client.py — superseded by "multi"; missing cdse,
+                   eumetsat, and vlm sub-agents).
 
     Returns:
         solution     : Solution with one Step per MCP tool call made.
@@ -57,9 +63,13 @@ def run_pipeline(
     import nest_asyncio
     nest_asyncio.apply()
 
-    if pipeline == "multi":
+    if pipeline in ("multi", "single_adk"):
         import json as _json
-        import agenticeoecosystem.agents.multi_agent as _adk
+
+        if pipeline == "multi":
+            import agenticeoecosystem.agents.multi_agent as _adk
+        else:
+            import agenticeoecosystem.agents.single_agent as _adk
 
         loop = asyncio.get_event_loop()
         raw = loop.run_until_complete(_adk.get_ans_tool_path(task_text))
@@ -151,12 +161,15 @@ def generate_solutions(
                            multi-agent system — all sub-agents share whatever
                            model `model` names, served from the EVE gateway;
                            model_provider is ignored, it's always "eve"),
-                           "single" (one LangGraph agent, all tools), or
+                           "single_adk" (google-adk, one agent with every
+                           toolset attached directly — same EVE-Instruct-only
+                           behavior as "multi"), "single" (one LangChain
+                           agent, all tools, sweepable across any model), or
                            "multi_legacy" (older LangGraph supervisor +
                            sub-agents in client.py — superseded by "multi").
         agent_models     : Per-agent model overrides for pipeline="multi_legacy",
                            e.g. {"gis": ("mistral-small-24b", "vllm")}. Ignored
-                           for pipeline="single" or pipeline="multi".
+                           for pipeline="single", "multi", or "single_adk".
 
     Returns:
         tasks        : Same TaskSet with generated_solution fields populated.
@@ -177,22 +190,26 @@ def generate_solutions(
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='single'")
         _single.rebuild_agent(model, provider=model_provider, temperature=temperature)
-    elif pipeline == "multi":
+    elif pipeline in ("multi", "single_adk"):
+        _module_path = (
+            "agenticeoecosystem.agents.multi_agent" if pipeline == "multi"
+            else "agenticeoecosystem.agents.single_agent"
+        )
         if agent_models:
-            logger.warning("agent_models is ignored when pipeline='multi' (ADK orchestrator)")
+            logger.warning("agent_models is ignored when pipeline='%s' (ADK)", pipeline)
         if model_provider != "eve":
             logger.warning(
-                "pipeline='multi' only supports provider='eve' (the internal EVE "
-                "gateway) — ignoring model_provider=%s", model_provider,
+                "pipeline='%s' only supports provider='eve' (the internal EVE "
+                "gateway) — ignoring model_provider=%s", pipeline, model_provider,
             )
-        if "agenticeoecosystem.agents.multi_agent" in sys.modules:
+        if _module_path in sys.modules:
             logger.warning(
-                "agenticeoecosystem.agents.multi_agent was already imported earlier "
-                "in this process with a different MULTI_AGENT_MODEL — model=%s will "
-                "have no effect. Each model needs its own fresh process.", model,
+                "%s was already imported earlier in this process with a "
+                "different MULTI_AGENT_MODEL — model=%s will have no effect. "
+                "Each model needs its own fresh process.", _module_path, model,
             )
         os.environ["MULTI_AGENT_MODEL"] = model
-        import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
+        importlib.import_module(_module_path)  # import triggers setup
     else:  # "multi_legacy"
         import agenticeoecosystem.client.client as _client
         _client.rebuild_agents(model, provider=model_provider, temperature=temperature, agent_models=agent_models)

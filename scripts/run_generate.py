@@ -51,6 +51,10 @@ def main() -> int:
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
     parser.add_argument("--skip-solved",          action="store_true", help="Skip tasks that already have a solution")
+    parser.add_argument("--keep-vllm-alive",      action="store_true",
+                        help="Don't terminate the vLLM server this process launches — lets a "
+                             "later invocation reuse the already-warm server for the same model "
+                             "(launch_vllm() skip-relaunch detection) instead of reloading weights.")
     parser.add_argument("--pipeline",             default="multi", choices=["multi", "single", "multi_legacy"],
                         help="Pipeline mode: 'multi' (google-adk orchestrator, the current "
                              "multi-agent system — EVE-Instruct only), 'single' (one LangGraph "
@@ -124,7 +128,8 @@ def main() -> int:
         return 1
 
     finally:
-        _terminate_vllm(proc)
+        if not args.keep_vllm_alive:
+            _terminate_vllm(proc)
 
 
 if __name__ == "__main__":

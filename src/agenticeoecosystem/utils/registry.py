@@ -48,6 +48,11 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         model_id="Qwen/Qwen3-30B-A3B",
         tool_call_parser="hermes",
     ),
+    # Dense 32B, BF16 ~64 GiB — will not fit on a single A6000 (46 GiB) unquantized
+    "qwen3-32b": ModelConfig(
+        model_id="Qwen/Qwen3-32B",
+        tool_call_parser="hermes",
+    ),
     # Llama family — gated: accept licence at huggingface.co/meta-llama/<model>
     "llama3.1-8b": ModelConfig(
         model_id="meta-llama/Llama-3.1-8B-Instruct",
@@ -62,6 +67,13 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
     # Gemma — gated: accept licence at huggingface.co/google/gemma-3-12b-it
     "gemma3-12b": ModelConfig(
         model_id="google/gemma-3-12b-it",
+        tool_call_parser="hermes",
+        gated=True,
+    ),
+    # Gated: accept licence at huggingface.co/google/gemma-3-27b-it
+    # BF16 ~54 GiB — will not fit on a single A6000 (46 GiB) unquantized
+    "gemma3-27b": ModelConfig(
+        model_id="google/gemma-3-27b-it",
         tool_call_parser="hermes",
         gated=True,
     ),
@@ -198,19 +210,24 @@ def launch_vllm(
             _sp.run(["fuser", "-k", f"{port}/tcp"], capture_output=True)
             time.sleep(2)
 
-    # Kill any processes still holding GPU memory (orphaned vLLM workers)
+    # Kill orphaned vLLM worker processes still holding GPU memory. Only
+    # processes whose cmdline mentions vllm are targeted, so other GPU users
+    # on the node (e.g. an MCP server) are left running.
     try:
         result = _sp.run(
-            ["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader"],
+            ["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader"],
             capture_output=True, text=True,
         )
-        gpu_pids = [
-            int(line.split(",")[0].strip())
-            for line in result.stdout.strip().splitlines()
-            if line.strip()
+        candidate_pids = [
+            int(line.strip()) for line in result.stdout.strip().splitlines() if line.strip()
         ]
+        gpu_pids = []
+        for pid in candidate_pids:
+            ps_result = _sp.run(["ps", "-p", str(pid), "-o", "cmd="], capture_output=True, text=True)
+            if "vllm" in ps_result.stdout.lower():
+                gpu_pids.append(pid)
         if gpu_pids:
-            logger.warning("Killing %d GPU process(es) holding memory: %s", len(gpu_pids), gpu_pids)
+            logger.warning("Killing %d orphaned vLLM process(es) holding memory: %s", len(gpu_pids), gpu_pids)
             for pid in gpu_pids:
                 try:
                     os.kill(pid, 9)
@@ -376,3 +393,20 @@ def get_vllm_langchain_model(
         model=cfg.model_id,
         temperature=temperature,
     )
+
+
+if __name__ == "__main__":
+    import argparse
+    from dotenv import load_dotenv
+    load_dotenv()
+    parser = argparse.ArgumentParser(description="vLLM model registry utility")
+    parser.add_argument("--list", action="store_true", help="List all models and their download status")
+    parser.add_argument("--download", metavar="MODEL_KEY", help="Download the specified model from HuggingFace")
+    args = parser.parse_args()
+
+    if args.list:
+        list_downloaded()
+    elif args.download:
+        download_model(args.download)
+    else:
+        parser.print_help()

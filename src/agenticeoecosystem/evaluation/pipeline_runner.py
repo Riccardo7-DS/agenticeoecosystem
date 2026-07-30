@@ -149,8 +149,9 @@ def generate_solutions(
         wait_between_tasks: Seconds to wait between API calls (rate-limit guard).
         pipeline         : "multi" (google-adk orchestrator, the current
                            multi-agent system — all sub-agents share whatever
-                           model `model` names, served from the EVE gateway;
-                           model_provider is ignored, it's always "eve"),
+                           model `model` names; model_provider "eve" routes to
+                           the EVE gateway, "vllm" routes to a local vLLM
+                           server, any other value falls back to "eve"),
                            "single" (one LangGraph agent, all tools), or
                            "multi_legacy" (older LangGraph supervisor +
                            sub-agents in client.py — superseded by "multi").
@@ -180,18 +181,22 @@ def generate_solutions(
     elif pipeline == "multi":
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='multi' (ADK orchestrator)")
-        if model_provider != "eve":
+        if model_provider not in ("eve", "vllm"):
             logger.warning(
-                "pipeline='multi' only supports provider='eve' (the internal EVE "
-                "gateway) — ignoring model_provider=%s", model_provider,
+                "pipeline='multi' only supports provider='eve' (EVE gateway) or "
+                "'vllm' (local server) — ignoring model_provider=%s, falling back "
+                "to 'eve'", model_provider,
             )
+            model_provider = "eve"
         if "agenticeoecosystem.agents.multi_agent" in sys.modules:
             logger.warning(
                 "agenticeoecosystem.agents.multi_agent was already imported earlier "
-                "in this process with a different MULTI_AGENT_MODEL — model=%s will "
-                "have no effect. Each model needs its own fresh process.", model,
+                "in this process with a different MULTI_AGENT_MODEL/PROVIDER — "
+                "model=%s provider=%s will have no effect. Each model needs its "
+                "own fresh process.", model, model_provider,
             )
         os.environ["MULTI_AGENT_MODEL"] = model
+        os.environ["MULTI_AGENT_PROVIDER"] = model_provider
         import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
     else:  # "multi_legacy"
         import agenticeoecosystem.client.client as _client

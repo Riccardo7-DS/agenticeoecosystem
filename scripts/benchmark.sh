@@ -4,13 +4,13 @@
 # Each model runs in its own Python process; GPU memory is explicitly freed
 # between runs via pkill, so no vLLM state leaks across models.
 #
-# Two pipeline architectures are exercised:
+# Two pipeline architectures are exercised, each swept across every model in
+# the Phase 1 list below:
 #   - "multi"  : the google-adk orchestrator (agents/multi_agent.py) — the
-#                current multi-agent system. It always runs EVE-Instruct via
-#                the EVE endpoint regardless of --model/--provider, so it is
-#                generated ONCE (not swept across every model below).
-#   - "single" : one LangGraph agent with all tools, swept across every model
-#                in the Phase 1 list below, same as before.
+#                current multi-agent system. provider="eve" (EVE-Instruct)
+#                routes through the EVE gateway; provider="vllm" routes
+#                through a local vLLM server (see utils/registry.py).
+#   - "single" : one LangGraph agent with all tools, same routing rules.
 #
 # Usage:
 #   cd /path/to/agenticeoecosystem
@@ -78,45 +78,33 @@ cleanup_gpu() {
     sleep 5
 }
 
-run_generate_single() {
-    local label="$1" model="$2" provider="$3" timeout="${4:-$TIMEOUT}"
-    local run_label="${label} [single]"
-    log "▶ Generate: $run_label  (model=$model, provider=$provider, timeout=${timeout}s)"
-    if python "$SCRIPT_DIR/run_generate.py" \
+run_generate() {
+    # keep_alive=true skips this call's vLLM teardown (both the Python-level
+    # _terminate_vllm and this function's cleanup_gpu), so a following call
+    # for the SAME model can reuse the still-warm server instead of paying
+    # the full reload cost twice — see launch_vllm()'s skip-relaunch check in
+    # utils/registry.py. Always pass keep_alive=false (or omit it) on the
+    # LAST call for a given model so the GPU is freed before the next model.
+    local pipeline="$1" label="$2" model="$3" provider="$4" timeout="${5:-$TIMEOUT}" keep_alive="${6:-false}"
+    local run_label="${label} [${pipeline}]"
+    local extra_args=()
+    [ "$keep_alive" = true ] && extra_args+=(--keep-vllm-alive)
+    log "▶ Generate: $run_label  (pipeline=$pipeline, model=$model, provider=$provider, timeout=${timeout}s)"
+    if uv run python "$SCRIPT_DIR/run_generate.py" \
             --label            "$run_label" \
             --model            "$model"    \
             --provider         "$provider" \
-            --pipeline         single \
+            --pipeline         "$pipeline" \
             --tasks-file       "${TASKS_FILES[@]}" \
             "${TASK_SELECTOR_ARGS[@]}" \
             --output-dir       "$OUTPUT_DIR" \
-            --vllm-startup-timeout "$timeout"; then
+            --vllm-startup-timeout "$timeout" \
+            "${extra_args[@]}"; then
         log "  ✓ Generate complete: $run_label"
     else
         log "  ✗ Generate FAILED: $run_label (continuing with next model)"
     fi
-    cleanup_gpu
-}
-
-run_generate_multi_once() {
-    # pipeline="multi" (google-adk orchestrator) always runs EVE-Instruct via
-    # the EVE endpoint regardless of --model/--provider — sweeping it across
-    # every model in the loop below would just relaunch vLLM for nothing and
-    # silently re-run EVE-Instruct each time, so it's generated once here.
-    local run_label="EVE-Instruct [multi]"
-    log "▶ Generate: $run_label  (google-adk orchestrator, EVE-Instruct only)"
-    if python "$SCRIPT_DIR/run_generate.py" \
-            --label      "$run_label" \
-            --model      "EVE-Instruct" \
-            --provider   "eve" \
-            --pipeline   multi \
-            --tasks-file "${TASKS_FILES[@]}" \
-            "${TASK_SELECTOR_ARGS[@]}" \
-            --output-dir "$OUTPUT_DIR"; then
-        log "  ✓ Generate complete: $run_label"
-    else
-        log "  ✗ Generate FAILED: $run_label"
-    fi
+    [ "$keep_alive" = true ] || cleanup_gpu
 }
 
 run_evaluate() {
@@ -124,7 +112,7 @@ run_evaluate() {
     local gen_label
     gen_label="$(basename "${results_file%.json}")"
     log "▶ Evaluate: $gen_label  ×  $eval_label  (model=$eval_model, timeout=${timeout}s)"
-    if python "$SCRIPT_DIR/run_evaluate.py" \
+    if uv run python "$SCRIPT_DIR/run_evaluate.py" \
             --results-file         "$results_file" \
             --evaluator-label      "$eval_label"   \
             --evaluator-model      "$eval_model"   \
@@ -150,26 +138,42 @@ log "━━━━━━━━━━━━━━━━━━━━━━━━━
 log "Phase 1/2: Generating solutions"
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Multi-agent (google-adk orchestrator) — EVE-Instruct only, runs once
-run_generate_multi_once
+# Each model is swept across both pipelines. For vLLM-backed models, the
+# "multi" call passes keep_alive=true so the server launched for it stays up
+# for the "single" call right after (same model → launch_vllm() detects it's
+# already serving and skips the reload); the "single" call then tears it
+# down before the next model. EVE-Instruct needs no vLLM either way.
 
-# Single-agent sweep across models
-# External API — always available, no vLLM needed
-run_generate_single "EVE-Instruct"      "EVE-Instruct"      "eve"
+# External API — always available, no vLLM involved
+run_generate multi  "EVE-Instruct"      "EVE-Instruct"      "eve"
+run_generate single "EVE-Instruct"      "EVE-Instruct"      "eve"
 
 # Free models via vLLM
-run_generate_single "Nemotron-2-12B"    "nemotron-2-12b"    "vllm" $TIMEOUT
-run_generate_single "Phi4-Mini"         "phi4-mini"         "vllm" $TIMEOUT
-run_generate_single "Qwen3-14B"         "qwen3-14b"         "vllm" $TIMEOUT_LARGE
-run_generate_single "Qwen2.5-14B"       "qwen2.5-14b"       "vllm" $TIMEOUT_LARGE
-run_generate_single "DeepSeek-R1-14B"   "deepseek-r1-14b"   "vllm" $TIMEOUT_LARGE
+run_generate multi  "Nemotron-2-12B"    "nemotron-2-12b"    "vllm" $TIMEOUT       true
+run_generate single "Nemotron-2-12B"    "nemotron-2-12b"    "vllm" $TIMEOUT
+
+run_generate multi  "Phi4-Mini"         "phi4-mini"         "vllm" $TIMEOUT       true
+run_generate single "Phi4-Mini"         "phi4-mini"         "vllm" $TIMEOUT
+
+run_generate multi  "Qwen3-14B"         "qwen3-14b"         "vllm" $TIMEOUT_LARGE true
+run_generate single "Qwen3-14B"         "qwen3-14b"         "vllm" $TIMEOUT_LARGE
+
+run_generate multi  "Qwen2.5-14B"       "qwen2.5-14b"       "vllm" $TIMEOUT_LARGE true
+run_generate single "Qwen2.5-14B"       "qwen2.5-14b"       "vllm" $TIMEOUT_LARGE
+
+run_generate multi  "DeepSeek-R1-14B"   "deepseek-r1-14b"   "vllm" $TIMEOUT_LARGE true
+run_generate single "DeepSeek-R1-14B"   "deepseek-r1-14b"   "vllm" $TIMEOUT_LARGE
 
 # Gated models (comment out if licence not accepted on huggingface.co)
-run_generate_single "Gemma3-12B"        "gemma3-12b"        "vllm" $TIMEOUT
+run_generate multi  "Gemma3-12B"        "gemma3-12b"        "vllm" $TIMEOUT       true
+run_generate single "Gemma3-12B"        "gemma3-12b"        "vllm" $TIMEOUT
 # INT8-quantized via bitsandbytes (weights ~44 GiB exceed A6000 in BF16)
-# run_generate_single "Mistral-Small-24B" "mistral-small-24b" "vllm" $TIMEOUT_LARGE
-# run_generate_single "Llama3.1-8B"       "llama3.1-8b"       "vllm" $TIMEOUT_LARGE
-# run_generate_single "Llama3.2-3B"       "llama3.2-3b"       "vllm" $TIMEOUT_LARGE
+# run_generate multi  "Mistral-Small-24B" "mistral-small-24b" "vllm" $TIMEOUT_LARGE true
+# run_generate single "Mistral-Small-24B" "mistral-small-24b" "vllm" $TIMEOUT_LARGE
+# run_generate multi  "Llama3.1-8B"       "llama3.1-8b"       "vllm" $TIMEOUT_LARGE true
+# run_generate single "Llama3.1-8B"       "llama3.1-8b"       "vllm" $TIMEOUT_LARGE
+# run_generate multi  "Llama3.2-3B"       "llama3.2-3b"       "vllm" $TIMEOUT_LARGE true
+# run_generate single "Llama3.2-3B"       "llama3.2-3b"       "vllm" $TIMEOUT_LARGE
 
 # ---------------------------------------------------------------------------
 # Phase 2: Evaluate solutions
@@ -195,6 +199,6 @@ done
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 log "Building comparison table"
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-python "$SCRIPT_DIR/build_table.py" --output-dir "$OUTPUT_DIR"
+uv run python "$SCRIPT_DIR/build_table.py" --output-dir "$OUTPUT_DIR"
 
 log "Done. Results in $OUTPUT_DIR"

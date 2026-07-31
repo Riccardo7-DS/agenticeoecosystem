@@ -63,8 +63,11 @@ else
 fi
 
 OUTPUT_DIR="$REPO_ROOT/output/geobenchX/run_$(date +%Y%m%d_%H%M%S)"
-TIMEOUT=1800       # 12B models — NemotronH hybrid Mamba-attn needs ~20 min on first run
-TIMEOUT_LARGE=1800 # 14B–24B models or slow NFS loading
+TIMEOUT=1800        # 12B models — NemotronH hybrid Mamba-attn needs ~20 min on first run
+TIMEOUT_LARGE=1800  # 14B–24B models or slow NFS loading
+TASK_TIMEOUT=2400   # Max wall-clock seconds per task; a stuck task (e.g. an MCP
+                     # tool call that keeps getting retried) is abandoned and the
+                     # run moves to the next task instead of hanging indefinitely.
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -99,6 +102,7 @@ run_generate() {
             "${TASK_SELECTOR_ARGS[@]}" \
             --output-dir       "$OUTPUT_DIR" \
             --vllm-startup-timeout "$timeout" \
+            --task-timeout     "$TASK_TIMEOUT" \
             "${extra_args[@]}"; then
         log "  ✓ Generate complete: $run_label"
     else

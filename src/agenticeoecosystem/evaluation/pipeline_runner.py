@@ -36,6 +36,7 @@ def ended_in_error(solution: Optional[Solution]) -> bool:
 def run_pipeline(
     task_text: str,
     pipeline: str = "multi",
+    task_timeout: Optional[float] = None,
 ) -> tuple[Solution, int, int]:
     """
     Run the agent pipeline on a single task and return the MCP-level tool steps.
@@ -62,7 +63,10 @@ def run_pipeline(
         import agenticeoecosystem.agents.multi_agent as _adk
 
         loop = asyncio.get_event_loop()
-        raw = loop.run_until_complete(_adk.get_ans_tool_path(task_text))
+        coro = _adk.get_ans_tool_path(task_text)
+        if task_timeout:
+            coro = asyncio.wait_for(coro, timeout=task_timeout)
+        raw = loop.run_until_complete(coro)
         data = _json.loads(raw)
         steps = [
             Step(
@@ -134,6 +138,7 @@ def generate_solutions(
     wait_between_tasks: float = 0.0,
     pipeline: str = "multi",
     agent_models: Optional[dict] = None,
+    task_timeout: Optional[float] = None,
 ) -> tuple[TaskSet, int, int]:
     """
     Iterate over all tasks in `tasks`, call `run_pipeline`, and store results.
@@ -158,6 +163,10 @@ def generate_solutions(
         agent_models     : Per-agent model overrides for pipeline="multi_legacy",
                            e.g. {"gis": ("mistral-small-24b", "vllm")}. Ignored
                            for pipeline="single" or pipeline="multi".
+        task_timeout     : Max wall-clock seconds for a single task's run_pipeline()
+                           call. A timed-out task raises asyncio.TimeoutError, which
+                           is caught below like any other per-task error — the loop
+                           moves on to the next task instead of hanging indefinitely.
 
     Returns:
         tasks        : Same TaskSet with generated_solution fields populated.
@@ -222,7 +231,7 @@ def generate_solutions(
 
         t0 = time.time()
         try:
-            solution, inp_tok, out_tok = run_pipeline(task.task_text, pipeline=pipeline)
+            solution, inp_tok, out_tok = run_pipeline(task.task_text, pipeline=pipeline, task_timeout=task_timeout)
             elapsed = time.time() - t0
             task.generated_solution = solution
             task.generated_solution_input_tokens = inp_tok

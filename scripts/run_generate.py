@@ -50,6 +50,10 @@ def main() -> int:
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
+    parser.add_argument("--task-timeout",         type=float, default=None,
+                        help="Max wall-clock seconds for a single task before it's "
+                             "abandoned and the run moves to the next task (default: "
+                             "no limit).")
     parser.add_argument("--skip-solved",          action="store_true", help="Skip tasks that already have a solution")
     parser.add_argument("--keep-vllm-alive",      action="store_true",
                         help="Don't terminate the vLLM server this process launches — lets a "
@@ -116,6 +120,7 @@ def main() -> int:
             skip_solved=args.skip_solved,
             pipeline=args.pipeline,
             agent_models=agent_models,
+            task_timeout=args.task_timeout,
         )
         # Authoritative save to the requested output_dir
         tasks.save_to_file(output_filename, folder=str(output_dir))

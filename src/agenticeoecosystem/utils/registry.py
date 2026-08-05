@@ -77,6 +77,15 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         tool_call_parser="hermes",
         gated=True,
     ),
+    # Gemma 4 — dense 31B, Apache 2.0 (ungated, unlike the Gemma 3 licence above).
+    # BF16 ~62 GiB — exceeds a single A6000 (46 GiB); split across both GPUs.
+    # Installed vLLM (0.16.0) has no dedicated 'gemma4' tool parser yet — reuse
+    # 'hermes', same workaround as the Gemma 3 entries.
+    "gemma4-31b": ModelConfig(
+        model_id="google/gemma-4-31B-it",
+        tool_call_parser="hermes",
+        extra_args=["--tensor-parallel-size", "2"],
+    ),
     # DeepSeek — free, Qwen2.5-14B distilled with R1 reasoning
     "deepseek-r1-14b": ModelConfig(
         model_id="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",

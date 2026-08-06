@@ -152,7 +152,15 @@ if __name__ == "__main__":
 
     mcp.settings.port = args.port
 
-    if args.transport == "stdio":
-        mcp.run(transport="stdio")
-    else:
-        mcp.run(transport="streamable-http")
+    try:
+        if args.transport == "stdio":
+            mcp.run(transport="stdio")
+        else:
+            mcp.run(transport="streamable-http")
+    finally:
+        # Explicit close so this runs during normal shutdown, before Python
+        # tears down the import machinery — QdrantClient's __del__ fallback
+        # needs a live import system and fails noisily (but harmlessly) if
+        # left to run during interpreter teardown instead.
+        if _qdrant is not None:
+            _qdrant.close()

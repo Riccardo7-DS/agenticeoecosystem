@@ -174,6 +174,8 @@ def generate_solutions(
         total_output : Sum of output tokens across all tasks.
     """
     _save_folder = output_folder or GEOBENCH_RESULTS
+    run_start = time.time()
+    healthcheck_results: dict = {}
     import nest_asyncio
     nest_asyncio.apply()
 
@@ -207,6 +209,9 @@ def generate_solutions(
         os.environ["MULTI_AGENT_MODEL"] = model
         os.environ["MULTI_AGENT_PROVIDER"] = model_provider
         import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
+
+        from agenticeoecosystem.utils.healthcheck import run_preflight_healthcheck
+        healthcheck_results = asyncio.get_event_loop().run_until_complete(run_preflight_healthcheck())
     else:  # "multi_legacy"
         import agenticeoecosystem.client.client as _client
         _client.rebuild_agents(model, provider=model_provider, temperature=temperature, agent_models=agent_models)
@@ -265,4 +270,97 @@ def generate_solutions(
         "not real solves)  total tokens: %d in / %d out",
         attempted, n_total, degraded, total_input, total_output,
     )
+
+    _write_run_summary(
+        tasks, model, pipeline, healthcheck_results, run_start,
+        n_total, attempted, n_skip, degraded, total_input, total_output,
+        output_filename, _save_folder,
+    )
+
     return tasks, total_input, total_output
+
+
+def _write_run_summary(
+    tasks: TaskSet, model: str, pipeline: str, healthcheck_results: dict,
+    run_start: float, n_total: int, attempted: int, n_skip: int, degraded: int,
+    total_input: int, total_output: int, output_filename: Optional[str], save_folder: str,
+) -> None:
+    """Build the clean run-overview block: healthcheck, duration, task counts,
+    tokens overall and by label. Logged as one bordered block and also written
+    to a standalone summary_<label>.md next to (but separate from) the
+    results_<label>.json used for evaluation."""
+    from agenticeoecosystem.utils.healthcheck import log_block
+
+    elapsed = int(time.time() - run_start)
+    hours, rem = divmod(elapsed, 3600)
+    mins, secs = divmod(rem, 60)
+    duration_str = f"{hours}h {mins}m {secs}s" if hours else f"{mins}m {secs}s"
+
+    lines = []
+    if healthcheck_results:
+        n_ok = sum(healthcheck_results.values())
+        lines.append(f"Healthcheck: {n_ok}/{len(healthcheck_results)} reachable")
+        for name, ok in healthcheck_results.items():
+            if not ok:
+                lines.append(f"  FAIL  {name}")
+    lines.append(f"Duration: {duration_str}")
+    lines.append(
+        f"Tasks: {n_total} total — {attempted} attempted, {n_skip} skipped "
+        f"(already solved), {degraded} ended in a tool error"
+    )
+    lines.append(f"Tokens: {total_input} in / {total_output} out (total)")
+
+    label_totals = tasks.get_token_totals_by_label()
+    if label_totals:
+        lines.append("Tokens by task label:")
+        for label, stats in sorted(label_totals.items(), key=lambda kv: str(kv[0])):
+            label_str = label.value if hasattr(label, "value") else label
+            lines.append(
+                f"  {label_str}: {stats['n']} task(s) — {stats['input']} in / {stats['output']} out"
+            )
+
+    log_block(f"RUN SUMMARY — {model} ({pipeline})", lines)
+
+    # Separate, properly-formatted Markdown for the .md file — the plain
+    # indented `lines` above read fine in a bordered log block, but a single
+    # newline doesn't break a line in Markdown, so writing them as-is
+    # collapses into one run-on paragraph in any Markdown preview.
+    md: list[str] = [f"# Run summary — {model} ({pipeline})", ""]
+
+    if healthcheck_results:
+        n_ok = sum(healthcheck_results.values())
+        md.append(f"**Healthcheck:** {n_ok}/{len(healthcheck_results)} reachable")
+        failed = [name for name, ok in healthcheck_results.items() if not ok]
+        if failed:
+            md.append("")
+            md.extend(f"- FAIL {name}" for name in failed)
+        md.append("")
+
+    md.append(f"**Duration:** {duration_str}")
+    md.append("")
+    md.append(
+        f"**Tasks:** {n_total} total — {attempted} attempted, {n_skip} skipped "
+        f"(already solved), {degraded} ended in a tool error"
+    )
+    md.append("")
+    md.append(f"**Tokens:** {total_input} in / {total_output} out (total)")
+
+    if label_totals:
+        md.append("")
+        md.append("**Tokens by task label:**")
+        md.append("")
+        md.append("| Label | Tasks | Tokens in | Tokens out |")
+        md.append("|---|---|---|---|")
+        for label, stats in sorted(label_totals.items(), key=lambda kv: str(kv[0])):
+            label_str = label.value if hasattr(label, "value") else label
+            md.append(f"| {label_str} | {stats['n']} | {stats['input']} | {stats['output']} |")
+
+    if output_filename:
+        summary_filename = os.path.splitext(output_filename.replace("results_", "summary_", 1))[0] + ".md"
+    else:
+        summary_filename = f"summary_{model}_{pipeline}.md".replace(" ", "_")
+    os.makedirs(save_folder, exist_ok=True)
+    summary_path = os.path.join(save_folder, summary_filename)
+    with open(summary_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(md) + "\n")
+    logger.info("Run summary written → %s", summary_path)

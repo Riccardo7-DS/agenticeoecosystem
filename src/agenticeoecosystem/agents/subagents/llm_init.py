@@ -40,6 +40,10 @@ if _PROVIDER == "vllm":
     _host = os.getenv("VLLM_HOST", "127.0.0.1")
     _port = os.getenv("VLLM_PORT", "8000")
     _model_id = MODEL_REGISTRY[_MODEL_NAME].model_id if _MODEL_NAME in MODEL_REGISTRY else _MODEL_NAME
-    llm = LiteLlm(model=f'openai/{_model_id}', base_url=f"http://{_host}:{_port}/v1", api_key="EMPTY", temperature=0, max_tokens=1024)
+    LLM_BASE_URL = f"http://{_host}:{_port}/v1"
+    LLM_AUTH_HEADERS: dict | None = None
+    llm = LiteLlm(model=f'openai/{_model_id}', base_url=LLM_BASE_URL, api_key="EMPTY", temperature=0, max_tokens=1024)
 else:
-    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=os.getenv("EVE_ENDPOINT"), headers=_basic_auth_header(), api_key="EMPTY", temperature=0, max_tokens=1024)
+    LLM_BASE_URL = os.getenv("EVE_ENDPOINT")
+    LLM_AUTH_HEADERS = _basic_auth_header()
+    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=LLM_BASE_URL, headers=LLM_AUTH_HEADERS, api_key="EMPTY", temperature=0, max_tokens=1024)

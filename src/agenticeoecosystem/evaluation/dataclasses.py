@@ -190,6 +190,24 @@ class TaskSet(BaseModel):
                 counter.update(task.task_labels)
         return dict(counter)
 
+    def get_token_totals_by_label(self) -> Dict[str, Dict[str, int]]:
+        """
+        Sum generated-solution tokens per task label. A task with several
+        labels contributes to each — same multi-label convention as
+        get_label_counts().
+        """
+        totals: Dict[str, Dict[str, int]] = {}
+        for task in self.tasks:
+            labels = task.task_labels or [NO_LABEL]
+            in_tok = task.generated_solution_input_tokens or 0
+            out_tok = task.generated_solution_output_tokens or 0
+            for label in labels:
+                entry = totals.setdefault(label, {"n": 0, "input": 0, "output": 0})
+                entry["n"] += 1
+                entry["input"] += in_tok
+                entry["output"] += out_tok
+        return totals
+
     def sample_stratified(self, num_samples: int) -> "TaskSet":
         """
         Return a new TaskSet with `num_samples` tasks, weighted so that

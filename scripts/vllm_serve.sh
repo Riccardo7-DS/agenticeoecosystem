@@ -27,7 +27,7 @@ done
 
 case "$MODEL_NAME" in
   eve)
-    MODEL_PATH="$MODEL_BASE/eve_hug/EVE-Instruct"
+    MODEL_PATH="eve-esa/EVE-Instruct"  # public on HuggingFace, no local access needed
     SERVED_NAME="EVE-Instruct"
     ;;
   mistral)

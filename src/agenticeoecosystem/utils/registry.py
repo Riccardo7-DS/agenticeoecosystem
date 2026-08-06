@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class ModelConfig:
     model_id: str               # HuggingFace model ID
     tool_call_parser: str       # vLLM parser name
+    reasoning_parser: str | None = None  # vLLM --reasoning-parser value, if the model emits <think>-style traces
     chat_template: str | None = None  # path to custom jinja template, if needed
     extra_args: list[str] = field(default_factory=list)
     dtype: str = "bfloat16"
@@ -53,6 +54,25 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         model_id="Qwen/Qwen3-32B",
         tool_call_parser="hermes",
     ),
+    # Qwen3.6 — newer generation than Qwen3 above; its own model card's
+    # recommended vllm serve command uses tool_call_parser="qwen3_coder"
+    # (not a mismatch despite the name — this generation was trained on
+    # that exact tool-call format) plus reasoning_parser="qwen3" for its
+    # <think> traces. Dense 27B, BF16 ~54 GiB — exceeds a single A6000.
+    "qwen3.6-27b": ModelConfig(
+        model_id="Qwen/Qwen3.6-27B",
+        tool_call_parser="qwen3_coder",
+        reasoning_parser="qwen3",
+        extra_args=["--tensor-parallel-size", "2"],
+    ),
+    # MoE — active params only 3B, total 35B, BF16 ~70 GiB total weights —
+    # exceeds a single A6000 despite the small active-param count.
+    "qwen3.6-35b-a3b": ModelConfig(
+        model_id="Qwen/Qwen3.6-35B-A3B",
+        tool_call_parser="qwen3_coder",
+        reasoning_parser="qwen3",
+        extra_args=["--tensor-parallel-size", "2"],
+    ),
     # Llama family — gated: accept licence at huggingface.co/meta-llama/<model>
     "llama3.1-8b": ModelConfig(
         model_id="meta-llama/Llama-3.1-8B-Instruct",
@@ -79,11 +99,11 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
     ),
     # Gemma 4 — dense 31B, Apache 2.0 (ungated, unlike the Gemma 3 licence above).
     # BF16 ~62 GiB — exceeds a single A6000 (46 GiB); split across both GPUs.
-    # Installed vLLM (0.16.0) has no dedicated 'gemma4' tool parser yet — reuse
-    # 'hermes', same workaround as the Gemma 3 entries.
+    # vLLM 0.19.0+ ships a dedicated 'gemma4' tool parser for this exact model
+    # family (vllm/tool_parsers/gemma4_tool_parser.py) — no more 'hermes' workaround.
     "gemma4-31b": ModelConfig(
         model_id="google/gemma-4-31B-it",
-        tool_call_parser="hermes",
+        tool_call_parser="gemma4",
         extra_args=["--tensor-parallel-size", "2"],
     ),
     # DeepSeek — free, Qwen2.5-14B distilled with R1 reasoning
@@ -129,6 +149,8 @@ def _vllm_cmd(cfg: ModelConfig, host: str, port: int) -> list[str]:
         "--tool-call-parser", cfg.tool_call_parser,
         "--enable-auto-tool-choice",
     ]
+    if cfg.reasoning_parser:
+        cmd += ["--reasoning-parser", cfg.reasoning_parser]
     if cfg.chat_template:
         cmd += ["--chat-template", cfg.chat_template]
     cmd += cfg.extra_args
@@ -204,6 +226,13 @@ def launch_vllm(
     cmd = _vllm_cmd(cfg, host, port)
 
     env = os.environ.copy()
+    # flashinfer-python==0.6.14's sampling kernel fails to JIT-compile against
+    # nvidia-cuda-cccl==13.3.3.4.1's CUB headers on this vLLM/torch/CUDA
+    # combo (compute capability 8.6) — "no member FlagHeads". Model-agnostic:
+    # any model hits this on first real inference unless disabled. Default
+    # off for every local launch; still overridable via extra_env or an
+    # already-exported env var if the upstream mismatch ever gets fixed.
+    env.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
     if extra_env:
         env.update(extra_env)
     hf_token = os.getenv(hf_token_env, "")

@@ -45,6 +45,14 @@ fi
 
 echo "Serving $SERVED_NAME from $MODEL_PATH"
 
+# flashinfer-python==0.6.14's sampling kernel fails to JIT-compile against
+# nvidia-cuda-cccl==13.3.3.4.1's CUB headers on this vLLM/torch/CUDA combo
+# (compute capability 8.6) — "no member FlagHeads". Model-agnostic: any
+# model hits this on first real inference unless disabled. Respects an
+# already-exported value, so this can still be re-enabled once the upstream
+# mismatch is fixed.
+export VLLM_USE_FLASHINFER_SAMPLER="${VLLM_USE_FLASHINFER_SAMPLER:-0}"
+
 uv run python -m vllm.entrypoints.openai.api_server \
   --model "$MODEL_PATH" \
   --port "$PORT" \

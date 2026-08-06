@@ -46,7 +46,7 @@ def check_llm_endpoint(
         return False
 
 
-async def check_mcp_toolset(name: str, toolset, timeout: float = 30.0) -> bool:
+async def check_mcp_toolset(name: str, toolset, timeout: float = 60.0) -> bool:
     """Confirm an MCP stdio server responds, via ADK's own McpToolset.get_tools()
     rather than a hand-rolled session. Non-fatal — never raises."""
     try:

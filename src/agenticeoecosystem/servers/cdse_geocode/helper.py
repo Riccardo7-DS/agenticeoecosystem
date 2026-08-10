@@ -33,6 +33,7 @@ from __future__ import annotations
 import base64
 import io
 import logging
+import math
 import os
 import threading
 import time
@@ -50,6 +51,34 @@ import os, requests
 
 
 _PROCESS_URL = "https://sh.dataspace.copernicus.eu/process/v1"
+
+# Sentinel Hub Process API hard limits (same for every collection this module
+# talks to). Checked locally in _fetch() before the HTTP call so a violation
+# comes back as an immediate, actionable error instead of a guaranteed-to-fail
+# round trip followed by Sentinel Hub's own late 400 response.
+_MAX_OUTPUT_PX = 2500
+_MAX_METERS_PER_PIXEL = 1500.0
+_METERS_PER_DEGREE_LAT = 110_540.0
+_METERS_PER_DEGREE_LON_AT_EQUATOR = 111_320.0
+
+
+def _check_output_limits(bbox: list[float], width: int, height: int) -> None:
+    if width > _MAX_OUTPUT_PX or height > _MAX_OUTPUT_PX:
+        raise ValueError(
+            f"width/height must each be <= {_MAX_OUTPUT_PX} px "
+            f"(got {width}x{height}). Reduce width/height."
+        )
+    min_lon, min_lat, max_lon, max_lat = bbox
+    mean_lat_rad = math.radians((min_lat + max_lat) / 2.0)
+    lon_span_m = (max_lon - min_lon) * _METERS_PER_DEGREE_LON_AT_EQUATOR * math.cos(mean_lat_rad)
+    lat_span_m = (max_lat - min_lat) * _METERS_PER_DEGREE_LAT
+    gsd = max(abs(lon_span_m) / width, abs(lat_span_m) / height)
+    if gsd > _MAX_METERS_PER_PIXEL:
+        raise ValueError(
+            f"Requested output of ~{gsd:.2f} meters/pixel exceeds the "
+            f"{_MAX_METERS_PER_PIXEL:.2f} m/pixel limit for this bbox at "
+            f"{width}x{height} px. Increase width/height or shrink the bbox."
+        )
 
 def _get_token() -> str:
 
@@ -133,6 +162,8 @@ def _fetch(
         )
         max_lon += 360
         bbox = [min_lon, min_lat, max_lon, max_lat]
+
+    _check_output_limits(bbox, width, height)
 
     body = {
         "input": {

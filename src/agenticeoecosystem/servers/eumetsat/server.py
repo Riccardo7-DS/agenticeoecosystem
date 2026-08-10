@@ -210,6 +210,11 @@ def search_eumetsat_products(
 
     Use this to check how many products a request would match before calling
     download_eumetsat_product, which refuses ranges above the per-call limit.
+    Geostationary products (MTG FCI, MSG SEVIRI) repeat every 5-15 minutes, so
+    a wide date range can match far more products than are returned here — the
+    listing itself is capped at MAX_PRODUCTS_PER_CALL entries; check "count"
+    (always accurate) and narrow start_date/end_date or add a bbox if it's
+    larger than the number of entries actually returned.
 
     Args:
         product: product key from list_eumetsat_products, e.g. "MTG-FCI-L1C-FDHSI".
@@ -218,12 +223,24 @@ def search_eumetsat_products(
               degrees. Omit for the full disk.
 
     Returns:
-        JSON with "count" and a list of matching {"identifier", "date"} entries.
+        JSON with the true "count", a "products" list of up to
+        MAX_PRODUCTS_PER_CALL matching {"identifier", "date"} entries, and
+        "truncated" (true if "count" exceeds how many "products" are listed).
     """
     downloader = _new_downloader(product)
     result = downloader.search(
         start_time=start_date, end_time=end_date, bounding_box=_wsen_to_nswe(bbox)
     )
+    products = result.get("products", [])
+    truncated = len(products) > MAX_PRODUCTS_PER_CALL
+    result["products"] = products[:MAX_PRODUCTS_PER_CALL]
+    result["truncated"] = truncated
+    if truncated:
+        result["note"] = (
+            f"Only the first {MAX_PRODUCTS_PER_CALL} of {result.get('count', len(products))} "
+            "matching products are listed. Narrow start_date/end_date or add a bbox "
+            "to see the rest."
+        )
     return json.dumps(result, indent=2)
 
 

@@ -54,6 +54,22 @@ keeps the two patches decoupled regardless of apply() order: a tool's
 internal retry-with-backoff loop happens entirely inside one run_async
 call, so it is counted once, not once per internal retry.
 
+THIRD MECHANISM — REPEATED ERRORS WITH VARYING ARGUMENTS:
+The 2026-08-07 09:22 gemma4-31b run (generate_Gemma4-31B_[multi-no-scope]
+..._092230.log) crashed with litellm.ContextWindowExceededError after the
+cdse_agent sub-agent made 7 consecutive failed fetch_sentinel1_grd calls
+(bbox tweaked, then height/width added, then polarization swapped, then
+custom_bands swapped) chasing a single Sentinel Hub 400 error, plus a
+similar shorter run against fetch_sentinel2. Each attempt used different
+arguments, so the identical-args counter above never triggered, but every
+attempt's error text stayed in history, and the accumulated conversation
+eventually exceeded the model's 32768-token context window and aborted
+the whole task. To catch this, the same McpTool.run_async patch also
+counts *errors* (isError result) per tool name alone, ignoring arguments;
+once a single tool's error count exceeds _ERROR_COUNT_MAX within a task,
+OrphanedToolCallStormError is raised instead of letting the model keep
+trying new argument combinations.
+
 USAGE:
     from agenticeoecosystem.agents.subagents.orphaned_tool_call_guard import apply as apply_orphan_guard
     apply_orphan_guard()
@@ -75,9 +91,11 @@ _TARGET_LOGGER_NAME = "google_adk.google.adk.models.lite_llm"
 _WARNING_PREFIX = "Missing tool results for tool_call_id(s):"
 _MAX_RETRIES = 10
 _REPEAT_CALL_MAX = 5
+_ERROR_COUNT_MAX = 4
 
 _counts: dict[str, int] = {}
 _call_counts: dict[tuple, int] = {}
+_error_counts: dict[str, int] = {}
 _filter_instance: "_OrphanedToolCallFilter | None" = None
 _original_mcp_run_async = McpTool.run_async
 _mcp_patch_applied = False
@@ -99,6 +117,10 @@ def _make_call_key(tool_name: str, args: dict) -> tuple:
     return (tool_name, normalized)
 
 
+def _is_error_result(result) -> bool:
+    return isinstance(result, dict) and bool(result.get("isError"))
+
+
 async def _counting_run_async(self, *, args, tool_context):
     key = _make_call_key(self.name, args)
     count = _call_counts[key] = _call_counts.get(key, 0) + 1
@@ -109,7 +131,21 @@ async def _counting_run_async(self, *, args, tool_context):
             "without the agent changing its approach — aborting this task "
             "instead of continuing the loop."
         )
-    return await _original_mcp_run_async(self, args=args, tool_context=tool_context)
+
+    result = await _original_mcp_run_async(self, args=args, tool_context=tool_context)
+
+    if _is_error_result(result):
+        error_count = _error_counts[self.name] = _error_counts.get(self.name, 0) + 1
+        if error_count > _ERROR_COUNT_MAX:
+            raise OrphanedToolCallStormError(
+                f"tool {self.name!r} has failed {error_count} times in this "
+                f"task (limit {_ERROR_COUNT_MAX}), most recently with "
+                f"arguments {args!r} — aborting this task instead of letting "
+                "the agent keep trying new argument combinations and "
+                "growing the context unboundedly."
+            )
+
+    return result
 
 
 class _OrphanedToolCallFilter(logging.Filter):
@@ -132,9 +168,11 @@ class _OrphanedToolCallFilter(logging.Filter):
 
 
 def reset() -> None:
-    """Clear per-id and per-(tool, args) counts. Call at the start of each new task."""
+    """Clear per-id, per-(tool, args), and per-tool-error counts. Call at the
+    start of each new task."""
     _counts.clear()
     _call_counts.clear()
+    _error_counts.clear()
 
 
 def apply() -> None:

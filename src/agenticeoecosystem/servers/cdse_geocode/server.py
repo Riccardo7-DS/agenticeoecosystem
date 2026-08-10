@@ -167,7 +167,10 @@ def _to_content(result: dict, return_image: bool = False) -> list[ImageContent |
         "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
         "linear backscatter values per polarisation (instead of an 8-bit "
         "display JPEG with dB scaling/RGB compositing) for feeding into "
-        "raster analysis tools (metadata_raster, raster_band_statistics, ...)."
+        "raster analysis tools (metadata_raster, raster_band_statistics, ...). "
+        "Hard output limits: width/height <= 2500 px each, and ground sample "
+        "distance (bbox size / width or height) <= ~1500 m/pixel — for a large "
+        "bbox, raise width/height accordingly or shrink the bbox."
     ),
 )
 def tool_sentinel1_grd(
@@ -177,8 +180,8 @@ def tool_sentinel1_grd(
     preset: Annotated[
         Optional[str],
         "One of: vv_vh_rgb | hh_hv_rgb "
-        "Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "Omit if supplying custom_bands or evalscript. Defaults to vv_vh_rgb.",
+    ] = "vv_vh_rgb",
     custom_bands: Annotated[
         Optional[list[str]],
         "Explicit polarisation list, e.g. ['VV'] or ['VV','VH']. "
@@ -266,7 +269,10 @@ def tool_sentinel1_grd(
         "Note: no atmospheric correction — use L2A for surface reflectance. "
         "Set as_geotiff=True to get a georeferenced GeoTIFF with raw FLOAT32 "
         "values (instead of an 8-bit display JPEG) for feeding into raster "
-        "analysis tools (metadata_raster, raster_band_statistics, reproject_raster, ...)."
+        "analysis tools (metadata_raster, raster_band_statistics, reproject_raster, ...). "
+        "Hard output limits: width/height <= 2500 px each, and ground sample "
+        "distance (bbox size / width or height) <= ~1500 m/pixel — for a large "
+        "bbox, raise width/height accordingly or shrink the bbox."
     ),
 )
 def tool_sentinel2(
@@ -276,8 +282,8 @@ def tool_sentinel2(
     collection: Annotated[str, "The collection of Sentinel-2 L2A or L1C"],
     preset: Annotated[
         Optional[str],
-        "true_color. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "true_color. Omit if supplying custom_bands or evalscript. Defaults to true_color.",
+    ] = "true_color",
     custom_bands: Annotated[
         Optional[list[str]],
         "Band list, e.g. ['B08','B04','B03'] for NIR false colour. "
@@ -356,8 +362,9 @@ def tool_sentinel3_olci(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "true_color or otci. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "true_color or otci. Omit if supplying custom_bands or evalscript. "
+        "Defaults to true_color.",
+    ] = "true_color",
     custom_bands: Annotated[
         Optional[list[str]],
         "Band list from B01–B21, e.g. ['B17','B08','B04'] for NIR false colour.",
@@ -421,8 +428,9 @@ def tool_sentinel3_slstr(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "false_color or ndvi. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "false_color or ndvi. Omit if supplying custom_bands or evalscript. "
+        "Defaults to false_color.",
+    ] = "false_color",
     custom_bands: Annotated[
         Optional[list[str]],
         "Bands without view suffix, e.g. ['S5','S3','S1']. "
@@ -485,8 +493,9 @@ def tool_sentinel3_syn_l2(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "true_color or ndvi. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "true_color or ndvi. Omit if supplying custom_bands or evalscript. "
+        "Defaults to true_color.",
+    ] = "true_color",
     custom_bands: Annotated[
         Optional[list[str]],
         "Band list, e.g. ['B17','B08','B04'] for NIR false colour.",
@@ -550,8 +559,8 @@ def tool_sentinel5p_l2(
     preset: Annotated[
         Optional[str],
         "no2 | co | o3 | so2 | ch4 | hcho | aer_ai_340_380 | cloud_fraction. "
-        "Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "Omit if supplying custom_bands or evalscript. Defaults to no2.",
+    ] = "no2",
     custom_bands: Annotated[
         Optional[list[str]],
         "Single S5P band name list, e.g. ['NO2'].",
@@ -617,8 +626,8 @@ def tool_landsat_ot_l1(
     end_date: Annotated[str, "End of date range, YYYY-MM-DD"],
     preset: Annotated[
         Optional[str],
-        "true_color. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "true_color. Omit if supplying custom_bands or evalscript. Defaults to true_color.",
+    ] = "true_color",
     custom_bands: Annotated[
         Optional[list[str]],
         "Band list, e.g. ['B05','B04','B03'] for NIR false colour.",
@@ -689,8 +698,9 @@ def tool_dem(
     bbox: Annotated[list[float], "Bounding box [west, south, east, north] in WGS-84"],
     preset: Annotated[
         Optional[str],
-        "elevation_grey | elevation_color. Omit if supplying custom_bands or evalscript.",
-    ] = None,
+        "elevation_grey | elevation_color. Omit if supplying custom_bands or evalscript. "
+        "Defaults to elevation_grey.",
+    ] = "elevation_grey",
     custom_bands: Annotated[
         Optional[list[str]],
         "Typically ['DEM'] for raw elevation values.",

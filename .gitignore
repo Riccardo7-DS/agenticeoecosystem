@@ -52,5 +52,6 @@ docs/eo_dashboard_narratives.mk
 docs/MOOC.jsonl
 docs/benchmark_dataset_description.md
 docs/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
+docs/gemma4_benchmark_run_issues_2026-08-07.md
 
 scripts/vlm.sh

@@ -9,4 +9,4 @@ MODEL_DIR = ROOT_DIR / "models"
 # Folder paths
 # ---------------------------------------------------------------------------
 TASKS_FOLDER = DATA_DIR / "tasks"
-GEOBENCH_RESULTS = ROOT_DIR / "output" / "geobenchX"
+GEOBENCH_RESULTS = ROOT_DIR / "output" / "ESAEOBench"

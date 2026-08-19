@@ -3,8 +3,8 @@
 build_table.py — Aggregate all results_*.json into a comparison CSV/HTML table.
 
 Usage:
-    python scripts/build_table.py --output-dir output/geobenchX
-    python scripts/build_table.py --output-dir output/geobenchX --table-filename my_comparison
+    python scripts/build_table.py --output-dir output/ESAEOBench
+    python scripts/build_table.py --output-dir output/ESAEOBench --table-filename my_comparison
 """
 
 import argparse

@@ -3,7 +3,7 @@ Verification run — EVE-Instruct on all runnable tasks (or a curated subset).
 
 Purpose: confirm EVE can call every tool type and chain them correctly.
 No LLM evaluators are run; inspect generated solutions in
-output/geobenchX/results_EVE-Instruct.json.
+output/ESAEOBench/results_EVE-Instruct.json.
 
 Run with:
   python tests/benchmarking.py              # curated subset (default)

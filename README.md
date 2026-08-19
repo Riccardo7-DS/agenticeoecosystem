@@ -109,7 +109,7 @@ agenticeoecosystem/
 ├── tests/
 │   └── benchmarking.py ← benchmark entry point
 ├── data/tasks/         ← task JSON files
-└── output/geobenchX/   ← benchmark results (CSV, HTML, JSON)
+└── output/ESAEOBench/   ← benchmark results (CSV, HTML, JSON)
 ```
 
 ---
@@ -184,7 +184,16 @@ The client registers up to nine MCP servers at startup, configured in [`mcp_conf
 
 ### EO Dashboard
 
-No setup required. The server fetches data from public ESA EO Dashboard endpoints and exposes tools for browsing narratives, themes, and STAC collections.
+No setup required. The server fetches data from public ESA EO Dashboard endpoints and exposes tools for browsing narratives, themes, and STAC collections. It starts automatically as a stdio subprocess with the client.
+
+**Exposing it externally** (e.g. as an MCP connector on the ASK ESA / Mistral platform): run it in streamable-HTTP mode instead, via the NEOHPC gateway — same pattern as EOSS GraphRAG below.
+
+```bash
+cd agenticeoecosystem
+screen -dmS eodashboard-http bash -c 'source .venv/bin/activate && python src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py --transport streamable-http --port 13000; exec bash'
+```
+
+Connector URL: `https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/13000/mcp`, same gateway Basic Auth credential as GraphRAG below. `--transport` defaults to `stdio`, so the local client's usage (`mcp_config.py`) is unaffected by running this in parallel.
 
 ### Google Earth Engine (GEE)
 
@@ -239,6 +248,15 @@ If the server is unreachable or the env vars are unset, the EOSS GraphRAG tools 
 ### EO MOOCs
 
 Provides semantic search over Earth Observation MOOC (online course) transcripts via the `search_moocs` tool. The server uses a **local, file-based Qdrant store** bundled in `src/agenticeoecosystem/servers/moocs/qdrant_storage/` — no cloud service or credentials required. On first launch it embeds and indexes the bundled `data/MOOC.jsonl`; subsequent starts reuse the existing collection. It starts automatically as a stdio subprocess with the client.
+
+**Exposing it externally** (e.g. as an MCP connector on the ASK ESA / Mistral platform): run it in HTTP mode via the NEOHPC gateway. The local Qdrant store takes an exclusive file lock, so a second process can't share the same `qdrant_storage/` directory as the stdio instance above — point it at a separate `--storage-path` instead (auto-ingested on first run, ~30s; instant afterwards):
+
+```bash
+cd agenticeoecosystem
+screen -dmS moocs-http bash -c 'source .venv/bin/activate && python src/agenticeoecosystem/servers/moocs/server.py --transport http --port 14000 --storage-path src/agenticeoecosystem/servers/moocs/qdrant_storage_http; exec bash'
+```
+
+Connector URL: `https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/14000/mcp`, same gateway Basic Auth credential as EOSS GraphRAG above.
 
 ### ArXiv
 
@@ -297,7 +315,7 @@ The evaluation framework lives in `src/agenticeoecosystem/evaluation/` and the e
 For each generator model:
 1. **Generate** — run every task through the agent pipeline and record the tool-call sequence (Solution)
 2. **Evaluate** — for each evaluator model, compare the generated solution against the reference solution and assign a score (0 = no match, 1 = partial, 2 = full match)
-3. **Save** — write per-model results to `output/geobenchX/` and a summary table as CSV and HTML
+3. **Save** — write per-model results to `output/ESAEOBench/` and a summary table as CSV and HTML
 
 ### Task format
 
@@ -306,7 +324,7 @@ Tasks are stored as JSON files in `data/tasks/` and loaded as a `TaskSet`:
 ```python
 from agenticeoecosystem.evaluation.dataclasses import TaskSet
 
-tasks = TaskSet.read_from_file("eo_benchmark_tasks.json")
+tasks = TaskSet.read_from_file("benchmark_tasks.json")
 ```
 
 Each `Task` has:
@@ -337,6 +355,9 @@ Generator and evaluator models are defined in [`src/agenticeoecosystem/utils/reg
 | `phi4-mini` | microsoft/Phi-4-mini-instruct | free |
 | `nemotron-2-12b` | nvidia/NVIDIA-Nemotron-Nano-12B-v2 | free |
 | `gemma3-12b` | google/gemma-3-12b-it | gated |
+| `gemma4-31b` | google/gemma-4-31B-it | free |
+| `qwen3.6-27b` | Qwen/Qwen3.6-27B | free |
+| `qwen3.6-35b-a3b` | Qwen/Qwen3.6-35B-A3B (MoE, 3B active) | free |
 | `mistral-small-24b` | mistralai/Mistral-Small-3.1-24B-Instruct-2503 | gated |
 | `llama3.1-8b` | meta-llama/Llama-3.1-8B-Instruct | gated |
 | `llama3.2-3b` | meta-llama/Llama-3.2-3B-Instruct | gated |
@@ -353,6 +374,53 @@ download_model("qwen3-14b")               # free model
 download_model("gemma3-12b")              # gated — needs HF_TOKEN
 ```
 
+### Running a single generator model (CLI)
+
+For a one-off run against a single model — e.g. comparing a new candidate LLM against EVE — use `scripts/run_generate.py` directly instead of editing `tests/benchmarking.py`. Each invocation is a fresh process: for `--provider vllm` it launches its own vLLM server (reusing one already serving the same model if present) and tears it down on exit unless `--keep-vllm-alive` is passed; for `--provider eve` it talks to `EVE_ENDPOINT` (`.env`) directly and never touches vLLM.
+
+```bash
+# EVE-Instruct — provider="eve", no vLLM server launched by this process
+uv run python scripts/run_generate.py \
+  --label       "EVE-Instruct" \
+  --model       "EVE-Instruct" \
+  --provider    "eve" \
+  --pipeline    "multi" \
+  --tasks-file  benchmark_tasks.json \
+  --task-labels "Tool Grounding,Sequential Reasoning,Cross-agent Synthesis,Scope Awareness" \
+  --output-dir  "output/ESAEOBench/run_$(date +%Y%m%d_%H%M%S)" \
+  --task-timeout 2400
+
+# A local candidate model — provider="vllm", auto-launches on port 8000
+uv run python scripts/run_generate.py \
+  --label       "Qwen3.6-27B" \
+  --model       "qwen3.6-27b" \
+  --provider    "vllm" \
+  --pipeline    "multi" \
+  --tasks-file  benchmark_tasks.json \
+  --task-labels "Tool Grounding,Sequential Reasoning,Cross-agent Synthesis,Scope Awareness" \
+  --output-dir  "output/ESAEOBench/run_$(date +%Y%m%d_%H%M%S)" \
+  --vllm-startup-timeout 1800 \
+  --task-timeout 2400
+```
+
+Key flags:
+
+| Flag | Description |
+|---|---|
+| `--label` | Human-readable name, used in the output filename (`results_<label>.json`) |
+| `--model` | Registry key (for `vllm`) or model identifier (for `eve`) |
+| `--provider` | `eve`, `vllm`, `openai`, … |
+| `--pipeline` | `multi` (google-adk orchestrator), `single` (one LangGraph agent), or `multi_legacy` |
+| `--tasks-file` | One or more task JSON filenames from `data/tasks/` (merged if multiple) |
+| `--task-labels` / `--task-ids` | Filter to specific categories or task IDs |
+| `--output-dir` | Directory for `results_<label>.json` |
+| `--vllm-startup-timeout` | Seconds to wait for the vLLM server's `/health` (only relevant for `--provider vllm`) |
+| `--task-timeout` | Max wall-clock seconds per task before it's abandoned and the run moves on |
+| `--skip-solved` | Skip tasks that already have a `generated_solution` in the loaded file |
+| `--keep-vllm-alive` | Don't tear down the vLLM server this process launched, so a following call for the same model can reuse it |
+
+**Note:** the `MODEL_REGISTRY` in `registry.py` has no entry for EVE — always use `--provider eve` for it, never `--provider vllm`.
+
 ### Running a comparison
 
 Edit `tests/benchmarking.py` to configure which models and tasks to run:
@@ -364,7 +432,7 @@ from agenticeoecosystem.utils.logging import setup_logging
 
 setup_logging(log_file="benchmarking")   # → logs/benchmarking_YYYYMMDD_HHMMSS.log
 
-tasks = TaskSet.read_from_file("eo_benchmark_tasks.json")
+tasks = TaskSet.read_from_file("benchmark_tasks.json")
 selected = tasks.select_by_ids(["TASK_...", "TASK_..."])
 
 runs = [
@@ -411,14 +479,14 @@ Each full `benchmark.sh` run writes to a timestamped subdirectory so results fro
 
 | File | Description |
 |---|---|
-| `output/geobenchX/run_YYYYMMDD_HHMMSS/results_<Label>.json` | Per-model task results with scores |
-| `output/geobenchX/run_YYYYMMDD_HHMMSS/model_comparison.csv` | Summary table (generators × evaluators) |
-| `output/geobenchX/run_YYYYMMDD_HHMMSS/model_comparison.html` | Same table as HTML |
+| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/results_<Label>.json` | Per-model task results with scores |
+| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/model_comparison.csv` | Summary table (generators × evaluators) |
+| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/model_comparison.html` | Same table as HTML |
 | `logs/benchmarking_YYYYMMDD_HHMMSS.log` | Full run log |
 
 To regenerate the comparison table from any archived run:
 ```bash
-python scripts/build_table.py --output-dir output/geobenchX/run_YYYYMMDD_HHMMSS
+python scripts/build_table.py --output-dir output/ESAEOBench/run_YYYYMMDD_HHMMSS
 ```
 
 ### Multi-model bash orchestration

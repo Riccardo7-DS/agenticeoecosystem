@@ -35,7 +35,17 @@ COLLECTION = "esa_moocs"
 EMBED_MODEL = "nasa-impact/nasa-smd-ibm-st-v2"
 RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
-mcp = FastMCP("ESA MOOCs RAG", host="0.0.0.0", port=8000, stateless_http=True)
+mcp = FastMCP(
+    "ESA MOOCs RAG",
+    host="0.0.0.0",
+    port=8000,
+    stateless_http=True,
+    instructions=(
+        "Tools for semantic search over Earth Observation MOOC (online course) "
+        "transcripts. Use this to find educational content explaining EO concepts, "
+        "methods, and applications as covered in ESA's online courses."
+    ),
+)
 
 _embedder = None
 _reranker = None
@@ -60,11 +70,14 @@ def _get_reranker():
     return _reranker
 
 
+_storage_path = _SERVER_DIR / "qdrant_storage"
+
+
 def _get_qdrant():
     global _qdrant
     if _qdrant is None:
         from qdrant_client import QdrantClient
-        _qdrant = QdrantClient(path=str(_SERVER_DIR / "qdrant_storage"))
+        _qdrant = QdrantClient(path=str(_storage_path))
     return _qdrant
 
 
@@ -82,7 +95,7 @@ def _ensure_ingested() -> None:
 
     logger.info("Collection '%s' not found or empty — running ingestion", COLLECTION)
     import ingest
-    ingest.run(_SERVER_DIR)
+    ingest.run(_SERVER_DIR, client)
 
 
 def _retrieve(query: str, top_k: int = 20) -> list[tuple[float, dict]]:
@@ -146,7 +159,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ESA MOOCs RAG MCP Server")
     parser.add_argument("--transport", choices=["stdio", "http"], default="stdio")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--storage-path", default=None)
     args = parser.parse_args()
+
+    if args.storage_path:
+        _storage_path = Path(args.storage_path)
 
     _ensure_ingested()
 

@@ -21,13 +21,16 @@ EMBED_MODEL = "nasa-impact/nasa-smd-ibm-st-v2"
 VECTOR_DIM = 768
 
 
-def run(server_dir: Path) -> None:
-    from qdrant_client import QdrantClient
+def run(server_dir: Path, client) -> None:
+    """Ingest MOOC.jsonl into `client`'s collection.
+
+    `client` must be an already-open QdrantClient — local-mode Qdrant only
+    allows one open client per storage path, so this never opens its own.
+    """
     from qdrant_client.models import Distance, PointStruct, VectorParams
     from sentence_transformers import SentenceTransformer
 
     data_path = server_dir / "data" / "MOOC.jsonl"
-    storage_path = server_dir / "qdrant_storage"
 
     logger.info("Loading embedding model %s", EMBED_MODEL)
     embedder = SentenceTransformer(EMBED_MODEL)
@@ -40,8 +43,6 @@ def run(server_dir: Path) -> None:
             if line:
                 records.append(json.loads(line))
     logger.info("Loaded %d chunks", len(records))
-
-    client = QdrantClient(path=str(storage_path))
 
     client.recreate_collection(
         collection_name=COLLECTION,
@@ -72,5 +73,9 @@ def run(server_dir: Path) -> None:
 
 
 if __name__ == "__main__":
+    from qdrant_client import QdrantClient
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    run(Path(__file__).resolve().parent)
+    _server_dir = Path(__file__).resolve().parent
+    _client = QdrantClient(path=str(_server_dir / "qdrant_storage"))
+    run(_server_dir, _client)

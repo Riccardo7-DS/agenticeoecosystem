@@ -1,3 +1,4 @@
+import argparse
 import io
 import logging
 from urllib.parse import urljoin
@@ -5,9 +6,18 @@ from urllib.parse import urljoin
 import pyarrow.parquet as pq
 import pystac
 import requests
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
-mcp = FastMCP("EODashboard MCP Server")
+mcp = FastMCP(
+    name="EODashboard MCP Server",
+    instructions=(
+        "Tools for browsing and searching the ESA EO Dashboard: narratives "
+        "(short stories about environmental events and phenomena observed from "
+        "space), themes, and the STAC-cataloged Earth Observation indicator "
+        "collections referenced by those narratives. Use these tools to find "
+        "relevant EO Dashboard content and the satellite data collections behind it."
+    ),
+)
 
 # Configuration
 NARRATIVES_URL = (
@@ -418,5 +428,23 @@ def find_narratives_for_indicator(indicator_code: str) -> str:
     return response
 
 
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--transport", default="stdio", choices=["stdio", "streamable-http"])
+    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=13000)
+    args = parser.parse_args()
+
+    if args.transport == "stdio":
+        mcp.run()
+        return
+
+    print(f"Starting EODashboard MCP server on {args.host}:{args.port}")
+    print(
+        f"Mistral connector URL: https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/{args.port}/mcp\n"
+    )
+    mcp.run(transport="streamable-http", host=args.host, port=args.port)
+
+
 if __name__ == "__main__":
-    mcp.run() 
+    main()

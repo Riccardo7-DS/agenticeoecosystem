@@ -32,6 +32,7 @@ def _basic_auth_header(username_env: str = "EVE_USERNAME",
 
 _MODEL_NAME = os.getenv("MULTI_AGENT_MODEL", "EVE-Instruct")
 _PROVIDER = os.getenv("MULTI_AGENT_PROVIDER", "eve")
+_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", "1024"))
 
 if _PROVIDER == "vllm":
     # Local vLLM server (see utils.registry.launch_vllm) — same OpenAI-compatible
@@ -42,8 +43,20 @@ if _PROVIDER == "vllm":
     _model_id = MODEL_REGISTRY[_MODEL_NAME].model_id if _MODEL_NAME in MODEL_REGISTRY else _MODEL_NAME
     LLM_BASE_URL = f"http://{_host}:{_port}/v1"
     LLM_AUTH_HEADERS: dict | None = None
-    llm = LiteLlm(model=f'openai/{_model_id}', base_url=LLM_BASE_URL, api_key="EMPTY", temperature=0, max_tokens=1024)
+    llm = LiteLlm(model=f'openai/{_model_id}', base_url=LLM_BASE_URL, api_key="EMPTY", temperature=0, max_tokens=_MAX_TOKENS)
+elif _PROVIDER == "openai":
+    # Real OpenAI API — no gateway, no Basic Auth, real billing.
+    LLM_BASE_URL = "https://api.openai.com/v1"
+    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY', '')}"}
+    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', api_key=os.getenv("OPENAI_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
+elif _PROVIDER == "openrouter":
+    # OpenRouter — _MODEL_NAME must include the vendor prefix it expects,
+    # e.g. "openai/gpt-5.4". Real billing.
+    LLM_BASE_URL = "https://openrouter.ai/api/v1"
+    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY', '')}"}
+    llm = LiteLlm(model=f'openrouter/{_MODEL_NAME}', api_key=os.getenv("OPENROUTER_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
 else:
+    # Self-hosted vLLM behind the EVE gateway (Basic Auth), e.g. EVE-Instruct or Mistral.
     LLM_BASE_URL = os.getenv("EVE_ENDPOINT")
     LLM_AUTH_HEADERS = _basic_auth_header()
-    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=LLM_BASE_URL, headers=LLM_AUTH_HEADERS, api_key="EMPTY", temperature=0, max_tokens=1024)
+    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=LLM_BASE_URL, headers=LLM_AUTH_HEADERS, api_key="EMPTY", temperature=0, max_tokens=_MAX_TOKENS)

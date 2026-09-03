@@ -123,8 +123,9 @@ def main() -> int:
             agent_models=agent_models,
             task_timeout=args.task_timeout,
         )
-        # Redundant with the intermediate saves inside generate_solutions()
-        # now that output_folder is passed through, but cheap and harmless.
+        # Final save — redundant with the intermediate saves inside
+        # generate_solutions() now that output_folder is passed through,
+        # but cheap, explicit, and harmless.
         tasks.save_to_file(output_filename, folder=str(output_dir))
         logger.info("Results saved → %s/%s  tokens: %d in / %d out",
                     output_dir, output_filename, in_tok, out_tok)

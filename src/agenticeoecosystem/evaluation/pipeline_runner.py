@@ -12,6 +12,7 @@ from typing import Optional
 from tqdm import tqdm
 
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS
+from agenticeoecosystem.utils.pricing import estimate_cost_usd
 from .dataclasses import Solution, Step, TaskSet
 
 logger = logging.getLogger(__name__)
@@ -156,7 +157,8 @@ def generate_solutions(
                            multi-agent system — all sub-agents share whatever
                            model `model` names; model_provider "eve" routes to
                            the EVE gateway, "vllm" routes to a local vLLM
-                           server, any other value falls back to "eve"),
+                           server, "openai"/"openrouter" route to the real,
+                           billed API, any other value falls back to "eve"),
                            "single" (one LangGraph agent, all tools), or
                            "multi_legacy" (older LangGraph supervisor +
                            sub-agents in client.py — superseded by "multi").
@@ -192,11 +194,13 @@ def generate_solutions(
     elif pipeline == "multi":
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='multi' (ADK orchestrator)")
-        if model_provider not in ("eve", "vllm"):
+        if model_provider not in ("eve", "vllm", "openai", "openrouter"):
             logger.warning(
-                "pipeline='multi' only supports provider='eve' (EVE gateway) or "
-                "'vllm' (local server) — ignoring model_provider=%s, falling back "
-                "to 'eve'", model_provider,
+                "pipeline='multi' only supports provider='eve' (internal EVE "
+                "gateway), 'vllm' (local server), 'openai' (real OpenAI API, "
+                "real billing), or 'openrouter' (real OpenRouter API, real "
+                "billing) — ignoring model_provider=%s, falling back to 'eve'",
+                model_provider,
             )
             model_provider = "eve"
         if "agenticeoecosystem.agents.multi_agent" in sys.modules:
@@ -226,6 +230,7 @@ def generate_solutions(
 
     total_input = 0
     total_output = 0
+    total_cost = estimate_cost_usd(model, 0, 0)  # None if `model` has no known rate card
 
     for i, task in enumerate(tqdm(tasks, desc="Generating solutions"), 1):
         logger.info("[%d/%d] Task %s: %s", i, n_total, task.task_ID, task.task_text[:80])
@@ -243,10 +248,19 @@ def generate_solutions(
             task.generated_solution_output_tokens = out_tok
             total_input += inp_tok
             total_output += out_tok
-            logger.info(
-                "  → Done in %.1fs — %d step(s)  tokens: %d in / %d out\n%s",
-                elapsed, len(solution), inp_tok, out_tok, str(solution),
-            )
+            task_cost = estimate_cost_usd(model, inp_tok, out_tok)
+            if task_cost is not None:
+                total_cost += task_cost
+                logger.info(
+                    "  → Done in %.1fs — %d step(s)  tokens: %d in / %d out  "
+                    "cost: $%.4f (running total: $%.2f)\n%s",
+                    elapsed, len(solution), inp_tok, out_tok, task_cost, total_cost, str(solution),
+                )
+            else:
+                logger.info(
+                    "  → Done in %.1fs — %d step(s)  tokens: %d in / %d out\n%s",
+                    elapsed, len(solution), inp_tok, out_tok, str(solution),
+                )
         except Exception as e:
             logger.error("  → ERROR on task %s: %s", task.task_ID, e, exc_info=True)
 
@@ -259,16 +273,19 @@ def generate_solutions(
 
     tasks.metadata["total_input_tokens"] = total_input
     tasks.metadata["total_output_tokens"] = total_output
+    if total_cost is not None:
+        tasks.metadata["total_cost_usd"] = round(total_cost, 4)
 
     if output_filename:
         tasks.save_to_file(output_filename, folder=_save_folder)
 
     attempted = sum(1 for t in tasks if t.generated_solution is not None)
     degraded = sum(1 for t in tasks if ended_in_error(t.generated_solution))
+    cost_str = f"  total cost: ${total_cost:.2f}" if total_cost is not None else ""
     logger.info(
         "Generation complete — attempted %d/%d (%d ended in a tool error, "
-        "not real solves)  total tokens: %d in / %d out",
-        attempted, n_total, degraded, total_input, total_output,
+        "not real solves)  total tokens: %d in / %d out%s",
+        attempted, n_total, degraded, total_input, total_output, cost_str,
     )
 
     _write_run_summary(

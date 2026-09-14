@@ -246,9 +246,34 @@ runner = Runner(agent=root, # The agent we want to run
 logger.info("Runner created for agent '%s'.", runner.agent.name)
 
 import json
+import re
 import uuid
 
 from google.genai import types  # adjust import to match your actual SDK path
+
+
+# Some models (observed on gemma4-31b served via vLLM — see the "gemma4-31b"
+# entry in utils/registry.py, which has no reasoning_parser configured
+# because no vLLM-registered parser matches this model's channel-tag shape)
+# leak a malformed reasoning/"thought"-channel marker as a literal prefix on
+# the final assistant text instead of it being split out server-side, e.g.:
+#   "<|channel>thought\n<channel|>The available themes are: ..."
+# vLLM's real harmony-style channel format is "<|channel|>NAME<|message|>",
+# so this is already a mangled/partial token sequence that leaked through as
+# plain text rather than a normal special token — no --reasoning-parser flag
+# reliably strips it. Strip it defensively here instead, so it never lands in
+# a recorded final_answer.
+_LEAKED_CHANNEL_PREFIX_RE = re.compile(
+    r"^\s*<\|?channel\|?>\s*[\w-]*\s*\n?\s*<\s*channel\|?>\s*",
+    re.IGNORECASE,
+)
+
+
+def _strip_leaked_channel_marker(text: str) -> str:
+    """Remove a leaked reasoning-channel marker prefix, if present."""
+    if not text:
+        return text
+    return _LEAKED_CHANNEL_PREFIX_RE.sub("", text, count=1)
 
 
 def _extract_final_text(event) -> str | None:
@@ -262,7 +287,7 @@ def _extract_final_text(event) -> str | None:
     for part in event.content.parts:
         text = getattr(part, "text", None)
         if text:
-            return text
+            return _strip_leaked_channel_marker(text)
     return None
 
 
@@ -441,7 +466,7 @@ async def debug_agent_async(query: str, runner, user_id, session_id):
 async def run_conversation():
     await debug_agent_async(
 
-    "Search arXiv for papers on sea-level rise monitoring using satellite altimetry published since 2024 and return up to 15 results.",
+    "Can you get the most recent imagery related to the forest fires near bordeaux, france",
     runner, USER_ID, SESSION_ID,
     )
 if __name__ == "__main__":

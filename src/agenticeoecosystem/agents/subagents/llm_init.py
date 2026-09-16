@@ -55,6 +55,13 @@ elif _PROVIDER == "openrouter":
     LLM_BASE_URL = "https://openrouter.ai/api/v1"
     LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY', '')}"}
     llm = LiteLlm(model=f'openrouter/{_MODEL_NAME}', api_key=os.getenv("OPENROUTER_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
+elif _PROVIDER == "mistral":
+    # Real Mistral La Plateforme API via LiteLLM's native "mistral/" provider —
+    # _MODEL_NAME is the bare Mistral model slug, e.g. "mistral-large-latest".
+    # Real billing. Override MISTRAL_API_BASE in .env for a non-default endpoint.
+    LLM_BASE_URL = os.getenv("MISTRAL_API_BASE", "https://api.mistral.ai/v1")
+    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('MISTRAL_API_KEY', '')}"}
+    llm = LiteLlm(model=f'mistral/{_MODEL_NAME}', api_key=os.getenv("MISTRAL_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
 else:
     # Self-hosted vLLM behind the EVE gateway (Basic Auth), e.g. EVE-Instruct or Mistral.
     LLM_BASE_URL = os.getenv("EVE_ENDPOINT")

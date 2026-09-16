@@ -62,7 +62,7 @@ toolset  = [McpToolset(
                          server_params = StdioServerParameters(
                              command=_ARXIV_MCP_BIN,
                              args=[
-                                    "--storage-path", f"{ROOT_DIR}/output/arxiv"
+                                    "--storage-path", f"{ROOT_DIR}/tool_output/arxiv"
                                 ]),
                              timeout=300))]
 def _fetch_agent(toolset) -> Optional[Agent]:

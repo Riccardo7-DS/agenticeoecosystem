@@ -63,7 +63,7 @@ KEY = os.getenv("CDS_KEY")
 # ---------------------------------------------------------------------------
 
 OUTPUT_DIR = pathlib.Path(
-    os.environ.get("ERA5_OUTPUT_DIR", str(ROOT_DIR / "output" / "era5"))
+    os.environ.get("ERA5_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "era5"))
 )
 
 

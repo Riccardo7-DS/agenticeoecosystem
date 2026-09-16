@@ -103,7 +103,7 @@ mcp = FastMCP(
 # ---------------------------------------------------------------------------
 
 OUTPUT_DIR = pathlib.Path(
-    os.environ.get("CDSE_OUTPUT_DIR", str(ROOT_DIR / "output" / "cdse_geocode"))
+    os.environ.get("CDSE_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "cdse_geocode"))
 )
 
 

@@ -60,7 +60,7 @@ Callback.active.clear()
 app = FastMCP("eumetsat-mcp")
 
 OUTPUT_DIR = Path(
-    os.environ.get("EUMETSAT_OUTPUT_DIR", str(ROOT_DIR / "output" / "eumetsat"))
+    os.environ.get("EUMETSAT_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "eumetsat"))
 )
 
 # Keep single tool calls fast and bounded — large batch jobs belong in

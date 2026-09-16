@@ -6,6 +6,7 @@ models/
 .env
 script.sh
 output/
+tool_output/
 
 **/__pycache__/
 */pycache__/

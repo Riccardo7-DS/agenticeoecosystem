@@ -157,9 +157,9 @@ def generate_solutions(
                            multi-agent system — all sub-agents share whatever
                            model `model` names; model_provider "eve" routes to
                            the EVE gateway, "vllm" routes to a local vLLM
-                           server, "openai"/"openrouter" route to the real,
-                           billed API, any other value falls back to "eve"),
-                           "single" (one LangGraph agent, all tools), or
+                           server, "openai"/"openrouter"/"mistral" route to the
+                           real, billed API, any other value falls back to
+                           "eve"), "single" (one LangGraph agent, all tools), or
                            "multi_legacy" (older LangGraph supervisor +
                            sub-agents in client.py — superseded by "multi").
         agent_models     : Per-agent model overrides for pipeline="multi_legacy",
@@ -194,12 +194,13 @@ def generate_solutions(
     elif pipeline == "multi":
         if agent_models:
             logger.warning("agent_models is ignored when pipeline='multi' (ADK orchestrator)")
-        if model_provider not in ("eve", "vllm", "openai", "openrouter"):
+        if model_provider not in ("eve", "vllm", "openai", "openrouter", "mistral"):
             logger.warning(
                 "pipeline='multi' only supports provider='eve' (internal EVE "
                 "gateway), 'vllm' (local server), 'openai' (real OpenAI API, "
-                "real billing), or 'openrouter' (real OpenRouter API, real "
-                "billing) — ignoring model_provider=%s, falling back to 'eve'",
+                "real billing), 'openrouter' (real OpenRouter API, real "
+                "billing), or 'mistral' (real Mistral API, real billing) — "
+                "ignoring model_provider=%s, falling back to 'eve'",
                 model_provider,
             )
             model_provider = "eve"

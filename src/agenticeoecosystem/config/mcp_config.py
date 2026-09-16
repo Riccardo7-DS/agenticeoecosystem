@@ -12,6 +12,16 @@ load_dotenv(dotenv_path=ROOT_DIR / ".env")
 
 logger = logging.getLogger(__name__)
 
+# gis-mcp is a third-party package that writes wherever a caller-supplied path
+# resolves relative to its own process CWD, with no ROOT_DIR-aware rooting of
+# its own. Pinning cwd here — the one lever we have over a subprocess we don't
+# control the source of — makes every relative path gis-mcp resolves land
+# under tool_output/gis_analysis/ instead of wherever this process was
+# launched from. Mirrors the same fix for the "multi" pipeline in
+# agents/subagents/sub_agent_gis.py.
+_GIS_OUTPUT_DIR = ROOT_DIR / "tool_output" / "gis_analysis"
+_GIS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def _try_register(servers: dict, key: str, build_fn) -> None:
     try:
@@ -97,7 +107,7 @@ def get_mcp_servers() -> dict:
                 "run",
                 "--python", "3.12",
                 "arxiv-mcp-server",
-                "--storage-path", f"{ROOT_DIR}/src/agenticeoecosystem/servers/arxiv_papers"
+                "--storage-path", f"{ROOT_DIR}/tool_output/arxiv"
             ]
         }
     }
@@ -122,6 +132,7 @@ def get_mcp_servers() -> dict:
         "transport": "stdio",
         "command": "uv",
         "args": ["tool", "run", "--python", "3.12", "gis-mcp"],
+        "cwd": str(_GIS_OUTPUT_DIR),
     })
 
     _try_register(servers, "moocs", lambda: {

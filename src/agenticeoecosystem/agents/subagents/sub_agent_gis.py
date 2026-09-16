@@ -15,10 +15,10 @@ from agenticeoecosystem.definitions import ROOT_DIR
 # servers). Left unset, that CWD is whatever directory the whole benchmark
 # run happened to be launched from, so a bare filename like
 # "ndvi_result.tif" from the agent lands there instead of anywhere under
-# output/. Pinning cwd here — the one lever we have over a subprocess we
+# tool_output/. Pinning cwd here — the one lever we have over a subprocess we
 # don't control the source of — makes every relative path gis-mcp resolves
-# land under output/gis_analysis/ instead.
-_GIS_OUTPUT_DIR = ROOT_DIR / "output" / "gis_analysis"
+# land under tool_output/gis_analysis/ instead.
+_GIS_OUTPUT_DIR = ROOT_DIR / "tool_output" / "gis_analysis"
 _GIS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 import logging

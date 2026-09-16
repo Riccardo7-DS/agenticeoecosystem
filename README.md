@@ -21,19 +21,22 @@ The primary goal is to enable EVE to connect ESA's EO platforms and data cluster
 
 ## Overview
 
-This project implements a **multi-agent supervisor architecture** in which a supervisor routes each user query to one or more specialised agents. Each agent connects to an MCP server:
+This project implements a **multi-agent orchestrator architecture** (built on [google-adk](https://github.com/google/adk-python), see [`agents/multi_agent.py`](src/agenticeoecosystem/agents/multi_agent.py)) in which an orchestrator agent routes each user query to one or more specialised sub-agents. This is the current, default system (`--pipeline multi`, used by both the interactive client and the benchmark). Each sub-agent connects to its own MCP server:
 
-- **EO Dashboard agent** — browses narratives, themes, and STAC collections from the ESA/NASA/JAXA [EO Dashboard](https://eodashboard.org/)
-- **GEE agent** — downloads satellite images via the Google Earth Engine Python API
-- **EVE retrieval agent** — retrieves knowledge from the EVE knowledge base (AWS Bedrock)
-- **EOSS GraphRAG agent** — retrieves from the ESA EO Science Strategy via GraphRAG: semantic vector search plus a Memgraph knowledge graph (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, KAOs). Backed by a remote MCP server (the `graphrag` sibling repo)
-- **MOOCs agent** — semantic search over Earth Observation MOOC (online course) transcripts, backed by a local Qdrant store
-- **ArXiv agent** — searches and retrieves scientific papers from ArXiv (semantic search, abstracts, full-text download)
-- **GIS agent** — performs spatial analysis, raster processing, coordinate transforms, map visualization, and geospatial data downloads (ESA WorldCover, Sentinel-2 NDVI, OSM street networks, GADM boundaries)
+- **CDSE agent** (`cdse_agent`) — the primary source for satellite quicklooks/GeoTIFFs: Sentinel-1/2/3, Sentinel-5P, Landsat, and DEM via the Copernicus Data Space Ecosystem (Sentinel Hub), plus place name ↔ bbox/lat-lon geocoding (OpenStreetMap Nominatim, free)
+- **EUMETSAT agent** (`eumetsat_agent`) — searches and downloads geostationary products from EUMETSAT's Data Store: MTG FCI and MSG SEVIRI only
+- **GEE agent** (`gee_agent`) — Google Earth Engine, used only for collections CDSE/EUMETSAT don't cover (e.g. NASA VIIRS/MODIS, JAXA GPM/GSMaP or ALOS); includes a live GEE STAC catalog search so it doesn't rely on memorised, possibly stale dataset IDs
+- **Climate agent** (`climate_agent`) — ERA5/ERA5-Land reanalysis data (monthly, hourly, daily-statistics) via the Copernicus Climate Data Store, plus local NetCDF processing (temporal aggregation, unit conversion, spatial clipping)
+- **EO Dashboard agent** (`eo_stac_agent`) — browses narratives, themes, and STAC collections from the ESA/NASA/JAXA [EO Dashboard](https://eodashboard.org/)
+- **EOSS GraphRAG agent** (`graph_rag_agent`) — retrieves from the ESA EO Science Strategy via GraphRAG: semantic vector search plus a Memgraph knowledge graph (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, KAOs). Backed by a remote MCP server (the `graphrag` sibling repo)
+- **MOOCs agent** (`mooc_rag_agent`) — semantic search over Earth Observation MOOC (online course) transcripts, backed by a local Qdrant store
+- **ArXiv agent** (`arxiv_rag_agent`) — searches and retrieves scientific papers from ArXiv (semantic search, abstracts, full-text download)
+- **GIS agent** (`gis_agent`) — spatial analysis, raster processing, coordinate transforms, map visualization, and spectral indices (NDVI, EVI, NDWI, NDMI, NBR) on rasters already on disk (it doesn't fetch imagery itself — that's CDSE/GEE/EUMETSAT's job)
+- **VLM agent** (`vlm_agent`) — vision-language reasoning over image files already on disk (e.g. "does this scene show cloud cover", "what changed between these two images"). Runs its own fixed model (Qwen3-VL) via a separately-hosted vLLM server, independent of whichever model is driving the orchestrator and the other sub-agents — see [VLM (Vision-Language Model)](#vlm-vision-language-model) below.
 
-Two further MCP servers — **EUMETSAT Data Store** (`geos_ops`) and **Climate/CDS** (`climate`) — are defined in `mcp_config.py` and load when their credentials are present, but are not yet wired to a dedicated sub-agent.
+> An older architecture (LangChain supervisor + sub-agents, [`client/client.py`](src/agenticeoecosystem/client/client.py)) is still used by `--pipeline single`/`multi_legacy` and by the interactive client fallback. It has a smaller, different agent set (7 agents, including an **EVE retrieval agent** for the EVE knowledge base over AWS Bedrock, which the current `multi` pipeline does not have) and is superseded by the architecture described above for benchmarking purposes.
 
-Using the **[MCP protocol](https://modelcontextprotocol.io/)**, agents can perform multi-step reasoning: for example, searching for a narrative, linking it to a STAC collection, retrieving satellite data for the relevant indicator, and computing NDVI over the area of interest.
+Using the **[MCP protocol](https://modelcontextprotocol.io/)**, sub-agents can perform multi-step reasoning: for example, geocoding a place name, fetching the matching Sentinel-2 scene, and computing NDVI over it.
 
 ```mermaid
 graph TD
@@ -41,24 +44,33 @@ graph TD
     Start([Start])
     End([End])
 
-    Start --> Supervisor
+    Start --> Orchestrator
 
-    Supervisor --> EO_STAC[eo_stac_agent]
-    Supervisor --> GEE[gee_agent]
-    Supervisor --> EVE[eve_retrieval_agent]
-    Supervisor --> RAG[eoss_rag_agent]
-    Supervisor --> MOOC[moocs_agent]
-    Supervisor --> ArXiv[arxiv_agent]
-    Supervisor --> GIS[gis_agent]
+    Orchestrator --> CDSE[cdse_agent]
+    Orchestrator --> EUMETSAT[eumetsat_agent]
+    Orchestrator --> GEE[gee_agent]
+    Orchestrator --> Climate[climate_agent]
+    Orchestrator --> EO_STAC[eo_stac_agent]
+    Orchestrator --> RAG[graph_rag_agent]
+    Orchestrator --> MOOC[mooc_rag_agent]
+    Orchestrator --> ArXiv[arxiv_rag_agent]
+    Orchestrator --> GIS[gis_agent]
+    Orchestrator --> VLM[vlm_agent]
 
-    EO_STAC --> EO_MCP["EO Dashboard MCP\n(narratives, themes, STAC collections)"]
-    EO_MCP --> EO_STAC
+    CDSE --> CDSE_MCP["CDSE MCP\n(Sentinel Hub imagery + geocoding)"]
+    CDSE_MCP --> CDSE
+
+    EUMETSAT --> EUMETSAT_MCP["EUMETSAT MCP\n(MTG FCI / MSG SEVIRI products)"]
+    EUMETSAT_MCP --> EUMETSAT
 
     GEE --> GEE_MCP["GEE MCP\n(satellite image download)"]
     GEE_MCP --> GEE
 
-    EVE --> EVE_MCP["EVE Document Retrieval MCP\n(AWS Bedrock / EVE knowledge base)"]
-    EVE_MCP --> EVE
+    Climate --> CLIMATE_MCP["CDS MCP\n(ERA5 reanalysis)"]
+    CLIMATE_MCP --> Climate
+
+    EO_STAC --> EO_MCP["EO Dashboard MCP\n(narratives, themes, STAC collections)"]
+    EO_MCP --> EO_STAC
 
     RAG --> GRAPHRAG_MCP["EOSS GraphRAG MCP\n(vector search + Memgraph knowledge graph)"]
     GRAPHRAG_MCP --> RAG
@@ -69,21 +81,27 @@ graph TD
     ArXiv --> ARXIV_MCP["ArXiv MCP\n(papers, abstracts, semantic search)"]
     ARXIV_MCP --> ArXiv
 
-    GIS --> GIS_MCP["GIS MCP\n(geometry, raster, visualization, data downloads)"]
+    GIS --> GIS_MCP["GIS MCP\n(geometry, raster, visualization)"]
     GIS_MCP --> GIS
 
-    EO_STAC --> Supervisor
-    GEE --> Supervisor
-    EVE --> Supervisor
-    RAG --> Supervisor
-    MOOC --> Supervisor
-    ArXiv --> Supervisor
-    GIS --> Supervisor
+    VLM --> VLM_MCP["VLM MCP\n(image loading) + Qwen3-VL"]
+    VLM_MCP --> VLM
 
-    Supervisor --> End
+    CDSE --> Orchestrator
+    EUMETSAT --> Orchestrator
+    GEE --> Orchestrator
+    Climate --> Orchestrator
+    EO_STAC --> Orchestrator
+    RAG --> Orchestrator
+    MOOC --> Orchestrator
+    ArXiv --> Orchestrator
+    GIS --> Orchestrator
+    VLM --> Orchestrator
+
+    Orchestrator --> End
 ```
 
-The supervisor routes each user query to one or more specialised agents. Each agent calls its MCP server(s) and returns a synthesised result. The supervisor passes the result through to the user.
+The orchestrator routes each user query to one or more specialised sub-agents. Each sub-agent calls its MCP server(s) and returns a synthesised result. The orchestrator passes the result through to the user.
 
 ---
 
@@ -109,8 +127,11 @@ agenticeoecosystem/
 ├── tests/
 │   └── benchmarking.py ← benchmark entry point
 ├── data/tasks/         ← task JSON files
-└── output/ESAEOBench/   ← benchmark results (CSV, HTML, JSON)
+├── output/ESAEOBench/  ← benchmark results (CSV, HTML, JSON) — the actual deliverable
+└── tool_output/        ← raw MCP tool downloads (CDSE, EUMETSAT, ERA5, GEE, ArXiv, GIS)
 ```
+
+`output/` and `tool_output/` are deliberately separate: `output/` holds the benchmark's own results plus whatever a task's reference solution explicitly asks a tool to save under `output/<task_ID>/...` (see [`utils/output_paths.py`](src/agenticeoecosystem/utils/output_paths.py) — this convention is unchanged and still anchored to `output/`, including its `output/misc/` catch-all for stray paths). `tool_output/` holds each MCP server's *default* download location — where files land when a model doesn't specify a path at all (e.g. `CDSE_OUTPUT_DIR`, `EUMETSAT_OUTPUT_DIR`). Keeping these separate means `output/` doesn't get buried under tens of gigabytes of raw satellite/climate downloads.
 
 ---
 
@@ -158,6 +179,8 @@ pip install -e .
 
 The main entry point is `src/agenticeoecosystem/client/client.py`. Startup takes a few minutes — the MCP servers need to initialise and tool discovery runs at import time. Subsequent queries in the same session are fast.
 
+> Note: this interactive client runs the older LangChain-based architecture described in the box under [Overview](#overview) (7 agents, including EVE retrieval, no CDSE/EUMETSAT/Climate/VLM). For the current, larger sub-agent set used by the benchmark, run the `multi` pipeline via `scripts/run_generate.py` or `tests/benchmarking.py` instead (see [Benchmarking](#benchmarking)).
+
 ```bash
 python src/agenticeoecosystem/client/client.py
 ```
@@ -180,7 +203,7 @@ Each session writes a timestamped log to `logs/client_YYYYMMDD_HHMMSS.log`.
 
 ## MCP Servers
 
-The client registers up to nine MCP servers at startup, configured in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py). Seven back a dedicated sub-agent (EO Dashboard, GEE, EVE retrieval, EOSS GraphRAG, MOOCs, ArXiv, GIS); two more (EUMETSAT Data Store and Climate/CDS) load their tools when credentials are present but are not yet exposed through a sub-agent. Each server is registered independently — if its dependency or credential is missing, that one server is skipped with a warning and the client still starts.
+The sections below cover every MCP server in the repo; which ones are actually reachable depends on which pipeline you run. In the legacy `single`/`multi_legacy` pipelines, `client.py` registers up to nine servers at startup via [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py) — seven back a dedicated sub-agent (EO Dashboard, GEE, EVE retrieval, EOSS GraphRAG, MOOCs, ArXiv, GIS); two more (EUMETSAT Data Store and Climate/CDS) load their tools when credentials are present but aren't wired to a sub-agent there, so they're unreachable from that pipeline's supervisor. The current `multi` pipeline (`agents/multi_agent.py`) wires up ten servers instead, each behind its own dedicated sub-agent, including EUMETSAT and Climate/CDS (now reachable) plus two servers the legacy pipeline doesn't have at all — CDSE and VLM. Either way, each server is registered independently — if its dependency or credential is missing, that one server/sub-agent is skipped with a warning and the client still starts.
 
 ### EO Dashboard
 
@@ -195,7 +218,22 @@ screen -dmS eodashboard-http bash -c 'source .venv/bin/activate && python src/ag
 
 Connector URL: `https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/13000/mcp`, same gateway Basic Auth credential as GraphRAG below. `--transport` defaults to `stdio`, so the local client's usage (`mcp_config.py`) is unaffected by running this in parallel.
 
+### CDSE (Copernicus Data Space Ecosystem)
+
+The primary source for satellite quicklooks/GeoTIFFs in the current (`multi`) pipeline — used by `cdse_agent`. Backed by `src/agenticeoecosystem/servers/cdse_geocode/server.py`, which wraps the Sentinel Hub API. Covers Sentinel-1 GRD (SAR), Sentinel-2 (L1C/L2A optical), Sentinel-3 (OLCI, SLSTR, SYN L2), Sentinel-5P (trace gases), Landsat (OT L1), and DEM elevation — each via its own `fetch_*` tool with sensor-appropriate presets (e.g. `true_color`, `ndvi`, `elevation_color`) plus a custom-bands/evalscript escape hatch. Also exposes `geocode_place` / `reverse_geocode_place` (place name ↔ bbox/lat-lon via OpenStreetMap Nominatim — free, no API key) and `resolve_named_region` for macro-regions (e.g. "the Sahel") that Nominatim doesn't resolve as a single place.
+
+Requires a Sentinel Hub OAuth client from the [Copernicus Data Space Ecosystem](https://dataspace.copernicus.eu/) (free registration → Dashboard → create an OAuth client):
+
+```env
+CDSE_CLIENT_ID=your-client-id
+CDSE_CLIENT_SECRET=your-client-secret
+```
+
+Downloads land under `tool_output/cdse_geocode/` by default (override with `CDSE_OUTPUT_DIR`). It starts automatically as a stdio subprocess with the client.
+
 ### Google Earth Engine (GEE)
+
+In the current (`multi`) pipeline, `gee_agent` is the **secondary** imagery source — the orchestrator only routes to it for collections CDSE/EUMETSAT don't cover (e.g. NASA VIIRS/MODIS, JAXA GPM/GSMaP or ALOS). It includes a `search_gee_catalog` tool that queries the live GEE STAC catalog for the exact, current Earth Engine asset ID (dataset IDs are frequently re-versioned, so a memorised ID is often stale) rather than relying only on a small hardcoded list of known-safe dataset IDs (Sentinel-2 SR, Landsat 8 SR, Sentinel-5P NO2).
 
 Enables satellite image downloads via the [Earth Engine Python API](https://developers.google.com/earth-engine/guides/python_install). One-time setup:
 
@@ -211,11 +249,12 @@ Enables satellite image downloads via the [Earth Engine Python API](https://deve
 GEE_PROJECT=your-gcp-project-id
 GEE_SERVICE_ACCOUNT=your-service-account@your-project.iam.gserviceaccount.com
 GEE_PRIVATE_KEY_PATH=/absolute/path/to/your-key.json
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key   # used by get_lat_lon to geocode place names
 ```
 
 ### EVE Knowledge Retrieval
 
-Provides retrieval-augmented access to the EVE knowledge base. Requires OAuth2 credentials:
+Provides retrieval-augmented access to the EVE knowledge base. **Only used by the `single`/`multi_legacy` pipelines** (`client/client.py`'s `get_eve_knowledge` tool) — the current default `multi` pipeline (`agents/multi_agent.py`) has no equivalent sub-agent. Requires OAuth2 credentials:
 
 ```env
 EVE_RETRIEVAL_CLIENT_ID=your-client-id
@@ -267,42 +306,59 @@ Pre-install (one-time, speeds up the first connection):
 uv tool install arxiv-mcp-server
 ```
 
-Papers fetched during a session are cached in `src/agenticeoecosystem/servers/arxiv_papers/`. Available tools include `search_papers`, `get_abstract`, `download_paper`, `semantic_search`, `citation_graph`, and `watch_topic`.
+Papers fetched during a session are cached in `tool_output/arxiv/` (both the current `multi` pipeline and the legacy `single`/`multi_legacy` one point at this same location). Available tools include `search_papers`, `get_abstract`, `download_paper`, `semantic_search`, `citation_graph`, and `watch_topic`. `arxiv_rag_agent`'s system prompt caps usage to avoid context blowups: at most one `download_paper` and at most five `get_abstract` calls per task, preferring the lighter discovery tools otherwise.
 
 ### GIS Analysis
 
-Provides 90+ spatial tools via [gis-mcp](https://github.com/mahdin75/gis-mcp): geometry operations (Shapely), vector file processing (GeoPandas), raster analysis (Rasterio), spatial statistics (PySAL), map visualisation (Folium), and geospatial data downloads (ESA WorldCover, Sentinel-2 NDVI via Planetary Computer, OSM street networks, GADM administrative boundaries).
+Provides spatial analysis tools via [gis-mcp](https://github.com/mahdin75/gis-mcp): geometry operations (Shapely), vector file processing (GeoPandas), raster analysis (Rasterio), spatial statistics (PySAL), and map visualisation (Folium/matplotlib). **`gis_agent` only performs analysis on files already on disk — it cannot fetch imagery itself.** gis-mcp's own data-download tools (`download_worldcover`, `compute_s2_ndvi`, `download_boundaries`, `download_climate_data`, `download_street_network`, `download_species_occurrences`, etc.) are explicitly filtered out of its toolset (`_GIS_DOWNLOAD_TOOL_NAMES` in [`sub_agent_gis.py`](src/agenticeoecosystem/agents/subagents/sub_agent_gis.py)) since that responsibility now belongs to the CDSE/GEE/EUMETSAT/Climate sub-agents — routing a "download X" request here will fail.
 
-The server runs in an isolated uv tool environment to avoid numpy version conflicts with other dependencies. Install once:
+On top of gis-mcp's own `compute_ndvi`, the sub-agent adds four spectral-index tools implemented directly in `sub_agent_gis.py` (not part of the third-party package): `compute_evi`, `compute_ndwi`, `compute_ndmi`, `compute_nbr` — each takes a local multi-band raster + 1-based band indices and writes a single-band float32 GeoTIFF. It also adds `clip_raster_with_bbox`, for clipping a raster to a `[west, south, east, north]` bbox without needing a shapefile (use gis-mcp's own `clip_raster_with_shapefile` when one is available).
+
+The server runs in an isolated uv tool environment (`uv tool run --python 3.12 gis-mcp`, cwd pinned to `tool_output/gis_analysis/` so relative output paths land there instead of wherever the process was launched from) to avoid numpy version conflicts with other dependencies. Install once:
 ```bash
 uv tool install "gis-mcp[visualize]"
 ```
 
-Optional extras (install separately if needed):
-```bash
-uv tool install "gis-mcp[administrative-boundaries]"   # GADM boundary downloads
-uv tool install "gis-mcp[climate]"                     # ERA5 climate data (requires Copernicus account)
-```
+No `.env` variables are required — none of gis-mcp's download extras (`administrative-boundaries`, `climate`) are relevant since those tools are filtered out for this sub-agent.
 
-No additional `.env` variables are required for the core tools.
+### EUMETSAT Data Store
 
-### EUMETSAT Data Store (optional)
+Wired to `eumetsat_agent` in the current (`multi`) pipeline — searches and downloads geostationary products from EUMETSAT's Data Store: **MTG FCI and MSG SEVIRI only** (not Sentinel/Landsat — that's CDSE's job). Backed by `src/agenticeoecosystem/servers/eumetsat/server.py`, which exposes four tools:
 
-Registered when EUMETSAT Data Store credentials are present. Loads its tools but is **not yet wired to a sub-agent**, so it is not reachable from the supervisor.
+| Tool | Purpose |
+|---|---|
+| `list_eumetsat_products()` | Look up valid product keys (e.g. `MTG-FCI-L1C-FDHSI`) with their `product_id`, `satpy_reader`, and bands |
+| `search_eumetsat_products(product, start_date, end_date, bbox)` | Dry-run count of matching products before downloading (results capped at 20) |
+| `download_eumetsat_product(args)` | Downloads matching files to `EUMETSAT_OUTPUT_DIR`. `method="datastore"` (default) is a fast raw archived file; `method="datatailor"` reprojects/clips/converts format server-side (slower, polls until done). Refuses any request matching more than 20 products in one call. |
+| `read_eumetsat_product(args)` | Opens downloaded files with `satpy`, returns per-band stats with correct calibration (reflectance for VIS/NIR, brightness temperature for IR/WV); `as_geotiff=true` also writes GeoTIFFs so `gis_agent` can process them (the raw `.nat`/`.nc` files aren't directly GIS-readable) |
 
 ```env
 EUMETSAT_CONSUMER_KEY=your-consumer-key
 EUMETSAT_CONSUMER_SECRET=your-consumer-secret
 ```
 
-### Climate / CDS (optional)
+> **Known issue:** `method="datatailor"` downloads can land in the repo root instead of `EUMETSAT_OUTPUT_DIR`, due to a bug in the third-party `eumetsearch` package's success-path file write (bare `open(filename)` instead of joining it to the configured output directory). See `docs/gemma4_benchmark_run_issues_2026-08-07.md` (issue #12) — unfixed as of that doc. `method="datastore"` is unaffected.
 
-Registered when Copernicus Climate Data Store credentials are present. As with EUMETSAT, its tools load but are **not yet exposed through a sub-agent**.
+### Climate / CDS
+
+Wired to `climate_agent` in the current (`multi`) pipeline — ERA5/ERA5-Land reanalysis data via the Copernicus Climate Data Store. Backed by `src/agenticeoecosystem/servers/climate/server.py`, which exposes discovery (`list_era5_single_level_variables`, `list_era5_pressure_level_variables`, `list_cds_datasets`), download (`fetch_era5_single_levels`/`fetch_era5_pressure_levels` for monthly means; `fetch_era5_hourly_single_levels`/`fetch_era5_hourly_pressure_levels`/`fetch_era5_land` for hourly; `fetch_era5_daily_statistics` for pre-computed daily stats; `fetch_cds_dataset` as a generic escape hatch for any other CDS dataset), and local NetCDF processing tools (`inspect_netcdf`, `convert_hourly_to_daily`/`convert_daily_to_monthly`/`resample_temporal` for temporal aggregation, `convert_units`, `clip_to_bbox`).
 
 ```env
 CDS_URL=https://cds.climate.copernicus.eu/api
 CDS_KEY=your-cds-api-key
 ```
+
+### VLM (Vision-Language Model)
+
+`vlm_agent` reasons over image files already on disk (a downloaded quicklook, a single scene, or a directory of up to 10 images) — e.g. "does this scene show visible cloud cover", "what changed between these two images". It's the only sub-agent in the current pipeline that runs its **own separate, fixed model** (`Qwen3-VL`, via [`vlm_init.py`](src/agenticeoecosystem/agents/subagents/vlm_init.py)) rather than whichever candidate model `MULTI_AGENT_MODEL`/`MULTI_AGENT_PROVIDER` selects for the orchestrator and every other sub-agent.
+
+The VLM is served by a separate vLLM instance and reached over an SSH local port-forward — this tunnel must be established before starting the client/benchmark, or `vlm_agent` calls will fail to connect:
+
+```bash
+ssh -L 18001:localhost:18001 <user>@<llava-vm-host>
+```
+
+Backed by `src/agenticeoecosystem/servers/vlm_tools/server.py`, which exposes `resolve_images(path, limit)` (list what images exist at a path) and `load_images(path, limit)` (load them into context — downscaled before base64-encoding to control per-image token cost). Its own system prompt enforces calling `load_images` at most once per distinct path, to avoid burning context on duplicate loads.
 
 ---
 
@@ -520,7 +576,54 @@ This filters to 2 tasks with the `Tool Grounding` label and appends `_smoke` to 
 
 ## Adding Custom Sub-agents
 
-### Creating the MCP tools
+The two subsections below target different pipelines — pick the one matching what you're actually running. Most new work should go through **the current (`multi`) pipeline** below; the LangChain instructions further down are for `--pipeline single`/`multi_legacy` only.
+
+### For the current (`multi`) pipeline
+
+Every sub-agent lives in its own `src/agenticeoecosystem/agents/subagents/sub_agent_<name>.py` file. [`subagents/__init__.py`](src/agenticeoecosystem/agents/subagents/__init__.py) auto-discovers them: it scans the package for any module starting with `sub_agent_` and collects every `google.adk.agents.llm_agent.Agent` instance it defines into `ALL_SUB_AGENTS` — so a new file is picked up automatically, no manual registration list to edit. Follow [`sub_agent_mooc.py`](src/agenticeoecosystem/agents/subagents/sub_agent_mooc.py) as the simplest template (a single stdio MCP server, no extra local tools):
+
+```python
+from agenticeoecosystem.agents.subagents.llm_init import llm
+from google.adk.agents.llm_agent import Agent
+from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+from mcp import StdioServerParameters
+from typing import Optional
+from agenticeoecosystem.definitions import ROOT_DIR
+
+_MY_SYSTEM_PROMPT = "You are a retrieval assistant for <domain>. Use the available tools to ..."
+
+toolset = [McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command='python',
+            args=[f"{ROOT_DIR}/src/agenticeoecosystem/servers/my_server/server.py"]),
+        timeout=300))]
+
+def _fetch_agent(toolset) -> Optional[Agent]:
+    if toolset:
+        return Agent(
+            model=llm,               # shared candidate model (MULTI_AGENT_MODEL/PROVIDER); use vlm_init.vlm instead for a fixed vision model, as vlm_agent does
+            name='my_agent',
+            description='A helpful assistant for answering user questions related to <domain>.',
+            instruction=_MY_SYSTEM_PROMPT,
+            tools=toolset,
+            mode='single_turn'
+        )
+    return None
+
+my_agent = _fetch_agent(toolset)
+```
+
+Build the MCP server itself the same way as for the legacy pipeline (see [Creating the MCP tools](#creating-the-mcp-tools) below) — the server side doesn't change between pipelines, only how the client wires it up.
+
+Two more steps, both in [`agents/multi_agent.py`](src/agenticeoecosystem/agents/multi_agent.py):
+1. Add a paragraph to `_SUPERVISOR_SYSTEM_PROMPT` describing when to route to the new sub-agent, and any scope boundaries it should respect relative to existing sub-agents (see how the CDSE/GEE/EUMETSAT split is worded there as an example of avoiding overlapping responsibilities).
+2. Nothing else — `root = Agent(..., sub_agents=ALL_SUB_AGENTS, ...)` already picks up every agent discovered in step 1 automatically.
+
+### For the `single`/`multi_legacy` pipelines (LangChain, `client/client.py`)
+
+#### Creating the MCP tools
 
 Follow the example server at [`src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py`](src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py) or any other server in the [`servers/`](src/agenticeoecosystem/servers) folder. Once created, add an entry to `get_mcp_servers()` in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py):
 
@@ -534,7 +637,7 @@ Follow the example server at [`src/agenticeoecosystem/servers/example/stdio_loca
 
 See the [MCP documentation](https://modelcontextprotocol.io/docs/develop/build-server) for more on building MCP servers.
 
-### Creating the sub-agent
+#### Creating the sub-agent
 
 Declare the agent:
 

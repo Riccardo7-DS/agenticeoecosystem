@@ -239,6 +239,14 @@ _GIS_SYSTEM_PROMPT = (
     "Return file paths for saved outputs (maps, rasters, vectors)."
 )
 
+_TLE_SYSTEM_PROMPT = (
+    "You are an orbital propagation and overpass prediction assistant. Use the available tools to compute satellite positions, " \
+    "predict overpasses, and generate acquisition schedules from TLE data. " \
+    "Extract all parameters from the user's request and call the appropriate tools. " \
+    "Compute overpass times, ground tracks, and visibility windows as needed. " \
+    "Return results in a clear format, including timestamps, and coordinates. If requested, provide visualizations of ground tracks or overpass paths."
+)
+
 _SUPERVISOR_SYSTEM_PROMPT = (
     "You are a routing agent. "
     "You can get data from EO Dashboards, Google Earth Engine, "
@@ -302,12 +310,12 @@ _DEFAULT_PROVIDER: str = os.getenv("MODEL_PROVIDER", "eve")
 model = load_llm(_DEFAULT_MODEL, _DEFAULT_PROVIDER)
 
 eo_stac_agent       = create_agent(model, tools=[t for t in mcp_tools if t.name in _EO_STAC_TOOL_NAMES], system_prompt=_EO_STAC_SYSTEM_PROMPT)
-gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
-eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
-eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name in _EOSS_TOOL_NAMES], system_prompt=_RAG_SYSTEM_PROMPT)
-moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
+# gee_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in ["download_gee_product", "get_lat_lon"]], system_prompt=_GEE_SYSTEM_PROMPT)
+# eve_retrieval_agent = create_agent(model, tools=[t for t in mcp_tools if t.name == "retrieve"], system_prompt=_EVE_RETRIEVAL_SYSTEM_PROMPT)
+# eoss_rag_agent      = create_agent(model, tools=[t for t in mcp_tools if t.name in _EOSS_TOOL_NAMES], system_prompt=_RAG_SYSTEM_PROMPT)
+# moocs_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _MOOC_TOOL_NAMES], system_prompt=_MOOC_SYSTEM_PROMPT)
 arxiv_agent         = create_agent(model, tools=[t for t in mcp_tools if t.name in _ARXIV_TOOL_NAMES], system_prompt=_ARXIV_SYSTEM_PROMPT)
-gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
+# gis_agent           = create_agent(model, tools=[t for t in mcp_tools if t.name in _GIS_TOOL_NAMES], system_prompt=_GIS_SYSTEM_PROMPT)
 
 
 @tool
@@ -485,7 +493,8 @@ def rebuild_agents(
     Valid keys: eo_stac, gee, eve, eoss_rag, moocs, arxiv, gis, supervisor.
     Missing keys fall back to (model_name, provider).
     """
-    global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, moocs_agent, arxiv_agent, gis_agent, supervisor_agent
+    # global model, eo_stac_agent, gee_agent, eve_retrieval_agent, eoss_rag_agent, moocs_agent, arxiv_agent, gis_agent, supervisor_agent
+    global model, eo_stac_agent, eve_retrieval_agent, arxiv_agent, supervisor_agent
 
     def _llm(key: str):
         if agent_models and key in agent_models:

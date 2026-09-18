@@ -3,6 +3,8 @@ data/eodashboard-catalog/
 # docs/
 models/
 # data/
+data/ImpactMesh-Fire/
+
 .env
 script.sh
 output/
@@ -42,7 +44,7 @@ test_eve_retrieval_mcp.py
 test_eve.py
 test_eve_auth.py    
 
-logs/
+# logs/
 *.sif
 container.def
 .claude/*
@@ -58,3 +60,6 @@ docs/gemma4_benchmark_run_issues_2026-08-07.md
 scripts/vlm.sh
 
 
+data/visual_tasks/context/knowledge.tex
+data/visual_tasks/labels/FireImages-Jul-Aug.json
+src/agenticeoecosystem/evaluation/confidence_evaluation.py

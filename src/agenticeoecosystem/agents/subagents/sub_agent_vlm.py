@@ -1,19 +1,56 @@
 # agenticeoecosystem/agents/subagents/vlm_agent.py
 
+"""Generic vision-language sub-agent, with optional domain-specific analysis
+knowledge activated per request (see `vlm_domains`).
+
+By default this agent does plain, domain-agnostic visual analysis — the same
+behavior it always had. An orchestrator that wants deeper domain-specific
+criteria applied (e.g. wildfire visual cues) includes a `VLM_DOMAIN: <key>`
+marker line in the handoff message it sends immediately before transferring
+control here; this agent's instruction tells it to look for that marker and
+apply the matching domain from `vlm_domains.DOMAINS`, or ignore it and stay
+generic if the marker is absent or unrecognized.
+
+This is intentionally the simple version (Option A: prompt convention over
+inherited conversation history, no new tool or session state) rather than a
+session-state-backed activation mechanism. That keeps this change scoped to
+prompt content, but it has a real limitation worth knowing: because the
+instruction string is assembled once at import time, every registered
+domain's guidance text is always present in this agent's context — the
+model chooses whether to apply it based on the marker, but a request that
+never mentions any domain still has that text sitting in its instructions,
+and within a single multi-turn session a domain marker from an earlier turn
+could in principle be misapplied to a later, unrelated turn if the model
+doesn't scope it correctly. If that proves unreliable in practice, the
+documented follow-up is a session-state-backed activation: an explicit
+`set_vlm_domain(domain)` tool the orchestrator calls before transferring,
+paired with turning `instruction` here into a per-invocation callable
+(ADK's InstructionProvider) that reads the active domain from session state
+instead of relying on the model to self-scope a text marker. That gives a
+structural guarantee instead of a behavioral convention.
+"""
+
 import logging
 from typing import Optional
 
+from google.adk.agents.callback_context import CallbackContext
 from google.adk.agents.llm_agent import Agent
+from google.adk.models.llm_request import LlmRequest
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
+from agenticeoecosystem.agents.subagents.vlm_domains import (
+    extract_domain_marker,
+    get_domain,
+    render_domain_catalog,
+)
 from agenticeoecosystem.agents.subagents.vlm_init import vlm
 from agenticeoecosystem.definitions import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
-_VLM_SYSTEM_PROMPT = """You are a VLM reasoning agent.
+_VLM_BASE_PROMPT = """You are a VLM reasoning agent.
 
 You receive one or more file paths (a single image or a directory of images)
 and a natural-language request from an orchestrator agent. Use the
@@ -34,71 +71,52 @@ Rules:
   turn (a different path every time) before answering — do not answer after
   loading only one of them.
 - Always ground your answer in the images you were actually given.
-- Once you have loaded the relevant image(s) and formed your visual
-  assessment, do NOT give the user a final answer yourself. Transfer control
-  back to `orchestrator_agent` (call transfer_to_agent with
-  agent_name="orchestrator_agent") with your findings stated in your own
-  response text first. Only the orchestrator is responsible for the final
-  answer — it must wrap your findings into its required FEATURES ANALYSIS
-  and DATA ACQUISITION PLAN output format, which you have no visibility into
-  and must not attempt to reproduce yourself.
-
-Wildfire domain knowledge (apply when asked about wildfires, smoke, or burned
-areas — only visually observable cues apply, not thermal/SWIR/radar signals
-read directly). This image set is pulled from live fire-alert satellite
-passes and is NOT visually uniform from image to image — first work out
-which of these three regimes the image is in, since what smoke and burn scar
-look like differs between them:
-- Clear daytime: ordinary natural colors — green/brown vegetation and soil,
-  blue water, white puffy clouds. The majority case.
-- Smoke-hazed daytime: thick smoke aerosols scatter and redden sunlight, so
-  the whole scene gets an unnatural reddish-brown/maroon cast and both
-  clouds AND smoke plumes render as pale lavender-white blooms that can look
-  identical in color. Recognizable by that overall reddish/purplish tint
-  across the whole image (not just one feature in it).
-- Nighttime: land is almost pure black (no reflected sunlight) except for
-  (a) small stippled clusters of bright dots tracing roads/rivers/towns —
-  this is city/town lighting, not fire, cloud, or smoke — and (b) soft
-  diffuse white/lavender blooms, which are clouds lit by moonlight/airglow.
-  Burn scars are invisible at night; don't claim to see one in this regime.
-
-A wildfire scene can show three independent visual features. When asked to
-assess wildfire presence, explicitly consider each rather than giving a
-single undifferentiated "yes, there's a wildfire" verdict:
-- Active flame: a bright orange-red glow or visible flame front. This is
-  rarely visible directly — most "fire-looking" content in these images is
-  actually smoke or burn scar, not flame itself.
-- Smoke / plume: in clear daytime imagery, a greyish-white/brownish hazy
-  streak elongated downwind from a source. In smoke-hazed or nighttime
-  imagery, smoke and ordinary clouds can be indistinguishable by color —
-  fall back on shape: a plume trails from one or a few point sources in a
-  wind-consistent comet-tail/fan shape, while ordinary clouds form broader,
-  sourceless decks or scattered puffy cells with no common origin. If shape
-  doesn't clearly settle it either, say the evidence is ambiguous rather
-  than confidently calling it smoke or confidently dismissing it as "just
-  clouds."
-- Burn scar / burned area: only assess this in the clear-daytime regime. It
-  looks like a distinct ash-grey or purplish-brown patch that clearly
-  contrasts with the normally-colored (green/vegetated or differently-toned)
-  land immediately around it in the same image, often following
-  ridgelines/terrain rather than wind direction. The signal is *local
-  contrast against nearby unburned land* — ordinary dark soil, water,
-  shadow, or forest that covers the whole image uniformly is NOT a burn
-  scar by itself. Don't call the generally darker/desaturated land under
-  smoke haze, or black nighttime terrain, a burn scar — neither is one.
-
-These features can co-occur (smoke over an already-burned area) or appear
-alone (a burn scar with no remaining smoke, or smoke with no burn scar yet
-visible). Do not default to describing everything as "smoke" — if what you
-actually see is a scorched, locally-contrasting patch with no visible
-plume, that is a burn scar, not smoke.
-
-When you conclude that a burn scar is present, that IS a positive wildfire
-finding by itself — a burn scar means a fire happened here, even if nothing
-is burning right now. Don't require active flame or smoke on top of it
-before you're willing to say a wildfire is evident, and don't let "the fire
-isn't currently active" soften a clear burn-scar identification into a "no."
 """
+
+
+def _build_vlm_instruction() -> str:
+    catalog = render_domain_catalog()
+    if not catalog:
+        return _VLM_BASE_PROMPT
+    return (
+        f"{_VLM_BASE_PROMPT}\n"
+        "DOMAIN-SPECIFIC ANALYSIS:\n"
+        "The message that triggered this handoff (the orchestrator's own "
+        "text immediately before it transferred control to you) may contain "
+        "a line of the form `VLM_DOMAIN: <key>`. If it does, and <key> "
+        "matches one of the domains below, apply that domain's guidance in "
+        "addition to the rules above. If no such line is present, or <key> "
+        "doesn't match any domain below, ignore it and stick to the generic "
+        "rules above — never guess a domain purely from image content, and "
+        "never carry a domain over from an earlier, unrelated turn in this "
+        "conversation.\n\n"
+        f"{catalog}"
+    )
+
+
+def _log_domain_marker(
+    callback_context: CallbackContext, llm_request: LlmRequest
+) -> None:
+    """Observability only — logs which VLM_DOMAIN marker (if any) is in the
+    latest turn. Does not alter the request; the instruction text above is
+    static and already contains every registered domain's guidance."""
+    contents = llm_request.contents or []
+    last_text = ""
+    if contents:
+        last_text = "".join(
+            part.text or "" for part in (contents[-1].parts or [])
+        )
+    key = extract_domain_marker(last_text)
+    if key is None:
+        return
+    domain = get_domain(key)
+    logger.info(
+        "VLM handoff mentions VLM_DOMAIN='%s' (%s)",
+        key, "recognized" if domain else "unrecognized, falling back to generic",
+    )
+
+
+_VLM_SYSTEM_PROMPT = _build_vlm_instruction()
 
 toolset = [
     McpToolset(
@@ -123,6 +141,7 @@ def _fetch_agent(toolset: list) -> Optional[Agent]:
         description="A helpful assistant for answering user questions related to reasoning over image data.",
         instruction=_VLM_SYSTEM_PROMPT,
         tools=toolset,
+        before_model_callback=_log_domain_marker,
         # NOTE: this agent is registered as a native ADK sub-agent and reached
         # via the built-in transfer_to_agent (no message payload) rather than
         # as an agent-tool with an explicit `request` argument — so it relies

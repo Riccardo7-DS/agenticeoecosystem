@@ -32,7 +32,7 @@ def _basic_auth_header(username_env: str = "EVE_USERNAME",
 
 _MODEL_NAME = os.getenv("MULTI_AGENT_MODEL", "EVE-Instruct")
 _PROVIDER = os.getenv("MULTI_AGENT_PROVIDER", "eve")
-_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", "1024"))
+_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", "4096"))
 
 if _PROVIDER == "vllm":
     # Local vLLM server (see utils.registry.launch_vllm) — same OpenAI-compatible

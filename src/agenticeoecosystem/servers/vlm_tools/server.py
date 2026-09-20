@@ -41,6 +41,10 @@ logger = logging.getLogger("vlm-mcp-server")
 mcp = FastMCP("vlm-tools")
 
 HARD_LIMIT = 10  # never exceed this, no matter what the caller asks for
+MAX_DIMENSION = 1024  # cap longest side before sending to the VLM — full-res
+# source imagery (e.g. 4096x4096) can blow a vision tokenizer's context
+# budget (esp. models using pan-and-scan tiling, which token-costs scale
+# with resolution much more steeply than Qwen3-VL's).
 
 _DISPLAY_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
 _GEOTIFF_EXTENSIONS = {".tif", ".tiff"}
@@ -54,6 +58,15 @@ _MIME_TYPES = {
     ".bmp": "image/bmp",
     ".gif": "image/gif",
 }
+
+
+def _downscale(img: Image.Image) -> Image.Image:
+    """Shrink img in place (aspect-ratio preserved) if either side exceeds
+    MAX_DIMENSION; a no-op otherwise."""
+    if max(img.size) > MAX_DIMENSION:
+        img = img.copy()
+        img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
+    return img
 
 
 def _geotiff_to_png_bytes(path: Path) -> bytes:
@@ -86,6 +99,7 @@ def _geotiff_to_png_bytes(path: Path) -> bytes:
     else:
         img = Image.fromarray(np.moveaxis(stretched, 0, -1), mode="RGB")
 
+    img = _downscale(img)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
@@ -215,12 +229,24 @@ def load_images(path: str, limit: int = HARD_LIMIT) -> list:
             mime_type = "image/png"
         else:
             try:
-                data = f.read_bytes()
-            except OSError as e:
+                img = Image.open(f)
+                img.load()
+            except Exception as e:
                 logger.warning("Failed to read %s: %s", f, e)
                 blocks.append(TextContent(type="text", text=f"ERROR reading {f.name}: {e}"))
                 continue
-            mime_type = _MIME_TYPES.get(f.suffix.lower(), "application/octet-stream")
+
+            if max(img.size) > MAX_DIMENSION:
+                if img.mode not in ("RGB", "L"):
+                    img = img.convert("RGB")
+                img = _downscale(img)
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=90)
+                data = buf.getvalue()
+                mime_type = "image/jpeg"
+            else:
+                data = f.read_bytes()
+                mime_type = _MIME_TYPES.get(f.suffix.lower(), "application/octet-stream")
 
         b64 = base64.b64encode(data).decode("utf-8")
         blocks.append(ImageContent(type="image", data=b64, mimeType=mime_type))

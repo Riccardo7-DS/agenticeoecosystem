@@ -128,7 +128,8 @@ agenticeoecosystem/
 │   └── benchmarking.py ← benchmark entry point
 ├── data/tasks/         ← task JSON files
 ├── output/ESAEOBench/  ← benchmark results (CSV, HTML, JSON) — the actual deliverable
-└── tool_output/        ← raw MCP tool downloads (CDSE, EUMETSAT, ERA5, GEE, ArXiv, GIS)
+├── tool_output/        ← raw MCP tool downloads (CDSE, EUMETSAT, ERA5, GEE, ArXiv, GIS)
+└── expert_eval/        ← human evaluation study (blinded web app) + collection/analysis scripts
 ```
 
 `output/` and `tool_output/` are deliberately separate: `output/` holds the benchmark's own results plus whatever a task's reference solution explicitly asks a tool to save under `output/<task_ID>/...` (see [`utils/output_paths.py`](src/agenticeoecosystem/utils/output_paths.py) — this convention is unchanged and still anchored to `output/`, including its `output/misc/` catch-all for stray paths). `tool_output/` holds each MCP server's *default* download location — where files land when a model doesn't specify a path at all (e.g. `CDSE_OUTPUT_DIR`, `EUMETSAT_OUTPUT_DIR`). Keeping these separate means `output/` doesn't get buried under tens of gigabytes of raw satellite/climate downloads.
@@ -571,6 +572,10 @@ df = run_comparison(
 ```
 
 This filters to 2 tasks with the `Tool Grounding` label and appends `_smoke` to all output filenames.
+
+### Expert Evaluation
+
+The LLM-as-judge pipeline above only compares tool-call sequences against reference solutions — it can't judge whether a final answer is actually correct, since the benchmark has no reference answers. `expert_eval/` runs a separate human evaluation of final-answer quality and question relevance: `python scripts/build_expert_eval.py` builds a blinded study from the same `output/ESAEOBench/` results, and a self-contained web app (published as a Claude Artifact, not Google Forms) collects experts' relevance/accuracy/ranking judgements. See [`expert_eval/README.md`](expert_eval/README.md) for the full design and the step-by-step "how to run this."
 
 ---
 

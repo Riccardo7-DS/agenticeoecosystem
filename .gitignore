@@ -56,3 +56,8 @@ docs/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
 docs/gemma4_benchmark_run_issues_2026-08-07.md
 
 scripts/vlm.sh
+
+# Expert-eval responses carry names/comments from real people; analysis
+# outputs are regenerated from them. Neither belongs in git.
+expert_eval/responses/
+expert_eval/out/analysis/

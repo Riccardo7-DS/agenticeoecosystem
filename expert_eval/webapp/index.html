@@ -1,0 +1,1037 @@
+<title>EOBench Human Expert Evaluation</title>
+<style>
+  :root {
+    --ink: #141a1f;
+    --muted: #5b6a70;
+    --paper: #f3f5f4;
+    --surface: #ffffff;
+    --surface-2: #eceeed;
+    --border: #d7dfdc;
+    --accent: #0e7c7b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3f1ef;
+    --gold: #9a6a1f;
+    --gold-soft: #f6ecd9;
+    --danger: #a13a3a;
+    --danger-soft: #f7e6e6;
+    --shadow: 0 1px 2px rgba(20, 26, 31, 0.06), 0 4px 14px rgba(20, 26, 31, 0.05);
+    --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e7edec;
+      --muted: #93a3a2;
+      --paper: #0d1416;
+      --surface: #151e21;
+      --surface-2: #1c2629;
+      --border: #263231;
+      --accent: #45c9bf;
+      --accent-ink: #06211f;
+      --accent-soft: #16302d;
+      --gold: #d9ab55;
+      --gold-soft: #2c2412;
+      --danger: #e08a8a;
+      --danger-soft: #331e1e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e7edec;
+    --muted: #93a3a2;
+    --paper: #0d1416;
+    --surface: #151e21;
+    --surface-2: #1c2629;
+    --border: #263231;
+    --accent: #45c9bf;
+    --accent-ink: #06211f;
+    --accent-soft: #16302d;
+    --gold: #d9ab55;
+    --gold-soft: #2c2412;
+    --danger: #e08a8a;
+    --danger-soft: #331e1e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    line-height: 1.5;
+    padding-inline: 16px;
+    padding-block: 24px;
+  }
+  main {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.05rem; }
+  p { margin: 0 0 0.9em; }
+  a { color: var(--accent); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  ::selection { background: var(--accent-soft); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block-end: 18px;
+    margin-block-end: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .masthead .brand { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+  .masthead .code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+
+  .progress-track {
+    height: 6px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    overflow: hidden;
+    margin-block-end: 8px;
+  }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.25s ease; border-radius: 4px; }
+  .progress-label { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); margin-block-end: 22px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-block-end: 16px;
+  }
+  .prose p { color: var(--ink); white-space: pre-line; text-align: justify; hyphens: auto; }
+  .prose h3 { margin-block: 1.1em 0.4em; font-size: 0.95rem; letter-spacing: 0.02em; color: var(--muted); text-transform: uppercase; font-family: var(--font-ui); font-weight: 600; }
+  .prose h3:first-child { margin-block-start: 0; }
+
+  label.field { display: block; margin-block-end: 18px; }
+  .field-title { font-weight: 600; margin-block-end: 4px; display: block; }
+  .field-help { color: var(--muted); font-size: 0.86rem; margin-block-end: 8px; }
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--ink);
+  }
+  textarea { resize: vertical; min-height: 72px; }
+
+  .pillrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pillrow.scale-5 .pill { min-width: 44px; text-align: center; }
+  .pill {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .pill[aria-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .scale-caption { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-block-start: 6px; }
+
+  .checkline { display: flex; align-items: flex-start; gap: 8px; margin-block-end: 8px; cursor: pointer; }
+  .checkline input { margin-top: 3px; }
+
+  .label-chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin-block-end: 10px;
+  }
+  .question-text { font-family: var(--font-display); font-size: 1.15rem; line-height: 1.5; text-align: justify; hyphens: auto; }
+
+  details.answer {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-block-end: 12px;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  details.answer > summary {
+    cursor: pointer;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+    font-weight: 500;
+  }
+  details.answer > summary::-webkit-details-marker { display: none; }
+  details.answer > summary .chevron { margin-inline-start: auto; color: var(--muted); transition: transform 0.15s ease; font-size: 0.8rem; }
+  details.answer[open] > summary .chevron { transform: rotate(90deg); }
+  .badge {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    color: var(--ink);
+    flex: none;
+  }
+  .word-count { color: var(--muted); font-size: 0.82rem; font-weight: 400; }
+  .image-flag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 2px 7px;
+  }
+  .answer-images { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 16px 0 50px; }
+  .answer-image-figure { margin: 0; }
+  .answer-images a { display: block; line-height: 0; }
+  .answer-images img {
+    max-width: 220px;
+    max-height: 220px;
+    width: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: zoom-in;
+  }
+  .answer-image-figure figcaption { font-size: 0.72rem; color: var(--muted); margin-top: 4px; max-width: 220px; }
+  .image-caption { padding: 6px 16px 0 50px; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .answer-body {
+    padding: 2px 16px 16px 50px;
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+  .answer-body p { white-space: pre-line; text-align: justify; hyphens: auto; }
+  .answer-body p { margin: 0 0 0.85em; }
+  .answer-body p:last-child { margin-bottom: 0; }
+  .answer-score { padding: 0 16px 16px 50px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .answer-score .field-title { font-size: 0.86rem; margin: 0; }
+
+  .expand-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+    margin-block-end: 14px;
+  }
+  .expand-toggle:hover { color: var(--ink); border-color: var(--accent); }
+
+  ol.rank-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .rank-number {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    background: var(--surface-2);
+    color: var(--muted);
+    border-radius: 7px;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .rank-row:first-child .rank-number { background: var(--gold-soft); color: var(--gold); }
+  .rank-snippet { flex: 1; font-size: 0.88rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-controls { display: flex; gap: 4px; flex: none; }
+  .rank-controls button {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  .rank-controls button:disabled { opacity: 0.3; cursor: default; }
+
+  .nav-row { display: flex; justify-content: space-between; gap: 10px; margin-block-start: 20px; }
+  .btn {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 11px 22px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:hover:not(:disabled) { filter: brightness(0.97); }
+
+  .validation-msg { color: var(--danger); background: var(--danger-soft); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-block-start: 10px; }
+
+  table.review-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  table.review-table th, table.review-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.review-table th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .rank-order { font-family: var(--font-mono); }
+
+  .center { text-align: center; }
+  .icon-ok {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 1.6rem;
+  }
+  textarea.dump { font-family: var(--font-mono); font-size: 0.78rem; min-height: 160px; }
+  .copy-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-block-start: 8px; }
+
+  @media (max-width: 460px) {
+    .rank-snippet { display: none; }
+    .answer-body, .answer-score, .answer-images, .image-caption { padding-inline-start: 16px; }
+    .answer-images img { max-width: 45vw; max-height: 45vw; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<main lang="en">
+  <div class="masthead">
+    <span class="brand">EOBench Human Expert Evaluation</span>
+    <span class="code" id="masthead-code"></span>
+  </div>
+
+  <section id="screen-loading" class="card">Loading your form…</section>
+
+  <section id="screen-error" class="card" hidden>
+    <h2>Can't open this form</h2>
+    <p id="error-message" style="color:var(--muted); margin-block-start:10px;"></p>
+  </section>
+
+  <section id="screen-code" class="card" hidden></section>
+
+  <div id="progress-wrap" hidden>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-label" id="progress-label"></div>
+  </div>
+
+  <section id="screen-intro" hidden></section>
+  <section id="screen-item" hidden></section>
+  <section id="screen-review" hidden></section>
+  <section id="screen-done" hidden></section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var ORGANISER_EMAIL = 'evameijling@gmail.com';
+  var CODE_PATTERN = /^F\d{1,3}$/;
+
+  var el = {
+    loading: document.getElementById('screen-loading'),
+    error: document.getElementById('screen-error'),
+    errorMsg: document.getElementById('error-message'),
+    code: document.getElementById('screen-code'),
+    intro: document.getElementById('screen-intro'),
+    item: document.getElementById('screen-item'),
+    review: document.getElementById('screen-review'),
+    done: document.getElementById('screen-done'),
+    mastheadCode: document.getElementById('masthead-code'),
+    progressWrap: document.getElementById('progress-wrap'),
+    progressFill: document.getElementById('progress-fill'),
+    progressLabel: document.getElementById('progress-label'),
+  };
+
+  function showScreen(name) {
+    ['loading', 'error', 'code', 'intro', 'item', 'review', 'done'].forEach(function (s) {
+      el[s].hidden = s !== name;
+    });
+    el.progressWrap.hidden = (name !== 'item');
+  }
+
+  function fail(msg) {
+    showScreen('error');
+    el.errorMsg.textContent = msg;
+  }
+
+  // h() (a small element-builder helper) is defined further below, but as a
+  // function declaration it's hoisted and already callable here.
+
+  // The form code is meant to travel as ?form=F01 (or, as a fallback,
+  // #form=F01 / a bare #F01) on the link the organiser sends. Some hosting
+  // layers strip query strings before this page ever loads, so neither is
+  // guaranteed to arrive -- if both are empty, ask for the code instead of
+  // dead-ending on an error.
+  function codeFromLocation() {
+    var fromQuery = new URLSearchParams(location.search).get('form');
+    if (fromQuery) return fromQuery;
+    var hash = location.hash.replace(/^#/, '');
+    if (!hash) return null;
+    var fromHash = new URLSearchParams(hash).get('form');
+    return fromHash || hash;
+  }
+
+  function renderCodeEntry(prefillError) {
+    var c = el.code;
+    c.innerHTML = '';
+    c.appendChild(h('h2', { text: 'Enter your form code' }));
+    c.appendChild(h('p', {
+      text: 'Your organiser gave you a short code (for example "F01"). Type it in below to open your questions.',
+      style: 'color:var(--muted); margin-block-start:10px;'
+    }));
+    var input = h('input', { type: 'text', id: 'field-code', placeholder: 'F01', style: 'max-width:140px; text-transform:uppercase; margin-block-start:14px;' });
+    var msg = h('div', { class: 'validation-msg', hidden: 'hidden' });
+    var go = h('button', {
+      type: 'button', class: 'btn primary', text: 'Continue', style: 'margin-block-start:14px; display:block;',
+      onclick: function () {
+        var code = input.value.toUpperCase().trim();
+        if (!CODE_PATTERN.test(code)) {
+          msg.hidden = false;
+          msg.textContent = 'That doesn’t look like a form code -- it should look like "F01".';
+          return;
+        }
+        start(code);
+      }
+    });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') go.click(); });
+    c.appendChild(input);
+    c.appendChild(go);
+    c.appendChild(msg);
+    if (prefillError) { msg.hidden = false; msg.textContent = prefillError; }
+    showScreen('code');
+    input.focus();
+  }
+
+  var formCode = null;
+  var STORAGE_KEY = null;
+  var spec = null;
+  var state = null;
+
+  function freshResponse() {
+    return { relevance: null, accuracy: {}, rank: null, familiarity: null, comment: '' };
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && saved.formCode === formCode && Array.isArray(saved.responses) &&
+            saved.responses.length === spec.items.length) {
+          return saved;
+        }
+      }
+    } catch (e) { /* ignore: private mode, quota, corrupt data */ }
+    return {
+      formCode: formCode,
+      profile: { name: '', expertise: null, experience: [], experienceOther: '', consent: false },
+      itemIndex: 0,
+      screen: 'intro',
+      responses: spec.items.map(freshResponse),
+    };
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  // ---------------------------------------------------------------------
+  // Small DOM helpers
+  // ---------------------------------------------------------------------
+  function h(tag, attrs, children) {
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      if (k === 'text') node.textContent = attrs[k];
+      else if (k === 'html') node.innerHTML = attrs[k];
+      else if (k.indexOf('on') === 0 && typeof attrs[k] === 'function') node.addEventListener(k.slice(2), attrs[k]);
+      else node.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c) node.appendChild(c); });
+    return node;
+  }
+
+  function paragraphs(text) {
+    var frag = document.createDocumentFragment();
+    text.split(/\n{2,}/).forEach(function (block) {
+      block = block.trim();
+      if (!block) return;
+      frag.appendChild(h('p', { text: block }));
+    });
+    return frag;
+  }
+
+  function renderDescription(container, text) {
+    text.split(/\n{2,}/).forEach(function (block) {
+      var lines = block.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      if (!lines.length) return;
+      var first = lines[0];
+      var isHeading = first.length < 60 && first === first.toUpperCase() && /[A-Z]/.test(first);
+      if (isHeading) {
+        container.appendChild(h('h3', { text: first }));
+        var rest = lines.slice(1).join(' ');
+        if (rest) container.appendChild(h('p', { text: rest }));
+      } else {
+        container.appendChild(h('p', { text: lines.join(' ') }));
+      }
+    });
+  }
+
+  function wordCount(text) { return text.trim().split(/\s+/).length; }
+
+  function snippet(text, nWords) {
+    var words = text.trim().split(/\s+/);
+    return words.slice(0, nWords).join(' ') + (words.length > nWords ? '…' : '');
+  }
+
+  function scalePicker(name, value, onChange, low, high) {
+    var wrap = h('div', {});
+    var row = h('div', { class: 'pillrow scale-5', role: 'radiogroup', 'aria-label': name });
+    for (var i = 1; i <= 5; i++) {
+      (function (n) {
+        var checked = value === n;
+        var pill = h('button', {
+          type: 'button', class: 'pill', id: name + '-' + n, role: 'radio',
+          'aria-checked': checked ? 'true' : 'false',
+          text: String(n),
+          onclick: function () { onChange(n); }
+        });
+        row.appendChild(pill);
+      })(i);
+    }
+    wrap.appendChild(row);
+    if (low || high) {
+      wrap.appendChild(h('div', { class: 'scale-caption' }, [
+        h('span', { text: low || '' }), h('span', { text: high || '' })
+      ]));
+    }
+    return wrap;
+  }
+
+  function refreshScalePicker(wrap, value) {
+    Array.prototype.forEach.call(wrap.querySelectorAll('.pill'), function (pill, idx) {
+      pill.setAttribute('aria-checked', (idx + 1 === value) ? 'true' : 'false');
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Intro / profile screen
+  // ---------------------------------------------------------------------
+  function renderIntro() {
+    var c = el.intro;
+    c.innerHTML = '';
+    c.appendChild(h('h1', { text: spec.title }));
+    var prose = h('div', { class: 'card prose' });
+    renderDescription(prose, spec.description);
+    c.appendChild(prose);
+
+    var form = h('div', { class: 'card' });
+    form.appendChild(h('h2', { text: 'Before you start', style: 'margin-block-end:16px;' }));
+
+    // Name
+    var nameField = h('label', { class: 'field', for: 'field-name' });
+    nameField.appendChild(h('span', { class: 'field-title', text: 'Name' }));
+    nameField.appendChild(h('span', { class: 'field-help', text: 'So we know who a response came from. Not shown to other experts.' }));
+    var nameInput = h('input', { type: 'text', id: 'field-name', value: state.profile.name || '', autocomplete: 'name' });
+    nameInput.addEventListener('input', function () { state.profile.name = nameInput.value; saveState(); updateStartButton(); });
+    nameField.appendChild(nameInput);
+    form.appendChild(nameField);
+
+    // Expertise
+    var expField = h('div', { class: 'field' });
+    expField.appendChild(h('span', { class: 'field-title', text: 'How would you rate your Earth Observation expertise?' }));
+    var expPicker = scalePicker('expertise', state.profile.expertise, function (n) {
+      state.profile.expertise = n;
+      refreshScalePicker(expPicker, n);
+      saveState();
+      updateStartButton();
+    }, 'Newcomer', 'Expert');
+    expField.appendChild(expPicker);
+    form.appendChild(expField);
+
+    // Experience areas
+    var areas = [
+      'Optical / SAR satellite imagery',
+      'Climate and atmospheric data (ERA5, trace gases)',
+      'Geospatial / GIS analysis',
+      'EO science strategy and scientific literature'
+    ];
+    var areaField = h('div', { class: 'field' });
+    areaField.appendChild(h('span', { class: 'field-title', text: 'Which areas are you experienced in? (optional)' }));
+    areas.forEach(function (area) {
+      var line = h('label', { class: 'checkline' });
+      var cb = h('input', { type: 'checkbox' });
+      cb.checked = state.profile.experience.indexOf(area) !== -1;
+      cb.addEventListener('change', function () {
+        var idx = state.profile.experience.indexOf(area);
+        if (cb.checked && idx === -1) state.profile.experience.push(area);
+        if (!cb.checked && idx !== -1) state.profile.experience.splice(idx, 1);
+        saveState();
+      });
+      line.appendChild(cb);
+      line.appendChild(h('span', { text: area }));
+      areaField.appendChild(line);
+    });
+    var otherLine = h('label', { class: 'checkline' });
+    var otherCb = h('input', { type: 'checkbox' });
+    otherCb.checked = !!state.profile.experienceOther;
+    var otherInput = h('input', { type: 'text', placeholder: 'Other area', style: 'margin-top:4px;' });
+    otherInput.value = state.profile.experienceOther || '';
+    otherInput.hidden = !otherCb.checked;
+    otherCb.addEventListener('change', function () {
+      otherInput.hidden = !otherCb.checked;
+      if (!otherCb.checked) { state.profile.experienceOther = ''; otherInput.value = ''; }
+      saveState();
+    });
+    otherInput.addEventListener('input', function () { state.profile.experienceOther = otherInput.value; saveState(); });
+    otherLine.appendChild(otherCb);
+    otherLine.appendChild(h('span', { text: 'Other' }));
+    areaField.appendChild(otherLine);
+    areaField.appendChild(otherInput);
+    form.appendChild(areaField);
+
+    // Consent
+    var consentField = h('div', { class: 'field' });
+    var consentLine = h('label', { class: 'checkline' });
+    var consentCb = h('input', { type: 'checkbox', id: 'field-consent' });
+    consentCb.checked = !!state.profile.consent;
+    consentCb.addEventListener('change', function () {
+      state.profile.consent = consentCb.checked;
+      saveState();
+      updateStartButton();
+    });
+    consentLine.appendChild(consentCb);
+    consentLine.appendChild(h('span', { text: 'I agree that my responses are used for the research evaluation of this benchmark.' }));
+    consentField.appendChild(consentLine);
+    form.appendChild(consentField);
+
+    var navRow = h('div', { class: 'nav-row', style: 'justify-content:flex-end;' });
+    var startBtn = h('button', {
+      type: 'button', class: 'btn primary', id: 'start-btn', text: 'Start',
+      onclick: function () {
+        state.screen = 'item';
+        state.itemIndex = 0;
+        saveState();
+        showScreen('item');
+        renderItem();
+      }
+    });
+    navRow.appendChild(startBtn);
+    form.appendChild(navRow);
+    c.appendChild(form);
+
+    function updateStartButton() {
+      var ok = state.profile.name.trim().length > 0 && state.profile.expertise !== null && state.profile.consent;
+      startBtn.disabled = !ok;
+    }
+    updateStartButton();
+  }
+
+  // ---------------------------------------------------------------------
+  // Item (question) screen
+  // ---------------------------------------------------------------------
+  function updateProgress() {
+    var n = spec.items.length;
+    var pct = Math.round((state.itemIndex / n) * 100);
+    el.progressFill.style.width = pct + '%';
+    el.progressLabel.textContent = 'Question ' + (state.itemIndex + 1) + ' of ' + n;
+  }
+
+  function renderItem() {
+    updateProgress();
+    var idx = state.itemIndex;
+    var item = spec.items[idx];
+    var resp = state.responses[idx];
+    if (!resp.rank && item.answers.length >= 2) resp.rank = item.answers.map(function (a) { return a.letter; });
+
+    var c = el.item;
+    c.innerHTML = '';
+
+    var qCard = h('div', { class: 'card' });
+    qCard.appendChild(h('span', { class: 'label-chip', text: item.label }));
+    qCard.appendChild(h('div', { class: 'question-text', text: item.question }));
+    c.appendChild(qCard);
+
+    // Relevance
+    var relCard = h('div', { class: 'card' });
+    relCard.appendChild(h('div', { class: 'field-title', text: spec.item_fields.relevance.title }));
+    relCard.appendChild(h('div', { class: 'field-help', text: spec.item_fields.relevance.help }));
+    var relPicker = scalePicker('relevance-' + idx, resp.relevance, function (n) {
+      resp.relevance = n; refreshScalePicker(relPicker, n); saveState(); validateItem();
+    }, spec.item_fields.relevance.low, spec.item_fields.relevance.high);
+    relCard.appendChild(relPicker);
+    c.appendChild(relCard);
+
+    // Answers
+    var ansCard = h('div', { class: 'card' });
+    var ansHead = h('div', { style: 'display:flex; align-items:baseline; justify-content:space-between; margin-block-end:10px;' });
+    ansHead.appendChild(h('h3', { text: 'Answers' }));
+    var toggleBtn = h('button', { type: 'button', class: 'expand-toggle', text: 'Expand all', style: 'margin:0;' });
+    ansHead.appendChild(toggleBtn);
+    ansCard.appendChild(ansHead);
+    ansCard.appendChild(h('div', { class: 'field-help', text: spec.item_fields.accuracy.help, style: 'margin-block-end:14px;' }));
+
+    var detailsEls = [];
+    item.answers.forEach(function (answer) {
+      var wc = wordCount(answer.text);
+      var images = answer.images || [];
+      var hasImages = images.length > 0;
+      var hasOriginal = images.some(function (im) { return !im.rendered; });
+      var details = h('details', { class: 'answer' });
+      var summaryChildren = [
+        h('span', { class: 'badge', text: answer.letter }),
+        h('span', { text: 'Answer ' + answer.letter }),
+        h('span', { class: 'word-count', text: '· ~' + wc + ' words' })
+      ];
+      if (hasImages) {
+        summaryChildren.push(h('span', {
+          class: 'image-flag',
+          title: hasOriginal ? 'Includes the image this answer describes' : 'Includes a rendered preview of the data file this answer describes',
+          text: hasOriginal ? '▣ image' : '▦ rendered preview'
+        }));
+      }
+      summaryChildren.push(h('span', { class: 'chevron', text: '›' }));
+      var summary = h('summary', {}, summaryChildren);
+      details.appendChild(summary);
+      var body = h('div', { class: 'answer-body' });
+      if (hasImages) {
+        var gallery = h('div', { class: 'answer-images' });
+        var captions = [];
+        images.forEach(function (im) {
+          var figure = h('figure', { class: 'answer-image-figure' });
+          var link = h('a', { href: im.src, target: '_blank', rel: 'noopener' });
+          link.appendChild(h('img', { src: im.src, loading: 'lazy', alt: im.rendered ? 'Rendered preview of the data file this answer refers to' : 'Image this answer refers to' }));
+          figure.appendChild(link);
+          figure.appendChild(h('figcaption', { text: im.rendered ? 'Rendered preview — not the literal image, colours/framing may differ' : 'Original image' }));
+          gallery.appendChild(figure);
+          if (im.rendered) captions.push(true);
+        });
+        body.appendChild(gallery);
+        body.appendChild(h('div', { class: 'image-caption', text: 'Click an image to view full size.' + (captions.length ? ' Rendered previews are reconstructed from the raw data file the assistant saved, not a copy of what it saw on screen.' : '') }));
+      }
+      body.appendChild(paragraphs(answer.text));
+      details.appendChild(body);
+
+      var scoreRow = h('div', { class: 'answer-score' });
+      scoreRow.appendChild(h('span', { class: 'field-title', text: 'Accuracy' }));
+      var accPicker = scalePicker('accuracy-' + idx + '-' + answer.letter, resp.accuracy[answer.letter] || null, function (n) {
+        resp.accuracy[answer.letter] = n; refreshScalePicker(accPicker, n); saveState(); validateItem();
+      });
+      scoreRow.appendChild(accPicker);
+      details.appendChild(scoreRow);
+
+      detailsEls.push(details);
+      ansCard.appendChild(details);
+    });
+    toggleBtn.addEventListener('click', function () {
+      var anyClosed = detailsEls.some(function (d) { return !d.open; });
+      detailsEls.forEach(function (d) { d.open = anyClosed; });
+      toggleBtn.textContent = anyClosed ? 'Collapse all' : 'Expand all';
+    });
+    c.appendChild(ansCard);
+
+    // Ranking -- only meaningful with 2+ answers; a single-answer question
+    // has nothing to compare it to, so skip the step entirely.
+    if (item.answers.length >= 2) {
+      var rankCard = h('div', { class: 'card' });
+      rankCard.appendChild(h('div', { class: 'field-title', text: spec.item_fields.ranking.title }));
+      rankCard.appendChild(h('div', { class: 'field-help', text: spec.item_fields.ranking.help }));
+      var rankList = h('ol', { class: 'rank-list' });
+      rankCard.appendChild(rankList);
+      c.appendChild(rankCard);
+
+      var textByLetter = (function () {
+        var map = {};
+        item.answers.forEach(function (a) { map[a.letter] = a.text; });
+        return function (letter) { return map[letter] || ''; };
+      })();
+
+      var renderRankList = function () {
+        rankList.innerHTML = '';
+        resp.rank.forEach(function (letter, pos) {
+          var row = h('li', { class: 'rank-row' });
+          row.appendChild(h('span', { class: 'rank-number', text: String(pos + 1) }));
+          row.appendChild(h('span', { class: 'badge', text: letter }));
+          row.appendChild(h('span', { class: 'rank-snippet', text: snippet(textByLetter(letter), 10) }));
+          var controls = h('span', { class: 'rank-controls' });
+          var up = h('button', {
+            type: 'button', 'aria-label': 'Move up', text: '↑',
+            onclick: function () {
+              if (pos === 0) return;
+              var tmp = resp.rank[pos - 1]; resp.rank[pos - 1] = resp.rank[pos]; resp.rank[pos] = tmp;
+              saveState(); renderRankList();
+            }
+          });
+          var down = h('button', {
+            type: 'button', 'aria-label': 'Move down', text: '↓',
+            onclick: function () {
+              if (pos === resp.rank.length - 1) return;
+              var tmp = resp.rank[pos + 1]; resp.rank[pos + 1] = resp.rank[pos]; resp.rank[pos] = tmp;
+              saveState(); renderRankList();
+            }
+          });
+          if (pos === 0) up.disabled = true;
+          if (pos === resp.rank.length - 1) down.disabled = true;
+          controls.appendChild(up);
+          controls.appendChild(down);
+          row.appendChild(controls);
+          rankList.appendChild(row);
+        });
+      };
+      renderRankList();
+    } else {
+      var noRankCard = h('div', { class: 'card' });
+      noRankCard.appendChild(h('div', { class: 'field-title', text: 'Ranking' }));
+      noRankCard.appendChild(h('div', {
+        class: 'field-help', style: 'margin:0;',
+        text: 'Only one assistant answered this question, so there’s nothing to rank it against.'
+      }));
+      c.appendChild(noRankCard);
+    }
+
+    // Familiarity + comment
+    var extraCard = h('div', { class: 'card' });
+    extraCard.appendChild(h('div', { class: 'field-title', text: spec.item_fields.familiarity.title }));
+    var famPicker = scalePicker('familiarity-' + idx, resp.familiarity, function (n) {
+      resp.familiarity = n;
+      refreshScalePicker(famPicker, n);
+      saveState();
+      validateItem();
+    }, spec.item_fields.familiarity.low, spec.item_fields.familiarity.high);
+    extraCard.appendChild(famPicker);
+
+    var commentField = h('label', { class: 'field', style: 'margin-block-start:16px; margin-block-end:0;' });
+    commentField.appendChild(h('span', { class: 'field-title', text: spec.item_fields.comment.title }));
+    commentField.appendChild(h('span', { class: 'field-help', text: spec.item_fields.comment.help }));
+    var commentBox = h('textarea', {});
+    commentBox.value = resp.comment || '';
+    commentBox.addEventListener('input', function () { resp.comment = commentBox.value; saveState(); });
+    commentField.appendChild(commentBox);
+    extraCard.appendChild(commentField);
+    c.appendChild(extraCard);
+
+    // Nav
+    var msg = h('div', { class: 'validation-msg', hidden: 'hidden' });
+    var navRow = h('div', { class: 'nav-row' });
+    var backBtn = h('button', {
+      type: 'button', class: 'btn', text: 'Back',
+      onclick: function () {
+        if (idx === 0) { state.screen = 'intro'; saveState(); showScreen('intro'); renderIntro(); return; }
+        state.itemIndex -= 1; saveState(); renderItem();
+      }
+    });
+    var nextBtn = h('button', {
+      type: 'button', class: 'btn primary',
+      text: idx === spec.items.length - 1 ? 'Review answers' : 'Next question',
+      onclick: function () {
+        var problem = itemProblem();
+        if (problem) { msg.hidden = false; msg.textContent = problem; return; }
+        if (idx === spec.items.length - 1) {
+          state.screen = 'review'; saveState(); showScreen('review'); renderReview();
+        } else {
+          state.itemIndex += 1; saveState(); renderItem();
+        }
+      }
+    });
+    navRow.appendChild(backBtn);
+    navRow.appendChild(nextBtn);
+    c.appendChild(navRow);
+    c.appendChild(msg);
+
+    function itemProblem() {
+      if (resp.relevance === null) return 'Rate how relevant the question is before continuing.';
+      var missing = item.answers.filter(function (a) { return !resp.accuracy[a.letter]; });
+      if (missing.length) return 'Score accuracy for every answer (missing: ' + missing.map(function (a) { return a.letter; }).join(', ') + ').';
+      if (resp.familiarity === null) return 'Rate how familiar you are with this topic before continuing.';
+      return null;
+    }
+    function validateItem() { if (!itemProblem()) msg.hidden = true; }
+  }
+
+  // ---------------------------------------------------------------------
+  // Review + download
+  // ---------------------------------------------------------------------
+  function buildResultPayload() {
+    return {
+      form_code: formCode,
+      submitted_at: new Date().toISOString(),
+      name: state.profile.name.trim(),
+      eo_expertise: state.profile.expertise,
+      experience_areas: state.profile.experience.concat(state.profile.experienceOther ? [state.profile.experienceOther] : []),
+      items: spec.items.map(function (item, idx) {
+        var r = state.responses[idx];
+        return {
+          position: item.position,
+          relevance: r.relevance,
+          accuracy: r.accuracy,
+          rank_best_to_worst: r.rank,
+          familiarity: r.familiarity,
+          comment: r.comment || ''
+        };
+      })
+    };
+  }
+
+  function slugify(s) {
+    var out = s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return out || 'anonymous';
+  }
+
+  function renderReview() {
+    var c = el.review;
+    c.innerHTML = '';
+    c.appendChild(h('h1', { text: 'Review your answers' }));
+
+    var summary = h('div', { class: 'card' });
+    var table = h('table', { class: 'review-table' });
+    var thead = h('tr', {}, [h('th', { text: 'Question' }), h('th', { text: 'Relevance' }), h('th', { text: 'Ranking (best → worst)' })]);
+    table.appendChild(thead);
+    spec.items.forEach(function (item, idx) {
+      var r = state.responses[idx];
+      var row = h('tr', {}, [
+        h('td', { text: item.label + ' #' + item.position }),
+        h('td', { text: r.relevance !== null ? String(r.relevance) : '—' }),
+        h('td', { class: 'rank-order', text: r.rank ? r.rank.join(' → ') : '(only one answer)' })
+      ]);
+      table.appendChild(row);
+    });
+    summary.appendChild(table);
+    var editBtn = h('button', {
+      type: 'button', class: 'btn', text: 'Edit answers', style: 'margin-block-start:14px;',
+      onclick: function () { state.screen = 'item'; state.itemIndex = 0; saveState(); showScreen('item'); renderItem(); }
+    });
+    summary.appendChild(editBtn);
+    c.appendChild(summary);
+
+    var sendCard = h('div', { class: 'card' });
+    sendCard.appendChild(h('h2', { text: 'Send in your results' }));
+    sendCard.appendChild(h('p', {
+      text: 'Download your results file, then email it to the organiser (or drop it in the shared folder they gave you). Nothing is sent automatically.',
+      style: 'color:var(--muted);'
+    }));
+
+    var status = h('div', { class: 'validation-msg', hidden: 'hidden' });
+    var dlBtn = h('button', { type: 'button', class: 'btn primary', text: 'Download my results' });
+    dlBtn.addEventListener('click', function () {
+      dlBtn.disabled = true;
+      var payload = buildResultPayload();
+      var filename = 'EOeval_' + formCode + '_' + slugify(payload.name) + '.json';
+      var json = JSON.stringify(payload, null, 2);
+      var afterFail = function () { showFallback(json, filename); };
+      if (!window.claude || typeof window.claude.use !== 'function') { afterFail(); return; }
+      window.claude.use('downloads').then(function (downloads) {
+        if (!downloads) { afterFail(); return; }
+        downloads.save({ filename: filename, data: json }).then(function () {
+          state.screen = 'done';
+          saveState();
+          showScreen('done');
+          renderDone(payload.name, filename);
+        }).catch(function () { afterFail(); });
+      }).catch(afterFail);
+    });
+    sendCard.appendChild(dlBtn);
+    sendCard.appendChild(status);
+    c.appendChild(sendCard);
+
+    function showFallback(json, filename) {
+      dlBtn.disabled = false;
+      status.hidden = false;
+      status.textContent = 'Automatic download isn’t available here. Copy the text below and save it yourself as "' + filename + '", then email it to the organiser.';
+      var box = h('textarea', { class: 'dump', readonly: 'readonly' });
+      box.value = json;
+      sendCard.appendChild(box);
+      var copyRow = h('div', { class: 'copy-row' });
+      var copyBtn = h('button', {
+        type: 'button', class: 'btn', text: 'Copy to clipboard',
+        onclick: function () {
+          box.select();
+          try { navigator.clipboard.writeText(json).then(function () { copyBtn.textContent = 'Copied'; }); }
+          catch (e) { document.execCommand('copy'); copyBtn.textContent = 'Copied'; }
+        }
+      });
+      copyRow.appendChild(copyBtn);
+      sendCard.appendChild(copyRow);
+    }
+  }
+
+  function renderDone(name, filename) {
+    var c = el.done;
+    c.innerHTML = '';
+    var card = h('div', { class: 'card center' });
+    card.appendChild(h('div', { class: 'icon-ok', text: '✓' }));
+    card.appendChild(h('h2', { text: 'Thank you' + (name ? ', ' + name.split(' ')[0] : '') + '.' }));
+    card.appendChild(h('p', {
+      text: 'Your file "' + filename + '" was downloaded. The last step is sending it to the organiser — nothing is submitted automatically.',
+      style: 'color:var(--muted);'
+    }));
+    var subject = encodeURIComponent('EO eval results – ' + formCode + (name ? ' – ' + name : ''));
+    var body = encodeURIComponent('Hi,\n\nAttached are my results for form ' + formCode + ' (file: ' + filename + ').\n\nThanks,\n' + (name || ''));
+    var mailBtn = h('a', {
+      class: 'btn primary', href: 'mailto:' + ORGANISER_EMAIL + '?subject=' + subject + '&body=' + body,
+      text: 'Open email to ' + ORGANISER_EMAIL, style: 'display:inline-block; text-decoration:none;'
+    });
+    card.appendChild(mailBtn);
+    card.appendChild(h('p', { text: 'Remember to attach the downloaded file before sending.', style: 'color:var(--muted); font-size:0.85rem; margin-block-start:12px;' }));
+    c.appendChild(card);
+  }
+
+  // ---------------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------------
+  function start(code) {
+    formCode = code;
+    STORAGE_KEY = 'eoeval:' + formCode;
+    el.mastheadCode.textContent = formCode;
+    showScreen('loading');
+    fetch('forms/form_' + formCode.slice(1) + '.json')
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (data) {
+        spec = data;
+        state = loadState();
+        document.title = spec.title;
+        if (state.screen === 'review') { showScreen('review'); renderReview(); }
+        else if (state.screen === 'item') { showScreen('item'); renderItem(); }
+        else { showScreen('intro'); renderIntro(); }
+      })
+      .catch(function () {
+        renderCodeEntry('Could not find form ' + formCode + '. Double-check the code, or ask the organiser to resend it.');
+      });
+  }
+
+  var initialCode = codeFromLocation();
+  if (initialCode && CODE_PATTERN.test(initialCode.toUpperCase().trim())) {
+    start(initialCode.toUpperCase().trim());
+  } else {
+    renderCodeEntry(null);
+  }
+})();
+</script>

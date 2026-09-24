@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Build the expert-evaluation study (a self-contained web form) from the benchmark.
 
-Pipeline: pool filtering -> coverage-balanced batching (one batch = one expert
-form) -> exports.
+Pipeline: pool filtering -> routing to expert groups -> coverage-balanced
+batching within each group (one batch = one expert form) -> exports.
 
 Usage:
-    python scripts/build_expert_eval.py [--n-experts 15] [--items-per-form N] [--seed 42]
+    python scripts/build_expert_eval.py [--experts eoss=4 dashboard=4 mooc=4 general=20]
+                                        [--items-per-form 8] [--seed 42]
 
 Design (see expert_eval/README.md):
     * a question is eligible as soon as AT LEAST ONE candidate model produced
@@ -15,9 +16,14 @@ Design (see expert_eval/README.md):
     * every question shows every model that actually answered it (no
       placeholder slots for models that didn't), so answers per question
       varies (1 to len(MODELS)); ranking is only asked when 2+ answers exist,
-    * one form per expert. `--items-per-form` questions per form, defaulting
-      to just enough that every pool question gets at least one form; any
-      slack from `n_experts x items_per_form` beyond the pool size is spent
+    * every question belongs to exactly one expert group (see
+      EXPERT_GROUPS): a specialist group if its reference solution uses that
+      group's sub-agent, otherwise the general group. Each group's questions
+      go only to that group's forms,
+    * one form per expert. Within a group, every form has the same length:
+      `--items-per-form`, or more if that is needed for every question in
+      the group to get at least one form; any slack from
+      `n_experts x items_per_form` beyond the group's pool size is spent
       giving as many questions as possible a second (or further) rater,
       spread evenly rather than concentrated.
 
@@ -70,7 +76,7 @@ assert len(LETTERS) >= len(MODELS)
 
 # Reading-load / time model (informational -- printed per form, not enforced;
 # with every eligible question in the study, a form's length is driven by
-# --n-experts/--items-per-form, not by a fixed per-form budget).
+# --experts/--items-per-form, not by a fixed per-form budget).
 READING_WPM = 200
 INTRO_MINUTES = 1.5
 JUDGEMENT_MINUTES_PER_ITEM = 1.5
@@ -288,6 +294,20 @@ SERVER_TO_AGENT = {
 VLM_AGENT = "vlm_agent"
 AGENTS = sorted(set(SERVER_TO_AGENT.values()) | {VLM_AGENT})
 
+# Expert groups. A question goes to a specialist group if its reference
+# solution uses that group's sub-agent (even alongside generic agents), else to
+# GENERAL_GROUP. Dict order is the routing priority for questions using several
+# specialist agents: smallest group first, so it doesn't run short of questions.
+EXPERT_GROUPS = {
+    "mooc": {"mooc_rag_agent"},
+    "eoss": {"graph_rag_agent"},
+    "dashboard": {"eo_stac_agent"},
+}
+GENERAL_GROUP = "general"
+GROUPS = [*EXPERT_GROUPS, GENERAL_GROUP]
+DEFAULT_GROUP_EXPERTS = {"mooc": 4, "eoss": 4, "dashboard": 4, "general": 20}
+assert set(DEFAULT_GROUP_EXPERTS) == set(GROUPS)
+
 # Identity strings that must not appear in what experts read.
 IDENTITY_PATTERN = re.compile(
     r"\b(EVE|Gemma\S*|Mistral\S*|Qwen\S*|Pi ?School|Earth Virtual Expert|OpenAI|GPT\S*|Claude|Llama\S*)\b",
@@ -375,6 +395,14 @@ def load_tool_to_agent():
     return tool_to_agent
 
 
+def expert_group(agents):
+    """First specialist group (in EXPERT_GROUPS order) whose agent is used, else GENERAL_GROUP."""
+    for group, specialist_agents in EXPERT_GROUPS.items():
+        if specialist_agents & set(agents):
+            return group
+    return GENERAL_GROUP
+
+
 def load_answers():
     """Return {model: {task_ID: {"text": raw final_answer, "images": [data URIs]}}}
     for non-empty answers."""
@@ -446,6 +474,7 @@ def build_pool(tool_to_agent):
             "question": task["task_text"].strip(),
             "tools": sorted(set(tools)),
             "agents": sorted({tool_to_agent[t] for t in tools}),
+            "group": expert_group({tool_to_agent[t] for t in tools}),
             "answers": cleaned,
             "allowed": allowed,
             "words": {m: n_words(cleaned[m]) for m in allowed},
@@ -501,24 +530,24 @@ def distribute_into_forms(pool, n_experts, items_per_form, rng):
     question appearing twice in the same form."""
     total_slots = n_experts * items_per_form
     if total_slots < len(pool):
-        sys.exit(f"--n-experts x --items-per-form ({n_experts} x {items_per_form} = {total_slots}) is less than "
+        sys.exit(f"experts x --items-per-form ({n_experts} x {items_per_form} = {total_slots}) is less than "
                   f"the pool ({len(pool)}) -- every question needs at least one slot. Raise one of them.")
 
     slots = build_slot_multiset(pool, total_slots, rng)
+    copies = collections.Counter(q["task_id"] for q in slots)
+    question_by_id = {q["task_id"]: q for q in pool}
     forms = [[] for _ in range(n_experts)]
-    form_task_ids = [set() for _ in range(n_experts)]
-    ptr = 0
-    for q in slots:
-        tries = 0
-        while q["task_id"] in form_task_ids[ptr] or len(forms[ptr]) >= items_per_form:
-            ptr = (ptr + 1) % n_experts
-            tries += 1
-            if tries > n_experts:
-                sys.exit("Could not place every question without repeating one within a form -- "
-                          "raise --n-experts or --items-per-form.")
-        forms[ptr].append(q)
-        form_task_ids[ptr].add(q["task_id"])
-        ptr = (ptr + 1) % n_experts
+    # Put all k copies of a question into the k least-filled forms (random
+    # tie-break). Fill levels then never differ by more than one, so every
+    # form ends at exactly items_per_form and no form holds a question twice
+    # -- unlike first-fit dealing, which can dead-end when coverage is tight.
+    for task_id in dict.fromkeys(q["task_id"] for q in slots):  # shuffled order, deduplicated
+        k = copies[task_id]
+        if k > n_experts:
+            sys.exit(f"{task_id} needs {k} forms but there are only {n_experts} -- lower --items-per-form.")
+        targets = sorted(range(n_experts), key=lambda i: (len(forms[i]), rng.random()))[:k]
+        for i in targets:
+            forms[i].append(question_by_id[task_id])
     for form_items in forms:
         rng.shuffle(form_items)  # question order within the form
     return forms
@@ -553,7 +582,9 @@ PROFILE_FIELDS = [
     {"type": "scale", "title": "How would you rate your Earth Observation expertise?", "low": "Newcomer", "high": "Expert", "required": True},
     {"type": "checkbox", "title": "Which areas are you experienced in?",
      "choices": ["Optical / SAR satellite imagery", "Climate and atmospheric data (ERA5, trace gases)",
-                 "Geospatial / GIS analysis", "EO science strategy and scientific literature"],
+                 "Geospatial / GIS analysis", "Scientific literature",
+                 "ESA Earth Observation Science Strategy (EOSS)", "EO Dashboard and its narratives",
+                 "EO training material (MOOCs)"],
      "other": True, "required": False},
     {"type": "checkbox", "title": "Consent", "choices": ["I agree that my responses are used for the research evaluation of this benchmark."], "required": True},
 ]
@@ -582,7 +613,7 @@ def estimated_minutes(items):
     return INTRO_MINUTES + JUDGEMENT_MINUTES_PER_ITEM * len(items) + words_to_read(items) / READING_WPM
 
 
-def build_form_spec(index, form_items, key_rows, rng):
+def build_form_spec(index, group, form_items, key_rows, rng):
     """Blinded form spec; appends the letter->model key rows for the organiser."""
     code = form_code(index)
     items = []
@@ -598,13 +629,14 @@ def build_form_spec(index, form_items, key_rows, rng):
                 answer["images"] = image_uris
             answers.append(answer)
             key_rows.append({
-                "form": code, "item": position, "task_id": item["task_id"],
+                "form": code, "group": group, "item": position, "task_id": item["task_id"],
                 "label": item["label"], "letter": letter, "model": model,
             })
         items.append({"position": position, "label": item["label"], "question": item["question"], "answers": answers})
 
     return {
         "code": code,
+        "group": group,
         "title": f"Human Expert Evaluation of Agentic AI for EO, form {code}",
         "description": INTRO_TEXT.format(n_items=len(items), target_minutes=estimated_minutes(items)),
         "profile_fields": PROFILE_FIELDS,
@@ -632,16 +664,16 @@ def write_study_overview(specs, minutes, path):
         "",
         "## Overview",
         "",
-        "| Form | Questions | Labels in display order | Words to read | Est. minutes |",
-        "|---|---|---|---|---|",
+        "| Form | Group | Questions | Labels in display order | Words to read | Est. minutes |",
+        "|---|---|---|---|---|---|",
     ]
     for spec, mins in zip(specs, minutes):
         labels = " / ".join(i["label"] for i in spec["items"])
-        lines.append(f"| {spec['code']} | {len(spec['items'])} | {labels} | {words_to_read(spec['items'])} | {mins:.1f} |")
+        lines.append(f"| {spec['code']} | {spec['group']} | {len(spec['items'])} | {labels} | {words_to_read(spec['items'])} | {mins:.1f} |")
 
     lines += ["", "## Form contents", ""]
     for spec, mins in zip(specs, minutes):
-        lines += [f"### Form {spec['code']}", "", f"Estimated {mins:.1f} min", ""]
+        lines += [f"### Form {spec['code']}", "", f"Group: {spec['group']}. Estimated {mins:.1f} min", ""]
         for item in spec["items"]:
             lines += [f"#### {spec['code']} / Question {item['position']} of {len(spec['items'])}", "",
                       "**Question**", "", item["question"], ""]
@@ -654,8 +686,8 @@ def write_study_overview(specs, minutes, path):
 
 def read_existing_assignments(path):
     """Best-effort: if `path` already has a filled-in 'Sent to' column, carry
-    those values forward keyed by form code, so rebuilding the study doesn't
-    wipe out who the organiser already noted a link went to."""
+    those values forward keyed by (form code, group), so rebuilding the study
+    doesn't wipe out who the organiser already noted a link went to."""
     if not path.exists():
         return {}
     assignments = {}
@@ -663,10 +695,10 @@ def read_existing_assignments(path):
         if not line.strip().startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 5 or not re.fullmatch(r"F\d+", cells[0]):
+        if len(cells) < 6 or not re.fullmatch(r"F\d+", cells[0]):
             continue
-        if cells[4]:
-            assignments[cells[0]] = cells[4]
+        if cells[5]:
+            assignments[(cells[0], cells[1])] = cells[5]
     return assignments
 
 
@@ -680,7 +712,10 @@ def write_distribution_manifest(specs, minutes, path, existing_assignments=None)
         "\"Anyone with the link can view\"**, otherwise the links 404 for your experts.",
         "",
         "Send each expert their own row's link below (one per expert — each opens a different, "
-        "unique set of questions). **Also tell them their code in plain text** (the \"Form\" "
+        "unique set of questions). Match the expert to the \"Group\" column: "
+        + ", ".join(f"`{g}` = {'/'.join(sorted(a))}" for g, a in EXPERT_GROUPS.items())
+        + f" specialists; `{GENERAL_GROUP}` = everyone else (questions using none of those agents)."
+        " **Also tell them their code in plain text** (the \"Form\" "
         "column) — claude.ai's own routing has been observed to strip the `?form=` part of the "
         "link before the page loads, in which case the page falls back to a plain \"enter your "
         "code\" box instead of failing outright. Every expert downloads their own results file at "
@@ -690,35 +725,35 @@ def write_distribution_manifest(specs, minutes, path, existing_assignments=None)
         "",
         "Fill in \"Sent to\" as you send each link out, to keep track of who has which form. "
         "Rebuilding the study preserves whatever you've filled in here, matched by form code -- "
-        "but only if the form codes still mean the same thing (same --n-experts/--seed); a rebuild "
+        "but only if the form codes still mean the same thing (same --experts/--items-per-form/--seed); a rebuild "
         "with different settings reshuffles which questions each code holds, so treat old "
         "assignments as stale and re-send in that case.",
         "",
         "If you rebuild the study or publish the web app again, re-run this script and re-copy "
         "the links below — the JSON specs may have changed.",
         "",
-        "| Form | Questions | Estimated minutes | Link | Sent to |",
-        "|---|---|---|---|---|",
+        "| Form | Group | Questions | Estimated minutes | Link | Sent to |",
+        "|---|---|---|---|---|---|",
     ]
     for spec, mins in zip(specs, minutes):
-        sent_to = existing_assignments.get(spec["code"], "")
-        lines.append(f"| {spec['code']} | {len(spec['items'])} | {mins:.1f} | {{ARTIFACT_URL}}?form={spec['code']} | {sent_to} |")
+        sent_to = existing_assignments.get((spec["code"], spec["group"]), "")
+        lines.append(f"| {spec['code']} | {spec['group']} | {len(spec['items'])} | {mins:.1f} | {{ARTIFACT_URL}}?form={spec['code']} | {sent_to} |")
     path.write_text("\n".join(lines) + "\n")
 
 
 def write_selected_questions(pool, coverage, forms_by_task, path):
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["task_id", "label", "gt", "n_answers", "coverage", "agents", "n_tools", "tools", "question_words", "forms"])
-        for q in sorted(pool, key=lambda q: (LABELS.index(q["label"]), q["task_id"])):
-            writer.writerow([q["task_id"], q["label"], q["gt"], len(q["allowed"]), coverage[q["task_id"]],
+        writer.writerow(["task_id", "group", "label", "gt", "n_answers", "coverage", "agents", "n_tools", "tools", "question_words", "forms"])
+        for q in sorted(pool, key=lambda q: (GROUPS.index(q["group"]), LABELS.index(q["label"]), q["task_id"])):
+            writer.writerow([q["task_id"], q["group"], q["label"], q["gt"], len(q["allowed"]), coverage[q["task_id"]],
                              ";".join(q["agents"]), len(q["tools"]), ";".join(q["tools"]), n_words(q["question"]),
                              ";".join(forms_by_task[q["task_id"]])])
 
 
 def write_private_key(key_rows, path):
     with open(path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["form", "item", "task_id", "label", "letter", "model"])
+        writer = csv.DictWriter(f, fieldnames=["form", "group", "item", "task_id", "label", "letter", "model"])
         writer.writeheader()
         writer.writerows(key_rows)
 
@@ -726,7 +761,7 @@ def write_private_key(key_rows, path):
 # --------------------------------------------------------------------------
 # Verification
 # --------------------------------------------------------------------------
-def verify(specs, pool, key_rows, items_per_form):
+def verify(specs, pool, key_rows, items_per_group):
     problems = []
 
     coverage = collections.Counter()
@@ -742,6 +777,11 @@ def verify(specs, pool, key_rows, items_per_form):
         if coverage[q["task_id"]] < 1:
             problems.append(f"{q['task_id']}: appears in 0 forms")
 
+    group_by_task = {q["task_id"]: q["group"] for q in pool}
+    for r in key_rows:
+        if r["group"] != group_by_task[r["task_id"]]:
+            problems.append(f"{r['form']}: {r['task_id']} is a {group_by_task[r['task_id']]} question on a {r['group']} form")
+
     # A task_id should occupy exactly one question position within any given
     # form -- distribute_into_forms is built to guarantee this, verify it did.
     positions_by_form_task = collections.defaultdict(set)
@@ -752,8 +792,9 @@ def verify(specs, pool, key_rows, items_per_form):
             problems.append(f"{form}: {task_id} appears at more than one position ({sorted(positions)})")
 
     for spec in specs:
-        if len(spec["items"]) != items_per_form:
-            problems.append(f"{spec['code']}: has {len(spec['items'])} questions, expected {items_per_form}")
+        n_expected = items_per_group[spec["group"]]
+        if len(spec["items"]) != n_expected:
+            problems.append(f"{spec['code']}: has {len(spec['items'])} questions, expected {n_expected}")
         for item in spec["items"]:
             letters = {a["letter"] for a in item["answers"]}
             expected = set(LETTERS[:len(item["answers"])])
@@ -787,13 +828,21 @@ def verify(specs, pool, key_rows, items_per_form):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--n-experts", type=int, default=15,
-                        help="number of forms; one form per expert (default 15)")
-    parser.add_argument("--items-per-form", type=int, default=None,
-                        help="questions per form; default: ceil(pool_size / n_experts), i.e. just enough "
-                             "for every pool question to get at least one form")
+    parser.add_argument("--experts", nargs="+", default=[], metavar="GROUP=N",
+                        help="experts (= forms) per group, overriding the defaults "
+                             + " ".join(f"{g}={n}" for g, n in DEFAULT_GROUP_EXPERTS.items()))
+    parser.add_argument("--items-per-form", type=int, default=8,
+                        help="minimum questions per form (default 8); a group's forms get more if that's "
+                             "needed for every question in the group to get at least one form")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
+
+    group_experts = dict(DEFAULT_GROUP_EXPERTS)
+    for value in args.experts:
+        group, _, n = value.partition("=")
+        if group not in GROUPS or not n.isdigit() or int(n) < 1:
+            sys.exit(f"--experts: expected GROUP=N with GROUP in {GROUPS} and N >= 1, got {value!r}")
+        group_experts[group] = int(n)
 
     rng = random.Random(args.seed)
     tool_to_agent = load_tool_to_agent()
@@ -803,22 +852,32 @@ def main():
     answer_count_dist = collections.Counter(len(q["allowed"]) for q in pool)
     print("  answers per pool question:", dict(sorted(answer_count_dist.items())))
 
-    items_per_form = args.items_per_form or -(-len(pool) // args.n_experts)  # ceil
-    total_slots = args.n_experts * items_per_form
-    base_coverage, extra = divmod(total_slots, len(pool))
-    print(f"Target: {args.n_experts} forms x {items_per_form} questions/form = {total_slots} slot(s) for "
-          f"{len(pool)} questions -> every question seen >={base_coverage} time(s)"
-          + (f", {extra} of them seen {base_coverage + 1} times" if extra else ""))
-
-    forms = distribute_into_forms(pool, args.n_experts, items_per_form, rng)
+    # Forms are numbered consecutively across groups, in GROUPS order.
+    forms = []  # (group, form_items)
+    items_per_group = {}
+    for group in GROUPS:
+        group_pool = [q for q in pool if q["group"] == group]
+        n_experts = group_experts[group]
+        if not group_pool:
+            sys.exit(f"Group {group!r} has no questions -- check EXPERT_GROUPS.")
+        items_per_form = max(args.items_per_form, -(-len(group_pool) // n_experts))  # ceil
+        items_per_group[group] = items_per_form
+        total_slots = n_experts * items_per_form
+        base_coverage, extra = divmod(total_slots, len(group_pool))
+        print(f"Group {group}: {n_experts} forms x {items_per_form} questions/form = {total_slots} slot(s) for "
+              f"{len(group_pool)} questions -> every question seen >={base_coverage} time(s)"
+              + (f", {extra} of them seen {base_coverage + 1} times" if extra else ""))
+        forms += [(group, form_items) for form_items in distribute_into_forms(group_pool, n_experts, items_per_form, rng)]
 
     key_rows = []
-    specs = [build_form_spec(i, form_items, key_rows, rng) for i, form_items in enumerate(forms, start=1)]
+    specs = [build_form_spec(i, group, form_items, key_rows, rng) for i, (group, form_items) in enumerate(forms, start=1)]
     minutes = [estimated_minutes(s["items"]) for s in specs]
 
-    problems, coverage, forms_by_task = verify(specs, pool, key_rows, items_per_form)
+    problems, coverage, forms_by_task = verify(specs, pool, key_rows, items_per_group)
 
     (OUT_DIR / "forms").mkdir(parents=True, exist_ok=True)
+    for stale in (OUT_DIR / "forms").glob("form_*.json"):  # a smaller rebuild must not leave old forms live
+        stale.unlink()
     for spec in specs:
         (OUT_DIR / "forms" / f"form_{spec['code'][1:]}.json").write_text(
             json.dumps(spec, ensure_ascii=False, indent=1))
@@ -830,6 +889,7 @@ def main():
 
     agent_counts = collections.Counter(a for q in pool for a in q["agents"])
     print("\nWhole-pool stats (every question here is in the study)")
+    print("  questions per group:", {g: sum(q["group"] == g for q in pool) for g in GROUPS})
     print("  questions per label:", dict(collections.Counter(q["label"] for q in pool)))
     print("  questions per agent:", dict(sorted(agent_counts.items())))
     print("  multi-agent questions:", sum(len(q["agents"]) > 1 for q in pool), "/", len(pool))
@@ -843,7 +903,10 @@ def main():
     n_images = sum(len(imgs) for q in pool for imgs in q["images"].values())
     print(f"  questions with a viewable image attached: {questions_with_images}/{len(pool)} ({n_images} image(s) total)")
     print(f"  words to read per form: min/max = {min(words_to_read(s['items']) for s in specs)}/{max(words_to_read(s['items']) for s in specs)}")
-    print(f"  estimated minutes per form: min/max/mean = {min(minutes):.1f}/{max(minutes):.1f}/{sum(minutes) / len(minutes):.1f}")
+    for group in GROUPS:
+        group_minutes = [m for s, m in zip(specs, minutes) if s["group"] == group]
+        print(f"  estimated minutes per {group} form: min/max/mean = {min(group_minutes):.1f}/{max(group_minutes):.1f}/"
+              f"{sum(group_minutes) / len(group_minutes):.1f}")
     if problems:
         print("\nPROBLEMS:")
         for problem in problems:

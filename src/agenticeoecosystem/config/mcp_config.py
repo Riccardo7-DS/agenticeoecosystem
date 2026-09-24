@@ -22,6 +22,16 @@ logger = logging.getLogger(__name__)
 _GIS_OUTPUT_DIR = ROOT_DIR / "tool_output" / "gis_analysis"
 _GIS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# The installed `eumetsearch` package writes DataTailor downloads via a bare
+# open(filename) on its success path (a bug — see
+# docs/gemma4_benchmark_run_issues_2026-08-07.md, issue #12), which resolves
+# relative to this subprocess's own cwd rather than EUMETSAT_OUTPUT_DIR.
+# Pinning cwd here, same fix as sub_agent_eumetsat.py for the "multi" pipeline.
+_EUMETSAT_OUTPUT_DIR = os.environ.get(
+    "EUMETSAT_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "eumetsat")
+)
+os.makedirs(_EUMETSAT_OUTPUT_DIR, exist_ok=True)
+
 
 def _try_register(servers: dict, key: str, build_fn) -> None:
     try:
@@ -155,6 +165,7 @@ def get_mcp_servers() -> dict:
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"],
+            "cwd": _EUMETSAT_OUTPUT_DIR,
         }
     ))
 

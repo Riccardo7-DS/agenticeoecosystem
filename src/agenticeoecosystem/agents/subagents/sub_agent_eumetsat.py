@@ -4,10 +4,24 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from typing import Optional
+import os
 from agenticeoecosystem.definitions import ROOT_DIR
 
 import logging
 logger = logging.getLogger(__name__)
+
+# The installed `eumetsearch` package writes DataTailor downloads via a bare
+# open(filename) on its success path (a bug — see
+# docs/gemma4_benchmark_run_issues_2026-08-07.md, issue #12), which resolves
+# relative to this subprocess's own cwd rather than EUMETSAT_OUTPUT_DIR. We
+# don't control that package's source, so cwd is the only lever available:
+# pinning it here makes that stray write land in EUMETSAT_OUTPUT_DIR (same
+# default the server itself uses) instead of wherever the parent process
+# happened to be launched from (e.g. the repo root).
+_EUMETSAT_OUTPUT_DIR = os.environ.get(
+    "EUMETSAT_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "eumetsat")
+)
+os.makedirs(_EUMETSAT_OUTPUT_DIR, exist_ok=True)
 
 
 _EUMETSAT_SYSTEM_PROMPT = (
@@ -89,7 +103,8 @@ toolset  = [McpToolset(
                      connection_params=StdioConnectionParams(
                          server_params = StdioServerParameters(
                              command='python',
-                             args=[f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"]),
+                             args=[f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"],
+                             cwd=_EUMETSAT_OUTPUT_DIR),
                              timeout=300))]
 def _fetch_agent(toolset) -> Optional[Agent]:
         if toolset:

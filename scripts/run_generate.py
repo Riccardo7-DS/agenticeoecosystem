@@ -48,6 +48,11 @@ def main() -> int:
     parser.add_argument("--tasks-folder",         default=None,   help="Folder containing tasks file (default: data/tasks)")
     parser.add_argument("--task-ids",             default=None,   help="Comma-separated task IDs to select")
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
+    parser.add_argument("--sample-n",             type=int, default=None,
+                        help="After filtering by --task-ids/--task-labels (or the whole file if "
+                             "neither is given), take a stratified sample of this many tasks "
+                             "(inverse-frequency by label) instead of running everything — for a "
+                             "quick local smoke run before scaling up.")
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
     parser.add_argument("--task-timeout",         type=float, default=None,
@@ -92,6 +97,9 @@ def main() -> int:
     elif args.task_labels:
         labels = [x.strip() for x in args.task_labels.split(",")]
         tasks = tasks.select_by_labels(labels)
+    if args.sample_n:
+        tasks = tasks.sample_stratified(args.sample_n)
+        logger.info("Sampled down to %d task(s) (stratified by label)", len(tasks))
     logger.info("Loaded %d task(s) from %d file(s) in %s", len(tasks), len(args.tasks_file), folder)
 
     import json as _json

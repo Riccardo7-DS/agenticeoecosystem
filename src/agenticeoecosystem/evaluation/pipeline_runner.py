@@ -74,6 +74,7 @@ def run_pipeline(
                 function_name=t["function_name"],
                 arguments=t.get("arguments", {}),
                 comment=(f"{_TOOL_ERROR_PREFIX} {t['error']}" if t.get("error") else None),
+                result=t.get("result"),
             )
             for t in data.get("tools_called", [])
         ]

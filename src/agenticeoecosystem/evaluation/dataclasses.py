@@ -41,6 +41,10 @@ class Step(BaseModel):
     function_name: str                      # e.g. tool name or action type
     arguments: Dict[str, Any] = Field(default_factory=dict)
     comment: Optional[str] = None          # Optional hint used during grading
+    result: Optional[str] = None           # Truncated text of what the tool actually
+                                            # returned (e.g. an output file path) —
+                                            # lets a judge verify the produced artifact,
+                                            # not just the call that was made.
 
     class Config:
         extra = "forbid"
@@ -61,6 +65,8 @@ class Solution(BaseModel):
         for i, s in enumerate(self.steps, 1):
             args = ", ".join(f"{k}={v!r}" for k, v in s.arguments.items())
             line = f"{i}. {s.function_name}({args})"
+            if s.result:
+                line += f"  -> {s.result}"
             if s.comment:
                 line += f"  # {s.comment}"
             lines.append(line)
@@ -109,6 +115,12 @@ class Task(BaseModel):
     # Multi-evaluator scores — keyed by evaluator label
     evaluator_scores: Dict[str, Optional[int]] = Field(default_factory=dict)
     evaluator_reasoning: Dict[str, Optional[str]] = Field(default_factory=dict)
+
+    # Audit trail for tool-using judges (e.g. agent_judge.py) — the tool
+    # calls an evaluator made (list_output_files / inspect_file / …) before
+    # reaching its verdict, keyed by evaluator label. Empty for evaluators
+    # that don't use tools (e.g. the plain LLM-as-judge in evaluator.py).
+    evaluator_tool_calls: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
 
     # Human evaluation
     match_reasoning_Human: Optional[str] = None

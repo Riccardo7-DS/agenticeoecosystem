@@ -10,7 +10,9 @@ pipeline_eval/
 ├── constants.py        — Score values, task labels, model names, folder paths
 ├── dataclasses.py      — Pydantic schemas: Step, Solution, Task, TaskSet
 ├── pipeline_runner.py  — Stub for running your pipeline; batch generation loop
-├── evaluator.py        — LLM-as-judge evaluator with prompts and batch runner
+├── evaluator.py        — one-shot LLM-as-judge: reads task + reference + trace as text
+├── agent_judge.py      — tool-using agent-as-judge: lists output/<server>/, opens files
+│                         the trace produced, and looks at image/GeoTIFF previews before scoring
 ├── save_results.py     — HTML report generator for task conversations
 ├── Benchmarking.ipynb  — End-to-end workflow notebook
 └── tasks/
@@ -43,6 +45,32 @@ Open `Benchmarking.ipynb` and follow the cells:
 3. Save HTML conversation logs (optional)
 4. Score with LLM-as-judge
 5. View summary stats and manually review individual tasks
+
+### 4. Sample run + agent-as-judge (script-driven)
+
+Try the tool-using judge on a small stratified sample before scaling to the
+full task set — `logs/` gets the human-readable run log (via
+`setup_logging()`), `--output-dir` gets `results_<label>.json` (the trace +
+scores), and the actual produced artifacts already land under
+`output/<server>/` as usual:
+
+```bash
+# 1. Generate on a 10-task stratified sample
+uv run python scripts/run_generate.py \
+    --label Sample --model EVE-Instruct --provider eve --pipeline multi \
+    --tasks-file benchmark_tasks.json --sample-n 10 \
+    --output-dir output/sample_run
+
+# 2. Score that same sample with the tool-using agent-as-judge
+uv run python scripts/run_agent_judge.py \
+    --results-file output/sample_run/results_Sample.json \
+    --evaluator-label agent_judge --evaluator-model claude-sonnet-4-6 --evaluator-provider eve
+```
+
+`agent_judge.py`'s judge can call `list_output_files`/`inspect_file` to
+check what a step actually produced (and see a real image/GeoTIFF preview,
+since the judge model is vision-capable) before scoring — see its module
+docstring for how it differs from `evaluator.py`'s one-shot LLM-as-judge.
 
 ## Task JSON schema
 

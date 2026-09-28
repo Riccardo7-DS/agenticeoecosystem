@@ -310,6 +310,28 @@ async def call_agent_async(query: str, runner, user_id, session_id):
 
 
 
+_RESULT_TRUNCATE_CHARS = 1000
+
+
+def _stringify_tool_result(resp) -> str:
+    """Compact text form of a raw MCP function_response payload, e.g. to
+    capture the output file path a tool reported without keeping the full
+    (possibly large/base64-laden) response in the saved trace."""
+    if isinstance(resp, dict) and isinstance(resp.get("content"), list):
+        texts = [
+            block.get("text", "") for block in resp["content"]
+            if isinstance(block, dict) and block.get("type") == "text"
+        ]
+        text = " ".join(t for t in texts if t) or str(resp)
+    elif isinstance(resp, dict):
+        text = json.dumps(resp, default=str)
+    else:
+        text = str(resp)
+    if len(text) > _RESULT_TRUNCATE_CHARS:
+        text = text[:_RESULT_TRUNCATE_CHARS] + "... [truncated]"
+    return text
+
+
 async def get_ans_tool_path(query: str) -> str:
     """
     Runs a query through the orchestrator in an isolated session and returns
@@ -364,9 +386,15 @@ async def get_ans_tool_path(query: str) -> str:
                     # same tool name (matches by name since concurrent calls to
                     # the same sub-agent are disallowed by the system prompt).
                     for entry in reversed(tools_called):
-                        if entry["function_name"] == fr.name and "error" not in entry:
+                        if entry["function_name"] == fr.name and "error" not in entry and "result" not in entry:
                             if error_text:
                                 entry["error"] = error_text
+                            else:
+                                # Kept so downstream evaluators (e.g. the
+                                # tool-using agent-as-judge) can find and
+                                # inspect the actual artifact a step
+                                # produced, not just the call it made.
+                                entry["result"] = _stringify_tool_result(resp)
                             break
 
         if event.is_final_response():

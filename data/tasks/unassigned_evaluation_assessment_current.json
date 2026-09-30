@@ -1,0 +1,504 @@
+{
+  "metadata": {
+    "source": "data/tasks/task_evaluation_strategies.json",
+    "unassigned_tasks": 38,
+    "tasks_with_strategy": 227,
+    "category_counts": {
+      "search_results": 15,
+      "metadata_answer": 11,
+      "spatial_and_visual_artifacts": 12
+    },
+    "note": "Current snapshot; recommendations only. Having a strategy does not imply validators are implemented or evaluation has run."
+  },
+  "tasks": [
+    {
+      "task_ID": "TASK_260619_000001_300001",
+      "task_text": "Find MOOC lectures explaining synthetic aperture radar (SAR) principles and how SAR is used to detect ground surface deformation and subsidence.",
+      "reference_tools": [
+        "search_moocs"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260619_000003_300003",
+      "task_text": "Find MOOC lectures about radar-based ocean remote sensing, including how SAR is used to detect oil spills and measure sea surface wind and waves.",
+      "reference_tools": [
+        "search_moocs"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000001_200001",
+      "task_text": "Search for recent arXiv papers on SAR (Synthetic Aperture Radar) flood mapping and inundation detection published since January 2022.",
+      "reference_tools": [
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000002_200002",
+      "task_text": "Search arXiv for papers on deep-learning-based land cover classification from satellite imagery, then download the first result and read its full content.",
+      "reference_tools": [
+        "download_paper",
+        "read_paper",
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000003_200003",
+      "task_text": "Find arXiv papers on NDVI-based crop monitoring or vegetation health assessment from Sentinel-2 imagery and retrieve the abstract of the most relevant result.",
+      "reference_tools": [
+        "get_abstract",
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000004_200004",
+      "task_text": "Search arXiv for papers about forest fire or wildfire detection using remote sensing, download the top result, and then explore its citation graph.",
+      "reference_tools": [
+        "citation_graph",
+        "download_paper",
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000006_200006",
+      "task_text": "Search arXiv for papers on atmospheric CO₂ retrieval from satellite spectrometers published between 2020 and 2024, download one paper, then find other downloaded papers semantically similar to it.",
+      "reference_tools": [
+        "download_paper",
+        "search_papers",
+        "semantic_search"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000007_200007",
+      "task_text": "Search arXiv for papers on sea-level rise monitoring using satellite altimetry published since 2024 and return up to 15 results.",
+      "reference_tools": [
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000008_200008",
+      "task_text": "Download a Sentinel-2 true-colour image of central Rome, Italy for March 2023, then read the raster metadata (driver, CRS, size, band count, data type, geographic extent) of the resulting file.",
+      "reference_tools": [
+        "fetch_sentinel2",
+        "geocode_place",
+        "metadata_raster"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000034_200034",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 10 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save the result.",
+      "reference_tools": [
+        "compute_ndvi",
+        "fetch_sentinel2",
+        "geocode_place",
+        "reproject_raster"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000037_200037",
+      "task_text": "Download a Sentinel-2 image of central Rome, Italy for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster using a red-yellow-green colormap.",
+      "reference_tools": [
+        "compute_ndvi",
+        "create_map",
+        "fetch_sentinel2",
+        "geocode_place"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000038_200038",
+      "task_text": "Download a Sentinel-2 image of the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June-August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, then create a static map of the NDVI raster using a red-yellow-green colormap.",
+      "reference_tools": [
+        "compute_ndvi",
+        "create_map",
+        "fetch_sentinel2",
+        "geocode_place"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260427_000039_200039",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Uman, Cherkasy Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, then create a static map of the NDVI raster using a red-yellow-green colormap.",
+      "reference_tools": [
+        "compute_ndvi",
+        "create_map",
+        "fetch_sentinel2",
+        "geocode_place"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260619_000012_300012",
+      "task_text": "Find the EO Dashboard narrative about the 2023-2024 El Niño floods and cyclone impacts in East Africa, identify the affected area, and download Sentinel-1 SAR images of that area to detect flood inundation.",
+      "reference_tools": [
+        "fetch_sentinel1_grd",
+        "geocode_place",
+        "load_images",
+        "resolve_images",
+        "search_narratives"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000005_400005",
+      "task_text": "Locate Mount Etna in Sicily, Italy, then download a Sentinel-2 short-wave infrared composite (bands B12, B11, B8A) for October–November 2022 at 20 m resolution to monitor volcanic thermal anomalies.",
+      "reference_tools": [
+        "fetch_sentinel2",
+        "geocode_place",
+        "load_images",
+        "resolve_images"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000009_400009",
+      "task_text": "Download the Copernicus 30 m DEM for Mount Etna, Sicily, then read its metadata (driver, CRS, pixel resolution, band count, data type, and geographic extent).",
+      "reference_tools": [
+        "fetch_dem",
+        "geocode_place",
+        "metadata_raster"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000011_400011",
+      "task_text": "Download Sentinel-2 imagery covering a representative area of the Congo Basin rainforest for August 2023 using the Red (B4) and NIR (B8) bands at 10 m resolution. Compute NDVI from the imagery and save the resulting NDVI raster.",
+      "reference_tools": [
+        "compute_ndvi",
+        "fetch_sentinel2",
+        "resolve_named_region"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000013_400013",
+      "task_text": "Download the ESA WorldCover 2021 land-cover raster for Kenya, then clip it to the Kenya national bounding box and save the result.",
+      "reference_tools": [
+        "clip_raster_with_bbox",
+        "download_gee_product",
+        "geocode_place"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000018_400018",
+      "task_text": "Download a Sentinel-2 near-infrared image of the boreal forest near Joensuu, North Karelia, Finland for July 2022. Find the correct UTM zone for that location, then reproject the raster to that UTM projection using bilinear resampling.",
+      "reference_tools": [
+        "fetch_sentinel2",
+        "geocode_place",
+        "get_utm_zone",
+        "reproject_raster"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000021_400021",
+      "task_text": "Create a 20 km buffer around the 2018 Camp Fire origin point near Paradise, Butte County, California representing the potential smoke-impact zone, then retrieve ESA strategic content on disaster-risk reduction and emergency preparedness to contextualise the risk assessment.",
+      "reference_tools": [
+        "buffer",
+        "geocode_place",
+        "search_eoss"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000041_500020",
+      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2024.",
+      "reference_tools": [
+        "list_eumetsat_products",
+        "search_eumetsat_products"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000043_500022",
+      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI imagery products.",
+      "reference_tools": [
+        "search_eumetsat_products",
+        "search_narratives"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000044_500023",
+      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2024.",
+      "reference_tools": [
+        "list_eumetsat_products",
+        "search_eumetsat_products",
+        "search_papers"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000046_500025",
+      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2024.",
+      "reference_tools": [
+        "search_eumetsat_products"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000047_500026",
+      "task_text": "Search for MSG SEVIRI Prime products over the Iberian Peninsula for the week of 1–7 June 2023, one observation per day at 12:00 UTC.",
+      "reference_tools": [
+        "resolve_named_region",
+        "search_eumetsat_products"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000051_500030",
+      "task_text": "Search EOdashboard narratives about record-breaking temperature anomalies. Based on the region and time period described in the narrative, search for MSG SEVIRI Prime products for a representative period and area.",
+      "reference_tools": [
+        "search_eumetsat_products",
+        "search_narratives"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000052_500031",
+      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2024.",
+      "reference_tools": [
+        "geocode_place",
+        "search_eumetsat_products"
+      ],
+      "proposed_category": "search_results",
+      "recommended_evaluation": "Set/identifier and date-filter checks plus relevance/source-grounding judgment.",
+      "notes": "Use matching source snapshots; open-ended searches may admit multiple valid result sets. Compound download/read/citation requirements need additional checks.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000062_500041",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for June 2022, then inspect the resulting file to check which variables and time dimensions are present.",
+      "reference_tools": [
+        "fetch_era5_pressure_levels",
+        "inspect_netcdf"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000063_500042",
+      "task_text": "Download ERA5 total precipitation for January 2021, then verify that the resulting file contains the expected variables and time coordinates.",
+      "reference_tools": [
+        "fetch_era5_single_levels",
+        "inspect_netcdf"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000064_500043",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature for July 2021 and then inspect the resulting NetCDF file to confirm its structure over Europe.",
+      "reference_tools": [
+        "fetch_era5_single_levels",
+        "inspect_netcdf",
+        "resolve_named_region"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000065_500044",
+      "task_text": "Download ERA5 geopotential at 500 hPa for January 2023 and inspect the resulting file to check the time and pressure dimensions over Europe.",
+      "reference_tools": [
+        "fetch_era5_pressure_levels",
+        "inspect_netcdf",
+        "resolve_named_region"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000066_500045",
+      "task_text": "Search the EO Dashboard for narratives about climate monitoring. Based on the geographic focus of the narrative, download ERA5 relevant data for the mentioned time period and inspect the resulting file.",
+      "reference_tools": [
+        "fetch_era5_single_levels",
+        "inspect_netcdf",
+        "search_narratives"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000072_500051",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023, then inspect the downloaded file to verify the pressure level coordinate over Europe. Visualize the geopotential field to confirm it depicts a plausible atmospheric pattern.",
+      "reference_tools": [
+        "clip_to_bbox",
+        "fetch_era5_pressure_levels",
+        "inspect_netcdf",
+        "load_images",
+        "netcdf_to_geotiff",
+        "resolve_images",
+        "resolve_named_region"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000080_500059",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature for July 2023, then inspect the downloaded file to verify its variable names and grid resolution over Europe.",
+      "reference_tools": [
+        "fetch_era5_single_levels",
+        "inspect_netcdf",
+        "resolve_named_region"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260713_000043_600043",
+      "task_text": "Download daily maximum 2m temperature for July 2023 over France. Then inspect the resulting NetCDF to verify its dimensions and variable units.",
+      "reference_tools": [
+        "fetch_era5_daily_statistics",
+        "geocode_place",
+        "inspect_netcdf"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260714_000094_700004",
+      "task_text": "Download a Sentinel-5P tropospheric NO₂ column map over the Po Valley, northern Italy for January 2020 to examine winter air quality.",
+      "reference_tools": [
+        "fetch_sentinel5p_l2",
+        "geocode_place",
+        "load_images",
+        "resolve_images"
+      ],
+      "proposed_category": "spatial_and_visual_artifacts",
+      "recommended_evaluation": "AAJ artifact inspection with deterministic metadata/spatial checks and VLM where visualization is required.",
+      "notes": "Independent index computation, clipping/reprojection and geometry validators require further implementation; do not demand unrequested scientific conclusions.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260716_000002_700014",
+      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2024, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
+      "reference_tools": [
+        "download_eumetsat_product",
+        "inspect_netcdf",
+        "read_eumetsat_product"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    },
+    {
+      "task_ID": "TASK_260716_000003_700015",
+      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2024, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
+      "reference_tools": [
+        "download_eumetsat_product",
+        "inspect_netcdf",
+        "read_eumetsat_product"
+      ],
+      "proposed_category": "metadata_answer",
+      "recommended_evaluation": "Compare reported metadata with the candidate artifact; AAJ for compound task fulfillment.",
+      "notes": "Metadata includes categorical fields, coordinates and dimensions. Compare to selected valid data rather than unrelated reference files.",
+      "status": "unassigned"
+    }
+  ]
+}

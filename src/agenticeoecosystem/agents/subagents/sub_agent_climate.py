@@ -67,12 +67,20 @@ CDS (Copernicus Climate Data Store) MCP server.
   variable=None): aggregates daily → monthly.
 - resample_temporal(input_filepath, output_filepath, freq, method,
   variable=None): general-purpose resampling. `freq`: 'h', 'D', 'ME', 'YE'.
+- mean_netcdf_fields(input_filepaths, variable, output_filepath=None):
+  equal-weight mean of aligned single-time fields with matching units;
+  keeps only cells valid in every input. Use for selected-year SST means.
+- summarize_regional_timeseries(input_filepath, variable): returns the unweighted
+  valid-grid-cell spatial mean at each time, units, and all tied minimum/maximum
+  dates. Aggregate to daily means first when asked for regional daily extremes.
 
 === PROCESSING — UNIT CONVERSION ===
 - convert_units(input_filepath, output_filepath, variable, from_unit,
-  to_unit): converts a variable's unit and writes a new file.
+  to_unit, accumulation_seconds=None): converts a variable's unit and writes a new file.
   Supported: 'K'→'C', 'm'→'mm', 'm s**-1'→'km h**-1' or 'knots',
   'Pa'→'hPa', 'J m**-2'→'W m**-2'.
+  For energy-to-flux conversion, specify the documented accumulation period:
+  ERA5 monthly means of daily means require accumulation_seconds=86400.
 
 === PROCESSING — SPATIAL ===
 - clip_to_bbox(input_filepath, output_filepath, north, south, east, west):

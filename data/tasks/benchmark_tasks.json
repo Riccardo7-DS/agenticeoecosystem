@@ -10549,32 +10549,112 @@
     },
     {
       "task_ID": "TASK_260713_000074_500053",
-      "task_text": "Search EOdashboard for narratives related to atmospheric monitoring. Based on the geographic focus of the narrative, download ERA5 monthly mean zonal wind at 250 hPa for recent winters to quantify upper-level circulation anomalies.",
+      "task_text": "Find and read an EO Dashboard narrative about EarthCARE that discusses the Walker circulation. Download ERA5 monthly mean vertical velocity at 500 hPa for June 2025 over the western and eastern tropical Pacific. Describe the ascending and descending motion shown by the data and explain how it relates to the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for jet stream context. Step 2: fetch_era5_pressure_levels for u-wind at 250 hPa for multiple winter months. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "Search EarthCARE narratives, retrieve the full text, and identify its Walker-circulation discussion. Download one June 2025 monthly mean ERA5 vertical-velocity field at 500 hPa, then crop to representative western and eastern tropical Pacific regions. Inspect actual values or maps; GeoTIFF export and raster_band_statistics provide one valid numerical inspection route. For pressure-coordinate vertical velocity in Pa s**-1, negative values indicate ascent and positive values descent. Explain how the observed motion relates to the narrative without prescribing its signs. Reference boxes are illustrative; no zonal-wind download, multi-year baseline, exact reference bbox or prescribed anomaly calculation is required.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "atmosphere"
+                "keyword": "EarthCARE"
               },
-              "comment": "Find EOdashboard narratives about jet stream variability"
+              "comment": "Find the named narrative using a title keyword, rather than searching for a jet-stream narrative."
+            },
+            {
+              "function_name": "get_narrative_content",
+              "arguments": {
+                "url": "https://esa-eodashboards.github.io/eodashboard-narratives/science-hub-team-1-story.md"
+              },
+              "comment": "Read the actual western/eastern Pacific discussion and distinguish climatological context from the June 2025 observations."
             },
             {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
-                "variable": "u_component_of_wind",
-                "pressure_level": 250,
-                "year": "<any representative recent years>",
-                "month": "<any representative winter month, e.g. Dec-Feb>",
-                "output_filename": "output/TASK_260713_000074_500053/u250_winters.nc",
-                "area": "<inferred>"
+                "variable": "vertical_velocity",
+                "pressure_level": 500,
+                "year": "2025",
+                "month": "06",
+                "output_filename": "output/TASK_260713_000074_500053/w500_202506_global.nc"
               },
-              "comment": "Download ERA5 250 hPa zonal wind for January in winters 2020–2022"
+              "comment": "One monthly field only; this tool has no area argument. Crop separately and normalize longitude conventions before clipping."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_global.nc",
+                "north": 10,
+                "south": -10,
+                "east": 170,
+                "west": 140,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc"
+              },
+              "comment": "Illustrative western/eastern tropical Pacific box; other scientifically appropriate representative boxes are valid. Normalize longitude convention before clipping."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc"
+              },
+              "comment": "Confirm the actual variable name, units, pressure coordinate and June 2025 time before interpretation."
+            },
+            {
+              "function_name": "netcdf_to_geotiff",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc",
+                "variable": "w",
+                "time_index": 0,
+                "level_index": 0,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.tif"
+              },
+              "comment": "Export a numerical slice; use the actual inspected variable name if different."
+            },
+            {
+              "function_name": "raster_band_statistics",
+              "arguments": {
+                "source": "output/TASK_260713_000074_500053/w500_202506_west_pacific.tif"
+              },
+              "comment": "Inspect actual sign/range/mean rather than infer them from metadata or an unlabeled stretched preview. Equivalent numerical inspection is valid."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_global.nc",
+                "north": 10,
+                "south": -10,
+                "east": -100,
+                "west": -140,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc"
+              },
+              "comment": "Illustrative western/eastern tropical Pacific box; other scientifically appropriate representative boxes are valid. Normalize longitude convention before clipping."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc"
+              },
+              "comment": "Confirm the actual variable name, units, pressure coordinate and June 2025 time before interpretation."
+            },
+            {
+              "function_name": "netcdf_to_geotiff",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc",
+                "variable": "w",
+                "time_index": 0,
+                "level_index": 0,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.tif"
+              },
+              "comment": "Export a numerical slice; use the actual inspected variable name if different."
+            },
+            {
+              "function_name": "raster_band_statistics",
+              "arguments": {
+                "source": "output/TASK_260713_000074_500053/w500_202506_east_pacific.tif"
+              },
+              "comment": "Inspect actual sign/range/mean rather than infer them from metadata or an unlabeled stretched preview. Equivalent numerical inspection is valid."
             }
           ]
         }
@@ -10588,7 +10668,7 @@
       "match_score_Human": null,
       "evaluator_scores": {},
       "evaluator_reasoning": {},
-      "GT": 1
+      "GT": 99
     },
     {
       "task_ID": "TASK_260713_000075_500054",
@@ -11438,18 +11518,64 @@
     },
     {
       "task_ID": "TASK_260713_000015_600015",
-      "task_text": "Find the CDS dataset for downloading Copernicus Sentinel-5P TROPOMI atmospheric composition data.",
+      "task_text": "Using CDSE, download three separate Sentinel-5P TROPOMI GeoTIFFs for carbon monoxide, nitrogen dioxide, and methane over Madrid and its surroundings for 1–30 June 2025. Report the data-band identifier used for each product.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "list_cds_datasets shows no Sentinel-5P dataset; TROPOMI data is distributed via CDSE/Copernicus Dataspace, not the CDS API.",
+      "reference_solution_description": "Resolve Madrid, Spain to a suitable bounding box covering the city and its surroundings, then call CDSE fetch_sentinel5p_l2 separately with presets co, no2 and ch4, dates 2025-06-01 through 2025-06-30, as_geotiff=True, and distinct output files. A scientifically reasonable Madrid-area bbox is acceptable; the example bbox in the reference is not mandatory. Report only the product–data-band identifiers: carbon monoxide → CO, nitrogen dioxide → NO2, methane → CH4, verified against the returned evalscripts. Reporting file paths is not required. These are geophysical data-band identifiers, not instrument spectral channels. The interval selects available observations, not a monthly mean or daily time series. Evaluators inspect downloaded artifacts and provenance independently of the final answer. The existing raw export omits dataMask, so finite values alone do not prove valid observations.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "list_cds_datasets",
-              "arguments": {},
-              "comment": "Scope awareness: CDS does not host Sentinel-5P TROPOMI data"
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "co",
+                "as_geotiff": true,
+                "save_path": "output/madrid_co_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report CO data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
+            },
+            {
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "no2",
+                "as_geotiff": true,
+                "save_path": "output/madrid_no2_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report NO2 data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
+            },
+            {
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "ch4",
+                "as_geotiff": true,
+                "save_path": "output/madrid_ch4_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report CH4 data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
             }
           ]
         }
@@ -13406,11 +13532,11 @@
     },
     {
       "task_ID": "TASK_260713_000054_600054",
-      "task_text": "Download hourly ERA5 2 m air temperature over Alentejo region in Portugal for January 2023, aggregate the sub-daily values into daily mean temperatures, and identify the warmest and coldest days of the month.",
+      "task_text": "Download ERA5 daily mean 2 m air temperature for January 2023 over Alentejo, Portugal. Using the unweighted mean across valid grid cells in the downloaded region, identify the warmest and coldest days of the month.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Alentejo, Portugal') to get an area (no gazetteer entry exists for Alentejo), fetch_era5_hourly_single_levels for 2m_temperature over January 2023, convert_hourly_to_daily with method='mean' to produce daily means, then inspect_netcdf to ground identifying the warmest/coldest days.",
+      "reference_solution_description": "Geocode Alentejo to establish a bounding box, download ERA5 pre-computed daily mean 2m temperature for January 2023 within that box, then summarize_regional_timeseries to calculate the unweighted valid-cell spatial mean for each day. Report the warmest and coldest dates. If extrema are tied, any date among the corresponding tied dates is correct; reporting all tied dates is also valid. An equivalent hourly-to-daily UTC workflow is acceptable. No temperature values, unit conversion or saved derived time series are required in the final answer.",
       "reference_solutions": [
         {
           "steps": [
@@ -13419,34 +13545,27 @@
               "arguments": {
                 "place_name": "Alentejo, Portugal"
               },
-              "comment": "Geocode Alentejo to a bounding box (no gazetteer entry exists for Alentejo)"
+              "comment": "Define the region bbox; use [north, west, south, east] for the climate request."
             },
             {
-              "function_name": "fetch_era5_hourly_single_levels",
+              "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "2m_temperature",
+                "statistic": "daily_mean",
                 "year": "2023",
                 "month": "01",
-                "area": "<derived from previous step>",
-                "output_filename": "output/TASK_260713_000054_600054/t2m_hourly_alentejo_jan2023.nc"
+                "area": "<Alentejo bbox in north, west, south, east order>",
+                "output_filename": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc"
               },
-              "comment": "Download hourly temperature over Alentejo"
+              "comment": "Retrieve January daily means. Equivalent UTC daily averaging of hourly observations is valid."
             },
             {
-              "function_name": "convert_hourly_to_daily",
+              "function_name": "summarize_regional_timeseries",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000054_600054/t2m_hourly_alentejo_jan2023.nc",
-                "output_filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc",
-                "method": "mean"
+                "input_filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc",
+                "variable": "t2m"
               },
-              "comment": "Average hourly values to daily means"
-            },
-            {
-              "function_name": "inspect_netcdf",
-              "arguments": {
-                "filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc"
-              },
-              "comment": "Inspect daily means to ground identifying the warmest and coldest days"
+              "comment": "Use unweighted means across valid regional grid cells. Return a warmest and coldest date; accept any tied extremum date, or all ties."
             }
           ]
         }
@@ -14182,11 +14301,11 @@
     },
     {
       "task_ID": "TASK_260713_000071_600071",
-      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative, retrieve ERA5 monthly mean sea surface temperature within a 2° × 2° region around that location for three representative years from different decades, and compute the multi-year mean SST field to characterize typical ocean temperature conditions.",
+      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative. Retrieve ERA5 monthly mean sea surface temperature for the same calendar month in three representative years from different decades, within a 2° × 2° box centred on that location. Compute and save the equal-weight, cell-by-cell mean SST field across the three observations on their common grid, retaining only ocean cells valid in all three inputs. Identify the location, selected month and years, report the output path and temperature units, and describe the resulting SST pattern. Explain that three selected years do not constitute a long-term climatology or establish a warming trend.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for SST-related narratives, geocode_place on the narrative's coastal study area to get a center point, then construct a 2°×2° bbox by taking that center's lat/lon ± 1° in each direction (geocode_place returns an administrative-boundary bbox, not a fixed-size box, so the ±1° span must be built from the returned center coordinates). For each of three representative years (e.g. 1990, 2005, 2020) fetch_era5_single_levels (this tool has no area parameter — it always returns the global field, and only accepts one year string at a time) followed by clip_to_bbox to crop to that 2°×2° box. No tool exists to merge multiple yearly NetCDF files into one series, so the multi-year mean is computed by reasoning over the three inspected fields, grounded via inspect_netcdf on each clipped file.",
+      "reference_solution_description": "Search SST-related narratives, geocode a supported coastal location, and construct a fixed centre ±1° box. For the same month in three different decades (1990, 2005, 2020 are examples), fetch ERA5 monthly mean SST and clip each file to that box. Inspect the inputs to verify matching coordinates and units. Call mean_netcdf_fields to compute and save an equal-weight cell-by-cell mean, using only cells valid in all three observations. Inspect the saved mean and describe its pattern and sampling limitations; do not substitute reasoning over metadata for actual arithmetic.",
       "reference_solutions": [
         {
           "steps": [
@@ -14275,21 +14394,41 @@
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_1990_07_region.nc"
               },
-              "comment": "Inspect 1990 field to ground the multi-year mean (no merge tool exists to combine years)"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_2005_07_region.nc"
               },
-              "comment": "Inspect 2005 field to ground the multi-year mean"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_2020_07_region.nc"
               },
-              "comment": "Inspect 2020 field to ground the multi-year mean"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
+            },
+            {
+              "function_name": "mean_netcdf_fields",
+              "arguments": {
+                "input_filepaths": [
+                  "output/TASK_260713_000071_600071/sst_1990_07_region.nc",
+                  "output/TASK_260713_000071_600071/sst_2005_07_region.nc",
+                  "output/TASK_260713_000071_600071/sst_2020_07_region.nc"
+                ],
+                "variable": "sst",
+                "output_filepath": "output/TASK_260713_000071_600071/sst_selected_years_mean.nc"
+              },
+              "comment": "Equal-weight pointwise mean on matching spatial coordinates; units must match; mask cells missing in any input. Use the actual inspected SST variable name if different."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000071_600071/sst_selected_years_mean.nc"
+              },
+              "comment": "Verify saved mean-field structure and numerical summaries. Report the sample years/month and units; characterize the field without claiming a climatology or trend."
             }
           ]
         }
@@ -14371,11 +14510,11 @@
     },
     {
       "task_ID": "TASK_260713_000075_600075",
-      "task_text": "Download ERA5 monthly mean surface latent heat flux for July 2022 over Lake Victoria, East Africa, then convert the 'slhf' variable from J m**-2 to W m**-2.",
+      "task_text": "Download ERA5 monthly means of daily means (product_type='monthly_averaged_reanalysis') for surface latent heat flux in July 2022 over Lake Victoria, East Africa. Inspect the 'slhf' variable and convert its accumulated-energy values from J m**-2 to a mean flux in W m**-2 using this product's effective daily accumulation interval of 86,400 seconds. Save the converted dataset, report its path, units and conversion factor, and preserve the ECMWF sign convention (positive downward).",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Lake Victoria') to get an area (no gazetteer entry exists for it), fetch_era5_single_levels for surface_latent_heat_flux (this tool has no area parameter — it always returns the global field), clip_to_bbox to crop to Lake Victoria, then convert_units with from_unit='J m**-2', to_unit='W m**-2'.",
+      "reference_solution_description": "Geocode Lake Victoria, fetch surface_latent_heat_flux from the ERA5 monthly-mean single-level product (monthly_averaged_reanalysis), and clip the global download to the location's bounding box. Inspect slhf and confirm the product and units. Monthly means of daily means have an effective one-day accumulation interval: convert using slhf / 86400, not /3600 and not the number of seconds in July. Call convert_units with accumulation_seconds=86400, preserve the sign, save and inspect the output. Source: https://confluence.ecmwf.int/pages/viewpage.action?pageId=179741903 (Monthly means).",
       "reference_solutions": [
         {
           "steps": [
@@ -14409,15 +14548,30 @@
               "comment": "Crop the global field to Lake Victoria"
             },
             {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria.nc"
+              },
+              "comment": "Verify slhf units and the monthly-mean product context before conversion."
+            },
+            {
               "function_name": "convert_units",
               "arguments": {
                 "input_filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria.nc",
                 "output_filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria_wm2.nc",
                 "variable": "slhf",
                 "from_unit": "J m**-2",
-                "to_unit": "W m**-2"
+                "to_unit": "W m**-2",
+                "accumulation_seconds": 86400
               },
-              "comment": "Divide by 3600 to convert accumulated flux to mean flux rate"
+              "comment": "Divide by 86400 for monthly means of daily means; preserve positive-downward sign convention."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria_wm2.nc"
+              },
+              "comment": "Check saved variable and W m**-2 units; report the applied factor 1/86400."
             }
           ]
         }
@@ -14806,7 +14960,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_single_levels → clip_to_bbox → convert_units K→C.",
+      "reference_solution_description": "Resolve sub-Saharan Africa to a bounding box, download ERA5 monthly mean 2m temperature for December 2022 globally with fetch_era5_single_levels, then clip_to_bbox to retain the requested region. The monthly fetch tool has no area argument. Keep the native temperature units; Celsius conversion is not required by the task.",
       "reference_solutions": [
         {
           "steps": [
@@ -14823,21 +14977,21 @@
                 "variable": "2m_temperature",
                 "year": "2022",
                 "month": "12",
-                "output_filename": "output/TASK_260713_000085_600085/t2m_sub_saharan__2022_12.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000085_600085/t2m_global_2022_12.nc"
               },
               "comment": "Download global 2m temperature"
             },
             {
-              "function_name": "convert_units",
+              "function_name": "clip_to_bbox",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000085_600085/t2m_sub_saharan__2022_12.nc",
-                "output_filepath": "output/TASK_260713_000085_600085/t2m_ssa_2022_12_degC.nc",
-                "variable": "t2m",
-                "from_unit": "K",
-                "to_unit": "C"
+                "input_filepath": "output/TASK_260713_000085_600085/t2m_global_2022_12.nc",
+                "north": "<north bound of resolved region>",
+                "south": "<south bound of resolved region>",
+                "east": "<east bound of resolved region>",
+                "west": "<west bound of resolved region>",
+                "output_filepath": "output/TASK_260713_000085_600085/t2m_sub_saharan_2022_12.nc"
               },
-              "comment": "Convert to Celsius"
+              "comment": "Save the requested regional subset in native units; no Celsius conversion is required."
             }
           ]
         }

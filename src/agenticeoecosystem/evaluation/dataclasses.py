@@ -109,6 +109,14 @@ class Task(BaseModel):
     # Multi-evaluator scores — keyed by evaluator label
     evaluator_scores: Dict[str, Optional[int]] = Field(default_factory=dict)
     evaluator_reasoning: Dict[str, Optional[str]] = Field(default_factory=dict)
+    evaluator_tool_calls: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+
+    # Full-precision score, for evaluators whose native scale isn't the 0/1/2
+    # bucket above — e.g. a weighted rubric score in [0, 2]. evaluator_scores
+    # still gets the rounded bucket (kept for match/partial/no_match summary
+    # compatibility with the plain LLM-as-judge); this field is the number an
+    # evaluator actually computed, for anyone doing real numeric analysis.
+    evaluator_scores_raw: Dict[str, Optional[float]] = Field(default_factory=dict)
 
     # Human evaluation
     match_reasoning_Human: Optional[str] = None

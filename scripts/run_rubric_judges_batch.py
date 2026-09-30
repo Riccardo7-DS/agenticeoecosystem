@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+"""
+run_rubric_judges_batch.py — Score candidate-run results files against the
+pre-authored 83-task open-ended rubric, with one judge model, reusing a
+single vLLM launch across every --results-file (same pattern as
+run_judges_batch.py, but rubric_evaluator.py's per-criterion judge instead
+of evaluator.py's reference-comparison judge).
+
+Only the tasks present in --rubrics-file are scored; each output file
+contains just that subset (self-contained per-experiment file), not the
+full candidate results file.
+
+Example:
+    uv run python scripts/run_rubric_judges_batch.py \
+        --results-file /shared/projects/philab-eve/ESAEOBench/candidate_runs/results_EVE-Instruct.json \
+        --results-file /shared/projects/philab-eve/ESAEOBench/candidate_runs/results_Qwen3.6-27B.json \
+        --rubrics-file /shared/projects/philab-eve/ESAEOBench/judges_runs/rubric_83q_v3/rubrics_83q_v3.json \
+        --evaluator-label Nemotron-2-12B \
+        --evaluator-model nemotron-2-12b \
+        --output-dir /shared/projects/philab-eve/ESAEOBench/judges_runs/rubric_83q_v3
+"""
+
+import argparse
+import json
+import logging
+import os
+import sys
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT / "src"))
+
+from dotenv import load_dotenv
+load_dotenv()
+
+from agenticeoecosystem.utils.logging import setup_logging
+
+
+def load_rubrics(path: str) -> dict[str, list[dict]]:
+    data = json.load(open(path, encoding="utf-8"))
+    out = {}
+    for entry in data:
+        crit = entry.get("rubric", {}).get("criteria")
+        if crit and len(crit) == 3:
+            out[entry["task_ID"]] = crit
+    return out
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Rubric-judge several candidate results files with one evaluator, one vLLM launch")
+    parser.add_argument("--results-file", required=True, action="append", dest="results_files",
+                        help="Full path to a candidate results_*.json file; repeat for each candidate run")
+    parser.add_argument("--rubrics-file", required=True, help="Path to the rubrics JSON (task_ID -> rubric.criteria)")
+    parser.add_argument("--evaluator-label", required=True, help="Short name for this evaluator (used as score key + output suffix)")
+    parser.add_argument("--evaluator-model", required=True, help="Evaluator model key (vLLM) or model ID")
+    parser.add_argument("--evaluator-provider", default="vllm", help="Provider: vllm, eve, openai, …")
+    parser.add_argument("--output-dir", required=True, help="Directory to write judged results into")
+    parser.add_argument("--vllm-startup-timeout", type=int, default=1800)
+    parser.add_argument("--skip-evaluated", action=argparse.BooleanOptionalAction, default=True)
+    args = parser.parse_args()
+
+    setup_logging(log_file=f"rubric_judges_batch_{args.evaluator_label.replace(' ', '_')}")
+    logger = logging.getLogger(__name__)
+
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    rubrics_by_id = load_rubrics(args.rubrics_file)
+    logger.info("Loaded %d rubrics from %s", len(rubrics_by_id), args.rubrics_file)
+    rubric_task_ids = list(rubrics_by_id.keys())
+
+    from agenticeoecosystem.evaluation.dataclasses import TaskSet
+    from agenticeoecosystem.evaluation.rubric_evaluator import rubric_evaluate_solutions
+
+    proc = None
+    failures = []
+    try:
+        model_id = args.evaluator_model
+        eval_provider = args.evaluator_provider
+        if args.evaluator_provider == "vllm":
+            from agenticeoecosystem.utils.registry import launch_vllm, get_vllm_model_name
+            proc = launch_vllm(args.evaluator_model, startup_timeout=args.vllm_startup_timeout)
+            os.environ["VLLM_PORT"] = "8000"
+            os.environ["EVALUATOR_PROVIDER"] = "vllm"
+            model_id = get_vllm_model_name()
+            logger.info("vLLM serving model as: %s", model_id)
+
+        for results_file in args.results_files:
+            results_path = Path(results_file)
+            logger.info("=== Rubric-judging %s ===", results_path.name)
+            try:
+                full_tasks = TaskSet.read_from_file(results_path.name, folder=str(results_path.parent))
+                tasks = full_tasks.select_by_ids(rubric_task_ids)
+                logger.info("Loaded %d task(s), %d overlap the rubric set", len(full_tasks), len(tasks))
+                if len(tasks) == 0:
+                    logger.warning("No overlapping tasks — skipping %s", results_path.name)
+                    continue
+
+                tasks = rubric_evaluate_solutions(
+                    tasks,
+                    rubrics_by_id=rubrics_by_id,
+                    model=model_id,
+                    skip_evaluated=args.skip_evaluated,
+                    evaluator_label=args.evaluator_label,
+                    provider=eval_provider,
+                )
+
+                evaluator_safe = args.evaluator_label.replace(" ", "_")
+                out_filename = f"results_{results_path.stem.removeprefix('results_')}_{evaluator_safe}.json"
+                tasks.save_to_file(out_filename, folder=str(output_dir))
+                logger.info("Saved -> %s/%s", output_dir, out_filename)
+
+                raw_scores = [t.evaluator_scores_raw.get(args.evaluator_label) for t in tasks]
+                raw_scores = [s for s in raw_scores if s is not None]
+                buckets = [t.evaluator_scores.get(args.evaluator_label) for t in tasks]
+                buckets = [s for s in buckets if s is not None]
+                if raw_scores:
+                    logger.info(
+                        "Summary [%s] %s - scored: %d/%d  mean: %.3f/2.0  match: %d  partial: %d  no_match: %d",
+                        args.evaluator_label, results_path.stem, len(raw_scores), len(tasks),
+                        sum(raw_scores) / len(raw_scores),
+                        sum(1 for s in buckets if s == 2), sum(1 for s in buckets if s == 1), sum(1 for s in buckets if s == 0),
+                    )
+            except Exception as exc:
+                logger.error("Rubric evaluation failed for '%s' with evaluator '%s': %s",
+                             results_path.name, args.evaluator_label, exc, exc_info=True)
+                failures.append(results_path.name)
+
+        return 1 if failures else 0
+
+    finally:
+        if proc is not None:
+            import signal
+            try:
+                pgid = os.getpgid(proc.pid)
+                os.killpg(pgid, signal.SIGTERM)
+                proc.wait(timeout=15)
+            except Exception:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except Exception:
+                    pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

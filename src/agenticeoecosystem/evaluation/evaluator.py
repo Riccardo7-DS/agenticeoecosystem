@@ -180,10 +180,11 @@ def score_task_solution(
     # Active: OpenAI-compatible endpoint via shared credentials helper.
     # provider controls which backend is used (set EVALUATOR_PROVIDER in .env).
     #
-    #   "eve"    — EVE endpoint with Basic Auth (EVE_ENDPOINT, EVE_USERNAME, EVE_PASSWORD)
-    #   "openai" — standard OpenAI API       (OPENAI_API_KEY)
-    #   "custom" — any OpenAI-compatible URL  (OPENAI_ENDPOINT, OPENAI_API_KEY)
-    #   "ollama" — local Ollama               (no credentials needed)
+    #   "eve"        — EVE endpoint with Basic Auth (EVE_ENDPOINT, EVE_USERNAME, EVE_PASSWORD)
+    #   "openai"     — standard OpenAI API       (OPENAI_API_KEY)
+    #   "openrouter" — OpenRouter API             (OPENROUTER_API_KEY)
+    #   "custom"     — any OpenAI-compatible URL  (OPENAI_ENDPOINT, OPENAI_API_KEY)
+    #   "ollama"     — local Ollama               (no credentials needed)
     # ---------------------------------------------------------------------------
     import os
     from agenticeoecosystem.config.credentials import get_openai_client
@@ -196,15 +197,50 @@ def score_task_solution(
         response_text = llm.invoke(prompt).content
     else:
         _oai = get_openai_client(provider=_provider)
-        resp = _oai.chat.completions.create(
-            model=model,
-            temperature=temperature,
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        response_text = resp.choices[0].message.content
+        # Free-tier / shared-capacity backends (e.g. OpenRouter's ":free" models)
+        # intermittently return a 200 with no choices under load — retry a few
+        # times with backoff before giving up on this one task.
+        response_text = None
+        _last_exc: Exception | None = None
+        for _attempt in range(3):
+            try:
+                resp = _oai.chat.completions.create(
+                    model=model,
+                    temperature=temperature,
+                    # Hybrid "thinking" judge models (e.g. Nemotron-2-12B,
+                    # Nemotron-3-Ultra) emit raw chain-of-thought directly into
+                    # `content` when no reasoning-parser splits it out, which can
+                    # run past 1000 tokens before ever reaching the <MATCH
+                    # SCORE> tags — 1024 was empirically confirmed (see
+                    # TASK_260419_000001_100001 and 10 similar cases) to
+                    # truncate mid-thought deterministically (same result every
+                    # retry, since temperature=0), never producing a parseable
+                    # response. Observed real completions up to ~3200 tokens.
+                    max_tokens=8192,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                if resp.choices and resp.choices[0].message.content:
+                    response_text = resp.choices[0].message.content
+                    break
+                logger.warning(
+                    "Task %s: evaluator returned no usable content (attempt %d/3) — retrying.",
+                    task.task_ID, _attempt + 1,
+                )
+            except Exception as exc:
+                _last_exc = exc
+                logger.warning(
+                    "Task %s: evaluator call failed (attempt %d/3): %s — retrying.",
+                    task.task_ID, _attempt + 1, exc,
+                )
+            time.sleep(2 * (_attempt + 1))
+        if response_text is None and _last_exc is not None:
+            raise _last_exc
 
-    reasoning, score = _parse_score(response_text)
+    if response_text is None:
+        logger.warning("Task %s: evaluator gave no usable response after 3 attempts — leaving unscored.", task.task_ID)
+        reasoning, score = None, None
+    else:
+        reasoning, score = _parse_score(response_text)
     if evaluator_label:
         task.evaluator_scores[evaluator_label] = int(score) if score is not None else None
         task.evaluator_reasoning[evaluator_label] = reasoning
@@ -261,8 +297,12 @@ def evaluate_solutions(
 
         logger.info("[%d/%d] Task %s: %s", i, n_total, task.task_ID, task.task_text[:80])
         t0 = time.time()
-        score_task_solution(task, model=model, temperature=temperature, evaluator_label=evaluator_label)
-        logger.info("  → Scored in %.1fs", time.time() - t0)
+        try:
+            score_task_solution(task, model=model, temperature=temperature, evaluator_label=evaluator_label)
+            logger.info("  → Scored in %.1fs", time.time() - t0)
+        except Exception:
+            logger.error("Task %s: scoring failed after retries — leaving unscored, continuing batch.",
+                         task.task_ID, exc_info=True)
 
         if output_filename:
             tasks.save_to_file(output_filename, folder=GEOBENCH_RESULTS)

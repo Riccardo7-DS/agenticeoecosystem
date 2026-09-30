@@ -933,12 +933,105 @@ async def resample_temporal(
 # ---------------------------------------------------------------------------
 
 @mcp.tool
+async def summarize_regional_timeseries(input_filepath: str, variable: str) -> str:
+    """Return unweighted valid-cell means and all tied extreme dates from a time field.
+
+    Average over latitude/longitude in the supplied regional dataset. Inputs
+    must already contain the requested temporal aggregation; this does not
+    apply a polygon mask or area weighting.
+    """
+    import json
+    import numpy as np
+
+    def _sync() -> str:
+        try:
+            with xr.open_dataset(resolve_run_path(input_filepath)) as dataset:
+                field = dataset[variable]
+                spatial = [name for name in field.dims if name in
+                           {"latitude", "longitude", "lat", "lon"}]
+                time_dim = next((name for name in ("time", "valid_time") if name in field.dims), None)
+                if len(spatial) != 2 or time_dim is None:
+                    raise ValueError("Expected time and two latitude/longitude dimensions.")
+                for dimension in set(field.dims) - set(spatial) - {time_dim}:
+                    if field.sizes[dimension] != 1:
+                        raise ValueError("Select one pressure level/member before summarizing.")
+                    field = field.isel({dimension: 0}, drop=True)
+                field = field.where(np.isfinite(field))
+                series = field.mean(spatial, skipna=True).load()
+                counts = field.count(spatial).load()
+                valid = series.values[np.isfinite(series.values)]
+                if not valid.size:
+                    raise ValueError("No finite regional means.")
+                minimum, maximum = float(valid.min()), float(valid.max())
+                rows = [{"time": str(time), "mean": float(value) if np.isfinite(value) else None,
+                         "valid_cells": int(count)}
+                        for time, value, count in zip(series[time_dim].values, series.values, counts.values)]
+                return json.dumps({"variable": variable, "units": field.attrs.get("units"),
+                                   "spatial_aggregation": "unweighted mean over valid grid cells",
+                                   "series": rows, "minimum": minimum, "maximum": maximum,
+                                   "minimum_times": [row["time"] for row in rows if row["mean"] == minimum],
+                                   "maximum_times": [row["time"] for row in rows if row["mean"] == maximum]},
+                                  allow_nan=False)
+        except (OSError, ValueError, KeyError) as error:
+            return f"Error summarizing regional time series: {error}"
+
+    return await asyncio.get_running_loop().run_in_executor(None, _sync)
+
+
+@mcp.tool
+async def mean_netcdf_fields(
+    input_filepaths: List[str],
+    variable: str,
+    output_filepath: Optional[str] = None,
+) -> str:
+    """Save the equal-weight mean of aligned single-time fields.
+
+    Require matching spatial coordinates and units. A cell is retained only
+    when every input has a valid value; singleton time coordinates are removed.
+    """
+    output_filepath = _coerce_output_path(output_filepath, f"mean_{variable}")
+
+    def _sync() -> str:
+        if len(input_filepaths) < 2:
+            return "Error: provide at least two input files."
+        try:
+            fields = []
+            for filepath in input_filepaths:
+                with xr.open_dataset(resolve_run_path(filepath)) as dataset:
+                    field = dataset[variable].load()
+                    for dimension in ("time", "valid_time"):
+                        if dimension in field.dims:
+                            if field.sizes[dimension] != 1:
+                                raise ValueError("Each file must contain exactly one time step.")
+                            field = field.isel({dimension: 0}, drop=True)
+                    fields.append(field)
+            units = [field.attrs.get("units") for field in fields]
+            if not units[0] or any(unit != units[0] for unit in units):
+                raise ValueError("Input units must be present and identical.")
+            fields = xr.align(*fields, join="exact")
+            mean = xr.concat(fields, dim="sample").mean("sample", skipna=False)
+            mean.attrs = dict(fields[0].attrs)
+            mean.attrs["aggregation"] = "equal-weight mean; valid in all input samples"
+            result = mean.to_dataset(name=variable)
+            result.attrs["source_files"] = "; ".join(input_filepaths)
+            destination = resolve_run_path(output_filepath)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            result.to_netcdf(destination)
+            return f"Saved mean of {len(fields)} fields to '{output_filepath}'."
+        except (OSError, ValueError, KeyError) as error:
+            return f"Error computing mean field: {error}"
+
+    return await asyncio.get_running_loop().run_in_executor(None, _sync)
+
+
+@mcp.tool
 async def convert_units(
     input_filepath: str,
     variable: str,
     from_unit: str,
     to_unit: str,
     output_filepath: Optional[str] = None,
+    accumulation_seconds: Optional[float] = None,
 ) -> str:
     """
     Converts the unit of a variable in a NetCDF file and writes a new file.
@@ -947,7 +1040,9 @@ async def convert_units(
       - Precipitation depth:  'm' → 'mm'  (multiply by 1000)
       - Wind speed:  'm s**-1' → 'km h**-1'  or  'm s**-1' → 'knots'
       - Pressure:  'Pa' → 'hPa'
-      - Radiation (accumulated):  'J m**-2' → 'W m**-2'  (divide by 3600)
+      - Accumulated energy: 'J m**-2' → 'W m**-2'; specify accumulation_seconds
+        from product semantics (86400 for ERA5 monthly means of daily means).
+        Omission retains the legacy 3600-second assumption.
 
     :param input_filepath: Path to the input NetCDF file.
     :param variable: The variable to convert (e.g., 'tp', 't2m', or the long name shown by inspect_netcdf).
@@ -973,6 +1068,12 @@ async def convert_units(
                     from_unit, to_unit, "\n".join(supported)
                 )
             op, factor = _UNIT_CONVERSIONS[key]
+            if accumulation_seconds is not None:
+                if key != ("J m**-2", "W m**-2"):
+                    return "Error: accumulation_seconds applies only to energy-to-flux conversion."
+                if not 0 < accumulation_seconds < float("inf"):
+                    return "Error: accumulation_seconds must be finite and positive."
+                factor = 1.0 / accumulation_seconds
             with xr.open_dataset(resolved_input) as ds:
                 if variable not in ds.data_vars:
                     return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"

@@ -168,8 +168,8 @@ def _is_latlon_group(d: Any) -> bool:
 
 def extract_scorable_fields(gt: Dict[str, Any]) -> "tuple[Dict[str, float], Dict[str, ToleranceSpec]]":
     """
-    Recursively walk a curated ground-truth blob (e.g. one entry from
-    numerical_ground_truths_lean.json) and pull out only the field groups
+    Recursively walk a curated ground-truth blob (e.g. one entry from the
+    lean data/tasks/numerical_ground_truths.json) and pull out only the field groups
     this module has a fixed tolerance preset for: band-stat groups
     (BAND_STAT_TOLERANCE) and lat/lon pairs (LATLON_TOLERANCE), wherever
     they're nested, under dotted-path keys (e.g. "band_statistics.B02.min",
@@ -260,8 +260,8 @@ def score_item(
     Args:
         prediction   : the candidate's extracted field -> value dict.
         ground_truth : the curated ground truth's field -> value dict
-                       (e.g. one entry's content from
-                       numerical_ground_truths_lean.json).
+                       (e.g. one entry's content from the lean
+                       data/tasks/numerical_ground_truths.json).
         tolerances   : field name -> ToleranceSpec. Every *numeric*
                        ground-truth field must have an entry here — this
                        module won't guess a tolerance for you (see module

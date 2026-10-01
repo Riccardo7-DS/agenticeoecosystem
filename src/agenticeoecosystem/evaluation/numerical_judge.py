@@ -56,8 +56,8 @@ def load_strategies_by_id(path) -> Dict[str, dict]:
 
 
 def load_ground_truths_by_id(path) -> Dict[str, dict]:
-    """task_ID -> its entry in numerical_ground_truths_lean.json (either a
-    real GT dict, or an {"_status": "error"/"skipped", ...} placeholder)."""
+    """task_ID -> its entry in the lean data/tasks/numerical_ground_truths.json
+    (either a real GT dict, or an {"_status": "error"/"skipped", ...} placeholder)."""
     return json.loads(open(path, encoding="utf-8").read())
 
 

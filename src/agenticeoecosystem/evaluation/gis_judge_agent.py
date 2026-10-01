@@ -69,6 +69,83 @@ class ArtifactInspector:
             return {"path": path, "dimensions": dict(dataset.sizes),
                     "coordinates": coordinates, "variables": variables}
 
+    def inspect_extent(self, path: str, reported_extent: list[float] | None = None,
+                       atol: float | None = None) -> dict[str, Any]:
+        """Measure WGS84 grid-centre bounds; optionally compare reported bounds.
+
+        Region suitability is a separate check. No pass/fail tolerance is
+        invented when atol is absent, and pixel edges are not substituted.
+        """
+        import numpy as np
+        import xarray as xr
+
+        with xr.open_dataset(self.resolve(path)) as dataset:
+            lat_name = next((c for c in ("latitude", "lat") if c in dataset.coords), None)
+            lon_name = next((c for c in ("longitude", "lon") if c in dataset.coords), None)
+            if lat_name is None or lon_name is None:
+                raise ValueError("Expected geographic latitude/longitude coordinates.")
+            lat, lon = dataset[lat_name].values, dataset[lon_name].values
+            if lat.ndim != 1 or lon.ndim != 1 or not lat.size or not lon.size:
+                raise ValueError("Expected nonempty one-dimensional coordinates.")
+            if not np.isfinite(lat).all() or not np.isfinite(lon).all() or np.any(np.abs(lat) > 90):
+                raise ValueError("Invalid geographic coordinates.")
+            lon = (lon + 180) % 360 - 180
+            expected = [float(lon.min()), float(lat.min()), float(lon.max()), float(lat.max())]
+        result = {"path": path, "extent": expected, "coordinate_order": "west,south,east,north",
+                  "longitude_convention": "-180,180", "extent_basis": "grid_cell_centres",
+                  "units": "degrees", "region_suitability_verified": False}
+        if reported_extent is not None:
+            actual = np.asarray(reported_extent, dtype=float)
+            if actual.shape != (4,) or not np.isfinite(actual).all():
+                raise ValueError("Reported extent must contain four finite values in W,S,E,N order.")
+            if atol is not None and (not np.isfinite(atol) or atol < 0):
+                raise ValueError("Extent tolerance must be finite and nonnegative.")
+            errors = np.abs(actual - np.asarray(expected))
+            result.update(per_boundary_absolute_error=errors.tolist(), atol=atol,
+                          verified=bool((errors <= atol).all()) if atol is not None else None)
+        return result
+
+    def inspect_timeseries(self, path: str, variable: str,
+                           spatial_reduction: str | None = None,
+                           frequency: str | None = None, method: str = "mean",
+                           max_points: int = 366) -> dict[str, Any]:
+        """Read a bounded saved series, optionally reducing space and aggregating time.
+
+        No downloads or output files. Spatial means are explicitly unweighted
+        over finite valid cells; no implicit reduction of pressure/ensemble axes.
+        """
+        import numpy as np
+        import xarray as xr
+
+        if not 1 <= max_points <= 4096 or method not in {"mean", "sum", "min", "max"}:
+            raise ValueError("Invalid series limit or aggregation method.")
+        with xr.open_dataset(self.resolve(path)) as dataset:
+            field = dataset[variable]
+            units = field.attrs.get("units")
+            time_dim = next((d for d in ("time", "valid_time") if d in field.dims), None)
+            if time_dim is None:
+                raise ValueError("No time dimension.")
+            field = field.where(np.isfinite(field))
+            spatial_dims = [d for d in field.dims if d != time_dim]
+            if spatial_dims:
+                if spatial_reduction != "unweighted_mean" or any(
+                    d not in {"latitude", "longitude", "lat", "lon", "x", "y"} for d in spatial_dims
+                ):
+                    raise ValueError("Explicit supported spatial reduction required; select other axes first.")
+                field = field.mean(spatial_dims, skipna=True)
+            if frequency:
+                grouped = field.resample({time_dim: frequency})
+                field = grouped.sum(skipna=True, min_count=1) if method == "sum" else getattr(grouped, method)(skipna=True)
+            if field.sizes[time_dim] > max_points:
+                raise ValueError("Series exceeds limit; request an appropriate temporal aggregation.")
+            values = field.values
+            return {"path": path, "variable": variable, "units": units,
+                    "dates": [str(v) for v in field[time_dim].values],
+                    "values": [float(v) if np.isfinite(v) else None for v in values],
+                    "spatial_reduction": spatial_reduction, "frequency": frequency,
+                    "method": method if frequency else None,
+                    "mask_policy": "decoded nodata and finite values; unweighted valid-cell means when requested"}
+
     def validate_netcdf(
         self, operation: str, input_paths: list[str], output_path: str,
         variable: str, output_variable: str | None = None,
@@ -103,7 +180,8 @@ class ArtifactInspector:
             time_dim = next((dim for dim in ("time", "valid_time") if dim in fields[0].dims), None)
             if time_dim is None:
                 raise ValueError("No time dimension.")
-            expected = getattr(fields[0].resample({time_dim: frequency}), method)()
+            grouped = fields[0].resample({time_dim: frequency})
+            expected = grouped.sum(skipna=True, min_count=1) if method == "sum" else getattr(grouped, method)()
         elif operation == "wind_speed":
             if len(fields) != 2 or not second_variable:
                 raise ValueError("Wind speed requires two inputs and second_variable.")
@@ -130,6 +208,14 @@ class ArtifactInspector:
             raise ValueError("Unsupported numerical operation.")
         with xr.open_dataset(self.resolve(output_path)) as dataset:
             actual = dataset[output_variable or variable].load()
+        if operation == "resample":
+            actual_time = next((d for d in ("time", "valid_time") if d in actual.dims), None)
+            if actual_time is not None and actual_time != time_dim:
+                actual = actual.rename({actual_time: time_dim})
+            if frequency in {"M", "ME", "MS"} and time_dim in actual.dims:
+                import pandas as pd
+                expected = expected.assign_coords({time_dim: pd.DatetimeIndex(expected[time_dim].values).to_period("M").to_timestamp()})
+                actual = actual.assign_coords({time_dim: pd.DatetimeIndex(actual[time_dim].values).to_period("M").to_timestamp()})
         expected, actual = xr.align(expected, actual, join="exact")
         if set(expected.dims) != set(actual.dims) or dict(expected.sizes) != dict(actual.sizes):
             raise ValueError("Output dimensions do not match the expected field.")
@@ -187,7 +273,7 @@ class GISJudgeAgent:
             for call in message.tool_calls:
                 try:
                     args = json.loads(call.function.arguments)
-                    if call.function.name not in {"inspect_raster", "inspect_netcdf", "validate_netcdf"}:
+                    if call.function.name not in {"inspect_raster", "inspect_netcdf", "inspect_extent", "inspect_timeseries", "validate_netcdf"}:
                         raise ValueError("Unsupported inspection tool.")
                     result = getattr(self.inspector, call.function.name)(**args)
                 except (ValueError, TypeError, KeyError, OSError, ImportError, IndexError) as error:
@@ -209,6 +295,13 @@ class GISJudgeAgent:
              {"path": string, "band": {"type": "integer"}, "bins": {"type": "integer"}}, ["path"]),
             ("inspect_netcdf", "Read NetCDF coordinates, units and numerical summaries.",
              {"path": string}, ["path"]),
+            ("inspect_extent", "Measure geographic grid-centre extent and compare reported W,S,E,N bounds without inventing a tolerance.",
+             {"path": string, "reported_extent": {"type": "array", "items": number}, "atol": number}, ["path"]),
+            ("inspect_timeseries", "Read actual saved time-series values; optionally compute monthly means without downloads.",
+             {"path": string, "variable": string,
+              "spatial_reduction": {"type": "string", "enum": ["unweighted_mean"]},
+              "frequency": string, "method": {"type": "string", "enum": ["mean", "sum", "min", "max"]},
+              "max_points": {"type": "integer"}}, ["path", "variable"]),
             ("validate_netcdf", "Independently compare a numerical output with its input-derived expectation.",
              {"operation": {"type": "string", "enum": ["affine", "resample", "wind_speed", "field_mean"]},
               "input_paths": {"type": "array", "items": string}, "output_path": string,

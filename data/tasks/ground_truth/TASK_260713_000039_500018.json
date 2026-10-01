@@ -1,0 +1,137 @@
+{
+  "task_ID": "TASK_260713_000039_500018",
+  "task_text": "What MSG SEVIRI product variants are available on the EUMETSAT server and what satpy reader should be used to open them?",
+  "status": "extracted_from_current_server_catalogue",
+  "retrieved_at_utc": "2026-10-01T16:01:59.557350+00:00",
+  "ground_truth_scope": "MSG SEVIRI variants exposed by this repository server, not all EUMETSAT holdings.",
+  "reference_dictionary": {
+    "MSG-SEVIRI-L1-HRY": "seviri_l1b_hrit",
+    "MSG-SEVIRI-L1-IODC": "seviri_l1b_hrit",
+    "MSG-SEVIRI-RSS": "seviri_l1b_hrit"
+  },
+  "reference_count": 3,
+  "products": {
+    "MSG-SEVIRI-L1-HRY": {
+      "product_id": "EO:EUM:DAT:MSG:HRSEVIRI",
+      "advertised_satpy_reader": "seviri_l1b_hrit",
+      "native_format_reader": "seviri_l1b_native",
+      "aliases": [
+        "MSG-SEVIRI-L1-HRY",
+        "Prime",
+        "MSG SEVIRI Prime",
+        "HRSEVIRI",
+        "EO:EUM:DAT:MSG:HRSEVIRI"
+      ],
+      "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+    },
+    "MSG-SEVIRI-L1-IODC": {
+      "product_id": "EO:EUM:DAT:MSG:HRSEVIRI-IODC",
+      "advertised_satpy_reader": "seviri_l1b_hrit",
+      "native_format_reader": "seviri_l1b_native",
+      "aliases": [
+        "MSG-SEVIRI-L1-IODC",
+        "IODC",
+        "MSG SEVIRI IODC",
+        "HRSEVIRI-IODC",
+        "EO:EUM:DAT:MSG:HRSEVIRI-IODC"
+      ],
+      "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+    },
+    "MSG-SEVIRI-RSS": {
+      "product_id": "EO:EUM:DAT:MSG:MSG15-RSS",
+      "advertised_satpy_reader": "seviri_l1b_hrit",
+      "native_format_reader": "seviri_l1b_native",
+      "aliases": [
+        "MSG-SEVIRI-RSS",
+        "RSS",
+        "Rapid Scan Service",
+        "MSG15-RSS",
+        "EO:EUM:DAT:MSG:MSG15-RSS"
+      ],
+      "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+    }
+  },
+  "reader_fallbacks": {
+    "seviri_l1b_hrit": "seviri_l1b_native"
+  },
+  "provenance": {
+    "tool": "list_eumetsat_products",
+    "extraction_method": "Executed the exact tool function against AST-extracted static products_list constants without importing downloader clients or starting the MCP server. No live EUMETSAT API/download called.",
+    "catalogue_module": ".venv/lib/python3.12/site-packages/eumetsearch/data_collection/downloader.py",
+    "catalogue_version": "0.1.3",
+    "catalogue_sha256": "d1c4ace3d9a99f1f783786a6595038dcbee647506bf2085f221693420831d19c",
+    "server_module": "src/agenticeoecosystem/servers/eumetsat/server.py",
+    "server_sha256": "a004b3691cdf1f42883eb09d2cb3a1c23bf77247d8c93a35be82bd27b50bf0a6",
+    "snapshot_sha256": "271a37046958a2a79db81b050ff88ff1e6e6531574160c7e38095722e53cf6bc",
+    "refresh_policy": "Refresh when installed eumetsearch catalogue or server reader handling changes."
+  },
+  "evaluation_policy": {
+    "product_set_metrics": [
+      "set_precision",
+      "set_recall",
+      "set_f1",
+      "exact_set_match"
+    ],
+    "reader_dictionary_metric": "product_reader_mapping_accuracy",
+    "normalization": "Resolve product names, keys and collection-ID aliases to canonical keys. Normalize formatting; reader identifiers must identify the correct reader.",
+    "pairing": "Check each product-reader pair, not independent sets of products and readers. Missing products count in set recall; report mapping coverage separately rather than hiding omissions.",
+    "format_exception": "seviri_l1b_native is valid for native .nat files, as the server fallback indicates; seviri_l1b_hrit is the advertised reader and is appropriate for HRIT data. Accept explanations distinguishing the two.",
+    "not_required": "No download, format inspection, numeric statistics or product-availability precondition is requested.",
+    "execution_status": "GT retrieved; candidate scoring/validator not run."
+  },
+  "catalogue_snapshot": {
+    "MSG-SEVIRI-L1-HRY": {
+      "product_id": "EO:EUM:DAT:MSG:HRSEVIRI",
+      "satpy_reader": "seviri_l1b_hrit",
+      "bands": [
+        "VIS006",
+        "VIS008",
+        "IR_016",
+        "IR_039",
+        "WV_062",
+        "WV_073",
+        "IR_087",
+        "IR_097",
+        "IR_108",
+        "IR_120",
+        "IR_134",
+        "HRV"
+      ]
+    },
+    "MSG-SEVIRI-L1-IODC": {
+      "product_id": "EO:EUM:DAT:MSG:HRSEVIRI-IODC",
+      "satpy_reader": "seviri_l1b_hrit",
+      "bands": [
+        "VIS006",
+        "VIS008",
+        "IR_016",
+        "IR_039",
+        "WV_062",
+        "WV_073",
+        "IR_087",
+        "IR_097",
+        "IR_108",
+        "IR_120",
+        "IR_134",
+        "HRV"
+      ]
+    },
+    "MSG-SEVIRI-RSS": {
+      "product_id": "EO:EUM:DAT:MSG:MSG15-RSS",
+      "satpy_reader": "seviri_l1b_hrit",
+      "bands": [
+        "VIS006",
+        "VIS008",
+        "IR_016",
+        "IR_039",
+        "WV_062",
+        "WV_073",
+        "IR_087",
+        "IR_097",
+        "IR_108",
+        "IR_120",
+        "IR_134"
+      ]
+    }
+  }
+}

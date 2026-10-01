@@ -21,6 +21,55 @@ levels' inspection calls and numerical results are saved in
 alternative workflows can receive full credit. Missing archived evidence must
 be described as unverified, rather than automatically attributed to the agent.
 
+## Candidate evidence and rubric scoring
+
+New candidate runs preserve successful tool responses in `Step.tool_result`,
+including retrieved narrative/paper text when the tool returns it. Existing
+results without these responses cannot reconstruct them from final-answer prose.
+
+Use `--archive-evidence` with `scripts/run_generate.py` to copy exact recorded
+artifact paths into `<output-dir>/evidence/<results-name>/<task-ID>/...` after
+each candidate task. The result JSON stores archive paths and SHA-256 hashes.
+This option consumes disk space but avoids another download and protects files
+from subsequent candidates overwriting the shared output directory. Paths not
+explicitly recorded in tool arguments or structured responses are not discovered
+by scanning folders; supply those through a candidate-owned manifest. Without
+this flag, artifact preservation remains the caller's responsibility.
+
+AAJ uses archived files in preference to mutable originals. Hash mismatches do
+not silently fall back to the originals. The runner/manifest must establish
+ownership; a candidate-written file path alone is not independent provenance.
+Archived manifests are trusted evaluation-runner records, not candidate input.
+
+The AAJ runner reads `task_evaluation_strategies.json` to enforce GIS consultation
+for every task mapped to `gis_verification_agent`. `--evaluation-strategies`
+selects another mapping. Calling the specialist is not itself proof of successful
+verification: inspect its recorded tool results and unavailable checks.
+
+For rubric evaluation, add `--inspect-evidence` to the existing rubric batch
+command. This performs offline AAJ inspection before scoring, using the selected
+judge model/provider and additional judge API calls; no retrieval/download tool
+is exposed. To reuse an inspection already saved in the input result JSON, pass
+`--inspection-evaluator-label <AAJ-label>` instead. A manifest can be supplied
+with `--artifact-manifest` when evaluating exactly one candidate results file.
+
+The rubric receives captured responses and candidate-bound inspection results.
+AAJ overall scores are not passed as evidence. GIS tool outputs are measurements;
+model summaries remain interpretations. `inspect_timeseries` reads saved values
+and can compute monthly means from saved daily data, with explicit unweighted
+spatial reduction and a bounded number of reported points. Verifying a saved
+aggregation requires the original daily input; a monthly output alone supports
+interpretation but does not prove the aggregation was correct.
+
+Structured results are saved in `evaluator_criteria` and `evaluator_evidence`.
+When grounding is unavailable, its criterion score is null/unverified while
+scientific correctness and internal consistency may still be scored. A complete
+weighted total is then null; weights are not silently redistributed. Missing or
+truncated material evidence can also produce an unverified grounding criterion.
+Genuinely absent written answers still score zero for the written-answer rubric.
+Use a new evaluator label when comparing this evidence-aware protocol to older
+judgments, and report evidence coverage alongside any ranking.
+
 ## Running selected tasks
 
 ```bash
@@ -78,3 +127,18 @@ All comparisons currently load the relevant arrays into memory. Very large
 artifacts require suitable memory or future chunked validators. The parent judge
 and specialist use the same configured model/provider. No live API evaluation is
 launched by these code changes.
+
+Approved climate-reference fixes (2026-10-01): monthly fetch tools do not accept
+`area`; references retrieve the monthly field and clip it before regional
+inspection. Clipping normalizes either longitude convention to -180–180 and
+supports ascending or descending latitude. Aggregation accepts `time` and
+`valid_time`; precipitation sums retain wholly missing cells as missing.
+For the eight regional numeric questions, aggregate time per cell first, then
+compute the unweighted mean across finite valid cells.
+
+The six formerly pending numerical references now have runtime recomputation
+recipes in the strategy mapping. Three compare derived fields against archived
+source inputs; three measure actual grid-cell-centre W,S,E,N bounds using
+`inspect_extent`. This does not populate fixed numeric GT values or launch
+scoring. Source/region validity remains a separate AAJ check, and calibrated
+numerical tolerances and candidate evidence are still required.

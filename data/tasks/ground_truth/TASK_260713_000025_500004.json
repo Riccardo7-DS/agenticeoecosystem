@@ -1,0 +1,282 @@
+{
+  "task_ID": "TASK_260713_000025_500004",
+  "task_text": "First, list all node types available in the EOSS knowledge graph, then query for all Treaty nodes with their descriptions.",
+  "status": "retrieved_and_inventory_count_verified",
+  "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00",
+  "ground_truth_scope": "All node labels returned by the current EOSS graph and all nodes labelled Treaty, with their source descriptions. This uses the graph taxonomy, not an independent legal classification.",
+  "components": {
+    "node_types": {
+      "reference_set": [
+        "Acronym",
+        "AreaOfAction",
+        "EnablingTool",
+        "KnowledgeAdvancementObjective",
+        "NationalPolicy",
+        "ScienceQuestion",
+        "ScienceTheme",
+        "StrategicObjective",
+        "TippingPoint",
+        "Treaty"
+      ],
+      "reference_count": 10,
+      "source_counts_for_context_only": [
+        {
+          "label": "Acronym",
+          "count": 148
+        },
+        {
+          "label": "AreaOfAction",
+          "count": 4
+        },
+        {
+          "label": "EnablingTool",
+          "count": 5
+        },
+        {
+          "label": "KnowledgeAdvancementObjective",
+          "count": 167
+        },
+        {
+          "label": "NationalPolicy",
+          "count": 6
+        },
+        {
+          "label": "ScienceQuestion",
+          "count": 23
+        },
+        {
+          "label": "ScienceTheme",
+          "count": 6
+        },
+        {
+          "label": "StrategicObjective",
+          "count": 16
+        },
+        {
+          "label": "TippingPoint",
+          "count": 18
+        },
+        {
+          "label": "Treaty",
+          "count": 5
+        }
+      ],
+      "request": {
+        "name": "list_ontology_nodes",
+        "arguments": {}
+      },
+      "retrieved_at_utc": "2026-10-01T15:56:56.234635+00:00"
+    },
+    "treaties": {
+      "reference_set": [
+        {
+          "id": "CBD",
+          "name": "Convention on Biodiversity",
+          "description": "CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education."
+        },
+        {
+          "id": "EUGD",
+          "name": "EU Green Deal",
+          "description": "Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility."
+        },
+        {
+          "id": "PARIS",
+          "name": "Paris Agreement",
+          "description": "UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake."
+        },
+        {
+          "id": "SDG",
+          "name": "UN Sustainable Development Goals",
+          "description": "17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land."
+        },
+        {
+          "id": "SENDAI",
+          "name": "Sendai Framework",
+          "description": "Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness."
+        }
+      ],
+      "reference_count": 5,
+      "reference_key": "id",
+      "request": {
+        "name": "query_ontology",
+        "arguments": {
+          "cypher": "MATCH (t:Treaty) RETURN t.id AS id, t.name AS name, t.description AS description ORDER BY t.id"
+        }
+      },
+      "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00",
+      "aliases": {
+        "CBD": [
+          "CBD",
+          "Convention on Biodiversity",
+          "Convention on Biological Diversity"
+        ],
+        "EUGD": [
+          "EUGD",
+          "EU Green Deal",
+          "European Green Deal"
+        ],
+        "PARIS": [
+          "PARIS",
+          "Paris Agreement",
+          "UNFCCC Paris Agreement"
+        ],
+        "SDG": [
+          "SDG",
+          "SDGs",
+          "UN Sustainable Development Goals",
+          "United Nations Sustainable Development Goals"
+        ],
+        "SENDAI": [
+          "SENDAI",
+          "Sendai Framework",
+          "Sendai Framework for Disaster Risk Reduction"
+        ]
+      }
+    }
+  },
+  "provenance": {
+    "server": {
+      "name": "EOSS GraphRAG",
+      "version": "3.3.1"
+    },
+    "endpoint_configuration_variable": "GRAPHRAG_MCP_URL",
+    "graph_version": null,
+    "snapshot_sha256": "2196b847387ac7bd9aad7d6e553f0d17bf33e64a9d7fa4b86c3e3b13c9d235e3",
+    "snapshot_scope": "Captured node-label counts and complete Treaty records; not a complete graph backup.",
+    "refresh_policy": "Use only with frozen/unchanged graph state; otherwise refresh and version both reference components."
+  },
+  "evaluation_policy": {
+    "set_metrics": [
+      "set_precision",
+      "set_recall",
+      "set_f1",
+      "exact_set_match"
+    ],
+    "component_reporting": "Score node types and Treaty identities separately; do not merge their sets.",
+    "description_comparison": "Match description to canonical Treaty ID, accept faithful paraphrase of source content rather than requiring verbatim wording. Description evaluation is distinct from identity metrics. Do not require external details absent from source.",
+    "node_counts": "Counts are provenance/completeness evidence, not an additional requested answer requirement.",
+    "normalization": "Normalize casing/spacing/punctuation and established aliases; deduplicate; ordering is not scored.",
+    "sequence": "Existing intermediate tool-order metrics may check node listing precedes Treaty query as explicitly requested. Do not prescribe exact Cypher syntax.",
+    "query_errors": "Infrastructure/unverified, not empty valid references.",
+    "execution_status": "Ground truth retrieved; candidate scores and description evaluator have not been run."
+  },
+  "raw_evidence": [
+    {
+      "request": {
+        "name": "list_ontology_nodes",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 103,
+        "result": {
+          "_meta": {
+            "fastmcp": {
+              "wrap_result": true
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+            }
+          ],
+          "structuredContent": {
+            "result": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+          },
+          "isError": false
+        }
+      },
+      "attempts": [
+        {
+          "jsonrpc": "2.0",
+          "id": 3,
+          "result": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Error calling tool 'list_ontology_nodes': failed to send chunk data"
+              }
+            ],
+            "isError": true
+          }
+        },
+        {
+          "jsonrpc": "2.0",
+          "id": 103,
+          "result": {
+            "_meta": {
+              "fastmcp": {
+                "wrap_result": true
+              }
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+              }
+            ],
+            "structuredContent": {
+              "result": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+            },
+            "isError": false
+          }
+        }
+      ],
+      "retrieved_at_utc": "2026-10-01T15:56:56.234635+00:00"
+    },
+    {
+      "request": {
+        "name": "query_ontology",
+        "arguments": {
+          "cypher": "MATCH (t:Treaty) RETURN t.id AS id, t.name AS name, t.description AS description ORDER BY t.id"
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "_meta": {
+            "fastmcp": {
+              "wrap_result": true
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+            }
+          ],
+          "structuredContent": {
+            "result": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+          },
+          "isError": false
+        }
+      },
+      "attempts": [
+        {
+          "jsonrpc": "2.0",
+          "id": 4,
+          "result": {
+            "_meta": {
+              "fastmcp": {
+                "wrap_result": true
+              }
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+              }
+            ],
+            "structuredContent": {
+              "result": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+            },
+            "isError": false
+          }
+        }
+      ],
+      "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00"
+    }
+  ]
+}

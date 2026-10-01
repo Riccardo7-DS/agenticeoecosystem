@@ -37,6 +37,8 @@ def main() -> int:
     parser.add_argument("--max-turns",          type=int, default=8, help="Max tool-call turns per task before giving up")
     parser.add_argument("--gis-max-turns", type=int, default=5, help="Maximum turns per GIS specialist delegation")
     parser.add_argument("--artifact-manifest", help="JSON mapping task IDs to candidate-owned absolute artifact paths")
+    parser.add_argument("--evaluation-strategies", default=str(_ROOT / "data/tasks/task_evaluation_strategies.json"),
+                        help="Task mapping used to enforce mandatory GIS consultation")
     parser.add_argument("--task-ids", nargs="+", help="Evaluate only the specified task IDs")
     parser.add_argument("--output-dir",         default=None,
                         help="Save updated results here (default: same folder as results-file)")
@@ -76,6 +78,7 @@ def main() -> int:
 
     try:
         from agenticeoecosystem.evaluation.agent_judge import evaluate_solutions_agentic
+        from agenticeoecosystem.evaluation.candidate_evidence import EvaluationRequirements
         evaluate_solutions_agentic(
             selected_tasks,
             model=args.evaluator_model,
@@ -88,6 +91,7 @@ def main() -> int:
             transcript_dir=transcript_dir,
             artifact_manifest=artifact_manifest,
             gis_max_turns=args.gis_max_turns,
+            evaluation_requirements=EvaluationRequirements(Path(args.evaluation_strategies)),
         )
         logger.info("Judge transcripts written → %s", transcript_dir)
         tasks.save_to_file(results_path.name, folder=str(output_dir))

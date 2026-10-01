@@ -57,7 +57,18 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, help="Directory to write judged results into")
     parser.add_argument("--vllm-startup-timeout", type=int, default=1800)
     parser.add_argument("--skip-evaluated", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--inspect-evidence", action="store_true",
+                        help="Run offline AAJ artifact inspection before rubric scoring (additional judge calls)")
+    parser.add_argument("--inspection-evaluator-label", help="Reuse candidate-bound AAJ evidence under this label")
+    parser.add_argument("--artifact-manifest", help="Candidate-owned artifact manifest; allowed with exactly one results file")
     args = parser.parse_args()
+    if args.artifact_manifest and len(args.results_files) != 1:
+        parser.error("Use one results file per artifact manifest to preserve candidate ownership.")
+    artifact_manifest = json.loads(Path(args.artifact_manifest).read_text()) if args.artifact_manifest else None
+    if artifact_manifest is not None and (not isinstance(artifact_manifest, dict) or any(
+        not isinstance(paths, list) or any(not isinstance(p, str) or not Path(p).is_absolute() for p in paths)
+        for paths in artifact_manifest.values())):
+        parser.error("Artifact manifest must map task IDs to lists of absolute paths.")
 
     setup_logging(log_file=f"rubric_judges_batch_{args.evaluator_label.replace(' ', '_')}")
     logger = logging.getLogger(__name__)
@@ -96,6 +107,13 @@ def main() -> int:
                     logger.warning("No overlapping tasks — skipping %s", results_path.name)
                     continue
 
+                inspection_label = args.inspection_evaluator_label
+                if args.inspect_evidence:
+                    from agenticeoecosystem.evaluation.agent_judge import evaluate_solutions_agentic
+                    inspection_label = inspection_label or f"{args.evaluator_label}_evidence"
+                    evaluate_solutions_agentic(tasks, model=model_id, provider=eval_provider,
+                                              evaluator_label=inspection_label, artifact_manifest=artifact_manifest,
+                                              skip_evaluated=False)
                 tasks = rubric_evaluate_solutions(
                     tasks,
                     rubrics_by_id=rubrics_by_id,
@@ -103,6 +121,7 @@ def main() -> int:
                     skip_evaluated=args.skip_evaluated,
                     evaluator_label=args.evaluator_label,
                     provider=eval_provider,
+                    inspection_label=inspection_label,
                 )
 
                 evaluator_safe = args.evaluator_label.replace(" ", "_")
@@ -114,6 +133,10 @@ def main() -> int:
                 raw_scores = [s for s in raw_scores if s is not None]
                 buckets = [t.evaluator_scores.get(args.evaluator_label) for t in tasks]
                 buckets = [s for s in buckets if s is not None]
+                unverified = sum(any(c.get("score") is None for c in
+                                     t.evaluator_criteria.get(args.evaluator_label, [])) for t in tasks)
+                logger.info("Evidence coverage [%s]: %d/%d complete rubric scores; %d have unverified criteria.",
+                            args.evaluator_label, len(raw_scores), len(tasks), unverified)
                 if raw_scores:
                     logger.info(
                         "Summary [%s] %s - scored: %d/%d  mean: %.3f/2.0  match: %d  partial: %d  no_match: %d",

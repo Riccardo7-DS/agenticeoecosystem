@@ -810,7 +810,11 @@ async def convert_hourly_to_daily(
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
-                resampled = getattr(ds.resample(time="1D"), method)()
+                time_dim = next((d for d in ("time", "valid_time") if d in ds.dims), None)
+                if time_dim is None:
+                    return "Error: No time or valid_time dimension found."
+                grouped = ds.resample({time_dim: "1D"})
+                resampled = grouped.sum(skipna=True, min_count=1, keep_attrs=True) if method == "sum" else getattr(grouped, method)(keep_attrs=True)
                 resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
@@ -860,7 +864,11 @@ async def convert_daily_to_monthly(
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
-                resampled = getattr(ds.resample(time="ME"), method)()
+                time_dim = next((d for d in ("time", "valid_time") if d in ds.dims), None)
+                if time_dim is None:
+                    return "Error: No time or valid_time dimension found."
+                grouped = ds.resample({time_dim: "ME"})
+                resampled = grouped.sum(skipna=True, min_count=1, keep_attrs=True) if method == "sum" else getattr(grouped, method)(keep_attrs=True)
                 resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
@@ -912,7 +920,11 @@ async def resample_temporal(
                     if variable not in ds.data_vars:
                         return f"Error: variable '{variable}' not found. Available: {list(ds.data_vars)}"
                     ds = ds[[variable]]
-                resampled = getattr(ds.resample(time=freq), method)()
+                time_dim = next((d for d in ("time", "valid_time") if d in ds.dims), None)
+                if time_dim is None:
+                    return "Error: No time or valid_time dimension found."
+                grouped = ds.resample({time_dim: freq})
+                resampled = grouped.sum(skipna=True, min_count=1, keep_attrs=True) if method == "sum" else getattr(grouped, method)(keep_attrs=True)
                 resampled.to_netcdf(resolved_output)
                 dims = dict(resampled.dims)
                 vars_info = {v: str(resampled[v].attrs.get('units', 'units unchanged')) for v in resampled.data_vars}
@@ -1104,6 +1116,8 @@ async def clip_to_bbox(
     """
     Clips a NetCDF file to a geographic bounding box and writes a new file.
     Works with ERA5 files which use 'latitude' and 'longitude' coordinate names.
+    Output longitudes use -180 to 180 degrees; both source longitude conventions
+    and both latitude orders are supported. Empty selections return an error.
 
     :param input_filepath: Path to the input NetCDF file.
     :param north: Northern boundary in decimal degrees (e.g., 60.0).
@@ -1128,11 +1142,24 @@ async def clip_to_bbox(
                 lon_name = next((c for c in ds.coords if 'lon' in c.lower()), None)
                 if not lat_name or not lon_name:
                     return f"Error: Could not find lat/lon coordinates. Available: {list(ds.coords)}"
-                # ERA5 stores latitudes in descending order (90 → -90): use slice(north, south)
-                clipped = ds.sel({lat_name: slice(north, south), lon_name: slice(west, east)})
-                # Fallback for ascending latitude order
-                if clipped[lat_name].size == 0:
-                    clipped = ds.sel({lat_name: slice(south, north), lon_name: slice(west, east)})
+                if not -90 <= south <= north <= 90 or not (-180 <= west <= 180 and -180 <= east <= 180):
+                    return "Error: Invalid WGS84 bounding box."
+                if ds[lat_name].ndim != 1 or ds[lon_name].ndim != 1:
+                    return "Error: Expected one-dimensional latitude and longitude coordinates."
+                if not ds[lat_name].size or not ds[lon_name].size:
+                    return "Error: Source has empty geographic coordinates."
+                lon_attrs = dict(ds[lon_name].attrs)
+                ds = ds.assign_coords({lon_name: (ds[lon_name] + 180) % 360 - 180}).sortby(lon_name)
+                ds[lon_name].attrs = lon_attrs
+                ascending_lat = ds[lat_name].values[0] <= ds[lat_name].values[-1]
+                lat_slice = slice(south, north) if ascending_lat else slice(north, south)
+                clipped = ds.sel({lat_name: lat_slice})
+                longitude_mask = ((clipped[lon_name] >= west) & (clipped[lon_name] <= east)
+                                  if west <= east else
+                                  (clipped[lon_name] >= west) | (clipped[lon_name] <= east))
+                clipped = clipped.sel({lon_name: longitude_mask})
+                if not clipped[lat_name].size or not clipped[lon_name].size:
+                    return "Error: Bounding box contains no grid-cell centres; choose a suitable surrounding region."
                 clipped.to_netcdf(resolved_output)
                 dims = dict(clipped.dims)
             return (

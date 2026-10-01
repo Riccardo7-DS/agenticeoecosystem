@@ -7,7 +7,7 @@ Typical usage
     from agenticeoecosystem.evaluation.model_comparison import ModelRun, run_comparison
     from agenticeoecosystem.evaluation.dataclasses import TaskSet
 
-    tasks = TaskSet.read_from_file("eo_benchmark_tasks.json")
+    tasks = TaskSet.read_from_file("benchmark_tasks.json")
 
     runs = [
         ModelRun(label="EVE-Instruct",    model="EVE-Instruct",              provider="eve"),

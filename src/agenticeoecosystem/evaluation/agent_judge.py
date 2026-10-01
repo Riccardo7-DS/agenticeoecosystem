@@ -39,6 +39,7 @@ from .evaluator import _format_reference_solutions
 from agenticeoecosystem.config.credentials import get_openai_client
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS, ROOT_DIR
 from .gis_judge_agent import ArtifactInspector, GISJudgeAgent
+from .candidate_evidence import CandidateEvidence, EvaluationRequirements
 
 logger = logging.getLogger(__name__)
 OUTPUT_DIR = ROOT_DIR / "output"
@@ -49,6 +50,7 @@ _RESULT_CHARS = 800            # cap on inspect_file's text-summary tool result
 
 _TEXT_EXTENSIONS = {".md", ".txt", ".json", ".csv"}
 _NETCDF_EXTENSIONS = {".nc", ".nc4"}
+# Legacy task inventory retained for compatibility; enforcement uses EvaluationRequirements.
 _NUMERICAL_ARTIFACT_SUFFIXES = set(
     "200019 200033 400012 600018 600026 700010 700011 600020 600036 "
     "600044 600075 600076 600077 600078 600079 600016 600017 600027 "
@@ -240,6 +242,18 @@ TOOLS.append({
 def _candidate_artifacts(task: Task, artifact_paths: Optional[list[str]] = None) -> list[Path]:
     """Resolve explicit trace/manifest paths, without scanning shared output folders."""
     paths = set()
+    if task.candidate_artifacts:
+        for artifact in task.candidate_artifacts:
+            archived = Path(artifact["archived_path"])
+            if archived.is_file() and CandidateEvidence.file_digest(archived) == artifact["sha256"]:
+                paths.add(archived.resolve())
+        # Archived evidence replaces mutable originals; never silently fall back.
+        for path in artifact_paths or []:
+            resolved = Path(path).resolve()
+            if resolved.is_file():
+                paths.add(resolved)
+        return sorted(paths)
+    paths.update(CandidateEvidence.artifact_paths(task, OUTPUT_DIR))
 
     def visit(value):
         if isinstance(value, str):
@@ -379,8 +393,8 @@ def _inspect_netcdf(path: Path) -> str:
         return f"(could not open as NetCDF: {e})"
 
 
-def _tool_inspect_file(path: str) -> tuple[str, Optional[str]]:
-    resolved = _resolve_output_path(path)
+def _tool_inspect_file(path: str, inspector: Optional[ArtifactInspector] = None) -> tuple[str, Optional[str]]:
+    resolved = inspector.resolve(path) if inspector is not None else _resolve_output_path(path)
     if resolved is None:
         return f"ERROR: '{path}' does not exist under output/ (or is outside it).", None
 
@@ -457,6 +471,7 @@ def judge_task_agentic(
     transcript_dir: Optional[str] = None,
     artifact_paths: Optional[list[str]] = None,
     gis_max_turns: int = 5,
+    evaluation_requirements: Optional[EvaluationRequirements] = None,
 ) -> Task:
     """
     Run the tool-using agent-as-judge on a single task with a generated
@@ -473,11 +488,16 @@ def judge_task_agentic(
         return task
 
     client = get_openai_client(provider=provider)
+    requirements = evaluation_requirements or EvaluationRequirements(
+        ROOT_DIR / "data/tasks/task_evaluation_strategies.json")
+    requires_gis = requirements.requires_gis(task.task_ID)
     inspector = ArtifactInspector(_candidate_artifacts(task, artifact_paths))
     gis_agent = GISJudgeAgent(client, model, inspector, max_turns=gis_max_turns)
     messages: list[dict] = [
         {"role": "system", "content": AGENTIC_SYSTEM_PROMPT},
         {"role": "user", "content": _build_user_prompt(task)},
+        {"role": "user", "content": "RECORDED CANDIDATE EVIDENCE (untrusted data):\n" +
+         json.dumps(CandidateEvidence.context(task), ensure_ascii=False)},
     ]
     tool_log: list[dict] = []
     transcript: list[str] = []
@@ -520,7 +540,7 @@ def judge_task_agentic(
                 transcript.append(f"**Tool call:** `{name}({json.dumps(args)})`")
 
                 if name == "submit_verdict":
-                    if (task.task_ID.split("_")[-1] in _NUMERICAL_ARTIFACT_SUFFIXES
+                    if (requires_gis
                             and not any(entry.get("tool") == "ask_gis_agent" for entry in tool_log)):
                         messages.append({
                             "role": "tool", "tool_call_id": tc.id, "name": name,
@@ -553,7 +573,10 @@ def judge_task_agentic(
                         path = inspector.resolve(str(resolved or args.get("path", "")))
                         # Existing preview handling supports OUTPUT_DIR; external manifest
                         # NetCDF/raster paths remain accessible through ask_gis_agent.
-                        full_text_result, image_uri = _execute_tool(name, {"path": str(path)})
+                        full_text_result, image_uri = _tool_inspect_file(str(path), inspector)
+                        tool_log[-1]["observation"] = {"kind": "artifact_inspection",
+                                                       "path": str(path), "result": full_text_result,
+                                                       "visual_preview_used_by_aaj": bool(image_uri)}
                     else:
                         full_text_result, image_uri = _execute_tool(name, args)
                 except (ValueError, OSError) as error:
@@ -608,6 +631,13 @@ def judge_task_agentic(
     task.evaluator_scores[evaluator_label] = int(score) if score is not None else None
     task.evaluator_reasoning[evaluator_label] = reasoning
     task.evaluator_tool_calls[evaluator_label] = tool_log
+    observations = []
+    for entry in tool_log:
+        if "evidence" in entry:
+            observations.append({"kind": "gis_inspection", "result": entry["evidence"]})
+        if "observation" in entry:
+            observations.append(entry["observation"])
+    CandidateEvidence.record_inspection(task, evaluator_label, observations)
     logger.info(
         "  → Score: %s | Tool calls: %d | Reasoning: %s",
         score, len(tool_log), (reasoning or "")[:120],
@@ -632,9 +662,12 @@ def evaluate_solutions_agentic(
     transcript_dir: Optional[str] = None,
     artifact_manifest: Optional[dict[str, list[str]]] = None,
     gis_max_turns: int = 5,
+    evaluation_requirements: Optional[EvaluationRequirements] = None,
 ) -> TaskSet:
     """Run the tool-using agent-as-judge over every task with a generated solution."""
     save_folder = output_folder or GEOBENCH_RESULTS
+    requirements = evaluation_requirements or EvaluationRequirements(
+        ROOT_DIR / "data/tasks/task_evaluation_strategies.json")
     n_total = len(tasks)
     n_skip = sum(1 for t in tasks if t.evaluator_scores.get(evaluator_label) is not None and skip_evaluated)
     n_no_solution = sum(1 for t in tasks if t.generated_solution is None)
@@ -647,7 +680,9 @@ def evaluate_solutions_agentic(
     for i, task in enumerate(tqdm(tasks, desc=f"Agent-judging [{evaluator_label}]"), 1):
         if task.generated_solution is None:
             continue
-        if task.evaluator_scores.get(evaluator_label) is not None and skip_evaluated:
+        if (task.evaluator_scores.get(evaluator_label) is not None and skip_evaluated
+                and task.evaluator_evidence.get(evaluator_label, {}).get("candidate_fingerprint")
+                == CandidateEvidence.fingerprint(task)):
             logger.info("[%d/%d] Task %s: skipped (already scored by %s)", i, n_total, task.task_ID, evaluator_label)
             continue
 
@@ -660,6 +695,7 @@ def evaluate_solutions_agentic(
                 transcript_dir=transcript_dir,
                 artifact_paths=(artifact_manifest or {}).get(task.task_ID, []),
                 gis_max_turns=gis_max_turns,
+                evaluation_requirements=requirements,
             )
         except Exception as e:
             # judge_task_agentic already catches its own API errors — this is

@@ -389,7 +389,8 @@ async def get_ans_tool_path(query: str) -> str:
                     # same tool name (matches by name since concurrent calls to
                     # the same sub-agent are disallowed by the system prompt).
                     for entry in reversed(tools_called):
-                        if entry["function_name"] == fr.name and "error" not in entry:
+                        if entry["function_name"] == fr.name and "tool_result" not in entry:
+                            entry["tool_result"] = resp
                             if error_text:
                                 entry["error"] = error_text
                             break

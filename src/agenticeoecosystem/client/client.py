@@ -37,7 +37,13 @@ def _extract_steps_from_messages(messages: list) -> None:
             _token_counts["output"] += msg.usage_metadata.get("output_tokens", 0)
         if hasattr(msg, "tool_calls") and msg.tool_calls:
             for tc in msg.tool_calls:
-                _step_log.append({"function_name": tc["name"], "arguments": tc["args"]})
+                _step_log.append({"function_name": tc["name"], "arguments": tc["args"],
+                                  "tool_call_id": tc.get("id")})
+        if getattr(msg, "type", None) == "tool":
+            for entry in reversed(_step_log):
+                if entry.get("tool_call_id") == getattr(msg, "tool_call_id", None):
+                    entry["tool_result"] = msg.content
+                    break
 
 
 async def _load_tools_from_mcp():

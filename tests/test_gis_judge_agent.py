@@ -34,6 +34,29 @@ class InspectorTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 inspector.resolve(str(path))
 
+    def test_extent_uses_centres_and_explicit_tolerance(self):
+        import xarray as xr
+        path = self.root / 'extent.nc'
+        xr.Dataset(coords={'latitude': [42., 41.], 'longitude': [351., 352.]}).to_netcdf(path)
+        inspector = gis.ArtifactInspector([path])
+        result = inspector.inspect_extent(str(path), [-9., 41., -8., 42.])
+        self.assertEqual(result['extent'], [-9., 41., -8., 42.])
+        self.assertIsNone(result['verified'])
+        self.assertTrue(inspector.inspect_extent(str(path), result['extent'], atol=0)['verified'])
+        self.assertFalse(inspector.inspect_extent(str(path), [-10., 41., -8., 42.], atol=.1)['verified'])
+
+    def test_monthly_validation_accepts_equivalent_calendar_labels(self):
+        import numpy as np
+        import xarray as xr
+        source, output = self.root / 'daily.nc', self.root / 'monthly.nc'
+        xr.Dataset({'t': ('valid_time', [2., 4.])}, coords={
+            'valid_time': np.array(['2023-01-01', '2023-01-02'], dtype='datetime64[D]')}).to_netcdf(source)
+        xr.Dataset({'t': ('time', [3.])}, coords={
+            'time': np.array(['2023-01-01'], dtype='datetime64[D]')}).to_netcdf(output)
+        inspector = gis.ArtifactInspector([source, output])
+        self.assertTrue(inspector.validate_netcdf('resample', [str(source)], str(output),
+                                               't', frequency='ME', method='mean')['verified'])
+
     def test_histogram_mask_counts_and_edges(self):
         import numpy as np
         import rasterio

@@ -1301,7 +1301,7 @@
   },
   {
     "task_ID": "TASK_260713_000061_500040",
-    "task_text": "Download ERA5 monthly mean 2m temperature for July 2023, then inspect the resulting file to summarise its variables, dimensions, and coordinate system.",
+    "task_text": "Download ERA5 monthly mean 2m temperature for July 2023 over Girona, Spain, and its surroundings, then inspect the resulting file to summarise its variables, dimensions, and coordinate system.",
     "rubric": {
       "criteria": [
         {
@@ -1313,7 +1313,7 @@
         {
           "id": "c2",
           "type": "grounded_and_complete",
-          "description": "Grounds the summary in the inspected file by reporting its variables, dimensions, and coordinate-system information, including when relevant that the file does not explicitly provide a CRS variable.",
+          "description": "Grounds the variables, dimensions and coordinate-system summary in the actual July 2023 ERA5 temperature artifact over Girona, Spain and surroundings; no fixed dimension names or explicit CRS variable is mandatory.",
           "weight": 0.3
         },
         {
@@ -1359,7 +1359,7 @@
         {
           "id": "c1",
           "type": "scientific_correctness",
-          "description": "Interprets 500 hPa geopotential as a mid-tropospheric height field and uses its broad height patterns to characterize circulation without conflating it with surface pressure or another variable.",
+          "description": "Interprets the 500 hPa geopotential field as a mid-tropospheric circulation indicator, respecting geopotential units (m² s⁻²) and distinguishing it from geopotential height unless converted; do not conflate it with surface pressure.",
           "weight": 0.5
         },
         {
@@ -1489,7 +1489,7 @@
         {
           "id": "c1",
           "type": "scientific_correctness",
-          "description": "Interprets ERA5 total precipitation as a precipitation amount over the January 2023 monthly period and makes scientifically defensible claims, without treating this single month as evidence of a long-term winter trend or causal mechanism.",
+          "description": "Interprets ERA5 monthly-mean total-precipitation values using the product’s accumulation convention: monthly_averaged_reanalysis contains average daily accumulation, not a monthly total unless explicitly converted. Respect units and distinguish total precipitation (rain and snow) from rain alone; a single month does not establish long-term trends or causation.",
           "weight": 0.5
         },
         {
@@ -1795,25 +1795,25 @@
   },
   {
     "task_ID": "TASK_260713_000071_600071",
-    "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative, retrieve ERA5 monthly mean sea surface temperature within a 2° × 2° region around that location for three representative years from different decades, and compute the multi-year mean SST field to characterize typical ocean temperature conditions.",
+    "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative. Retrieve ERA5 monthly mean sea surface temperature for the same calendar month in three representative years from different decades, within a 2° × 2° box centred on that location. Compute and save the equal-weight, cell-by-cell mean SST field across the three observations on their common grid, retaining only ocean cells valid in all three inputs. Identify the location, selected month and years, report the output path and temperature units, and describe the resulting SST pattern. Explain that three selected years do not constitute a long-term climatology or establish a warming trend.",
     "rubric": {
       "criteria": [
         {
           "id": "c1",
           "type": "scientific_correctness",
-          "description": "Interprets ERA5 monthly mean sea surface temperature and its units correctly, and limits claims about typical conditions or change to what the selected monthly observations and their mean can support.",
+          "description": "Correctly interprets ERA5 monthly mean SST and its temperature units; qualifies the equal-weight mean of three selected years as a sample, not a long-term climatology or evidence of a warming trend.",
           "weight": 0.5
         },
         {
           "id": "c2",
           "type": "grounded_and_complete",
-          "description": "Identifies a coastal location discussed in an SST-related EO Dashboard narrative, describes the 2° × 2° region around it, and characterizes the multi-year mean field using three selected years from different decades with the chosen temporal sampling stated.",
+          "description": "Identifies a narrative-supported coastal location, same calendar month and three years from different decades, and the centred 2° by 2° region. Reports the saved mean-field path and units and describes patterns supported by the actual equal-weight, common-grid SST field with ocean cells valid in all three inputs. Artifact computation is verified separately by AAJ/GIS, not presumed from prose.",
           "weight": 0.3
         },
         {
           "id": "c3",
           "type": "internal_consistency",
-          "description": "Keeps the reported mean and its interpretation consistent with the selected years, months, region, and units, distinguishing the mean field from differences among individual observations.",
+          "description": "Keeps the described mean field and interpretation consistent with the stated location, month, years, units and common-valid-cell sampling, without unsupported trends or contradictions between inputs and conclusions.",
           "weight": 0.2
         }
       ]
@@ -2490,6 +2490,318 @@
           "id": "c3",
           "type": "internal_consistency",
           "description": "The temporal sequence and circulation conclusions follow from the evidence described, without contradictory claims about feature movement, strengthening or weakening, observation times or variable units.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260619_000001_300001",
+    "task_text": "Find MOOC lectures explaining synthetic aperture radar (SAR) principles and how SAR is used to detect ground surface deformation and subsidence.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any claims describing the selected lectures or their scientific applications are defensible for SAR principles and SAR-based detection of ground deformation and subsidence; do not infer unsupported capabilities from lecture titles. A correct selection alone may satisfy this dimension without an unrequested detailed explanation.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The returned lecture selections are supported by actual retrieved MOOC metadata or content and collectively cover SAR principles and SAR-based detection of ground deformation and subsidence. Accept any relevant lecture combination; no fixed reference IDs or minimum count beyond coverage, and no unrequested narrative synthesis.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The lecture-to-topic associations and any reasoning are mutually consistent and supported by the evidence presented. Do not require additional explanations absent from the task or penalize valid selections differing from the reference.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260619_000003_300003",
+    "task_text": "Find MOOC lectures about radar-based ocean remote sensing, including how SAR is used to detect oil spills and measure sea surface wind and waves.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any claims describing the selected lectures or their scientific applications are defensible for radar-based ocean remote sensing, including SAR oil-spill detection and sea-surface wind and wave measurement; do not infer unsupported capabilities from lecture titles. A correct selection alone may satisfy this dimension without an unrequested detailed explanation.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The returned lecture selections are supported by actual retrieved MOOC metadata or content and collectively cover radar-based ocean remote sensing, including SAR oil-spill detection and sea-surface wind and wave measurement. Accept any relevant lecture combination; no fixed reference IDs or minimum count beyond coverage, and no unrequested narrative synthesis.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The lecture-to-topic associations and any reasoning are mutually consistent and supported by the evidence presented. Do not require additional explanations absent from the task or penalize valid selections differing from the reference.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260419_000068_100068",
+    "task_text": "Look up what the ESA Science Strategy says about monitoring forests and deforestation from space, then find a matching MOOC lecture on the same topic.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of ESA Science Strategy forest/deforestation monitoring objectives. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved ESA Science Strategy forest/deforestation monitoring objectives content and MOOC metadata/content, and the selected lecture covers forest monitoring or deforestation and corresponds to the retrieved objectives. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260419_000071_100071",
+    "task_text": "Find what the ESA Science Strategy says about monitoring land subsidence and solid Earth deformation in urban areas, then search for a MOOC lecture on urban remote sensing.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of ESA Science Strategy urban land-subsidence and solid-Earth-deformation objectives. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved ESA Science Strategy urban land-subsidence and solid-Earth-deformation objectives content and MOOC metadata/content, and the selected lecture covers urban remote sensing; it need not specifically teach subsidence. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260419_000074_100074",
+    "task_text": "Look up the ESA Science Strategy objectives on sea ice as a climate indicator, then find a MOOC lecture on cryosphere remote sensing.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of ESA Science Strategy sea ice as a climate indicator. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved ESA Science Strategy sea ice as a climate indicator content and MOOC metadata/content, and the selected lecture covers cryosphere remote sensing; it need not be exclusively about sea ice. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260419_000077_100077",
+    "task_text": "Find what the ESA Science Strategy says about water resources management and drought monitoring, then search for a MOOC lecture that covers those topics.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of ESA Science Strategy water-resource management and drought monitoring objectives. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved ESA Science Strategy water-resource management and drought monitoring objectives content and MOOC metadata/content, and the selected lecture covers water-resource management and drought monitoring. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260619_000004_300004",
+    "task_text": "What does the ESA EO Science Strategy say about monitoring biodiversity and ecosystem health? Based on the answer, find a MOOC lecture that covers the relevant satellite observation techniques.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of ESA EO Science Strategy biodiversity and ecosystem-health objectives. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved ESA EO Science Strategy biodiversity and ecosystem-health objectives content and MOOC metadata/content, and the selected lecture covers satellite observation techniques relevant to the retrieved objectives. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260619_000005_300005",
+    "task_text": "Search the EO Dashboard for narratives about wildfires, then find a MOOC lecture that teaches the satellite techniques used to detect and monitor active fires from space.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any scientific claims or topic-to-technique associations made are defensible in the context of retrieved EO Dashboard wildfire narratives. Distinguish satellite observations from unsupported causal or measurement claims. Do not demand technical explanations beyond the task.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The answer or selected resources are supported by actual retrieved retrieved EO Dashboard wildfire narratives content and MOOC metadata/content, and the selected lecture teaches satellite techniques for active-fire detection and monitoring; no narrative summary required. Accept any valid source-supported lecture rather than fixed reference titles; require only content or explanations explicitly requested by the task.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260619_000007_300007",
+    "task_text": "Find EO Dashboard narratives about urban expansion, identify the city it discusses, download a Sentinel-2 image of that city, and find a MOOC lecture explaining how satellite data is used to map impervious surfaces and track urban growth.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any claims associating lecture techniques with impervious-surface mapping and urban growth are scientifically defensible; do not require the downloaded image to establish long-term urban change.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "The urban-expansion narrative supports the identified city and the selected retrieved MOOC content covers impervious-surface mapping and urban-growth monitoring. Accept any valid lecture; no unrequested image interpretation or narrative synthesis. Sentinel-2 download is checked separately by AAJ/artifact inspection.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "City, narrative, selected lecture and any reasoning are mutually consistent. Do not penalize omission of unrequested explanation or a valid source choice differing from the reference.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260427_000031_200031",
+    "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia, Lombardy, Italy during June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the selected image, save the resulting raster, and report the mean, minimum, and maximum NDVI values, then state whether these values indicate predominantly healthy vegetation, sparse or stressed vegetation, or a mix of both across the study area.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Interprets NDVI statistics as evidence of vegetation greenness without treating NDVI alone as proof of plant health, drought causation or a trend. A qualified healthy/stressed/mixed interpretation is acceptable when scientifically defensible.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "Reports mean/minimum/maximum for the actual candidate NDVI raster and gives the requested vegetation interpretation grounded in those values and acquisition context. Do not impose fixed expected values or a predetermined category; numerical statistics and artifact computation are validated separately.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The stated vegetation assessment follows from the reported NDVI statistics and their limitations without contradictory classifications or unsupported spatial conclusions.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260713_000048_500027",
+    "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2023. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Any claims about product counts, download constraints and workload are accurate according to actual catalogue/tool evidence. Do not invent a universal full-download threshold or undocumented resource limit.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "States the actual matching-product count and makes a full-set versus representative-subset choice with a concrete justification based on that count and any relevant evidenced constraints. Either choice may be valid; an actual download is not required. Count correctness is scored separately.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The chosen download scope follows logically from the stated count and practical rationale, with no contradictions between claimed constraints and recommendation.",
+          "weight": 0.2
+        }
+      ]
+    }
+  },
+  {
+    "task_ID": "TASK_260713_000065_600065",
+    "task_text": "Search MOOC content on temporal signatures and satellite time-series analysis. Based on the concepts covered, retrieve ERA5 daily mean 2 m air temperature over a mid-latitude region (e.g., Central Europe) for the winter season (December 2022-February 2023), aggregate the daily data into monthly means, and analyze the resulting temperature time series.",
+    "rubric": {
+      "criteria": [
+        {
+          "id": "c1",
+          "type": "scientific_correctness",
+          "description": "Interprets ERA5 monthly means of daily mean 2m air temperature with correct units and temporal meaning. Distinguishes variation within this three-month winter from long-term climate trends or causation; qualifies stronger claims when relevant. No particular warmest month or expected seasonal pattern is prescribed.",
+          "weight": 0.5
+        },
+        {
+          "id": "c2",
+          "type": "grounded_and_complete",
+          "description": "Analyzes the actual December 2022–February 2023 monthly temperature series for the selected mid-latitude region, using concrete observations from the candidate’s data and relevant retrieved MOOC time-series concepts. Any valid mid-latitude region is acceptable. Source retrieval and aggregation correctness are checked separately; do not infer groundedness from plausible prose alone.",
+          "weight": 0.3
+        },
+        {
+          "id": "c3",
+          "type": "internal_consistency",
+          "description": "The interpretation follows from the reported monthly values or patterns and the stated regional and temporal support, without contradictory comparisons, units or conclusions. Accept different conclusions when supported by the candidate’s evidence.",
           "weight": 0.2
         }
       ]

@@ -41,6 +41,7 @@ class Step(BaseModel):
     function_name: str                      # e.g. tool name or action type
     arguments: Dict[str, Any] = Field(default_factory=dict)
     comment: Optional[str] = None          # Optional hint used during grading
+    tool_result: Any = None               # Actual captured response, not candidate prose
 
     class Config:
         extra = "forbid"
@@ -101,6 +102,7 @@ class Task(BaseModel):
     generated_solution: Optional[Solution] = None
     generated_solution_input_tokens: Optional[int] = None
     generated_solution_output_tokens: Optional[int] = None
+    candidate_artifacts: List[Dict[str, str]] = Field(default_factory=list)
 
     # LLM-as-judge evaluation (single evaluator, kept for backward compat)
     match_reasoning_LLM: Optional[str] = None
@@ -110,6 +112,8 @@ class Task(BaseModel):
     evaluator_scores: Dict[str, Optional[int]] = Field(default_factory=dict)
     evaluator_reasoning: Dict[str, Optional[str]] = Field(default_factory=dict)
     evaluator_tool_calls: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
+    evaluator_evidence: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    evaluator_criteria: Dict[str, List[Dict[str, Any]]] = Field(default_factory=dict)
 
     # Full-precision score, for evaluators whose native scale isn't the 0/1/2
     # bucket above — e.g. a weighted rubric score in [0, 2]. evaluator_scores

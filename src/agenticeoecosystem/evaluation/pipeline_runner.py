@@ -74,6 +74,7 @@ def run_pipeline(
                 function_name=t["function_name"],
                 arguments=t.get("arguments", {}),
                 comment=(f"{_TOOL_ERROR_PREFIX} {t['error']}" if t.get("error") else None),
+                tool_result=t.get("tool_result"),
             )
             for t in data.get("tools_called", [])
         ]
@@ -118,7 +119,7 @@ def run_pipeline(
     in_tok, out_tok = loop.run_until_complete(_run())
 
     steps = [
-        Step(function_name=s["function_name"], arguments=s["arguments"])
+        Step(function_name=s["function_name"], arguments=s["arguments"], tool_result=s.get("tool_result"))
         for s in _module._step_log
     ]
     return Solution(steps=steps), in_tok, out_tok
@@ -140,6 +141,7 @@ def generate_solutions(
     pipeline: str = "multi",
     agent_models: Optional[dict] = None,
     task_timeout: Optional[float] = None,
+    archive_evidence: bool = False,
 ) -> tuple[TaskSet, int, int]:
     """
     Iterate over all tasks in `tasks`, call `run_pipeline`, and store results.
@@ -244,8 +246,15 @@ def generate_solutions(
             solution, inp_tok, out_tok = run_pipeline(task.task_text, pipeline=pipeline, task_timeout=task_timeout)
             elapsed = time.time() - t0
             task.generated_solution = solution
+            task.candidate_artifacts = []
             task.generated_solution_input_tokens = inp_tok
             task.generated_solution_output_tokens = out_tok
+            if archive_evidence:
+                from pathlib import Path
+                from .candidate_evidence import CandidateEvidence
+                from agenticeoecosystem.definitions import ROOT_DIR
+                CandidateEvidence.archive(task, ROOT_DIR / "output",
+                                          Path(_save_folder) / "evidence" / Path(output_filename or model).stem)
             total_input += inp_tok
             total_output += out_tok
             task_cost = estimate_cost_usd(model, inp_tok, out_tok)

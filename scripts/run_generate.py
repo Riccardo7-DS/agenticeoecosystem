@@ -49,6 +49,8 @@ def main() -> int:
     parser.add_argument("--task-ids",             default=None,   help="Comma-separated task IDs to select")
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
+    parser.add_argument("--archive-evidence", action="store_true",
+                        help="Copy recorded candidate artifacts into run-specific evidence storage before reuse")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
     parser.add_argument("--task-timeout",         type=float, default=None,
                         help="Max wall-clock seconds for a single task before it's "
@@ -122,6 +124,7 @@ def main() -> int:
             pipeline=args.pipeline,
             agent_models=agent_models,
             task_timeout=args.task_timeout,
+            archive_evidence=args.archive_evidence,
         )
         # Final save — redundant with the intermediate saves inside
         # generate_solutions() now that output_folder is passed through,

@@ -1,0 +1,3909 @@
+{
+  "metadata": {
+    "audit_date": "2026-10-01",
+    "eligible_tasks": 265,
+    "rubric_entries": 108,
+    "scope": "Configuration, question/reference alignment and local runner/schema inspection; no live download, judge execution or product-availability prechecks. External wrapper schemas are not inferred from generic Python args objects.",
+    "unassigned_tasks": 0,
+    "strategy_counts": {
+      "set_answer": 19,
+      "qualitative": 88,
+      "hybrid": 31,
+      "named_entity": 2,
+      "retrieval_validation": 13,
+      "artifact_metadata": 5,
+      "numerical_answer": 40,
+      "categorical_identifier": 2,
+      "agent_as_judge": 36,
+      "download_contract": 27,
+      "numerical_artifact": 2
+    },
+    "finding_counts": {
+      "candidate_grounding_evidence_required_at_runtime": 108,
+      "approved_question_evaluation_exception": 1
+    },
+    "review_required_tasks": 0
+  },
+  "configuration_fixes": [
+    {
+      "task_ID": "TASK_260713_000071_600071",
+      "change": "Synchronized SST rubric wording and criteria with approved revised question."
+    },
+    {
+      "task_ID": "TASK_260619_000001_300001",
+      "change": "Normalized rubric method names to existing convention; canonical criteria stored only in rubric source."
+    },
+    {
+      "task_ID": "TASK_260619_000003_300003",
+      "change": "Normalized rubric method names to existing convention; canonical criteria stored only in rubric source."
+    },
+    {
+      "task_ID": "TASK_260713_000002_600002",
+      "change": "Restricted explicitly exact API-name task to canonical exact matching."
+    },
+    {
+      "task_IDs": [
+        "TASK_260419_000008_100008",
+        "TASK_260419_000017_100017",
+        "TASK_260419_000020_100020",
+        "TASK_260419_000041_100041",
+        "TASK_260419_000068_100068",
+        "TASK_260419_000071_100071",
+        "TASK_260419_000074_100074",
+        "TASK_260419_000077_100077",
+        "TASK_260619_000004_300004",
+        "TASK_260619_000005_300005"
+      ],
+      "change": "Applied10 approved missing-component additions;6 manually authored rubrics added."
+    },
+    {
+      "task_ID": "TASK_260713_000026_500005",
+      "change": "Rephrased as enabling-tool inventory; five-node ground truth stored; set metrics assigned; context/link requirement removed."
+    },
+    {
+      "task_IDs": [
+        "TASK_260619_000007_300007",
+        "TASK_260427_000021_200021",
+        "TASK_260427_000031_200031",
+        "TASK_260619_000010_300010",
+        "TASK_260713_000025_500004",
+        "TASK_260713_000033_500012",
+        "TASK_260713_000039_500018",
+        "TASK_260713_000048_500027",
+        "TASK_260713_000013_600013"
+      ],
+      "change": "Applied9 approved remaining batch additions, including paired descriptions/readers and3 manually authored rubrics."
+    },
+    {
+      "task_ID": "TASK_260713_000014_600014",
+      "change": "Simplified to climate catalogue lookup; removed narrative retrieval and added snapshot GT with deterministic identifier–classification pairing."
+    },
+    {
+      "task_ID": "TASK_260713_000065_600065",
+      "change": "Added AAJ/GIS verification and manually authored interpretation rubric, retaining pending numerical GT. Grounded rubric scoring requires candidate evidence plumbing."
+    },
+    {
+      "task_IDs": [
+        "TASK_260713_000015_600015",
+        "TASK_260713_000014_600014"
+      ],
+      "change": "Removed incidental exact science-band count and mandatory preset identifiers; made classification aliases explicit. Annotated check execution modes and corrected stale AAJ/GIS/partial counts. Raw encoding policy still requires review."
+    },
+    {
+      "task_IDs": [
+        "TASK_260713_000003_600003",
+        "TASK_260713_000004_600004",
+        "TASK_260713_000008_600008",
+        "TASK_260713_000009_600009",
+        "TASK_260713_000015_600015",
+        "TASK_260713_000053_600053",
+        "TASK_260713_000058_600058",
+        "TASK_260713_000059_600059",
+        "TASK_260713_000061_500040",
+        "TASK_260713_000061_600061",
+        "TASK_260713_000062_500041",
+        "TASK_260713_000062_600062",
+        "TASK_260713_000063_600063",
+        "TASK_260713_000065_600065",
+        "TASK_260713_000066_500045",
+        "TASK_260713_000067_600067",
+        "TASK_260713_000068_600068",
+        "TASK_260713_000069_500048",
+        "TASK_260713_000070_600070",
+        "TASK_260713_000073_600073",
+        "TASK_260713_000075_500054",
+        "TASK_260713_000076_600076",
+        "TASK_260713_000077_500056",
+        "TASK_260713_000078_500057",
+        "TASK_260713_000078_600078",
+        "TASK_260713_000079_500058",
+        "TASK_260713_000079_600079",
+        "TASK_260713_000081_500060",
+        "TASK_260713_000081_600081",
+        "TASK_260713_000082_500061",
+        "TASK_260713_000082_600082",
+        "TASK_260713_000083_500062",
+        "TASK_260713_000083_600083",
+        "TASK_260715_000001_700010",
+        "TASK_260715_000002_700011"
+      ],
+      "change": "Applied user-approved fixes: global monthly fetch then regional clip; seeded small-city assignments where area was unspecified; explicit temporal-first unweighted spatial means; soil-moisture reference; candidate-runtime numerical GT recipes; no unrequested raw encoding. Updated corresponding questions/references/rubrics and rerun requirements."
+    }
+  ],
+  "implementation_gaps": [
+    "Runtime rubric grounding requires saved source/artifact evidence; missing data remains unverified.",
+    "Task-specific NDVI/reprojection/geometry/export validators are not all implemented.",
+    "Six runtime GT recipes require candidate-owned inputs, independently resolved source/region suitability and calibrated numerical tolerances; no scoring run performed."
+  ],
+  "tasks": [
+    {
+      "task_ID": "TASK_260419_000001_100001",
+      "task_text": "List all available themes in the EO Dashboard.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260419_000002_100002",
+      "task_text": "Search the EO Dashboard for the narrative on the 2019–2020 Australian bushfires. Identify the affected study area, select an appropriate Earth observation dataset for mapping burn scars, retrieve data covering the region, and explain why the chosen dataset is suitable and how it relates to the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000003_100003",
+      "task_text": "Retrieve the full content of any narrative about air quality.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000004_100004",
+      "task_text": "Download a Sentinel-2 RGB satellite image of central Rome, Italy for the period January to March 2023, at 10 m resolution with less than 20% cloud cover. Is the Tiber River clearly visible? If so, describe the direction in which it flows across the image.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000005_100005",
+      "task_text": "Find an EOdashboard narrative about environmental changes observed from space during the Covid-19 lockdown (such as improved air quality, clearer waterways, or reduced maritime traffic), identify the affected study area, then download two Sentinel-2 true-colour images of that area — one from approximately one year before the lockdown (same season, 2019) and one from during the lockdown (2020) — and compare the two images to assess whether visible environmental changes are apparent.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000006_100006",
+      "task_text": "Which narratives in the EO Dashboard reference the indicator collection EO:EEA:DAT:CLMS_CORINE_CLCPLUS_RASTER_2018_V1_1?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260419_000008_100008",
+      "task_text": "Find the EO Dashboard narrative about farmlands north of Cairo absorbing atmospheric CO2, identify the study area it describes, and download a Sentinel-2 true-colour image of that agricultural region.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_artifact_checks",
+        "gis_verification_agent"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000009_100009",
+      "task_text": "Find an EO Dashboard narrative about forest cover loss and retrieve its full text content.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000010_100010",
+      "task_text": "Which EO Dashboard narratives reference the sea ice dataset with indicator code EO:ESA:DAT:CRYOSAT:SEA_ICE_THICKNESS?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260419_000011_100011",
+      "task_text": "Get an overview of all thematic areas covered by the EO Dashboard.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260419_000012_100012",
+      "task_text": "Download a true-colour Sentinel-2 satellite image of central Barcelona, Spain for July 2022 at 10 m resolution with a maximum cloud cover of 15%. Inspect the image and assess whether urban structures, roads, and built-up areas are clearly visible. Explain whether the image is suitable for urban feature mapping.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000013_100013",
+      "task_text": "Download a false-colour near-infrared composite of the agricultural area around Cremona, Lombardy, Italy for the growing season (June–August 2021) at 20 m resolution. Describe the spatial patterns of vegetation conditions visible in the image and identify areas with stronger or weaker vegetation signals.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000016_100016",
+      "task_text": "Find an EO Dashboard narrative about forest cover change, identify the study area and time period it discusses, and retrieve a Sentinel-2 true-colour image covering that area. Describe whether the retrieved imagery provides visible evidence supporting the forest cover changes reported in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000017_100017",
+      "task_text": "Find an EO Dashboard narrative about flood events, retrieve its full content, and identify the geographic area and approximate study region it describes.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000018_100018",
+      "task_text": "Find an EO Dashboard narrative about forest habitat change, extract a study area from it, and download a Sentinel-2 true-colour image for that area for the most recent available year. Identify whether the selected area still appears to contain the forest habitat described in the dashboard and explain your reasoning.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000019_100019",
+      "task_text": "Download a Sentinel-2 image with bands B8 and B4 for the area around Ciudad Real in central Spain during the summer drought period of July–September 2022 at 10 m resolution, then find EO Dashboard narratives that discuss food security or extreme climate impacts relevant to agricultural drought in Europe.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000020_100020",
+      "task_text": "Find the EO Dashboard narrative about Arctic changes characteristic of global warming, identify a representative Arctic study area, and download a Sentinel-1 SAR image of that area to examine sea-ice/open-water backscatter contrast.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_artifact_checks",
+        "gis_verification_agent"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000021_100021",
+      "task_text": "Retrieve multiple priority areas from the ESA Earth Observation Science Strategy, identify the related Earth observation application domains, and search for MOOC lectures covering satellite-based monitoring methods for each domain. Determine which ESA priorities are represented in the available MOOC content, and explain how the lectures support the corresponding strategy objectives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000022_100022",
+      "task_text": "Find an EO Dashboard narrative about glaciers or cryosphere change. Extract the study area discussed, then download the corresponding data using the appropriate data access tool. Summarize what the downloaded data reveals about the cryosphere conditions or ice extent described in the narrative and explain your reasoning.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000023_100023",
+      "task_text": "Find two separate EO Dashboard narratives related to greenhouse gas monitoring: one focused on carbon emissions or carbon storage, and one focused on other greenhouse gases such as methane or atmospheric pollutants. Identify the study areas discussed in each narrative, retrieve the relevant satellite datasets, and summarize their spatial resolution, temporal coverage, measured variables, and relevance for monitoring the emissions described in the narratives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000024_100024",
+      "task_text": "Find an EO Dashboard narrative about climate change impacts, retrieve its full content to identify the study area, select and download an appropriate EO image for that area, and query the ESA Science Strategy for policy context on the same topic. Explain how the selected observation helps assess the climate impact described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000025_100025",
+      "task_text": "Find an EO Dashboard narrative about greenhouse gas emissions from industrial activity. Identify the study area mentioned in the narrative, retrieve a suitable methane observation dataset (such as Sentinel-5P or another atmospheric composition product) for that location, and search for ESA educational resources on satellite monitoring of greenhouse gases. Explain how the retrieved observations relate to the emissions issue discussed in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000026_100026",
+      "task_text": "Download two Sentinel-2 true-colour images of Bordeaux, France — one before the July 2022 heatwave and wildfires (April–June 2022) and one after (August–September 2022) — to assess landscape changes caused by the extreme weather event. Compare the two images and assess whether visible landscape changes — such as vegetation stress, burn scars, or browning — are observable between the pre- and post-event periods.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000027_100027",
+      "task_text": "Find an EO Dashboard narrative related to food security and crop monitoring. Identify the agricultural region discussed in the narrative, retrieve a MODIS NDVI vegetation-index product covering that area, and identify relevant ESA Earth Observation Science Strategy objectives and educational resources on satellite-based crop monitoring. Explain how the NDVI observations and supporting resources relate to the crop-monitoring objectives described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000031_100031",
+      "task_text": "Find the EO Dashboard narrative about air pollution changes, identify a representative city discussed in the narrative, and retrieve a Sentinel-5P atmospheric composition product for that location. Inspect the retrieved data and describe the spatial distribution of the pollutant signal (e.g., NO₂ concentration), explaining how it relates to the air-quality changes described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000032_100032",
+      "task_text": "Find an EO Dashboard narrative about aerosols or atmospheric particulate matter and retrieve its full text content.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000033_100033",
+      "task_text": "Find the EO Dashboard narrative about using satellites to monitor land cover and aboveground biomass, identify the study region it discusses, and retrieve the MODIS annual land-cover product covering that area. Summarize the dominant land-cover classes and explain how they relate to the biomass monitoring described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000034_100034",
+      "task_text": "Find an EO Dashboard narrative about ocean health or sea surface temperature and retrieve its full text.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000035_100035",
+      "task_text": "Find the EO Dashboard narrative about COVID-19 travel restrictions disrupting global cargo shipping, identify a representative shipping chokepoint, and retrieve Sentinel-1 SAR and Sentinel-2 imagery for that location. Use the SAR data to assess maritime activity and the optical image to describe the surrounding port infrastructure and geographic context.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000036_100036",
+      "task_text": "Retrieve a Sentinel-2 true-colour image of central Wuhan, Hubei, China during the February 2020 COVID-19 lockdown period. Select the most suitable available acquisition based on cloud cover and image quality. Describe the visible urban environment and explain what information can and cannot be inferred from this optical image about lockdown-related changes.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000037_100037",
+      "task_text": "Retrieve a false-colour near-infrared composite of the agricultural area near Mansoura, Egypt for March–April 2022 at 20 m resolution. Describe the main vegetation patterns visible in the image before harvest.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000038_100038",
+      "task_text": "Download a true-colour Sentinel-2 image of the area around Darmstadt, Germany — home to ESA's European Space Operations Centre (ESOC) and EUMETSAT headquarters — for July 2022. Estimate the proportion of built-up versus vegetated land cover and describe the spatial distribution of green space relative to the urban core.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000039_100039",
+      "task_text": "Find the EO Dashboard narrative about extreme air pollution episodes in Northern India and Pakistan, identify a representative city discussed in the narrative, and retrieve Sentinel-5P atmospheric composition data for that location during the smog season. Describe the spatial distribution of pollutant concentrations and explain how the observations relate to the pollution episode described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000040_100040",
+      "task_text": "Find an EO Dashboard narrative about economic activity or night-time lighting patterns observed from space and retrieve its full text content.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000041_100041",
+      "task_text": "Find the EO Dashboard narrative about urban NO2 or air pollution, identify the location it describes, and download a Sentinel-2 true-colour image of the area to visually inspect air-quality-relevant urban haze conditions.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_artifact_checks",
+        "gis_verification_agent"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000042_100042",
+      "task_text": "Find an EO Dashboard narrative about climate change effects on ocean warming, identify a representative coastal study area and the relevant time period discussed in the narrative, and retrieve a JAXA daily sea surface temperature (SST) product for that region. To avoid downloading the full time series, select representative observations from the period of interest (e.g., one observation per year during the same season if the period spans multiple years). Describe the observed SST patterns and explain how they relate to the ocean warming impacts described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000043_100043",
+      "task_text": "Download a Sentinel-2 true-colour image of the coastal area near Cairns, Queensland, Australia for September 2022 at 10 m resolution. Then find an EO Dashboard narrative about climate change effects on ocean warming in the same region. Describe whether the image provides visible context supporting the impacts discussed in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000044_100044",
+      "task_text": "Find an EO Dashboard narrative about land cover change or urbanisation. Read the full content to identify the study area and the main change process described. Retrieve a Sentinel-2 image covering that area for 2023 using an appropriate false-colour composite. Describe the visible land-cover patterns and assess whether the image provides evidence consistent with the changes reported in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000045_100045",
+      "task_text": "Search the EO Dashboard for a narrative about deforestation or forest loss. Identify a representative area of documented forest loss, then download two Sentinel-2 true-colour images of that area: one before and one after the reported forest change. Compare the images and describe visible land-cover changes.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000046_100046",
+      "task_text": "Search the EO Dashboard for narratives about wildfires or burned areas. Identify the study area they discuss, then download two Sentinel-2 false-colour near-infrared composites of the affected area: one before and one after the wildfire event. Compare the images and describe visible changes in vegetation cover, burned areas, and landscape conditions associated with the fire.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000047_100047",
+      "task_text": "Search the EO Dashboard for a narrative about Amazon deforestation. Read the complete narrative to identify the study area and environmental issue discussed. Download the relevant satellite assets: select a Sentinel-2 false-colour image covering the same region during the dry season (July–September 2022). Summarize the visible evidence of deforestation or forest degradation and explain how it supports or challenges the findings described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000064_100064",
+      "task_text": "What does the ESA Science Strategy say about monitoring carbon emissions and the role of satellite data in supporting carbon accounting?",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000066_100066",
+      "task_text": "What does the ESA Science Strategy say about using Earth observation for disaster risk reduction and emergency response?",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000067_100067",
+      "task_text": "Find a MOOC lecture that explains how satellite sensors such as MODIS measure land surface temperature for environmental monitoring.",
+      "evaluation_strategy": "named_entity",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260419_000068_100068",
+      "task_text": "Look up what the ESA Science Strategy says about monitoring forests and deforestation from space, then find a matching MOOC lecture on the same topic.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000069_100069",
+      "task_text": "What does the ESA Science Strategy say about monitoring polar regions, sea ice, and Arctic climate change?",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260419_000071_100071",
+      "task_text": "Find what the ESA Science Strategy says about monitoring land subsidence and solid Earth deformation in urban areas, then search for a MOOC lecture on urban remote sensing.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000074_100074",
+      "task_text": "Look up the ESA Science Strategy objectives on sea ice as a climate indicator, then find a MOOC lecture on cryosphere remote sensing.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260419_000077_100077",
+      "task_text": "Find what the ESA Science Strategy says about water resources management and drought monitoring, then search for a MOOC lecture that covers those topics.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260619_000001_300001",
+      "task_text": "Find MOOC lectures explaining synthetic aperture radar (SAR) principles and how SAR is used to detect ground surface deformation and subsidence.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260619_000003_300003",
+      "task_text": "Find MOOC lectures about radar-based ocean remote sensing, including how SAR is used to detect oil spills and measure sea surface wind and waves.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260619_000004_300004",
+      "task_text": "What does the ESA EO Science Strategy say about monitoring biodiversity and ecosystem health? Based on the answer, find a MOOC lecture that covers the relevant satellite observation techniques.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260619_000005_300005",
+      "task_text": "Search the EO Dashboard for narratives about wildfires, then find a MOOC lecture that teaches the satellite techniques used to detect and monitor active fires from space.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01; mapping completed, implementation/evaluation pending."
+    },
+    {
+      "task_ID": "TASK_260619_000006_300006",
+      "task_text": "Search the ESA Science Strategy for priorities on glacier and cryosphere monitoring and search MOOC content for lectures on ice sheet remote sensing. Identify a glacier or cryosphere study site relevant to these sources, download a recent summer Sentinel-2 image of that location, and describe the visible cryosphere features that are relevant for monitoring climate change impacts.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260619_000007_300007",
+      "task_text": "Find EO Dashboard narratives about urban expansion, identify the city it discusses, download a Sentinel-2 image of that city, and find a MOOC lecture explaining how satellite data is used to map impervious surfaces and track urban growth.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260427_000001_200001",
+      "task_text": "Search for recent arXiv papers on SAR (Synthetic Aperture Radar) flood mapping and inundation detection published since January 2022.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000002_200002",
+      "task_text": "Search arXiv for papers on deep-learning-based land cover classification from satellite imagery, then download the first result and read its full content.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "approved_question_evaluation_exception",
+          "detail": "Question still says first result, but explicit user instruction excludes search-rank scoring. Apply the approved evaluation exception."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000003_200003",
+      "task_text": "Find arXiv papers on NDVI-based crop monitoring or vegetation health assessment from Sentinel-2 imagery and retrieve the abstract of the most relevant result.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000004_200004",
+      "task_text": "Search arXiv for papers about forest fire or wildfire detection using remote sensing, download the top result, and then explore its citation graph.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000005_200005",
+      "task_text": "List all arXiv papers that have been downloaded to local storage.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000006_200006",
+      "task_text": "Search arXiv for papers on atmospheric CO₂ retrieval from satellite spectrometers published between 2020 and 2024, download one paper, then find other downloaded papers semantically similar to it.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000007_200007",
+      "task_text": "Search arXiv for papers on sea-level rise monitoring using satellite altimetry published since 2024 and return up to 15 results.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000008_200008",
+      "task_text": "Download a Sentinel-2 true-colour image of central Rome, Italy for March 2023, then read the raster metadata (driver, CRS, size, band count, data type, geographic extent) of the resulting file.",
+      "evaluation_strategy": "artifact_metadata",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "metadata_field_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000009_200009",
+      "task_text": "Download a multi-band Sentinel-2 image of central Barcelona, Spain for July 2022, then calculate the minimum, maximum, mean, and standard deviation for each band.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000010_200010",
+      "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022, save the result, and report the NDVI value range and the percentage of the area with NDVI greater than 0.6.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000011_200011",
+      "task_text": "Download a Sentinel-2 true-colour image of the Swiss Alps for September 2022, reproject it from its native CRS to UTM zone 32N (EPSG:32632) using bilinear resampling, then compute per-band statistics on the reprojected result.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000012_200012",
+      "task_text": "Download a Sentinel-2 image of the Almería region in southern Spain for June 2023 with bands B2, B3, B4, and B8. Clip the image to the Almería study area, compute NDVI using B4 (Red) and B8 (NIR), and report the minimum, maximum, mean NDVI, and the percentage of pixels with NDVI greater than 0.5.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000013_200013",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 (Red) and B8 (NIR) at 10 m resolution and a maximum cloud cover of 20%. Compute NDVI from the downloaded imagery, save the resulting raster, and report the mean and maximum NDVI values for the study area.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000014_200014",
+      "task_text": "Transform the geographic coordinates of the Colosseum in Rome from WGS84 (EPSG:4326) to UTM zone 33N (EPSG:32633).",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000015_200015",
+      "task_text": "Find the appropriate UTM CRS for the centre of Addis Ababa, Ethiopia.",
+      "evaluation_strategy": "categorical_identifier",
+      "evaluation_methods": [
+        "canonicalized_crs_equivalence"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000016_200016",
+      "task_text": "Calculate the geodetic distance in metres along the WGS84 ellipsoid between ESA’s ESRIN centre in Frascati, Italy and ESA’s ESAC centre in Villanueva de la Cañada, Spain.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000017_200017",
+      "task_text": "Create a 5 km buffer around the point representing the centre of an Amazon deforestation hotspot (WKT: POINT(625000 9000000) in UTM zone 22S), then calculate the geodetic area of the resulting buffer polygon. Report the area in square kilometres.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000019_200019",
+      "task_text": "Download a Sentinel-2 image of the Po Valley agricultural region in northern Italy for July 2022, compute NDVI, then generate a 256-bin pixel-value histogram to understand the distribution of vegetation density across the area.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000020_200020",
+      "task_text": "Search arXiv for papers on SAR-based flood extent mapping published since 2023, download the most relevant result, read its full content to identify the study area, then compute the geodetic distance between that study area centroid and Rome, Italy.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000021_200021",
+      "task_text": "Search arXiv for papers on vegetation index analysis for drought monitoring, download one, and retrieve its abstract to identify a drought-affected study region. Download a Sentinel-2 image for that region, then compute NDVI and save the result.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260427_000024_200024",
+      "task_text": "Find what the ESA Science Strategy says about monitoring carbon emissions from space, then search arXiv for papers published in the last year on satellite-based carbon or CO₂ monitoring. Compare the research priorities in the strategy with the approaches described in recent papers — identify areas of alignment and any gaps.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000025_200025",
+      "task_text": "Look up what the ESA Science Strategy says about cryosphere monitoring and sea ice observations, then search arXiv for recent papers on Arctic sea ice remote sensing. Assess whether the current research literature addresses the strategy's stated priorities — highlight commonalities and any under-explored areas.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000026_200026",
+      "task_text": "Query the ESA Science Strategy for its objectives on biodiversity and ecosystem monitoring, then search arXiv for recent papers on satellite-based biodiversity or habitat mapping and download the top result. Identify how the paper's methodology and scope align with or diverge from the strategy's objectives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000027_200027",
+      "task_text": "Find what the ESA Science Strategy says about water resources management and hydrological monitoring, then search arXiv for recent papers on satellite hydrology or soil moisture retrieval and retrieve the abstract of the top result. Compare the strategy's priorities with the paper's focus — note where they converge and where gaps remain.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000028_200028",
+      "task_text": "Look up the ESA Science Strategy's position on disaster risk reduction and emergency response using satellite data, then search arXiv for recent papers on flood or earthquake damage assessment from satellite imagery and build the citation graph of the top result. Assess how well the recent literature addresses the strategy's disaster response priorities, noting areas of overlap and divergence.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000029_200029",
+      "task_text": "Find out what the ESA Science Strategy says about solid Earth deformation and land subsidence in urban environments, then search arXiv for recent papers on InSAR-based urban subsidence or land deformation monitoring from satellite data. Compare the scale and focus of the research literature with the strategy's urban deformation monitoring objectives — identify what the community is actively pursuing versus what the strategy emphasises.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000030_200030",
+      "task_text": "Retrieve what the ESA Science Strategy says about ocean health and marine environment monitoring, then search arXiv for the latest papers on satellite ocean colour or phytoplankton monitoring and find papers semantically similar to the top result. Synthesise how the recent literature aligns with or diverges from the strategy's marine monitoring priorities.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000031_200031",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Pavia, Lombardy, Italy during June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the selected image, save the resulting raster, and report the mean, minimum, and maximum NDVI values, then state whether these values indicate predominantly healthy vegetation, sparse or stressed vegetation, or a mix of both across the study area.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260427_000032_200032",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Zinder, Niger for July-September 2022 with bands B3, B4, and B8, all at native 10 m resolution. Compute NDVI and NDWI, save the results, report raster statistics for each index, and state whether the statistics indicate dense, dry vegetation or a wetter, water-influenced landscape across the study area.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000033_200033",
+      "task_text": "Download a Sentinel-2 image of the area around Córdoba, Andalusia, Spain for the summer drought period of July-September 2022 with bands B4, B8, and B11 at 10-20 m resolution. Compute NDVI and NDMI, save the resulting rasters, and produce 256-bin histograms of both indices to assess vegetation condition and drought-related moisture stress.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260427_000034_200034",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Kafr el-Sheikh in the Nile Delta, Egypt for April 2023 with bands B8 and B4 at 10 m resolution, reproject the downloaded raster to UTM zone 36N (EPSG:32636) using bilinear resampling, then compute NDVI from the reprojected image and save the result.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000035_200035",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save the result. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save the reprojected result. Finally report band statistics (mean, max, std) for the reprojected raster.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000036_200036",
+      "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the agricultural area around Mopti, Mali for August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000037_200037",
+      "task_text": "Download a Sentinel-2 image of central Rome, Italy for June 2023 with bands B8 and B4 at 10 m resolution and less than 20% cloud cover, compute NDVI from it, then save a static PNG map of the NDVI raster using a red-yellow-green colormap.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation",
+        "aaj_image_inspection"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000038_200038",
+      "task_text": "Download a Sentinel-2 image of the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June-August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, then create a static map of the NDVI raster using a red-yellow-green colormap.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation",
+        "aaj_image_inspection"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260427_000039_200039",
+      "task_text": "Download a Sentinel-2 image of the agricultural area around Uman, Cherkasy Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution, compute NDVI, then create a static map of the NDVI raster using a red-yellow-green colormap.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation",
+        "aaj_image_inspection"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260619_000009_300009",
+      "task_text": "List all available narratives in the EO Dashboard.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260619_000010_300010",
+      "task_text": "List all EO Dashboard narratives, then search among them for any related to ocean or climate change.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260619_000011_300011",
+      "task_text": "Find an EO Dashboard narrative about satellite-based agricultural monitoring, identify the key farming region discussed, and retrieve a MODIS NDVI vegetation-index product covering that area. Visualize the NDVI product and describe the spatial patterns of vegetation activity, identifying areas of higher and lower vegetation response. Explain how these patterns relate to the agricultural conditions described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260619_000012_300012",
+      "task_text": "Find the EO Dashboard narrative about the 2023-2024 El Niño floods and cyclone impacts in East Africa, identify the affected area, and download Sentinel-1 SAR images of that area to detect flood inundation.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260619_000013_300013",
+      "task_text": "Find an EO Dashboard narrative about forest loss and changing forest landscapes, identify the study area discussed, and retrieve a MODIS surface-reflectance product covering that region. Describe the regional-scale vegetation patterns visible in the imagery and explain how they relate to the forest changes described in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260619_000014_300014",
+      "task_text": "Get the latitude and longitude coordinates for Nairobi, Kenya.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260619_000015_300015",
+      "task_text": "Find the geographic coordinates of Reykjavik, Iceland, then download a Sentinel-2 true colour image of that location for July 2022 at 10 m resolution. Describe the dominant landforms visible in the image and identify features that are characteristic of Iceland's volcanic landscape.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000001_400001",
+      "task_text": "What are the latitude and longitude coordinates of the ESA ESRIN facility in Frascati, Italy?",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000002_400002",
+      "task_text": "Retrieve the latitude and longitude of Manaus, Brazil, the gateway city for Amazon basin satellite observation campaigns.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000003_400003",
+      "task_text": "What are the geographic coordinates of the Mauna Loa Observatory in Hawaii, one of the world's key atmospheric CO2 monitoring stations?",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000004_400004",
+      "task_text": "Geocode the city of Aral, Kazakhstan. Retrieve a suitable Sentinel-2 true-colour observation covering the area during July 2023. Assess the current Aral Sea shoreline, describe visible evidence of environmental change, and explain how the observation could be combined with historical data to quantify shoreline retreat.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000005_400005",
+      "task_text": "Locate Mount Etna in Sicily, Italy, then download a Sentinel-2 short-wave infrared composite (bands B12, B11, B8A) for October–November 2022 at 20 m resolution to monitor volcanic thermal anomalies.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000006_400006",
+      "task_text": "Find MOOC educational content on SAR-based flood mapping, then geocode Dhaka, Bangladesh and download a Sentinel-1 GRD image from August 2022 at 10 m resolution to assess monsoon flood extent.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000007_400007",
+      "task_text": "Retrieve ESA strategic priorities for Arctic cryosphere monitoring from the knowledge base. Identify the relevant objectives and study areas mentioned. Then geocode the Ny-Ålesund research station in Svalbard, Norway and retrieve a suitable Sentinel-2 observation from September 2023 covering the area. Describe the visible sea ice conditions and explain how the observation supports Arctic cryosphere monitoring objectives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000009_400009",
+      "task_text": "Download the Copernicus 30 m DEM for Mount Etna, Sicily, then read its metadata (driver, CRS, pixel resolution, band count, data type, and geographic extent).",
+      "evaluation_strategy": "artifact_metadata",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "metadata_field_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000010_400010",
+      "task_text": "Download a Landsat 8 surface reflectance image of central California from July 2013, then read its metadata to verify its CRS and band structure and compute per-band statistics to summarise the reflectance distribution.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000011_400011",
+      "task_text": "Download Sentinel-2 imagery covering a representative area of the Congo Basin rainforest for August 2023 using the Red (B4) and NIR (B8) bands at 10 m resolution. Compute NDVI from the imagery and save the resulting NDVI raster.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000012_400012",
+      "task_text": "Compute NDVI for the Iberian Peninsula for September 2022 to assess late-summer vegetation stress, then generate a histogram of the NDVI values with 100 bins.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000013_400013",
+      "task_text": "Download the ESA WorldCover 2021 land-cover raster for Kenya, then clip it to the Kenya national bounding box and save the result.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000014_400014",
+      "task_text": "Download a Sentinel-2 image of the Attica region of Greece for August 2023 with bands B2, B3, B4, B8, and B11. Clip it to the Attica region bounding box, compute NDVI (NIR = B8, Red = B4) and NDMI (NIR = B8, SWIR = B11), and save the resulting index maps. Visualize the NDVI and NDMI outputs and describe the spatial patterns of vegetation greenness and moisture stress across the region, relating them to summer vegetation conditions in Attica.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000015_400015",
+      "task_text": "Convert the coordinates of the Greenland Ice Sheet monitoring station at longitude -40.5°, latitude 72.6° from WGS84 (EPSG:4326) to EPSG:3413 (WGS 84 / NSIDC Sea Ice Polar Stereographic North) for polar-projection analysis.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000016_400016",
+      "task_text": "Find the appropriate UTM CRS for central Addis Ababa, Ethiopia, then transform the city centre coordinates from WGS84 to that UTM projection.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "coordinate_distance_error"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000017_400017",
+      "task_text": "Determine the UTM CRS and UTM zone for a satellite downlink station near Belém, Brazil.",
+      "evaluation_strategy": "categorical_identifier",
+      "evaluation_methods": [
+        "canonicalized_crs_equivalence",
+        "utm_zone_hemisphere_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000018_400018",
+      "task_text": "Download a Sentinel-2 near-infrared image of the boreal forest near Joensuu, North Karelia, Finland for July 2022. Find the correct UTM zone for that location, then reproject the raster to that UTM projection using bilinear resampling.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000019_400019",
+      "task_text": "Create a 3 km exclusion buffer around the Chernobyl Nuclear Power Plant representing a contamination perimeter, then calculate the geodetic area of the resulting polygon.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000020_400020",
+      "task_text": "Calculate the geodetic area in square kilometres of the Greenland ice sheet region defined by the polygon WKT: POLYGON((-73.0 76.0, -12.0 83.5, 18.0 77.0, 10.0 70.0, -24.0 65.0, -44.0 59.5, -59.0 62.0, -73.0 76.0)).",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000021_400021",
+      "task_text": "Create a 20 km buffer around Paradise, Butte County, California as an illustrative potential smoke-impact zone in the context of the 2018 Camp Fire, then retrieve ESA Science Strategy content on disaster-risk reduction and emergency preparedness to contextualise the risk assessment.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000025_400025",
+      "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save the result. Then report the mean, max, and standard deviation of NDVI for the study area.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000026_400026",
+      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000022_500001",
+      "task_text": "Using the EOSS knowledge graph, find all science questions that are directly linked to the Paris Agreement treaty.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000024_500003",
+      "task_text": "Query the EOSS ontology to retrieve all tipping points that are associated with ice-related science themes.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000025_500004",
+      "task_text": "First, list all node types available in the EOSS knowledge graph, then query for all Treaty nodes with their descriptions.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "deterministic_retrieval_checks",
+        "paired_description_accuracy",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000025_500004.json",
+      "ground_truth_observation": "10 node types and5 Treaty records with descriptions successfully retrieved; count cross-check passed. Separate description scoring remains a pending component proposal.",
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260713_000026_500005",
+      "task_text": "List all enabling tools identified in the ESA Earth Observation Science Strategy.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000026_500005.json",
+      "ground_truth_observation": "Scored reference is the retrieved five-node EnablingTool inventory, not the historical empty direct-link set."
+    },
+    {
+      "task_ID": "TASK_260713_000027_500006",
+      "task_text": "Search the EO Dashboard for narratives related to climate change adaptation, then identify the ESA Earth Observation Science Strategy objectives that align most closely with the adaptation themes discussed in those narratives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000028_500007",
+      "task_text": "Identify the ESA Earth Observation Science Strategy research priorities related to sea-level rise, then search arXiv for recent papers addressing those topics. Summarize how the recent research supports or expands on the identified ESA priorities.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000029_500008",
+      "task_text": "Use the EOSS knowledge graph to find all science questions related to land surface temperature monitoring.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000030_500009",
+      "task_text": "List all ScienceTheme nodes in the EOSS knowledge graph.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000031_500010",
+      "task_text": "Enumerate all TippingPoint nodes registered in the EOSS knowledge graph to understand which Earth system tipping points are covered by the ESA science strategy.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000032_500011",
+      "task_text": "Get an overview of all node types and their counts in the EOSS knowledge graph without filtering by any specific label.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "exact_count_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000033_500012",
+      "task_text": "First enumerate all Treaty nodes in the EOSS knowledge graph, then use one of the treaty names to search for its strategic context in the EOSS knowledge base.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260713_000034_500013",
+      "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many strategic objectives each science question informs.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "exact_count_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000035_500014",
+      "task_text": "Retrieve the main knowledge advancement objectives from the ESA Earth Observation Science Strategy, then search the EO Dashboard for narratives that illustrate one of these scientific priorities. Explain how the selected narrative relates to the identified objective.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000036_500015",
+      "task_text": "Review the national policy priorities described in the ESA Earth Observation Science Strategy, then find recent arXiv papers on Earth observation governance and national EO programmes. Explain how the research supports or complements these policy priorities.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000038_500017",
+      "task_text": "List all EUMETSAT geostationary products that can be searched and downloaded.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000039_500018",
+      "task_text": "What MSG SEVIRI product variants are available on the EUMETSAT server and what satpy reader should be used to open them?",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "product_reader_mapping_accuracy",
+        "deterministic_retrieval_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000039_500018.json",
+      "ground_truth_observation": "Three variants and reader dictionary captured from actual server catalogue function; stored native-format fallback separately. Mapping-metric addition remains pending approval.",
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260713_000040_500019",
+      "task_text": "Check which MTG FCI Level 2 products (cloud mask, fire, OCA) are available on the EUMETSAT server and note their product IDs.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000041_500020",
+      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2024.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000042_500021",
+      "task_text": "Search the EUMETSAT catalogue for the MSG SEVIRI Prime Level 1.5 Image Data collection, identify the appropriate product, and download the 10:00 UTC observation from 20 March 2023. Summarize the retrieved dataset, including the acquisition time, spatial coverage, spectral channel, and the main cloud and land-surface features visible in the image.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000043_500022",
+      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI imagery products.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000044_500023",
+      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2024.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "normalized_topic_keyword_match",
+        "deterministic_retrieval_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000046_500025",
+      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2024.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000047_500026",
+      "task_text": "Search for MSG SEVIRI Prime products over the Iberian Peninsula for the week of 1–7 June 2023, one observation per day at 12:00 UTC.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000048_500027",
+      "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2023. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "exact_count_match",
+        "deterministic_retrieval_checks",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260713_000049_500028",
+      "task_text": "List all available EUMETSAT products to identify the correct key for the MSG SEVIRI Rapid Scan Service, then check how many RSS slots are available on 15 May 2023 between 08:00 and 10:00 UTC.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "exact_count_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000050_500029",
+      "task_text": "Search for MTG FCI FDHSI products over central Europe on 5 September 2023, then download up to 3 observations using the datastore method and read them back to confirm the data is restricted to the central Europe area.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000051_500030",
+      "task_text": "Search EOdashboard narratives about record-breaking temperature anomalies. Based on the region and time period described in the narrative, search for MSG SEVIRI Prime products for a representative period and area.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000052_500031",
+      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2024.",
+      "evaluation_strategy": "retrieval_validation",
+      "evaluation_methods": [
+        "deterministic_retrieval_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000053_500032",
+      "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily during the 2025 fire season, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000054_500033",
+      "task_text": "Download one MTG FCI Level 1C FDHSI full-disk observation from 15 January 2024 at 10:00 UTC using the direct datastore method.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000055_500034",
+      "task_text": "Download MSG SEVIRI Prime data over the North Atlantic for 3 January 2023, reprojected to geographic lat/lon in NetCDF4 format using the Data Tailor.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000056_500035",
+      "task_text": "Download 2 MTG FCI HRFI observations per day from 10 to 12 July 2024 over northern Italy, requesting GeoTIFF output via the Data Tailor.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000057_500036",
+      "task_text": "Search for available MTG FCI FDHSI products over the Middle East on 15 June 2024, select one representative observation, download it, and read it back to confirm that the data coverage is restricted to the Middle East region.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000058_500037",
+      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Based on the geographic focus and time period of the narrative, search for and download the corresponding MTG FCI imagery products, then read them back cropped to that geographic focus.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000059_500038",
+      "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000061_500040",
+      "task_text": "Download ERA5 monthly mean 2m temperature for July 2023 over Girona, Spain, and its surroundings, then inspect the resulting file to summarise its variables, dimensions, and coordinate system.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000062_500041",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for June 2022 over Trento, Italy, and its surroundings, then inspect the resulting file to check which variables and time dimensions are present.",
+      "evaluation_strategy": "artifact_metadata",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "metadata_field_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000063_500042",
+      "task_text": "Download ERA5 total precipitation for January 2021 over the Tigray region of Ethiopia, then verify that the resulting file contains the expected variables and time coordinates.",
+      "evaluation_strategy": "artifact_metadata",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "metadata_field_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000064_500043",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2021, then inspect the resulting NetCDF file to confirm its structure.",
+      "evaluation_strategy": "artifact_metadata",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "metadata_field_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000065_500044",
+      "task_text": "Download ERA5 geopotential at 500 hPa over Europe for January 2023, then inspect the resulting file to check its time and pressure dimensions.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000066_500045",
+      "task_text": "Search the EO Dashboard for narratives about climate monitoring. Based on the geographic focus of the narrative, download ERA5 relevant data for the mentioned time period and inspect the resulting file.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000067_500046",
+      "task_text": "Retrieve ERA5 monthly mean geopotential height at the 500 hPa pressure level over Europe for January 2023. Visualize the geopotential field and describe the main large-scale atmospheric circulation patterns, such as ridges, troughs, and areas of anomalously high or low geopotential.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000069_500048",
+      "task_text": "Retrieve the ERA5 monthly mean geopotential at the 500 hPa pressure level over Europe for January 2023. Describe the main large-scale circulation patterns visible in the data.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000070_500049",
+      "task_text": "Retrieve ERA5 monthly mean temperature at the 850 hPa pressure level over Europe for June, July, and August 2022 using a single data request. Visualize the temperature fields, identify the warmest regions in each month, and describe the main month-to-month changes in the 850 hPa temperature distribution.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000071_500050",
+      "task_text": "Retrieve ERA5 monthly mean U- and V-components of wind at the 250 hPa pressure level over the North Atlantic for December 2021. Visualize the upper-level wind field and identify the position and strength of the winter jet stream. Describe the dominant circulation patterns, including the orientation and location of the main jet features.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000072_500051",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa over Europe for January 2023, then inspect the downloaded file to verify the pressure level coordinate. Visualize the geopotential field to confirm it depicts a plausible atmospheric pattern.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "aaj_image_inspection"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000073_500052",
+      "task_text": "Search the EO Dashboard for narratives related to extreme weather events and early-warning applications. Select a relevant event, extract the study area and event period from the narrative, and search the EOSS knowledge base for ESA science strategy objectives related to extreme weather monitoring and prediction. Based on the identified event, retrieve a suitable ERA5 pressure-level variable (e.g., 500 hPa geopotential height or 250 hPa wind) over the corresponding region and period. Visualize the ERA5 field and explain how the observed atmospheric dynamics relate to the extreme event and the ESA science objectives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000074_500053",
+      "task_text": "Find and read an EO Dashboard narrative about EarthCARE that discusses the Walker circulation. Download ERA5 monthly mean vertical velocity at 500 hPa for June 2025 over the western and eastern tropical Pacific. Describe the ascending and descending motion shown by the data and explain how it relates to the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000075_500054",
+      "task_text": "Search ArXiv for papers on ERA5 pressure-level reanalysis accuracy. Based on the study region, pressure level, and reference period used in the most relevant paper, download the corresponding ERA5 pressure-level temperature data to reproduce their validation dataset.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000077_500056",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2021. Identify the warmest regions and summarize the overall temperature pattern across the continent.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000078_500057",
+      "task_text": "Retrieve ERA5 monthly mean total precipitation over Europe for January 2023. Describe the spatial distribution of winter rainfall patterns and identify regions with the highest precipitation.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000079_500058",
+      "task_text": "Retrieve ERA5 monthly mean sea surface temperature over the North Atlantic for August 2022. Describe the spatial distribution of SST and identify regions with relatively warmer and cooler ocean conditions.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000080_500059",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2023, then inspect the downloaded file to verify its variable names and grid resolution.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000081_500060",
+      "task_text": "Search the EOSS knowledge base for content on extreme heat events in the ESA science strategy, then download ERA5 2-metre temperature for July 2022 to contextualise the European heatwave over Mediterranean.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000082_500061",
+      "task_text": "Search EOdashboard narratives on sea surface temperature and ocean heat content. Based on the ocean region highlighted in the narrative, download ERA5 monthly mean sea surface temperature for the relevant summer period.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000083_500062",
+      "task_text": "Search ArXiv for papers on ERA5 2-metre temperature trends over the Mediterranean. Based on the study region and reference period in the papers, download ERA5 2m temperature to provide a concrete dataset for the analysis.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000001_600001",
+      "task_text": "What ERA5 surface variables related to precipitation and hydrology are available through the CDS API?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000002_600002",
+      "task_text": "What is the exact CDS API variable name for 2-metre air temperature in ERA5?",
+      "evaluation_strategy": "named_entity",
+      "evaluation_methods": [
+        "canonicalized_exact_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000003_600003",
+      "task_text": "I want to download ERA5 monthly mean total precipitation for Germany in January 2022. First check what surface variables are available to confirm the exact CDS variable name, then fetch the data.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000004_600004",
+      "task_text": "A MOOC on EO applications discusses soil moisture as a key land-atmosphere variable. Check whether it is available in ERA5 single-level data, then fetch its monthly mean for a summer month in 2023–2025 over a mid-latitude land region.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000006_600006",
+      "task_text": "What atmospheric variables are available at ERA5 pressure levels through the CDS API?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000007_600007",
+      "task_text": "What pressure levels (in hPa) are available in ERA5 for pressure-level downloads?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000008_600008",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023. First confirm the correct variable name over Europe.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000009_600009",
+      "task_text": "Search the EOSS knowledge base for ESA science strategy content on Earth energy imbalance and atmospheric heat transport, then download ERA5 u-component of wind at 250 hPa for a winter month over the North Atlantic jet-stream corridor to examine mid-latitude circulation patterns relevant to that energy transport.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000011_600011",
+      "task_text": "What CDS datasets are available for accessing ERA5 reanalysis data?",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000013_600013",
+      "task_text": "I want efficient daily maximum 2m temperature data without downloading raw hourly files. Find the most appropriate CDS dataset, then download daily maximum 2m temperature for July 2023 over Spain.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "canonicalized_exact_match",
+        "alias_match",
+        "fuzzy_match",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+    },
+    {
+      "task_ID": "TASK_260713_000014_600014",
+      "task_text": "Using the climate tool’s dataset catalogue, identify the dataset for future climate projections and the dataset for seasonal forecasts. Report each dataset identifier and its classification.",
+      "evaluation_strategy": "set_answer",
+      "evaluation_methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "dataset_classification_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [],
+      "approved_component_addition": "Approved 2026-10-01: simplified catalogue question, stored deterministic paired-classification GT; execution pending."
+    },
+    {
+      "task_ID": "TASK_260713_000015_600015",
+      "task_text": "Using CDSE, download three separate Sentinel-5P TROPOMI GeoTIFFs for carbon monoxide, nitrogen dioxide, and methane over Madrid and its surroundings for 1–30 June 2025. Report the data-band identifier used for each product.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "product_band_mapping_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000016_600016",
+      "task_text": "Retrieve hourly ERA5 total precipitation over Europe for 3 days in August 2021. Aggregate the hourly data to a total and describe the main rainfall patterns across Europe.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000017_600017",
+      "task_text": "Download ERA5 2 m temperature over Europe for 10–15 January 2023 at 00:00 and 12:00 UTC only. Calculate the mean temperature over the period and describe the spatial distribution of average conditions.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000018_600018",
+      "task_text": "Download hourly ERA5 10 m U- and V-components of wind over the Mediterranean region for June 2020. Compute wind speed and identify periods and locations with unusually strong winds during the month. Summarize the main wind events and their spatial distribution.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000020_600020",
+      "task_text": "Download hourly ERA5 2m temperature for 2 days in July 2023 over Southern Europe. Then convert the temperature from Kelvin to Celsius.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000022_600022",
+      "task_text": "Search MOOC content about urban heat islands and land surface temperature monitoring. Based on the geographic examples and season discussed, download hourly ERA5 2m temperature for a representative area and a few representative days to support a case study.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000024_600024",
+      "task_text": "Retrieve hourly ERA5 geopotential at 500 hPa over Europe for 15 January 2023. Analyse how the mid-tropospheric circulation evolves throughout the day.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000025_600025",
+      "task_text": "Retrieve hourly ERA5 temperature at 850 hPa over the North Atlantic for December 2022, using only the 00:00 and 12:00 UTC time steps. Describe the spatial distribution of lower-tropospheric temperatures and identify regions with the warmest and coldest air masses.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000026_600026",
+      "task_text": "Retrieve hourly ERA5 u-component and v-component of wind at 250 hPa over the Northern Hemisphere for one week in January 2023. Calculate the wind speed and describe the location and evolution of the main jet stream features during the week.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000027_600027",
+      "task_text": "Download hourly ERA5 temperature at 850 hPa for one week in January 2023 over Europe. Then resample to daily mean values.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000028_600028",
+      "task_text": "Download ERA5 specific humidity at the 925 hPa pressure level over the Mediterranean for July and August 2022 at 00:00 UTC each day, then convert daily observations to monthly and describe the difference between the two months.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000029_600029",
+      "task_text": "Query the EOSS knowledge base for ESA mission objectives related to atmospheric sounding instruments (e.g. infrared sounders and GNSS radio occultation). Based on the target atmospheric layers identified, download hourly ERA5 temperature at the relevant pressure levels, for a representative area and sample period, to contextualise the mission science.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000030_600030",
+      "task_text": "Search EO Dashboard narratives about jet stream variability or upper-level atmospheric circulation. Based on the geographic focus and season of the narrative, download hourly ERA5 geopotential at 250 hPa to contextualise the event.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000032_600032",
+      "task_text": "Download hourly ERA5-Land total precipitation over the Po Valley, Italy for July 2021.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000033_600033",
+      "task_text": "Download hourly ERA5-Land volumetric soil water layer 1 for August 2022 over the Iberian Peninsula.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000034_600034",
+      "task_text": "Download ERA5-Land snow depth at 12:00 UTC only for March 2023 over the Alps.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000035_600035",
+      "task_text": "Download ERA5-Land hourly precipitation for September 2022 over Central Europe. Then aggregate to daily totals.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000036_600036",
+      "task_text": "Download ERA5-Land hourly soil temperature level 1 for June 2023 over the Sahel. Then convert from Kelvin to Celsius.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000037_600037",
+      "task_text": "Search MOOC content about soil moisture dynamics and vegetation water stress. Based on the region and examples discussed in the educational content, download ERA5-Land volumetric soil water data for the relevant period.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000038_600038",
+      "task_text": "Find the EO Dashboard narrative about El Niño's impacts on food security. Identify the affected study region and the associated drought period, then retrieve ERA5-Land runoff data for that area and time frame. Explain how the runoff anomalies support or contradict the drought impacts reported in the narrative.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000040_600040",
+      "task_text": "Download pre-computed daily mean 2m temperature for January 2023 over Europe without downloading raw hourly data.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000041_600041",
+      "task_text": "Download pre-computed daily maximum 2m temperature for July 2023 over Spain and Portugal.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000042_600042",
+      "task_text": "Download the pre-computed daily sum of total precipitation for December 2022 over the UK and Ireland.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000043_600043",
+      "task_text": "Download daily maximum 2m temperature for July 2023 over France. Then inspect the resulting NetCDF to verify its dimensions and variable units.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000044_600044",
+      "task_text": "Download the daily sum of total precipitation for August 2021 over Belgium. Then convert the precipitation from metres to millimetres.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000045_600045",
+      "task_text": "Search EO Dashboard narratives about record-breaking temperature anomalies. Based on the region and time period of the event described, download the pre-computed daily maximum 2m temperature to contextualise the narrative.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000046_600046",
+      "task_text": "Use the EOSS knowledge base to identify ESA missions and science objectives related to monitoring the hydrological cycle. Then download ERA5 daily total precipitation over Somalia for the long rainy seasons (March-May) of 2023 and 2024. Compare the precipitation patterns between the two years and explain how the retrieved data supports the hydrological monitoring objectives identified in the ESA Science Strategy.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000048_600048",
+      "task_text": "Retrieve monthly near-surface air temperature projections from the CMIP6 archive for the SSP5-8.5 scenario using the MPI-ESM1-2-HR model for 2050-2060, and summarize the projected seasonal temperature cycle over the study period.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000049_600049",
+      "task_text": "Download ERA5-Land monthly mean 2 m air temperature over Europe for 2020 and summarize the seasonal temperature patterns across the continent.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000050_600050",
+      "task_text": "Explore the available Copernicus Climate Data Store datasets to identify a product providing daily minimum 2 m air temperature statistics. Retrieve the daily minimum 2 m temperature over Scandinavia for January 2023 and summarize the observed temperature range during the month.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000051_600051",
+      "task_text": "Search the EOSS knowledge base for ESA activities and science objectives related to climate change monitoring. Then retrieve CMIP6 near-surface air temperature projections under the SSP2-4.5 scenario for the period 2040-2060, and summarize the projected temperature changes relevant to climate monitoring objectives.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000053_600053",
+      "task_text": "Download hourly ERA5 total precipitation over Sicily, Italy, for August 2021, aggregate the hourly values into daily totals. For each day, report the unweighted mean of the daily totals across valid grid cells in the downloaded Sicily region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "aligned_series_mae_rmse"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000054_600054",
+      "task_text": "Download ERA5 daily mean 2 m air temperature for January 2023 over Alentejo, Portugal. Using the unweighted mean across valid grid cells in the downloaded region, identify the warmest and coldest days of the month.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "deterministic_artifact_checks",
+        "regional_extreme_date_match",
+        "agent_as_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000055_600055",
+      "task_text": "Retrieve hourly ERA5 total precipitation and 2 m air temperature over Netherlands for June 2023 as a single multi-variable dataset. Extract total precipitation, aggregate it into daily totals, and summarize the wettest days of the month.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000058_600058",
+      "task_text": "Search EO Dashboard narratives about flooding events in East Africa. Based on the specific event location and time period described in the narrative, download hourly ERA5 precipitation for a 2° × 2° region around the affected area and convert to daily totals to quantify the event.",
+      "evaluation_strategy": "numerical_artifact",
+      "evaluation_methods": [
+        "numerical_artifact_validation",
+        "agent_as_judge",
+        "gis_verification_agent"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000059_600059",
+      "task_text": "Search MOOC content about extreme precipitation events and disaster risk reduction. Based on a major flood case study discussed in the content, download hourly ERA5 precipitation for the affected region and period and aggregate to daily sums.",
+      "evaluation_strategy": "numerical_artifact",
+      "evaluation_methods": [
+        "numerical_artifact_validation",
+        "agent_as_judge",
+        "gis_verification_agent"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000061_600061",
+      "task_text": "Download ERA5 daily total precipitation for August 2022 over Braga, Portugal, and its surroundings, then resample the daily time series to a monthly total. Report the unweighted mean of the per-cell monthly totals across valid grid cells in the downloaded region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000062_600062",
+      "task_text": "Download ERA5 daily mean 2 m temperature for July 2022 over Annecy, France, and its surroundings, then resample the daily time series to a monthly mean. Report the unweighted mean of the per-cell monthly means across valid grid cells in the downloaded region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000063_600063",
+      "task_text": "Download ERA5 daily total precipitation over the Sahel region for July 2022, aggregate the daily values into a monthly precipitation total. Report the regional mean monthly accumulated precipitation: the unweighted mean of per-cell monthly totals across valid grid cells, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000064_600064",
+      "task_text": "Download ERA5 daily mean total column water vapour for January 2023 over Central Europe, then aggregate the daily values into a monthly mean field.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000065_600065",
+      "task_text": "Search MOOC content on temporal signatures and satellite time-series analysis. Based on the concepts covered, retrieve ERA5 daily mean 2 m air temperature over a mid-latitude region (e.g., Central Europe) for the winter season (December 2022-February 2023), aggregate the daily data into monthly means, and analyze the resulting temperature time series.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "numerical_artifact_validation",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ],
+      "approved_component_addition": "Approved 2026-10-01: AAJ/GIS source/aggregation verification and interpretation rubric; numerical GT retained as pending."
+    },
+    {
+      "task_ID": "TASK_260713_000067_600067",
+      "task_text": "Retrieve ERA5 daily mean 2 m temperature data over Malta for July 2023, then resample the time series to monthly frequency using a mean aggregation. Report the unweighted mean of the per-cell monthly means across valid grid cells in the downloaded Malta region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000068_600068",
+      "task_text": "Download ERA5 mean sea level pressure at 6-hourly intervals for January 2023 over the Azores, Portugal, then aggregate the sub-daily values to daily means. For each day, report the unweighted mean of the per-cell daily means across valid grid cells in the downloaded Azores region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "aligned_series_mae_rmse"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000069_600069",
+      "task_text": "Download hourly ERA5 mean sea level pressure for January 2023 at 6-hourly intervals over the North Atlantic. Then resample to daily mean.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000070_600070",
+      "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean, then aggregate the hourly values to a monthly total precipitation. Report the unweighted mean of the per-cell monthly precipitation totals across valid grid cells in the downloaded Mediterranean region, with units.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000071_600071",
+      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative. Retrieve ERA5 monthly mean sea surface temperature for the same calendar month in three representative years from different decades, within a 2° × 2° box centred on that location. Compute and save the equal-weight, cell-by-cell mean SST field across the three observations on their common grid, retaining only ocean cells valid in all three inputs. Identify the location, selected month and years, report the output path and temperature units, and describe the resulting SST pattern. Explain that three selected years do not constitute a long-term climatology or establish a warming trend.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260713_000073_600073",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2023 over Death Valley, USA, then convert the temperature values from Kelvin to Celsius. Report the unweighted mean temperature across valid grid cells in the clipped Death Valley region, in degrees Celsius.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000075_600075",
+      "task_text": "Download ERA5 monthly means of daily means (product_type='monthly_averaged_reanalysis') for surface latent heat flux in July 2022 over Lake Victoria, East Africa. Inspect the 'slhf' variable and convert its accumulated-energy values from J m**-2 to a mean flux in W m**-2 using this product's effective daily accumulation interval of 86,400 seconds. Save the converted dataset, report its path, units and conversion factor, and preserve the ECMWF sign convention (positive downward).",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000076_600076",
+      "task_text": "Download ERA5 monthly mean 2m temperature for July 2023 then convert the temperature from Kelvin to Celsius over Europe.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000077_600077",
+      "task_text": "Download hourly ERA5 total precipitation for August 2022 over Italy. Aggregate to daily totals, then convert from metres to millimetres.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000078_600078",
+      "task_text": "Search MOOC content about sea ice monitoring and glacier mapping. Based on the region and recent period discussed, download ERA5 monthly mean 2m temperature and convert to Celsius to illustrate the warming signal.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000079_600079",
+      "task_text": "Search EO Dashboard narratives about sea surface temperature anomalies. Based on the region and season highlighted, download ERA5 monthly mean skin temperature for the relevant period and convert from Kelvin to Celsius.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000081_600081",
+      "task_text": "Download ERA5 monthly mean total precipitation for January 2023, then clip the result to Africa. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "clipped_extent_comparison",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000082_600082",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2022 at global coverage, then clip the result to the Nile River basin. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "clipped_extent_comparison",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000083_600083",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 at global coverage, then clip the result to the South Asian monsoon region. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy",
+        "clipped_extent_comparison",
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000085_600085",
+      "task_text": "Download ERA5 monthly mean 2m temperature for December 2022 over sub-Saharan Africa.",
+      "evaluation_strategy": "download_contract",
+      "evaluation_methods": [
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260713_000087_600087",
+      "task_text": "Search the EOSS knowledge base for ESA science strategy objectives related to flood-risk monitoring. Then geocode Sindh Province, Pakistan, and retrieve ERA5 daily total precipitation over the region for August 2022. Summarize the rainfall patterns during the period and explain how the data supports flood monitoring objectives described in the ESA strategy.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000091_700001",
+      "task_text": "Download a Sentinel-2 L2A NDVI composite over the Ebro Delta, Spain for June 2023 to assess irrigated rice crop greenness.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000092_700002",
+      "task_text": "Download a Sentinel-3 OLCI true-colour image of the North Sea for June 2023 to visualise a phytoplankton bloom. Identify whether a visible bloom is present and describe its approximate location.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000093_700003",
+      "task_text": "Download a Sentinel-3 SLSTR false-colour image over the Sahara Desert for July 2022 to characterise land surface temperature patterns. Describe the spatial distribution of temperature patterns visible in the image and identify areas with relatively higher or lower surface temperatures.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000094_700004",
+      "task_text": "Download a Sentinel-5P tropospheric NO₂ column map over the Po Valley, northern Italy for January 2020 to examine winter air quality.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260714_000095_700005",
+      "task_text": "Download the Copernicus 30 m Digital Elevation Model (DEM) covering the Mont Blanc massif in the Western Alps, generate a colour-shaded elevation map, and describe the main terrain features visible in the visualization.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000096_700006",
+      "task_text": "Download a Sentinel-1 GRD SAR image of the Po Delta, northern Italy for October 2023 to assess wetland extent and soil moisture. Describe the main backscatter patterns visible in the image and identify areas likely associated with wetlands or open water.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000097_700007",
+      "task_text": "Geocode Andalusia, Spain, then download a Sentinel-3 SYN L2 true-colour image of that region for June 2023. Describe the dominant land-cover patterns visible and comment on the added value of using the combined OLCI+SLSTR Synergy product over a single-sensor acquisition.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000098_700008",
+      "task_text": "Geocode the Sacramento Valley, California and download a Landsat OT L1 true-colour image of that location for July 2022 with less than 20% cloud cover. Describe the visible land-cover patterns and identify the main agricultural features in the scene. Comment on the spatial resolution and spectral characteristics that make Landsat suitable for monitoring agricultural areas.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260714_000099_700009",
+      "task_text": "The coordinates 45.4654° N, 9.1859° E correspond to a major European city. Reverse geocode these coordinates to identify the city name, then download a Sentinel-5P NO₂ column map over that location for March 2020. Describe the spatial distribution of NO₂ concentrations visible in the map and identify areas with relatively higher or lower values.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260715_000001_700010",
+      "task_text": "Assess offshore wind resource potential over the North Sea by retrieving ERA5 monthly mean 10-metre u-component and v-component of wind for March 2023, then calculate the wind speed.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260715_000002_700011",
+      "task_text": "Search the EOSS knowledge base for ESA strategy content about coastal renewable energy sources and coastal atmosphere-ocean exchange processes. Based on the region of interest identified, download ERA5 monthly mean u-component and v-component of wind at 850 hPa for that period and calculate the wind speed to characterize the low-level wind field relevant to coastal wind-energy resource assessment.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260715_000003_700012",
+      "task_text": "Search the EO Dashboard for a narrative about flooding. Identify the affected area it discusses, then download Sentinel-1 SAR images of that area before and after the flood event. Analyse changes in radar backscatter to identify newly inundated areas and describe the spatial extent of flooding.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260716_000001_700013",
+      "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2024, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
+      "evaluation_strategy": "hybrid",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge",
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260716_000002_700014",
+      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2024, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260716_000003_700015",
+      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2024, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
+      "evaluation_strategy": "agent_as_judge",
+      "evaluation_methods": [
+        "agent_as_judge",
+        "gis_verification_agent",
+        "deterministic_artifact_checks",
+        "numerical_artifact_validation"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260716_000004_700016",
+      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 10 March 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260716_000005_700017",
+      "task_text": "Search for MSG SEVIRI Rapid Scan imagery over the Canary Islands on 5 July 2024, download the first match, and then read the downloaded file to check the HRV channel's reflectance range.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260716_000006_700018",
+      "task_text": "Search EOdashboard for the narrative on urban health monitoring in New Delhi, then download the corresponding MSG SEVIRI IODC imagery over New Delhi, and read the downloaded imagery to extract brightness-temperature statistics for the thermal channels.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260716_000007_700019",
+      "task_text": "Download MSG SEVIRI Prime imagery over Nairobi for 20 February 2024, and read the downloaded file to report the visible-channel reflectance range.",
+      "evaluation_strategy": "numerical_answer",
+      "evaluation_methods": [
+        "unit_normalized_error",
+        "numeric_tolerance_accuracy"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": []
+    },
+    {
+      "task_ID": "TASK_260718_000001_700020",
+      "task_text": "Download two Sentinel-2 true-colour images covering the areas affected by the LNU Lightning Complex wildfire in Northern California (including Napa, Sonoma, Lake, Solano, and Yolo counties) — one before the wildfire (May–July 2020) and one after the event (September–October 2020) — to assess landscape changes caused by the wildfire. Compare the two images and determine whether visible changes such as burn scars, vegetation degradation, reduced vegetation greenness, or post-fire landscape recovery are observable between the pre- and post-event periods.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    },
+    {
+      "task_ID": "TASK_260718_000002_700021",
+      "task_text": "Download two Sentinel-2 true-colour images with maximum cloud cover of 20% covering Los Angeles County, California, USA — one acquired in the period December 2024–7 January 2025 and one acquired in the period 31 January–28 February 2025 — to assess landscape changes caused by the Palisades and Eaton wildfires. Compare the two images and determine whether visible changes such as burn scars, vegetation loss, reduced vegetation greenness, smoke impacts, and other landscape changes are observable between the early- and post-fire periods.",
+      "evaluation_strategy": "qualitative",
+      "evaluation_methods": [
+        "rubrics",
+        "llm_judge"
+      ],
+      "audit_status": "consistent_mapping",
+      "findings": [
+        {
+          "code": "candidate_grounding_evidence_required_at_runtime",
+          "detail": "Evidence-aware rubric plumbing now supports recorded tool responses and candidate-bound AAJ/GIS observations. Existing runs lacking evidence must remain unverified; new runs must preserve source responses and artifacts."
+        }
+      ]
+    }
+  ],
+  "deterministic_recheck": {
+    "audit_date": "2026-10-01",
+    "scope": "All 265 eligible mappings, 108 rubrics, four stored GT files, 393 configured check requirements, local MCP function argument names and current evaluator code. No candidate scoring/download execution.",
+    "checks_reviewed": 393,
+    "tasks_with_check_requirements": 89,
+    "validation_mode_counts": {
+      "semantic_judgment": 33,
+      "conditional_deterministic": 100,
+      "deterministic": 260
+    },
+    "reference_schema_mismatches": [],
+    "unresolved_issue_counts": {
+      "reference_schema_mismatch_tasks": 0,
+      "spatial_reduction_unspecified_tasks": 0,
+      "reference_content_mismatch_tasks": 0,
+      "rubric_evidence_plumbing_tasks": 0,
+      "pending_numeric_GT_configurations": 0,
+      "raw_encoding_policy_tasks": 0
+    },
+    "additional_runner_gap": "Resolved in code: mandatory GIS consultation now reads evaluation mapping. Successful inspection must still be established from tool results, not merely consultation.",
+    "scientific_source_check": {
+      "task_ID": "TASK_260713_000042_600042",
+      "status": "consistent_with_current_CDS_documentation",
+      "finding": "ERA5 single-level daily statistics supports daily_sum for accumulated variables, including total precipitation. Do not confuse with ERA5-Land daily statistics exclusions.",
+      "source": "https://cds.climate.copernicus.eu/datasets/derived-era5-single-levels-daily-statistics?tab=overview"
+    },
+    "configured_validator_bindings": 0,
+    "structural_verification": {
+      "result": "passed",
+      "checks": [
+        "265 unique mappings match all eligible benchmark IDs",
+        "108 rubric IDs, task texts and three criterion weights aligned",
+        "All referenced GT/rubric files exist",
+        "Four GT task texts and recorded local server hashes match",
+        "Check IDs unique per task; all evidence requirements populated; all results unexecuted",
+        "Strategy and AAJ/GIS counts recomputed"
+      ],
+      "evidence_requirements_added": 7
+    },
+    "runtime_reference_defined_tasks": 6,
+    "approved_fixes": {
+      "affected_tasks": 35,
+      "question_changes": [
+        "TASK_260713_000004_600004",
+        "TASK_260713_000053_600053",
+        "TASK_260713_000061_500040",
+        "TASK_260713_000061_600061",
+        "TASK_260713_000062_500041",
+        "TASK_260713_000062_600062",
+        "TASK_260713_000063_600063",
+        "TASK_260713_000067_600067",
+        "TASK_260713_000068_600068",
+        "TASK_260713_000070_600070",
+        "TASK_260713_000073_600073",
+        "TASK_260713_000081_600081",
+        "TASK_260713_000082_600082",
+        "TASK_260713_000083_600083"
+      ],
+      "random_area_assignments": {
+        "TASK_260713_000061_500040": "Girona, Spain",
+        "TASK_260713_000062_500041": "Trento, Italy",
+        "TASK_260713_000061_600061": "Braga, Portugal",
+        "TASK_260713_000062_600062": "Annecy, France"
+      },
+      "remaining_execution_requirements": "No candidate data retrieved or numerical scoring run; runtime evidence and calibrated tolerances still required.",
+      "structural_verification": "Passed: 294 benchmark tasks, 265 strategies, 108 synchronized rubrics, and 258 local climate reference calls checked against actual signatures; method counts match mappings.",
+      "offline_verification": "16 tests passed; JSON/mapping/reference signature checks passed. Climate tool thread dispatch was not validated in the sandbox."
+    }
+  },
+  "evidence_pipeline_implementation": {
+    "status": "implemented_with_offline_tests",
+    "candidate_response_capture": "New generation preserves actual tool responses; old missing responses are not reconstructed.",
+    "artifact_archiving": "Opt-in --archive-evidence; copies exact recorded output paths and verifies SHA-256.",
+    "rubric_inputs": "Recorded candidate responses and matching AAJ inspection observations; no AAJ overall score.",
+    "grounding_missing": "Null criterion score; preserve other criterion scores; no complete total or weight redistribution.",
+    "GIS_obligations": "Read current mapping rather than fixed suffix list.",
+    "series_inspection": "Read saved series or compute bounded monthly summaries from saved daily files, without downloads.",
+    "verification": "16 offline tests passed: 14 judge/inspector regression tests and 2 climate-tool body tests with inline executor to avoid sandbox thread-wakeup stalls. Changed modules compile. No live judge or candidate run launched."
+  }
+}

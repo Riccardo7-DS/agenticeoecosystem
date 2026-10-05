@@ -116,7 +116,7 @@ requires-dist = [
     { name = "dask", specifier = ">=2025.7.0" },
     { name = "datasets", specifier = ">=4.7.0" },
     { name = "earthengine-api", specifier = ">=1.7.22" },
-    { name = "eumetsearch", specifier = ">=0.1.3" },
+    { name = "eumetsearch", specifier = ">=0.1.4" },
     { name = "fastapi", specifier = ">=0.128.0" },
     { name = "fastmcp", specifier = ">=2.14.0" },
     { name = "fastparquet", specifier = ">=2024.11.0" },
@@ -1125,7 +1125,7 @@ wheels = [
 
 [[package]]
 name = "eumetsearch"
-version = "0.1.3"
+version = "0.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask" },
@@ -1150,9 +1150,9 @@ dependencies = [
     { name = "xarray" },
     { name = "zarr" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/39/aa219f2e471c7472c36c3ce9d828dab12c780928b0bfed97169f4d80c7ad/eumetsearch-0.1.3.tar.gz", hash = "sha256:bf39c3847270e3c7826f431627adfb8a7acd083b14d739aba923b2fad0b83cec", size = 82649, upload-time = "2026-07-24T13:23:53.841Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/d2/7b040026bb359ed4208855e09d678af39fcbe535865d098a3782e6c9717c/eumetsearch-0.1.4.tar.gz", hash = "sha256:a25a40c34be2fc20d8e11a1ee4789ca2707f31e437777c221cda44d0b804c100", size = 613760, upload-time = "2026-10-03T13:52:29.226Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/df/7de64eb4b72ebb41441f239325e9a5ee4f316e7a72be4a9ca6856034f803/eumetsearch-0.1.3-py3-none-any.whl", hash = "sha256:0469f00699045238f259542254901a894d17a1c1ad27dca31dfe041f0b5c375a", size = 74618, upload-time = "2026-07-24T13:23:55.017Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/f3/aff62790fa0e97cc8ac649677f09f5a43a1cc240ad5c0e79cce2e4397ffb/eumetsearch-0.1.4-py3-none-any.whl", hash = "sha256:94257b6d5f530203964bf8ad4cc1f9839b5e2f6bca4dcd26c45fe65fc5757622", size = 76126, upload-time = "2026-10-03T13:52:30.499Z" },
 ]
 
 [[package]]

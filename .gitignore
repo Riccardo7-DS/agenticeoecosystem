@@ -55,3 +55,16 @@ docs/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
 docs/gemma4_benchmark_run_issues_2026-08-07.md
 
 scripts/vlm.sh
+
+# Generated benchmark runs and downloaded artifacts (task inputs stay versioned).
+data/candidate_reruns/
+data/evaluation_runs/
+data/rubric_runs/
+results_*.json
+summary_*.json
+src/agenticeoecosystem/servers/arxiv_papers/
+/*.nc
+scripts/*.deb
+
+# Service credentials must be supplied separately.
+src/agenticeoecosystem/servers/gee/gee-key.json

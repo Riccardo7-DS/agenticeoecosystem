@@ -8221,20 +8221,20 @@
     },
     {
       "task_ID": "TASK_260713_000026_400026",
-      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
+      "task_text": "Download a Sentinel-2 image of W National Park in Niger for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "resolve_named_region for the Sahel macro-region (a real gazetteer entry — Niger/Mali/Chad-scale, not a single city), fetch_sentinel2 (as_geotiff=True) for B02, B04, B08, compute_evi (red=B04, nir=B08, blue=B02), then raster_band_statistics for the mean and max EVI.",
+      "reference_solution_description": "Geocode W National Park in Niger, verify that the chosen bounding box covers the Niger portion of the park, fetch a Sentinel-2 L2A GeoTIFF for July 2023 with B02, B04 and B08 at the requested 10 m resolution, compute EVI using the actual band order and reflectance encoding, save the result, and report the mean and maximum over valid pixels. Do not use the whole Sahel or the whole transboundary W park complex.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "resolve_named_region",
+              "function_name": "geocode_place",
               "arguments": {
-                "region_name": "Sahel"
+                "place_name": "W National Park, Niger"
               },
-              "comment": "'Sahel' is explicitly named in the task and isn't a single administrative unit a place geocoder resolves well, so use the named-region gazetteer rather than an arbitrary city within it"
+              "comment": "Resolve the Niger portion of W National Park and verify the returned region; use its bbox, not a Sahel-wide extent."
             },
             {
               "function_name": "fetch_sentinel2",
@@ -8250,25 +8250,25 @@
                 ],
                 "max_cloud_cover": 20,
                 "as_geotiff": true,
-                "save_path": "output/TASK_260713_000026_400026/sentinel2_sahel.tif"
+                "save_path": "output/TASK_260713_000026_400026/sentinel2_w_national_park_niger.tif"
               },
-              "comment": "band1=B02 (Blue), band2=B04 (Red), band3=B08 (NIR)"
+              "comment": "Use the verified park bbox and actual output dimensions appropriate for the requested 10 m resolution; verify georeferencing. Band1=B02 (Blue), band2=B04 (Red), band3=B08 (NIR). Do not assume default output dimensions satisfy 10 m."
             },
             {
               "function_name": "compute_evi",
               "arguments": {
-                "source": "output/TASK_260713_000026_400026/sentinel2_sahel.tif",
+                "source": "output/TASK_260713_000026_400026/sentinel2_w_national_park_niger.tif",
                 "red_band_index": 2,
                 "nir_band_index": 3,
                 "blue_band_index": 1,
-                "destination": "output/TASK_260713_000026_400026/evi_sahel_2023.tif"
+                "destination": "output/TASK_260713_000026_400026/evi_w_national_park_niger_2023.tif"
               },
-              "comment": "EVI = 2.5*(NIR-Red)/(NIR+6*Red-7.5*Blue+1) via the dedicated compute_evi tool, scale_factor=0.0001 default for Sentinel-2 SR"
+              "comment": "EVI = 2.5*(NIR-Red)/(NIR+6*Red-7.5*Blue+1); use the actual reflectance encoding and valid-data mask. Default scaling is appropriate only if supported by the retrieved product."
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "output/TASK_260713_000026_400026/evi_sahel_2023.tif"
+                "source": "output/TASK_260713_000026_400026/evi_w_national_park_niger_2023.tif"
               },
               "comment": "Report mean and max EVI across the scene"
             }
@@ -8673,9 +8673,9 @@
             {
               "function_name": "query_ontology",
               "arguments": {
-                "cypher": "MATCH (sq:ScienceQuestion)-[r]->(so:StrategicObjective) RETURN sq.name AS question, count(so) AS n_objectives ORDER BY n_objectives DESC"
+                "cypher": "MATCH (sq:ScienceQuestion) OPTIONAL MATCH (sq)-[r]->(so:StrategicObjective) RETURN sq.name AS question, count(so) AS n_objectives ORDER BY question"
               },
-              "comment": "Count how many strategic objectives each science question informs"
+              "comment": "Preserve all ScienceQuestion nodes using OPTIONAL MATCH; report zero direct links where absent. Do not manufacture links from shared text chunks."
             }
           ]
         }
@@ -8857,7 +8857,7 @@
     },
     {
       "task_ID": "TASK_260713_000041_500020",
-      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2024.",
+      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2025.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -8874,10 +8874,10 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-01-15T09:00:00",
-                "end_date": "2024-01-15T11:00:00"
+                "start_date": "2025-01-15T09:00:00",
+                "end_date": "2025-01-15T11:00:00"
               },
-              "comment": "Search for available FCI FDHSI slots on 15 January 2024"
+              "comment": "Search for available FCI FDHSI slots on 15 January 2025"
             }
           ]
         }
@@ -8938,11 +8938,11 @@
     },
     {
       "task_ID": "TASK_260713_000043_500022",
-      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI imagery products.",
+      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Use the geographic area described in the narrative to search the EUMETSAT server for MTG FCI imagery products during August 2025.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for the atmospheric CO2 monitoring narrative. Step 2: search_eumetsat_products for MTG FCI Level 1C imagery over the narrative's region and time period.",
+      "reference_solution_description": "Step 1: search_narratives on eodashboard for the atmospheric CO2 monitoring narrative. Step 2: search_eumetsat_products for MTG FCI Level 1C imagery over the narrative's region during August 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -8957,11 +8957,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-01T00:00:00",
-                "end_date": "2023-08-31T23:59:00",
+                "start_date": "2025-08-01T00:00:00",
+                "end_date": "2025-08-31T23:59:00",
                 "bbox": "<inferred>"
               },
-              "comment": "Search for MTG FCI Level 1C imagery over the narrative's region and time period"
+              "comment": "Search for MTG FCI Level 1C imagery over the narrative's region during August 2025"
             }
           ]
         }
@@ -8979,11 +8979,11 @@
     },
     {
       "task_ID": "TASK_260713_000044_500023",
-      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2024.",
+      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2025.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_papers on ArXiv for MTG FCI calibration papers. Step 2: list_eumetsat_products then search_eumetsat_products for MTG-FCI-L1C-FDHSI in June 2024.",
+      "reference_solution_description": "Step 1: search_papers on ArXiv for MTG FCI calibration papers. Step 2: list_eumetsat_products then search_eumetsat_products for MTG-FCI-L1C-FDHSI in June 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -9004,10 +9004,10 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-01T00:00:00",
-                "end_date": "2024-06-07T23:59:00"
+                "start_date": "2025-06-01T00:00:00",
+                "end_date": "2025-06-07T23:59:00"
               },
-              "comment": "Check availability of FCI FDHSI products in first week of June 2024"
+              "comment": "Check availability of FCI FDHSI products in first week of June 2025"
             }
           ]
         }
@@ -9025,7 +9025,7 @@
     },
     {
       "task_ID": "TASK_260713_000046_500025",
-      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2024.",
+      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2025.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -9037,8 +9037,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-04-10T10:00:00",
-                "end_date": "2024-04-10T12:00:00"
+                "start_date": "2025-04-10T10:00:00",
+                "end_date": "2025-04-10T12:00:00"
               },
               "comment": "Returns count and identifiers of available FCI FDHSI slots in that time window"
             }
@@ -9099,11 +9099,11 @@
     },
     {
       "task_ID": "TASK_260713_000048_500027",
-      "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2023. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
+      "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2025. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Use search_eumetsat_products to count available MTG-FCI-L2-AFM (Active Fire Monitoring) products over the Italian peninsula in August 2023, then assess whether the count is within the per-call download limit.",
+      "reference_solution_description": "Use search_eumetsat_products to count available MTG-FCI-L2-AFM (Active Fire Monitoring) products over the Italian peninsula in August 2025, then assess whether the count is within the per-call download limit.",
       "reference_solutions": [
         {
           "steps": [
@@ -9118,11 +9118,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2023-08-01T00:00:00",
-                "end_date": "2023-08-31T23:59:00",
+                "start_date": "2025-08-01T00:00:00",
+                "end_date": "2025-08-31T23:59:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Returns count of MTG FCI Active Fire Monitoring products over Italy in August 2023"
+              "comment": "Returns count of MTG FCI Active Fire Monitoring products over Italy in August 2025"
             }
           ]
         }
@@ -9178,7 +9178,7 @@
     },
     {
       "task_ID": "TASK_260713_000050_500029",
-      "task_text": "Search for MTG FCI FDHSI products over central Europe on 5 September 2023, then download up to 3 observations using the datastore method and read them back to confirm the data is restricted to the central Europe area.",
+      "task_text": "Search for MTG FCI FDHSI products over central Europe on 5 September 2025, then download up to 3 observations using the datastore method and read them back to confirm the data is restricted to the central Europe area.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9197,8 +9197,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-09-05T08:00:00",
-                "end_date": "2023-09-05T14:00:00",
+                "start_date": "2025-09-05T08:00:00",
+                "end_date": "2025-09-05T14:00:00",
                 "bbox": "<derived from previous step>"
               },
               "comment": "Check availability of FCI FDHSI slots over central Europe"
@@ -9207,8 +9207,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-09-05T08:00:00",
-                "end_date": "2023-09-05T14:00:00",
+                "start_date": "2025-09-05T08:00:00",
+                "end_date": "2025-09-05T14:00:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 3,
@@ -9283,7 +9283,7 @@
     },
     {
       "task_ID": "TASK_260713_000052_500031",
-      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2024.",
+      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2025.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9302,11 +9302,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-HRFI",
-                "start_date": "2024-06-20T10:00:00",
-                "end_date": "2024-06-20T12:00:00",
+                "start_date": "2025-06-20T10:00:00",
+                "end_date": "2025-06-20T12:00:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Search for FCI HRFI products over the Rome area on 20 June 2024"
+              "comment": "Search for FCI HRFI products over the Rome area on 20 June 2025"
             }
           ]
         }
@@ -9324,11 +9324,11 @@
     },
     {
       "task_ID": "TASK_260713_000053_500032",
-      "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily during the 2025 fire season, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
+      "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily from 3 July through 30 September 2025, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: geocode_place to resolve Sicily's bounding box. Step 2: search_eumetsat_products to check MTG-FCI-L2-AFM availability over Sicily during the 2025 fire season (June-September). Step 3: download_eumetsat_product for one representative observation. Step 4: read_eumetsat_product with as_geotiff=true to export the fire_probability band. Step 5: create_map to render it as a viewable PNG. Steps 6-7: resolve_images/load_images to load the map into the VLM's context and assess visible fire activity.",
+      "reference_solution_description": "Step 1: geocode_place to resolve Sicily's bounding box. Step 2: search_eumetsat_products to check MTG-FCI-L2-AFM availability over Sicily from 3 July through 30 September 2025 (3 July–30 September). Step 3: download_eumetsat_product for one representative observation. Step 4: read_eumetsat_product with as_geotiff=true to export the fire_probability band. Step 5: create_map to render it as a viewable PNG. Steps 6-7: resolve_images/load_images to load the map into the VLM's context and assess visible fire activity.",
       "reference_solutions": [
         {
           "steps": [
@@ -9343,11 +9343,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2025-06-01T00:00:00",
+                "start_date": "2025-07-03T00:00:00",
                 "end_date": "2025-09-30T23:59:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Check MTG FCI Active Fire Monitoring availability over Sicily during the 2025 fire season"
+              "comment": "Check MTG FCI Active Fire Monitoring availability over Sicily from 3 July through 30 September 2025"
             },
             {
               "function_name": "download_eumetsat_product",
@@ -9424,11 +9424,11 @@
     },
     {
       "task_ID": "TASK_260713_000054_500033",
-      "task_text": "Download one MTG FCI Level 1C FDHSI full-disk observation from 15 January 2024 at 10:00 UTC using the direct datastore method.",
+      "task_text": "Download one MTG FCI Level 1C FDHSI full-disk observation from 15 January 2025 at 10:00 UTC using the direct datastore method.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call download_eumetsat_product for MTG-FCI-L1C-FDHSI for a 10-minute window on 15 January 2024.",
+      "reference_solution_description": "Call download_eumetsat_product for MTG-FCI-L1C-FDHSI for a 10-minute window on 15 January 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -9436,8 +9436,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-01-15T10:00:00",
-                "end_date": "2024-01-15T10:10:00",
+                "start_date": "2025-01-15T10:00:00",
+                "end_date": "2025-01-15T10:10:00",
                 "method": "datastore",
                 "observations_per_day": 1,
                 "start_hour": 10,
@@ -9507,7 +9507,7 @@
     },
     {
       "task_ID": "TASK_260713_000056_500035",
-      "task_text": "Download 2 MTG FCI HRFI observations per day from 10 to 12 July 2024 over northern Italy, requesting GeoTIFF output via the Data Tailor.",
+      "task_text": "Download 2 MTG FCI HRFI observations per day from 10 to 12 July 2025 over northern Italy, requesting GeoTIFF output via the Data Tailor.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -9519,8 +9519,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-HRFI",
-                "start_date": "2024-07-10T00:00:00",
-                "end_date": "2024-07-12T23:59:00",
+                "start_date": "2025-07-10T00:00:00",
+                "end_date": "2025-07-12T23:59:00",
                 "bbox": "<inferred>",
                 "format": "geotiff",
                 "method": "datatailor",
@@ -9546,7 +9546,7 @@
     },
     {
       "task_ID": "TASK_260713_000057_500036",
-      "task_text": "Search for available MTG FCI FDHSI products over the Middle East on 15 June 2024, select one representative observation, download it, and read it back to confirm that the data coverage is restricted to the Middle East region.",
+      "task_text": "Search for available MTG FCI FDHSI products over the Middle East on 15 June 2025, select one representative observation, download it, and read it back to confirm that the data coverage is restricted to the Middle East region.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9565,8 +9565,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-15T08:00:00",
-                "end_date": "2024-06-15T11:00:00",
+                "start_date": "2025-06-15T08:00:00",
+                "end_date": "2025-06-15T11:00:00",
                 "bbox": "<derived from previous step>"
               },
               "comment": "Verify availability and count before downloading"
@@ -9575,8 +9575,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-15T09:00:00",
-                "end_date": "2024-06-15T09:15:00",
+                "start_date": "2025-06-15T09:00:00",
+                "end_date": "2025-06-15T09:15:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 1,
@@ -9610,7 +9610,7 @@
     },
     {
       "task_ID": "TASK_260713_000058_500037",
-      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Based on the geographic focus and time period of the narrative, search for and download the corresponding MTG FCI imagery products, then read them back cropped to that geographic focus.",
+      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Use the geographic focus of the narrative to search for and download MTG FCI imagery products for 15–20 August 2025, then read them back cropped to that geographic focus.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9629,8 +9629,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-15T00:00:00",
-                "end_date": "2023-08-20T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-20T23:59:00",
                 "bbox": "<inferred>"
               },
               "comment": "Check availability of FCI Level 1C imagery over Egypt"
@@ -9639,8 +9639,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-15T00:00:00",
-                "end_date": "2023-08-20T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-20T23:59:00",
                 "bbox": "<inferred>",
                 "method": "datastore",
                 "observations_per_day": 4,
@@ -9674,7 +9674,7 @@
     },
     {
       "task_ID": "TASK_260713_000059_500038",
-      "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
+      "task_text": "Download MTG FCI cloud mask products over Spain on 10 July 2025, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9693,8 +9693,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-CLM",
-                "start_date": "2023-07-10T10:00:00",
-                "end_date": "2023-07-10T12:00:00",
+                "start_date": "2025-07-10T10:00:00",
+                "end_date": "2025-07-10T12:00:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 2,
@@ -16188,7 +16188,7 @@
     },
     {
       "task_ID": "TASK_260716_000001_700013",
-      "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2024, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2025, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -16200,8 +16200,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-03-10T00:00:00",
-                "end_date": "2024-03-10T23:59:00",
+                "start_date": "2025-03-10T00:00:00",
+                "end_date": "2025-03-10T23:59:00",
                 "bbox": [
                   -5.0,
                   42.0,
@@ -16250,7 +16250,7 @@
     },
     {
       "task_ID": "TASK_260716_000002_700014",
-      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2024, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2025, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -16262,8 +16262,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2024-08-15T00:00:00",
-                "end_date": "2024-08-15T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-15T23:59:00",
                 "bbox": [
                   -70.0,
                   -15.0,
@@ -16315,7 +16315,7 @@
     },
     {
       "task_ID": "TASK_260716_000003_700015",
-      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2024, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2025, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -16327,8 +16327,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-CLM",
-                "start_date": "2024-06-01T00:00:00",
-                "end_date": "2024-06-01T23:59:00",
+                "start_date": "2025-06-01T00:00:00",
+                "end_date": "2025-06-01T23:59:00",
                 "bbox": [
                   -10.0,
                   5.0,
@@ -16378,11 +16378,11 @@
     },
     {
       "task_ID": "TASK_260716_000004_700016",
-      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 10 March 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
+      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 1 October 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: download_eumetsat_product for a single FCI FDHSI slot over the Alps bbox (start_hour omitted, so the tool auto-selects local solar noon). Step 2: read_eumetsat_product using the identifier returned by the download to read only that file.",
+      "reference_solution_description": "Download a single FCI FDHSI observation over the Alps on 1 October 2024 (omitted start_hour selects local solar noon). Pass the exact file paths returned by that single-product download to read_eumetsat_product and crop to the Alps bbox. FCI is delivered as multiple chunks whose filenames do not contain the parent identifier; identifier-only lookup is invalid. Numerical comparisons must use the same observation, channels, crop, calibration and valid-pixel mask.",
       "reference_solutions": [
         {
           "steps": [
@@ -16390,8 +16390,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-03-10T00:00:00",
-                "end_date": "2024-03-10T23:59:00",
+                "start_date": "2024-10-01T00:00:00",
+                "end_date": "2024-10-01T23:59:00",
                 "bbox": [
                   5.0,
                   45.0,
@@ -16407,7 +16407,6 @@
               "function_name": "read_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "identifier": "<derived from download_eumetsat_product: products[0].identifier>",
                 "bands": [
                   "vis_04",
                   "vis_05",
@@ -16420,9 +16419,10 @@
                   45.0,
                   15.0,
                   48.0
-                ]
+                ],
+                "paths": "<derived from download_eumetsat_product: new_files (single-product download)>"
               },
-              "comment": "Reads only the just-downloaded file and reports reflectance stats for its VIS/NIR channels — passing bbox here is required to actually crop the AOI: 'datastore' downloads are always the full uncropped disk, bbox during download only filtered which products matched the search"
+              "comment": "Pass all readable chunk paths from this single-observation download, not the parent identifier. Crop to the same Alps bbox before computing channel statistics."
             }
           ]
         }
@@ -16549,8 +16549,8 @@
                 "product": "MSG-SEVIRI-L1-IODC",
                 "identifier": "<derived from download_eumetsat_product: products[0].identifier>",
                 "bands": [
-                  "IR108",
-                  "IR120"
+                  "IR_108",
+                  "IR_120"
                 ],
                 "bbox": [
                   76.5,

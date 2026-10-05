@@ -116,6 +116,10 @@ agenticeoecosystem/
 
 ## Installation
 
+For model reruns using the EVE API or OpenRouter, see
+[the colleague setup and rerun guide](docs/candidate_reruns.md). It includes
+portable task inputs, credentials, one-model commands and checkpoint resuming.
+
 **Requirements:** Python 3.12+
 
 Clone the repository:

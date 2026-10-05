@@ -92,8 +92,11 @@ def run_pipeline(
         _agent = _module.supervisor_agent
 
     _module.reset_step_log()
+    final_answer: str | None = None
 
     async def _run() -> tuple[int, int]:
+        nonlocal final_answer
+        final_answer = None
         async for chunk in _agent.astream(
             {"messages": [{"role": "user", "content": task_text}]},
             config={"recursion_limit": 50},
@@ -105,6 +108,17 @@ def run_pipeline(
                     # messages carry the real tool_calls — log them here, mirroring
                     # how client.py's sub-agent wrappers log steps for "multi".
                     _module._extract_steps_from_messages(messages)
+                    for msg in messages:
+                        if getattr(msg, "type", None) == "ai" and not getattr(msg, "tool_calls", None):
+                            content = msg.content
+                            if isinstance(content, str):
+                                final_answer = content
+                            elif isinstance(content, list):
+                                final_answer = "\n".join(
+                                    block if isinstance(block, str) else block.get("text", "")
+                                    for block in content
+                                    if isinstance(block, str) or isinstance(block, dict) and block.get("type") == "text"
+                                )
                 else:
                     # For "multi_legacy", each sub-agent wrapper already logs its
                     # own MCP-level steps via _extract_steps_from_messages(); only
@@ -116,13 +130,53 @@ def run_pipeline(
         return _module._token_counts["input"], _module._token_counts["output"]
 
     loop = asyncio.get_event_loop()
-    in_tok, out_tok = loop.run_until_complete(_run())
+
+    def _is_dead_session_error(exc: BaseException) -> bool:
+        # Matched by class name rather than importing anyio directly, since
+        # this module is pipeline-agnostic and anyio is only a dependency of
+        # the "single"/"multi_legacy" MCP client stack. Walks __cause__ and
+        # __context__ too — the error can arrive wrapped depending on which
+        # layer (langgraph's tool_node, langchain's BaseTool.arun, etc.)
+        # last touched it.
+        seen = set()
+        while exc is not None and id(exc) not in seen:
+            seen.add(id(exc))
+            if type(exc).__name__ == "ClosedResourceError":
+                return True
+            exc = exc.__cause__ or exc.__context__
+        return False
+
+    def _run_once():
+        coro = _run()
+        if task_timeout:
+            coro = asyncio.wait_for(coro, timeout=task_timeout)
+        return loop.run_until_complete(coro)
+
+    try:
+        in_tok, out_tok = _run_once()
+    except Exception as exc:
+        if _is_dead_session_error(exc) and hasattr(_module, "reconnect_mcp_tools"):
+            # A persistent MCP session (e.g. gis-mcp) died mid-run, poisoning
+            # every subsequent call to that server for the rest of the
+            # process — see reconnect_mcp_tools's docstring. Rebuild once and
+            # retry this task; if it still fails, let the exception surface
+            # normally (this task recorded as unsolved) rather than loop.
+            logger.warning(
+                "run_pipeline: dead MCP session detected (%s) — reconnecting and retrying this task once",
+                exc,
+            )
+            _module.reconnect_mcp_tools()
+            _agent = _module.agent
+            _module.reset_step_log()
+            in_tok, out_tok = _run_once()
+        else:
+            raise
 
     steps = [
         Step(function_name=s["function_name"], arguments=s["arguments"], tool_result=s.get("tool_result"))
         for s in _module._step_log
     ]
-    return Solution(steps=steps), in_tok, out_tok
+    return Solution(steps=steps, final_answer=final_answer), in_tok, out_tok
 
 
 # ---------------------------------------------------------------------------

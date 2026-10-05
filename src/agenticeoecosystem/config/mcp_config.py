@@ -44,6 +44,17 @@ def _check_climate_env() -> None:
         raise RuntimeError(f"Climate (CDS) env vars not set: {', '.join(missing)} (check .env)")
 
 
+def _check_cdse_env() -> None:
+    """Raise RuntimeError if CDSE (Copernicus Data Space / Sentinel Hub)
+    credentials are missing."""
+    missing = [
+        v for v in ("CDSE_CLIENT_ID", "CDSE_CLIENT_SECRET")
+        if not os.getenv(v)
+    ]
+    if missing:
+        raise RuntimeError(f"CDSE env vars not set: {', '.join(missing)} (check .env)")
+
+
 _EVE_RETRIEVAL_URL = (
     "https://bedrock-agentcore.eu-west-1.amazonaws.com/runtimes/"
     "arn%3Aaws%3Abedrock-agentcore%3Aeu-west-1%3A686812424034%3A"
@@ -144,6 +155,21 @@ def get_mcp_servers() -> dict:
             "transport": "stdio",
             "command": "python",
             "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/eumetsat/server.py"],
+        }
+    ))
+
+    # CDSE (Copernicus Data Space / Sentinel Hub) — also exposes the
+    # Nominatim-backed geocode_place/resolve_named_region tools used
+    # elsewhere as the preferred place-name resolver. The single-agent
+    # pipeline had no route to this server at all before this entry (it
+    # only reaches gee-mcp's Google-Maps-based get_lat_lon for imagery
+    # requests), unlike the "multi" pipeline where sub_agent_cdse.py wires
+    # cdse_agent directly and bypasses this registry.
+    _try_register(servers, "cdse", lambda: (
+        _check_cdse_env() or {
+            "transport": "stdio",
+            "command": "python",
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/cdse_geocode/server.py"],
         }
     ))
 

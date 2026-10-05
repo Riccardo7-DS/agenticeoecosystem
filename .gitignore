@@ -56,6 +56,11 @@ docs/gemma4_benchmark_run_issues_2026-08-07.md
 
 scripts/vlm.sh
 
+# Local model-serving launchers and EUMETSAT acquisition-date analysis.
+scripts/*_serve.sh
+docs/mtg_fci_date_audit.json
+docs/mtg_fci_date_audit.md
+
 # Generated benchmark runs and downloaded artifacts (task inputs stay versioned).
 data/candidate_reruns/
 data/evaluation_runs/

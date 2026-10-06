@@ -105,6 +105,48 @@ class ArtifactInspector:
                           verified=bool((errors <= atol).all()) if atol is not None else None)
         return result
 
+    def measure_geodetic_distance(
+        self, point1_lon_lat: list[float], point2_lon_lat: list[float],
+        source_path: str, source_quote: str, centroid_derivation: str,
+        source_location_verified: bool, destination_verified: bool,
+    ) -> dict[str, Any]:
+        """Compute a WGS84 distance after source-location judgment, without scoring.
+
+        The judge must verify both endpoints and explain the centroid derivation.
+        An exact quote from an allowlisted paper/text artifact binds that judgment
+        to captured source evidence. Matching a quote alone is not semantic proof.
+        """
+        import hashlib
+        import math
+        from pyproj import Geod
+
+        if source_location_verified is not True or destination_verified is not True:
+            raise ValueError("Both endpoint locations require independent judge verification.")
+        if not centroid_derivation.strip() or not source_quote.strip():
+            raise ValueError("Source quotation and centroid derivation are required.")
+        path = self.resolve(source_path)
+        raw = path.read_bytes()
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ValueError("Supply the captured paper text, not a binary PDF.") from error
+        if " ".join(source_quote.split()) not in " ".join(text.split()):
+            raise ValueError("Quoted study-area evidence is absent from the captured source.")
+        for point in (point1_lon_lat, point2_lon_lat):
+            if len(point) != 2 or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                                      or not math.isfinite(v) for v in point):
+                raise ValueError("Each endpoint needs finite [longitude, latitude] coordinates.")
+            if not -180 <= point[0] <= 180 or not -90 <= point[1] <= 90:
+                raise ValueError("Endpoint coordinates are outside WGS84 ranges.")
+        _, _, distance = Geod(ellps="WGS84").inv(*point1_lon_lat, *point2_lon_lat)
+        return {"reference_type": "source_dependent_geodetic_distance", "distance_m": float(distance),
+                "point1_lon_lat": point1_lon_lat, "point2_lon_lat": point2_lon_lat,
+                "ellipsoid": "WGS84", "units": "m", "source_path": str(path),
+                "source_sha256": hashlib.sha256(raw).hexdigest(), "source_quote": source_quote,
+                "centroid_derivation": centroid_derivation,
+                "source_location_verified": True, "destination_verified": True,
+                "source_verification_basis": "AAJ semantic judgment plus exact captured quote; not automatic geographic proof"}
+
     def inspect_timeseries(self, path: str, variable: str,
                            spatial_reduction: str | None = None,
                            frequency: str | None = None, method: str = "mean",
@@ -273,7 +315,7 @@ class GISJudgeAgent:
             for call in message.tool_calls:
                 try:
                     args = json.loads(call.function.arguments)
-                    if call.function.name not in {"inspect_raster", "inspect_netcdf", "inspect_extent", "inspect_timeseries", "validate_netcdf"}:
+                    if call.function.name not in {"inspect_raster", "inspect_netcdf", "inspect_extent", "inspect_timeseries", "validate_netcdf", "measure_geodetic_distance"}:
                         raise ValueError("Unsupported inspection tool.")
                     result = getattr(self.inspector, call.function.name)(**args)
                 except (ValueError, TypeError, KeyError, OSError, ImportError, IndexError) as error:
@@ -291,6 +333,12 @@ class GISJudgeAgent:
         string = {"type": "string"}
         number = {"type": "number"}
         definitions = [
+            ("measure_geodetic_distance", "Compute runtime WGS84 reference distance after verifying source-derived centroid and destination. Requires a captured source quotation and explicit independent endpoint verification; never estimate distance.",
+             {"point1_lon_lat": {"type": "array", "items": number, "minItems": 2, "maxItems": 2},
+              "point2_lon_lat": {"type": "array", "items": number, "minItems": 2, "maxItems": 2},
+              "source_path": string, "source_quote": string, "centroid_derivation": string,
+              "source_location_verified": {"type": "boolean"}, "destination_verified": {"type": "boolean"}},
+             ["point1_lon_lat", "point2_lon_lat", "source_path", "source_quote", "centroid_derivation", "source_location_verified", "destination_verified"]),
             ("inspect_raster", "Read raster metadata, statistics and histogram arrays.",
              {"path": string, "band": {"type": "integer"}, "bins": {"type": "integer"}}, ["path"]),
             ("inspect_netcdf", "Read NetCDF coordinates, units and numerical summaries.",

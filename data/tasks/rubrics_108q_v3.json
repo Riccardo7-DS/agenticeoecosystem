@@ -1249,7 +1249,7 @@
   },
   {
     "task_ID": "TASK_260713_000053_500032",
-    "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily during the 2025 fire season, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
+    "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily from 3 July through 30 September 2025, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
     "rubric": {
       "criteria": [
         {
@@ -1261,7 +1261,7 @@
         {
           "id": "c2",
           "type": "grounded_and_complete",
-          "description": "Grounds the assessment in a visualized MTG FCI Active Fire Monitoring observation for Sicily during the 2025 fire season by reporting the evidence of detections or their absence in the observed area and stating whether fire activity is visible.",
+          "description": "Grounds the assessment in a visualized MTG FCI Active Fire Monitoring observation for Sicily from 3 July through 30 September 2025 by reporting the evidence of detections or their absence in the observed area and stating whether fire activity is visible.",
           "weight": 0.3
         },
         {
@@ -1275,7 +1275,7 @@
   },
   {
     "task_ID": "TASK_260713_000059_500038",
-    "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
+    "task_text": "Download MTG FCI cloud mask products over Spain on 10 July 2025, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
     "rubric": {
       "criteria": [
         {
@@ -1287,7 +1287,7 @@
         {
           "id": "c2",
           "type": "grounded_and_complete",
-          "description": "Grounds its account in the MTG FCI cloud-mask data retrieved for Spain during the July 2023 heatwave period, reports that the data were read back cropped to the Spain area and what that establishes about coverage, and connects the observations to relevant objectives found in the ESA strategy.",
+          "description": "Grounds its account in the MTG FCI cloud-mask data retrieved for Spain during the July 2025 heatwave period, reports that the data were read back cropped to the Spain area and what that establishes about coverage, and connects the observations to relevant objectives found in the ESA strategy.",
           "weight": 0.3
         },
         {
@@ -2081,7 +2081,7 @@
   },
   {
     "task_ID": "TASK_260716_000001_700013",
-    "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2024, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
+    "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2025, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
     "rubric": {
       "criteria": [
         {
@@ -2757,7 +2757,7 @@
   },
   {
     "task_ID": "TASK_260713_000048_500027",
-    "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2023. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
+    "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2025. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
     "rubric": {
       "criteria": [
         {

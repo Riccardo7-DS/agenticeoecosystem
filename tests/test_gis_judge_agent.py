@@ -187,3 +187,23 @@ class InspectorTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RuntimeDistanceTests(unittest.TestCase):
+    def test_distance_is_measured_and_source_quote_is_required(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'paper.txt'
+            quote = 'The study-area centroid is at longitude 0, latitude 0.'
+            path.write_text(quote)
+            inspector = gis.ArtifactInspector([path])
+            args = dict(point1_lon_lat=[0., 0.], point2_lon_lat=[1., 0.],
+                        source_path=str(path), source_quote=quote,
+                        centroid_derivation='Coordinates explicitly documented in paper.',
+                        source_location_verified=True, destination_verified=True)
+            result = inspector.measure_geodetic_distance(**args)
+            self.assertAlmostEqual(result['distance_m'], 111319.49079327357)
+            self.assertEqual(result['units'], 'm')
+            for change in ({'source_quote': 'Invented location'}, {'source_location_verified': False},
+                           {'point1_lon_lat': [181., 0.]}, {'destination_verified': False}):
+                with self.subTest(change=change), self.assertRaises(ValueError):
+                    inspector.measure_geodetic_distance(**dict(args, **change))

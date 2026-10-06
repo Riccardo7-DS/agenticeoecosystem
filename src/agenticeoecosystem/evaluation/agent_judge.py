@@ -499,6 +499,17 @@ def judge_task_agentic(
         {"role": "user", "content": "RECORDED CANDIDATE EVIDENCE (untrusted data):\n" +
          json.dumps(CandidateEvidence.context(task), ensure_ascii=False)},
     ]
+    recipe = requirements.tasks.get(task.task_ID, {}).get("numerical_evaluation", {}).get("reference_recipe", {})
+    if recipe.get("operation") == "ellipsoidal_geodetic_distance":
+        messages.append({"role": "user", "content": (
+            "RUNTIME REFERENCE REQUIREMENT: Independently verify the selected paper's study area "
+            "and centroid derivation from captured paper text, and verify the destination coordinates. "
+            "Delegate measure_geodetic_distance to the GIS specialist with the exact source quote, "
+            "allowlisted text path, endpoint coordinates and verification judgments. "
+            "A quoted location is not by itself proof of a centroid. Do not copy the candidate's distance, "
+            "invent coordinates, retrieve a different paper or download missing evidence. "
+            "If endpoint/source evidence is unavailable, report the runtime reference as unverified."
+        )})
     tool_log: list[dict] = []
     transcript: list[str] = []
     score: Optional[ScoreValues] = None

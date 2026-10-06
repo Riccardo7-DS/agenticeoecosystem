@@ -32,7 +32,15 @@ def _basic_auth_header(username_env: str = "EVE_USERNAME",
 
 _MODEL_NAME = os.getenv("MULTI_AGENT_MODEL", "EVE-Instruct")
 _PROVIDER = os.getenv("MULTI_AGENT_PROVIDER", "eve")
-_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", "4096"))
+
+# Reasoning models (e.g. DeepSeek-R1 distillations) spend a large chunk of
+# their output budget on chain-of-thought before ever reaching a tool call
+# or final answer, on every turn — the 4096 default that's fine for
+# non-reasoning models risks truncating mid-thought for these. Bump the
+# default for any model with "deepseek" in its name; an operator-set
+# MULTI_AGENT_MAX_TOKENS always wins over either default.
+_DEFAULT_MAX_TOKENS = 8192 if "deepseek" in _MODEL_NAME.lower() else 4096
+_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", str(_DEFAULT_MAX_TOKENS)))
 
 if _PROVIDER == "vllm":
     # Local vLLM server (see utils.registry.launch_vllm) — same OpenAI-compatible

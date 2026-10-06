@@ -156,6 +156,26 @@ class JudgeEvidenceTests(unittest.TestCase):
         self.assertEqual(task.evaluator_scores["agent_judge"], 1)
         self.assertEqual(task.evaluator_tool_calls["agent_judge"][0]["tool"], "ask_gis_agent")
 
+    def test_runtime_distance_rejects_changed_source_and_candidate(self):
+        path = self.root / 'paper.txt'
+        quote = 'The study-area centroid is at longitude 0, latitude 0.'
+        path.write_text(quote)
+        args = dict(point1_lon_lat=[0., 0.], point2_lon_lat=[1., 0.], source_path=str(path),
+                    source_quote=quote, centroid_derivation='Paper explicitly supplies the centroid.',
+                    source_location_verified=True, destination_verified=True)
+        result = self.gis.ArtifactInspector([path]).measure_geodetic_distance(**args)
+        task = self.task()
+        self.evidence.CandidateEvidence.record_inspection(task, 'aaj', [
+            {'kind': 'gis_inspection', 'result': {'tool_calls': [
+                {'tool': 'measure_geodetic_distance', 'arguments': json.dumps(args), 'result': result}]}}])
+        reference = self.evidence.CandidateEvidence.runtime_distance_reference(task, 'aaj')
+        self.assertEqual(reference['distance_m'], result['distance_m'])
+        path.write_text(quote + ' modified')
+        self.assertIsNone(self.evidence.CandidateEvidence.runtime_distance_reference(task, 'aaj'))
+        path.write_text(quote)
+        task.generated_solution.final_answer = 'Different candidate answer.'
+        self.assertIsNone(self.evidence.CandidateEvidence.runtime_distance_reference(task, 'aaj'))
+
 
 if __name__ == "__main__":
     unittest.main()

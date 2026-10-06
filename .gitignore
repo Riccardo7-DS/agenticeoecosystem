@@ -8,6 +8,12 @@ script.sh
 output/
 tool_output/
 
+# Local agent setup and generated rubric comparison reports.
+.agents/
+data/tasks/rubric_rerun_audit/
+docs/numerical_gt_coverage.json
+data/output_run_*.tar.gz
+
 **/__pycache__/
 */pycache__/
 __pycache__/

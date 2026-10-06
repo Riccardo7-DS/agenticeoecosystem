@@ -308,7 +308,7 @@ def generate_solutions(
                 from pathlib import Path
                 from .candidate_evidence import CandidateEvidence
                 from agenticeoecosystem.definitions import ROOT_DIR
-                CandidateEvidence.archive(task, ROOT_DIR / "output",
+                CandidateEvidence.archive(task, (ROOT_DIR / "output", ROOT_DIR / "tool_output"),
                                           Path(_save_folder) / "evidence" / Path(output_filename or model).stem)
             total_input += inp_tok
             total_output += out_tok

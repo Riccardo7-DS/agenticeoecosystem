@@ -46,6 +46,24 @@ def load_rubrics(path: str) -> dict[str, list[dict]]:
     return out
 
 
+def load_rubric_protocols(path: str) -> dict[str, dict]:
+    """Read explicit v4 instructions without changing legacy v3 inputs."""
+    entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    protocols = {}
+    for entry in entries:
+        rubric = entry.get("rubric", {})
+        if "protocol_version" not in rubric:
+            continue
+        if rubric.get("evidence_mode") not in {"trace", "evidence"}:
+            raise ValueError(f"Invalid rubric profile for {entry['task_ID']}")
+        if not rubric.get("scoring_instructions"):
+            raise ValueError(f"Missing scoring instructions for {entry['task_ID']}")
+        protocols[entry["task_ID"]] = {
+            key: rubric[key] for key in ("protocol_version", "evidence_mode", "scoring_instructions")
+        }
+    return protocols
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rubric-judge several candidate results files with one evaluator, one vLLM launch")
     parser.add_argument("--results-file", required=True, action="append", dest="results_files",
@@ -77,6 +95,13 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     rubrics_by_id = load_rubrics(args.rubrics_file)
+    rubric_protocols = load_rubric_protocols(args.rubrics_file)
+    modes = {p["evidence_mode"] for p in rubric_protocols.values()}
+    if len(modes) > 1 or (rubric_protocols and len(rubric_protocols) != len(rubrics_by_id)):
+        parser.error("Use one consistent rubric profile per scoring batch.")
+    if "trace" in modes and (args.inspect_evidence or args.inspection_evaluator_label or args.artifact_manifest):
+        parser.error("Trace scoring uses uniform calls/arguments/answers; run artifact verification separately.")
+    logger.info("Rubric protocol: %s", next(iter(modes), "legacy evidence-required"))
     logger.info("Loaded %d rubrics from %s", len(rubrics_by_id), args.rubrics_file)
     rubric_task_ids = list(rubrics_by_id.keys())
 
@@ -122,6 +147,7 @@ def main() -> int:
                     evaluator_label=args.evaluator_label,
                     provider=eval_provider,
                     inspection_label=inspection_label,
+                    rubric_protocols=rubric_protocols,
                 )
 
                 evaluator_safe = args.evaluator_label.replace(" ", "_")

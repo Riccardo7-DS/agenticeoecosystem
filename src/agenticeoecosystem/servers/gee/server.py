@@ -577,7 +577,23 @@ def get_lat_lon(address: str) -> List[float]:
     data = response.json()
 
     if not data.get("results"):
-        raise ValueError(f"No geocoding results found for: {address}")
+        # Surface Google's actual status/error_message (e.g. REQUEST_DENIED
+        # with "This API is not activated on your API project" — observed to
+        # fire for the same (key, address) pair depending on the caller's
+        # egress IP, consistent with an IP-restricted API key rather than a
+        # genuine "place not found") instead of a generic message that hides
+        # the real cause. No fallback geocoder here by design: GEE and CDSE
+        # are deliberately kept as separate tools with separate geocoders so
+        # the agent's own tool choice (CDSE by default, GEE only for
+        # collections CDSE doesn't cover) is what determines reliability —
+        # see the "geocode via CDSE first" routing rule in both the
+        # multi-agent orchestrator and single-agent system prompts.
+        status = data.get("status", "UNKNOWN")
+        detail = data.get("error_message")
+        msg = f"Geocoding failed for {address!r}: status={status}"
+        if detail:
+            msg += f" — {detail}"
+        raise ValueError(msg)
 
     loc = data["results"][0]["geometry"]["location"]
     return [loc["lat"], loc["lng"]]

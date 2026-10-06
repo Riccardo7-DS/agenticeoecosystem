@@ -11,6 +11,7 @@ Exits 0 on success, 1 on failure.
 import argparse
 import logging
 import os
+import random
 import signal
 import sys
 from pathlib import Path
@@ -61,6 +62,8 @@ def main() -> int:
                              "abandoned and the run moves to the next task (default: "
                              "no limit).")
     parser.add_argument("--skip-solved",          action="store_true", help="Skip tasks that already have a solution")
+    parser.add_argument("--shuffle-seed", type=int, default=None,
+                        help="Shuffle task execution order reproducibly using this seed")
     parser.add_argument("--keep-vllm-alive",      action="store_true",
                         help="Don't terminate the vLLM server this process launches — lets a "
                              "later invocation reuse the already-warm server for the same model "
@@ -99,6 +102,11 @@ def main() -> int:
         labels = [x.strip() for x in args.task_labels.split(",")]
         tasks = tasks.select_by_labels(labels)
     logger.info("Loaded %d task(s) from %d file(s) in %s", len(tasks), len(args.tasks_file), folder)
+    if args.shuffle_seed is not None:
+        random.Random(args.shuffle_seed).shuffle(tasks.tasks)
+        tasks.metadata["task_shuffle_seed"] = args.shuffle_seed
+        tasks.metadata["task_execution_order"] = [task.task_ID for task in tasks.tasks]
+        logger.info("Shuffled task order with seed %d", args.shuffle_seed)
 
     import json as _json
     agent_models = None

@@ -14,39 +14,37 @@
     "assignment_note": "All 265 task IDs mapped. Approved reference-schema, spatial-reduction, soil-moisture and raw-encoding issues resolved. Configuration does not imply successful candidate execution or completed scoring.",
     "numerical_answer_tasks": 45,
     "numerical_only_strategy_tasks": 40,
-    "hybrid_tasks": 31,
+    "hybrid_tasks": 33,
     "numerical_artifact_tasks": 37,
-    "agent_as_judge_tasks": 87,
+    "agent_as_judge_tasks": 88,
     "agent_as_judge_only_strategy_tasks": 36,
     "previous_rubric_source": "/shared/projects/philab-eve/ESAEOBench/judges_runs/rubric_83q_v3/rubrics_83q_v3.json",
     "rubric_note": "108 current rubric entries: original 83 plus 25 manually authored task-specific rubrics. No external-model generation or scoring run performed for these additions.",
-    "download_contract_tasks": 27,
+    "download_contract_tasks": 32,
     "download_contract_parameter_counts": {
+      "task_specific_checks": 5,
       "fixed": 14,
       "source_dependent": 9,
       "fixed_with_context": 3,
       "constrained_choice": 1
     },
-    "deterministic_check_note": "Download-contract check placeholders are defined for 27 tasks; their presence is not successful evaluation. Source-dependent parameters require evidence resolution before deterministic checks.",
+    "deterministic_check_note": "Download-contract primary category now contains 32 tasks, including five artifact-metadata tasks. Preserve each task’s download/provenance and reported-metadata checks. Configuration does not establish executed validation.",
     "date_answer_tasks": 1,
     "numerical_ground_truth_pending_tasks": 0,
     "numerical_placeholder_note": "Six runtime numerical reference recipes are defined from archived candidate evidence. No fixed numeric values or scores were fabricated; candidate inputs and calibrated tolerances are required.",
-    "categorical_identifier_tasks": 2,
-    "retrieval_validation_tasks": 13,
-    "artifact_metadata_tasks": 5,
+    "categorical_identifier_tasks": 3,
+    "retrieval_validation_tasks": 14,
+    "artifact_metadata_tasks": 0,
     "aaj_primary_tasks": 49,
     "strategy_counts": {
       "set_answer": 19,
       "qualitative": 88,
-      "hybrid": 31,
-      "named_entity": 2,
-      "retrieval_validation": 13,
-      "artifact_metadata": 5,
+      "hybrid": 33,
+      "retrieval_validation": 14,
+      "download_contract": 32,
       "numerical_answer": 40,
-      "categorical_identifier": 2,
-      "agent_as_judge": 36,
-      "download_contract": 27,
-      "numerical_artifact": 2
+      "categorical_identifier": 3,
+      "agent_as_judge": 36
     },
     "evaluation_method_counts": {
       "set_precision": 23,
@@ -58,9 +56,9 @@
       "canonicalized_exact_match": 15,
       "alias_match": 14,
       "fuzzy_match": 14,
-      "agent_as_judge": 87,
+      "agent_as_judge": 88,
       "deterministic_artifact_checks": 62,
-      "gis_verification_agent": 54,
+      "gis_verification_agent": 55,
       "deterministic_retrieval_checks": 26,
       "metadata_field_accuracy": 5,
       "unit_normalized_error": 41,
@@ -96,9 +94,29 @@
       "check_execution_modes": "The legacy deterministic_checks container includes semantic and mixed requirements. Only validation_mode=deterministic is purely deterministic; conditional_deterministic needs resolved accepted constraints; semantic_judgment needs AAJ/rubric evidence-based assessment. This metadata does not implement a runner.",
       "mapping_status_vs_readiness": "requires_additional_evaluation is a legacy flag also used for pending GT/implementation, not a reliable missing-component count. Determine mapping gaps from coverage_status/pending_component_proposal; report implementation and execution readiness separately.",
       "deterministic_score_reporting": "Report factual checks and task components separately. Precision/recall/F1/exact-set-match are correlated views, not independent weighted achievements. Exact/alias/fuzzy identity matches are alternatives. Aggregate only under explicit component weights and common normalization; missing GT/infrastructure failures are not zeros.",
-      "grounding_evidence": "Use saved tool responses and candidate-bound AAJ inspection observations. Missing material evidence yields unverified/null grounding; other criteria remain independently scoreable. No complete weighted total until all criteria are scored. New generation can archive artifacts with --archive-evidence; existing missing data is not reconstructed."
+      "grounding_evidence": "Use saved tool responses and candidate-bound AAJ inspection observations. Missing material evidence yields unverified/null grounding; other criteria remain independently scoreable. No complete weighted total until all criteria are scored. New generation can archive artifacts with --archive-evidence; existing missing data is not reconstructed.",
+      "scalar_numerical_scoring": {
+        "metrics": [
+          "Hit@tol",
+          "NumScore"
+        ],
+        "effective_tolerance": "max(abs_tol, rel_tol * abs(y), floor_scale)",
+        "absolute_error": "abs(y_pred - y)",
+        "normalized_error": "absolute_error / effective_tol",
+        "Hit@tol": "1 if normalized_error <= 1 else 0",
+        "NumScore": "1 if normalized_error <= 1 else 2 ** (-(normalized_error - 1))",
+        "field_aggregation": "mean over all required GT fields; missing, invalid and unparseable predictions receive zero",
+        "diagnostics": [
+          "effective_tol",
+          "absolute_error",
+          "normalized_error"
+        ],
+        "quantity_policy": "Same metric for every ordinary scalar, including geodetic distance; task accuracy is specified only through field tolerances. GT source verification, derivation and unit normalization are separate.",
+        "configuration": "numerical_field_tolerances in task strategy or field_tolerances in GT; canonical parameters abs_tol, rel_tol, floor_scale. No new tolerance values inferred automatically.",
+        "compatibility": "Existing band/coordinate presets and tolerance aliases preserved; legacy method names remain. Mean Hit@tol and NumScore are stored explicitly; normalized error is an error diagnostic, not the NumScore itself."
+      }
     },
-    "named_entity_only_strategy_tasks": 2,
+    "named_entity_only_strategy_tasks": 0,
     "set_answer_only_strategy_tasks": 19,
     "gis_verification_agent_tasks": 54,
     "deterministic_check_execution_mode_counts": {
@@ -122,7 +140,50 @@
       },
       "scope": "Questions with genuinely unspecified geography; source-derived/geographically constrained choices are preserved."
     },
-    "runtime_numerical_reference_tasks": 6
+    "runtime_numerical_reference_tasks": 6,
+    "numerical_runtime_reference_defined_tasks": 7,
+    "category_consolidation": {
+      "date": "2026-10-03",
+      "changed_tasks": {
+        "TASK_260419_000067_100067": {
+          "from": "named_entity",
+          "to": "retrieval_validation"
+        },
+        "TASK_260427_000008_200008": {
+          "from": "artifact_metadata",
+          "to": "download_contract"
+        },
+        "TASK_260713_000009_400009": {
+          "from": "artifact_metadata",
+          "to": "download_contract"
+        },
+        "TASK_260713_000062_500041": {
+          "from": "artifact_metadata",
+          "to": "download_contract"
+        },
+        "TASK_260713_000063_500042": {
+          "from": "artifact_metadata",
+          "to": "download_contract"
+        },
+        "TASK_260713_000064_500043": {
+          "from": "artifact_metadata",
+          "to": "download_contract"
+        },
+        "TASK_260713_000002_600002": {
+          "from": "named_entity",
+          "to": "categorical_identifier"
+        },
+        "TASK_260713_000058_600058": {
+          "from": "numerical_artifact",
+          "to": "hybrid"
+        },
+        "TASK_260713_000059_600059": {
+          "from": "numerical_artifact",
+          "to": "hybrid"
+        }
+      },
+      "policy": "Primary categories consolidated; specific numerical, entity, CRS and metadata validators retained. No candidate generation or judge execution performed."
+    }
   },
   "tasks": [
     {
@@ -970,7 +1031,7 @@
     },
     {
       "task_ID": "TASK_260419_000067_100067",
-      "evaluation_strategy": "named_entity",
+      "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
         "canonicalized_exact_match",
         "alias_match",
@@ -981,7 +1042,7 @@
       "reference_policy": "candidate_source_evidence",
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Exact/alias matching first; fuzzy matching and agent-as-judge resolve ambiguous cases rather than supply independent additive scores. Accept alternative entities only when supported by the selected source and task.",
+      "evaluation_notes": "Exact/alias matching first; fuzzy matching and agent-as-judge resolve ambiguous cases rather than supply independent additive scores. Accept alternative entities only when supported by the selected source and task. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation"
@@ -2063,13 +2124,13 @@
     },
     {
       "task_ID": "TASK_260427_000008_200008",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "No fixed reference dimensions or filename; record numeric metadata tolerances. Validators/scoring remain placeholders; no evaluation run performed.",
+      "evaluation_notes": "No fixed reference dimensions or filename; record numeric metadata tolerances. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -2132,10 +2193,115 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_statistics.B02.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B02.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B02.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B02.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B03.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B03.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B03.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B03.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B04.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B04.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B04.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B04.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B08.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B08.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B08.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.B08.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_statistics.B02.min": "same physical/encoding units as verified reference",
+        "band_statistics.B02.max": "same physical/encoding units as verified reference",
+        "band_statistics.B02.mean": "same physical/encoding units as verified reference",
+        "band_statistics.B02.std": "same physical/encoding units as verified reference",
+        "band_statistics.B03.min": "same physical/encoding units as verified reference",
+        "band_statistics.B03.max": "same physical/encoding units as verified reference",
+        "band_statistics.B03.mean": "same physical/encoding units as verified reference",
+        "band_statistics.B03.std": "same physical/encoding units as verified reference",
+        "band_statistics.B04.min": "same physical/encoding units as verified reference",
+        "band_statistics.B04.max": "same physical/encoding units as verified reference",
+        "band_statistics.B04.mean": "same physical/encoding units as verified reference",
+        "band_statistics.B04.std": "same physical/encoding units as verified reference",
+        "band_statistics.B08.min": "same physical/encoding units as verified reference",
+        "band_statistics.B08.max": "same physical/encoding units as verified reference",
+        "band_statistics.B08.mean": "same physical/encoding units as verified reference",
+        "band_statistics.B08.std": "same physical/encoding units as verified reference"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000010_200010",
@@ -2157,10 +2323,37 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "pct_pixels_ndvi_gt_0.6": {
+          "abs_tol": 0.01,
+          "rel_tol": 0.01,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.min": "dimensionless",
+        "ndvi_stats.max": "dimensionless",
+        "pct_pixels_ndvi_gt_0.6": "percentage points (0..100)"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000011_200011",
@@ -2182,10 +2375,91 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_stats.R(B04).min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.R(B04).max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.R(B04).mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.R(B04).std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.G(B03).min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.G(B03).max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.G(B03).mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.G(B03).std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.B(B02).min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.B(B02).max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.B(B02).mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.B(B02).std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_stats.R(B04).min": "same physical/encoding units as verified reference",
+        "band_stats.R(B04).max": "same physical/encoding units as verified reference",
+        "band_stats.R(B04).mean": "same physical/encoding units as verified reference",
+        "band_stats.R(B04).std": "same physical/encoding units as verified reference",
+        "band_stats.G(B03).min": "same physical/encoding units as verified reference",
+        "band_stats.G(B03).max": "same physical/encoding units as verified reference",
+        "band_stats.G(B03).mean": "same physical/encoding units as verified reference",
+        "band_stats.G(B03).std": "same physical/encoding units as verified reference",
+        "band_stats.B(B02).min": "same physical/encoding units as verified reference",
+        "band_stats.B(B02).max": "same physical/encoding units as verified reference",
+        "band_stats.B(B02).mean": "same physical/encoding units as verified reference",
+        "band_stats.B(B02).std": "same physical/encoding units as verified reference"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000012_200012",
@@ -2207,10 +2481,43 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "pct_pixels_ndvi_gt_0.5": {
+          "abs_tol": 0.01,
+          "rel_tol": 0.01,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.min": "dimensionless",
+        "ndvi_stats.max": "dimensionless",
+        "ndvi_stats.mean": "dimensionless",
+        "pct_pixels_ndvi_gt_0.5": "percentage points (0..100)"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000013_200013",
@@ -2232,10 +2539,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.mean": "dimensionless",
+        "ndvi_stats.max": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000014_200014",
@@ -2259,10 +2587,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "transform.x": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        },
+        "transform.y": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "transform.x": "m",
+        "transform.y": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000015_200015",
@@ -2330,10 +2679,25 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "distance_m": {
+          "abs_tol": 1,
+          "rel_tol": 0.001,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "distance_m": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000017_200017",
@@ -2355,10 +2719,25 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "area_km2": {
+          "abs_tol": 0,
+          "rel_tol": 0.005,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "area_km2": "km2"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "fixed_geometry",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000019_200019",
@@ -2383,9 +2762,19 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
+        {
+          "type": "source_grounding",
+          "target": "selected paper study area and centroid",
+          "methods": [
+            "agent_as_judge"
+          ],
+          "reference_policy": "candidate_selected_valid_paper_evidence"
+        },
         {
           "type": "numerical_answer",
           "target": "distance_or_area",
@@ -2396,12 +2785,50 @@
           ]
         }
       ],
-      "assignment_status": "proposed",
+      "assignment_status": "approved",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "AAJ verifies the selected paper, study-area centroid derivation and Rome coordinates against captured source evidence. GIS independently computes the WGS84 distance; the numerical judge consumes matching, replay-verified candidate-bound GIS observations and applies the same scalar Hit@tol/NumScore metric. No fixed paper/location/distance is required. Captured evidence and calibrated abs_tol, rel_tol and floor_scale are required; missing, stale or conflicting evidence remains unverified.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "ground_truth_key": "TASK_260427_000020_200020",
+      "ground_truth_status": "runtime_reference",
+      "numerical_evaluation": {
+        "status": "runtime_reference_defined",
+        "target_type": "geodetic_distance",
+        "ground_truth": {
+          "value": null,
+          "units": "m",
+          "reference_type": "candidate_selected_paper_centroid"
+        },
+        "reference_recipe": {
+          "operation": "ellipsoidal_geodetic_distance",
+          "ellipsoid": "WGS84",
+          "point1": "independently verified centroid of selected paper study area",
+          "point2": "accepted Rome city-centre coordinates",
+          "coordinate_order": "longitude,latitude",
+          "source_validation": "AAJ verifies study-area evidence and centroid derivation before numerical comparison"
+        },
+        "validator": "agenticeoecosystem.evaluation.gis_judge_agent.ArtifactInspector.measure_geodetic_distance",
+        "absolute_tolerance": null,
+        "relative_tolerance": null,
+        "execution_status": "runtime_provider_implemented; requires_candidate_paper_evidence_verified_endpoints_and_declared_scalar_tolerances",
+        "missing_ground_truth_policy": "not_evaluated/unverified; do not assign zero for missing evidence",
+        "runtime_reference_provider": "agenticeoecosystem.evaluation.candidate_evidence.CandidateEvidence.runtime_distance_reference",
+        "reference_field": "distance_m"
+      },
+      "numerical_field_tolerances": {
+        "distance_m": {
+          "abs_tol": 1,
+          "rel_tol": 0.001,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "distance_m": "m"
+      },
+      "numerical_tolerance_status": "Initial defaults pending empirical calibration; runtime reference requires source/endpoint verification."
     },
     {
       "task_ID": "TASK_260427_000021_200021",
@@ -2719,7 +3146,34 @@
           "numerical_comparison_policy": "Recompute from valid candidate inputs with aligned coordinates, units, masks/nodata and explicitly recorded tolerances. Categorical labels require exact preservation under an appropriate categorical transform. Missing GT/validator/evidence remains not_evaluated, never a fabricated zero."
         }
       ],
-      "rubric_source": "data/tasks/rubrics_108q_v3.json"
+      "rubric_source": "data/tasks/rubrics_108q_v3.json",
+      "numerical_field_tolerances": {
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.mean": "dimensionless",
+        "ndvi_stats.min": "dimensionless",
+        "ndvi_stats.max": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000032_200032",
@@ -2870,10 +3324,37 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.mean": "dimensionless",
+        "ndvi_stats.max": "dimensionless",
+        "ndvi_stats.std": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000036_200036",
@@ -2895,10 +3376,43 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.min": "dimensionless",
+        "ndvi_stats.max": "dimensionless",
+        "ndvi_stats.mean": "dimensionless",
+        "ndvi_stats.std": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260427_000037_200037",
@@ -3356,10 +3870,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "lat": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        },
+        "lon": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        }
+      },
+      "numerical_field_units": {
+        "lat": "degrees",
+        "lon": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260619_000015_300015",
@@ -3394,10 +3929,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "lat": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        },
+        "lon": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        }
+      },
+      "numerical_field_units": {
+        "lat": "degrees",
+        "lon": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000002_400002",
@@ -3421,10 +3977,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "lat": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        },
+        "lon": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        }
+      },
+      "numerical_field_units": {
+        "lat": "degrees",
+        "lon": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000003_400003",
@@ -3448,10 +4025,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "lat": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        },
+        "lon": {
+          "abs_tol": 0.02,
+          "rel_tol": 0,
+          "floor_scale": 0
+        }
+      },
+      "numerical_field_units": {
+        "lat": "degrees",
+        "lon": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000004_400004",
@@ -3542,13 +4140,13 @@
     },
     {
       "task_ID": "TASK_260713_000009_400009",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "Distinguish nominal 30 m product resolution from stored angular pixel spacing. Validators/scoring remain placeholders; no evaluation run performed.",
+      "evaluation_notes": "Distinguish nominal 30 m product resolution from stored angular pixel spacing. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -3611,10 +4209,115 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_stats.SR_B4.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B4.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B4.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B4.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B3.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B3.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B3.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B3.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B2.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B2.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B2.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B2.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B5.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B5.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B5.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_stats.SR_B5.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_stats.SR_B4.min": "same physical/encoding units as verified reference",
+        "band_stats.SR_B4.max": "same physical/encoding units as verified reference",
+        "band_stats.SR_B4.mean": "same physical/encoding units as verified reference",
+        "band_stats.SR_B4.std": "same physical/encoding units as verified reference",
+        "band_stats.SR_B3.min": "same physical/encoding units as verified reference",
+        "band_stats.SR_B3.max": "same physical/encoding units as verified reference",
+        "band_stats.SR_B3.mean": "same physical/encoding units as verified reference",
+        "band_stats.SR_B3.std": "same physical/encoding units as verified reference",
+        "band_stats.SR_B2.min": "same physical/encoding units as verified reference",
+        "band_stats.SR_B2.max": "same physical/encoding units as verified reference",
+        "band_stats.SR_B2.mean": "same physical/encoding units as verified reference",
+        "band_stats.SR_B2.std": "same physical/encoding units as verified reference",
+        "band_stats.SR_B5.min": "same physical/encoding units as verified reference",
+        "band_stats.SR_B5.max": "same physical/encoding units as verified reference",
+        "band_stats.SR_B5.mean": "same physical/encoding units as verified reference",
+        "band_stats.SR_B5.std": "same physical/encoding units as verified reference"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000011_400011",
@@ -3818,10 +4521,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "transform.x": {
+          "abs_tol": 1,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        },
+        "transform.y": {
+          "abs_tol": 1,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "transform.x": "m",
+        "transform.y": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000016_400016",
@@ -3845,10 +4569,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "transform.x": {
+          "abs_tol": 2000,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        },
+        "transform.y": {
+          "abs_tol": 2000,
+          "rel_tol": 0,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "transform.x": "m",
+        "transform.y": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000017_400017",
@@ -4013,10 +4758,25 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "area_km2": {
+          "abs_tol": 0,
+          "rel_tol": 0.005,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "area_km2": "km2"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "documented_geometry_observation",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000020_400020",
@@ -4038,10 +4798,25 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "area_km2": {
+          "abs_tol": 0,
+          "rel_tol": 0.001,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "area_km2": "km2"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000021_400021",
@@ -4136,10 +4911,37 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "ndvi_stats.std": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "ndvi_stats.mean": "dimensionless",
+        "ndvi_stats.max": "dimensionless",
+        "ndvi_stats.std": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "stored_reference",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000026_400026",
@@ -4161,10 +4963,47 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "The revised W National Park, Niger task now has independently regenerated EVI mean/max for a documented approximately 10 m July 2023 scene sample inside the Niger park boundary. Score only mean and maximum with the generic scalar Hit@tol and NumScore and configured initial tolerances pending empirical calibration. Compare stored values only for matching verified source, spatial support, reflectance encoding and mask; independently recompute from other task-valid candidate scenes. Rerun candidate generation and evaluation for the revised region.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "fixed_task_requirements": {
+        "region": "W National Park, Niger (Niger portion)",
+        "period": "2023-07-01 through 2023-07-31",
+        "bands": [
+          "B02",
+          "B04",
+          "B08"
+        ],
+        "requested_resolution_m": 10,
+        "required_outputs": [
+          "saved EVI raster",
+          "mean EVI",
+          "maximum EVI"
+        ]
+      },
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "ground_truth_key": "TASK_260713_000026_400026",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "numerical_field_tolerances": {
+        "evi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "evi_stats.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "evi_stats.mean": "dimensionless",
+        "evi_stats.max": "dimensionless"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references."
     },
     {
       "task_ID": "TASK_260713_000022_500001",
@@ -4222,7 +5061,7 @@
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "all requested components mapped; validators/evaluation remain pending",
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000025_500004.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "ground_truth_status": "retrieved_and_inventory_count_verified",
       "ground_truth_note": "Retrieved10 node types and5 Treaty records with exact source descriptions. Treaty count agrees with node inventory. Compare each set separately; description comparison stays paired to Treaty IDs and permits faithful paraphrase. Node counts are provenance only; do not add an unrequested count-answer metric.",
       "evaluation_components": [
@@ -4302,7 +5141,8 @@
           "execution_evaluator": "agent_as_judge_or_rubric",
           "execution_readiness": "requires_candidate_source_evidence_and_judge"
         }
-      ]
+      ],
+      "ground_truth_key": "TASK_260713_000025_500004"
     },
     {
       "task_ID": "TASK_260713_000026_500005",
@@ -4321,7 +5161,7 @@
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "all requested components mapped; scoring implementation/execution remains separate",
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000026_500005.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "ground_truth_status": "retrieved_inventory",
       "ground_truth_note": "Five EnablingTool nodes retrieved from live EOSS inventory. Historical empty direct-link query is not the scored target. Refresh/version reference if graph changes.",
       "deterministic_checks": [
@@ -4354,7 +5194,8 @@
           "execution_evaluator": "deterministic_validator",
           "execution_readiness": "requires_validator_and_evidence"
         }
-      ]
+      ],
+      "ground_truth_key": "TASK_260713_000026_500005"
     },
     {
       "task_ID": "TASK_260713_000027_500006",
@@ -4459,10 +5300,85 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "node_counts.Acronym": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.AreaOfAction": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.Chunk": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.EnablingTool": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.KnowledgeAdvancementObjective": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.NationalPolicy": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.ScienceQuestion": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.ScienceTheme": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.StrategicObjective": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.TippingPoint": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "node_counts.Treaty": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "node_counts.Acronym": "count",
+        "node_counts.AreaOfAction": "count",
+        "node_counts.Chunk": "count",
+        "node_counts.EnablingTool": "count",
+        "node_counts.KnowledgeAdvancementObjective": "count",
+        "node_counts.NationalPolicy": "count",
+        "node_counts.ScienceQuestion": "count",
+        "node_counts.ScienceTheme": "count",
+        "node_counts.StrategicObjective": "count",
+        "node_counts.TippingPoint": "count",
+        "node_counts.Treaty": "count"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "captured_graph_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000033_500012",
@@ -4579,10 +5495,157 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Schema verification found no direct ScienceQuestion/StrategicObjective edges. Stored counts are all zero and mean explicit graph links only; shared text chunks do not establish an INFORMS edge.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "objectives_per_question.Climate sensitivity": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Coastal carbon cycle": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Coastal process mediation of exchanges": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Coastal sea level": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Coupled energy, water and carbon cycles": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Coupled litho-, atmo-, iono- and mesosphere": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Drivers of sea-ice state and variability": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Earth energy imbalance": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Earth's crust dynamics": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Ecosystems transitions": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Erosional processes of drainage basins": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Global carbon cycle": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Ice mass balance": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Land biosphere responses": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Ocean carbon cycle": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Planetary heat exchange": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Polar and high-mountain climate relationship": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Polar ecosystem impacts": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Seismic deformation processes": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Solid Earth deformation": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.State of land ecosystems": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Volcanic processes and their impact": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "objectives_per_question.Water cycle": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "objectives_per_question.Climate sensitivity": "count",
+        "objectives_per_question.Coastal carbon cycle": "count",
+        "objectives_per_question.Coastal process mediation of exchanges": "count",
+        "objectives_per_question.Coastal sea level": "count",
+        "objectives_per_question.Coupled energy, water and carbon cycles": "count",
+        "objectives_per_question.Coupled litho-, atmo-, iono- and mesosphere": "count",
+        "objectives_per_question.Drivers of sea-ice state and variability": "count",
+        "objectives_per_question.Earth energy imbalance": "count",
+        "objectives_per_question.Earth's crust dynamics": "count",
+        "objectives_per_question.Ecosystems transitions": "count",
+        "objectives_per_question.Erosional processes of drainage basins": "count",
+        "objectives_per_question.Global carbon cycle": "count",
+        "objectives_per_question.Ice mass balance": "count",
+        "objectives_per_question.Land biosphere responses": "count",
+        "objectives_per_question.Ocean carbon cycle": "count",
+        "objectives_per_question.Planetary heat exchange": "count",
+        "objectives_per_question.Polar and high-mountain climate relationship": "count",
+        "objectives_per_question.Polar ecosystem impacts": "count",
+        "objectives_per_question.Seismic deformation processes": "count",
+        "objectives_per_question.Solid Earth deformation": "count",
+        "objectives_per_question.State of land ecosystems": "count",
+        "objectives_per_question.Volcanic processes and their impact": "count",
+        "objectives_per_question.Water cycle": "count"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "captured_graph_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000035_500014",
@@ -4643,7 +5706,7 @@
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "all requested components mapped; validators/evaluation remain pending",
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000039_500018.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "ground_truth_status": "extracted_from_current_server_catalogue",
       "ground_truth_note": "Three MSG SEVIRI variants map to advertised seviri_l1b_hrit. Accept seviri_l1b_native when qualified for native .nat data, consistent with server fallback. Compare paired product-reader dictionary entries; no download required.",
       "evaluation_components": [
@@ -4704,7 +5767,8 @@
           "execution_evaluator": "deterministic_after_constraints_resolved",
           "execution_readiness": "requires_explicit_resolved_constraints_and_validator"
         }
-      ]
+      ],
+      "ground_truth_key": "TASK_260713_000039_500018"
     },
     {
       "task_ID": "TASK_260713_000040_500019",
@@ -4769,7 +5833,7 @@
         {
           "id": "d3",
           "type": "search_period",
-          "expected": "Search interval covers the UTC day 2024-01-15.",
+          "expected": "Search interval covers the UTC day 2025-01-15.",
           "evidence_required": [
             "candidate_tool_trace",
             "retrieved_source_metadata",
@@ -4823,12 +5887,12 @@
         "agent_as_judge"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "AAJ checks actual narrative relevance to Egypt CO2 monitoring and derives its location/time constraints. Do not claim FCI directly measures atmospheric CO2; verify imagery search rather than CO2 retrieval capability. Validators remain placeholders; no evaluation run has been performed.",
+      "evaluation_notes": "AAJ checks actual narrative relevance to Egypt CO2 monitoring and derives its location constraints; the acquisition window is fixed to August 2025 by the task. Do not claim FCI directly measures atmospheric CO2; verify imagery search rather than CO2 retrieval capability. Validators remain placeholders; no evaluation run has been performed.",
       "deterministic_checks": [
         {
           "id": "d1",
           "type": "resolved_search_constraints",
-          "expected": "Resolve region and period from the actual Egypt CO2 narrative before comparing candidate search constraints.",
+          "expected": "Resolve the region from the actual Egypt CO2 narrative; use the task's fixed August 2025 acquisition window when comparing candidate search constraints.",
           "evidence_required": [
             "candidate_tool_trace",
             "retrieved_source_metadata",
@@ -4860,7 +5924,7 @@
         {
           "id": "d3",
           "type": "search_region_period",
-          "expected": "Search agrees with narrative-derived region/period; full-disk spatial coverage is valid without clipping.",
+          "expected": "Search agrees with the narrative-derived region and the fixed August 2025 acquisition window; full-disk spatial coverage is valid without clipping.",
           "evidence_required": [
             "candidate_tool_trace",
             "retrieved_source_metadata",
@@ -4925,7 +5989,7 @@
         {
           "id": "d2",
           "type": "product_and_period",
-          "expected": "MTG FCI Level 1C; 1–7 June 2024 UTC.",
+          "expected": "MTG FCI Level 1C; 1–7 June 2025 UTC.",
           "evidence_required": [
             "candidate_tool_trace",
             "actual_retrieved_metadata",
@@ -4976,7 +6040,7 @@
         {
           "id": "d1",
           "type": "product_and_period",
-          "expected": "MTG FCI Level 1C FDHSI; 10 April 2024, 10:00–12:00 UTC.",
+          "expected": "MTG FCI Level 1C FDHSI; 10 April 2025, 10:00–12:00 UTC.",
           "evidence_required": [
             "candidate_tool_trace",
             "actual_retrieved_metadata",
@@ -5122,7 +6186,7 @@
         {
           "id": "d1",
           "type": "product_count",
-          "expected": "Exact count of actual matching MTG FCI Level2 FIR products over Italy in August2023 from actual successful catalogue search; account for pagination/truncation.",
+          "expected": "Exact count of actual matching MTG FCI Level2 FIR products over Italy in August2025 from actual successful catalogue search; account for pagination/truncation.",
           "evidence_required": [
             "candidate_tool_trace",
             "actual_source_snapshot_or_content",
@@ -5176,10 +6240,25 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "slot_count": {
+          "abs_tol": 0,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "slot_count": "count"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "captured_catalogue_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000050_500029",
@@ -5264,7 +6343,7 @@
           "id": "d5",
           "type": "requested_period",
           "parameter_basis": "fixed",
-          "expected": "2023-09-05",
+          "expected": "2025-09-05",
           "evidence_required": [
             "actual_artifact_metadata",
             "recorded_request"
@@ -5483,7 +6562,7 @@
         {
           "id": "d3",
           "type": "product_and_period",
-          "expected": "MTG FCI HRFI on 20 June 2024 UTC; full-disk coverage valid.",
+          "expected": "MTG FCI HRFI on 20 June 2025 UTC; full-disk coverage valid.",
           "evidence_required": [
             "candidate_tool_trace",
             "actual_retrieved_metadata",
@@ -5616,7 +6695,7 @@
           "id": "d5",
           "type": "requested_period",
           "parameter_basis": "fixed",
-          "expected": "2024-01-15 at 10:00 UTC",
+          "expected": "2025-01-15 at 10:00 UTC",
           "evidence_required": [
             "actual_artifact_metadata",
             "recorded_request"
@@ -5960,7 +7039,7 @@
           "id": "d5",
           "type": "requested_period",
           "parameter_basis": "fixed",
-          "expected": "2024-07-10 through 2024-07-12 inclusive",
+          "expected": "2025-07-10 through 2025-07-12 inclusive",
           "evidence_required": [
             "actual_artifact_metadata",
             "recorded_request"
@@ -6144,7 +7223,7 @@
           "id": "d5",
           "type": "requested_period",
           "parameter_basis": "fixed",
-          "expected": "2024-06-15",
+          "expected": "2025-06-15",
           "evidence_required": [
             "actual_artifact_metadata",
             "recorded_request"
@@ -6309,12 +7388,8 @@
         {
           "id": "d5",
           "type": "requested_period",
-          "parameter_basis": "source_dependent",
-          "expected": {
-            "description": "narrative event period",
-            "resolved_value": null,
-            "source_locator": null
-          },
+          "parameter_basis": "fixed",
+          "expected": "15–20 August 2025 UTC",
           "evidence_required": [
             "actual_artifact_metadata",
             "recorded_request",
@@ -6435,13 +7510,13 @@
     },
     {
       "task_ID": "TASK_260713_000062_500041",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "Verify pressure and monthly statistic from request/product evidence; no fixed reference layout. Validators/scoring remain placeholders; no evaluation run performed. Accept any task-valid workflow yielding a readable regional artifact. Global monthly input is permitted as an intermediate; verify the required regional output independently. Do not require the original unsupported area call or one illustrative bbox. Required region: Trento, Italy and surroundings; check nonempty grid coverage and source provenance.",
+      "evaluation_notes": "Verify pressure and monthly statistic from request/product evidence; no fixed reference layout. Validators/scoring remain placeholders; no evaluation run performed. Accept any task-valid workflow yielding a readable regional artifact. Global monthly input is permitted as an intermediate; verify the required regional output independently. Do not require the original unsupported area call or one illustrative bbox. Required region: Trento, Italy and surroundings; check nonempty grid coverage and source provenance. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -6490,13 +7565,13 @@
     },
     {
       "task_ID": "TASK_260713_000063_500042",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "No mandatory hourly/daily/monthly sampling; bbox subset acceptable, polygon mask not required. Global raw input permitted only as intermediate. Rerun required. Validators/scoring remain placeholders; no evaluation run performed.",
+      "evaluation_notes": "No mandatory hourly/daily/monthly sampling; bbox subset acceptable, polygon mask not required. Global raw input permitted only as intermediate. Rerun required. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -6560,13 +7635,13 @@
     },
     {
       "task_ID": "TASK_260713_000064_500043",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
       ],
       "assignment_status": "approved",
-      "evaluation_notes": "Monthly mean required. Global raw input permitted only as intermediate; global-only final output acceptance superseded. Rerun required. Validators/scoring remain placeholders; no evaluation run performed.",
+      "evaluation_notes": "Monthly mean required. Global raw input permitted only as intermediate; global-only final output acceptance superseded. Rerun required. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -7825,7 +8900,7 @@
     },
     {
       "task_ID": "TASK_260713_000002_600002",
-      "evaluation_strategy": "named_entity",
+      "evaluation_strategy": "categorical_identifier",
       "evaluation_methods": [
         "canonicalized_exact_match"
       ],
@@ -7833,7 +8908,7 @@
       "reference_policy": "fixed_identifier",
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Task explicitly asks for the exact CDS API variable name. Require 2m_temperature after removing surrounding whitespace/Markdown quoting; do not accept t2m (NetCDF short name), fuzzy near-matches or human-readable aliases as the API identifier.",
+      "evaluation_notes": "Task explicitly asks for the exact CDS API variable name. Require 2m_temperature after removing surrounding whitespace/Markdown quoting; do not accept t2m (NetCDF short name), fuzzy near-matches or human-readable aliases as the API identifier. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "deterministic_checks": [
         {
           "id": "d1",
@@ -8795,7 +9870,7 @@
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "complete",
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000014_600014.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "evaluation_components": [
         {
           "id": "dataset_identifiers",
@@ -8843,7 +9918,8 @@
           },
           "unrecognized_label_policy": "Normalize case/whitespace/punctuation and match explicit aliases. Ambiguous or unrecognized paraphrases require manual adjudication; record unresolved rather than silently using fuzzy/model matching as a deterministic score."
         }
-      ]
+      ],
+      "ground_truth_key": "TASK_260713_000014_600014"
     },
     {
       "task_ID": "TASK_260713_000015_600015",
@@ -11412,7 +12488,202 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "daily_values.2021-08-01": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-02": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-03": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-04": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-05": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-06": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-07": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-08": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-09": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-10": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-11": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-12": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-13": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-14": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-15": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-16": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-17": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-18": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-19": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-20": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-21": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-22": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-23": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-24": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-25": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-26": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-27": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-28": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-29": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-30": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2021-08-31": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "daily_values.2021-08-01": "m",
+        "daily_values.2021-08-02": "m",
+        "daily_values.2021-08-03": "m",
+        "daily_values.2021-08-04": "m",
+        "daily_values.2021-08-05": "m",
+        "daily_values.2021-08-06": "m",
+        "daily_values.2021-08-07": "m",
+        "daily_values.2021-08-08": "m",
+        "daily_values.2021-08-09": "m",
+        "daily_values.2021-08-10": "m",
+        "daily_values.2021-08-11": "m",
+        "daily_values.2021-08-12": "m",
+        "daily_values.2021-08-13": "m",
+        "daily_values.2021-08-14": "m",
+        "daily_values.2021-08-15": "m",
+        "daily_values.2021-08-16": "m",
+        "daily_values.2021-08-17": "m",
+        "daily_values.2021-08-18": "m",
+        "daily_values.2021-08-19": "m",
+        "daily_values.2021-08-20": "m",
+        "daily_values.2021-08-21": "m",
+        "daily_values.2021-08-22": "m",
+        "daily_values.2021-08-23": "m",
+        "daily_values.2021-08-24": "m",
+        "daily_values.2021-08-25": "m",
+        "daily_values.2021-08-26": "m",
+        "daily_values.2021-08-27": "m",
+        "daily_values.2021-08-28": "m",
+        "daily_values.2021-08-29": "m",
+        "daily_values.2021-08-30": "m",
+        "daily_values.2021-08-31": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000054_600054",
@@ -11535,7 +12806,7 @@
     },
     {
       "task_ID": "TASK_260713_000058_600058",
-      "evaluation_strategy": "numerical_artifact",
+      "evaluation_strategy": "hybrid",
       "evaluation_methods": [
         "numerical_artifact_validation",
         "agent_as_judge",
@@ -11596,14 +12867,32 @@
           "measurement_tool": "ArtifactInspector.validate_netcdf(operation=resample, ...)"
         }
       },
-      "evaluation_notes": "Runtime numerical reference defined: independently resample archived task-valid candidate inputs, align dates/calendar months and units, and compare fields/masks. AAJ verifies source-grounded region and period. Ground-truth values are intentionally not hardcoded; missing artifacts remain unverified. Tolerances need declaration/calibration and no scoring run has been performed.",
+      "evaluation_notes": "Runtime numerical reference defined: independently resample archived task-valid candidate inputs, align dates/calendar months and units, and compare fields/masks. AAJ verifies source-grounded region and period. Ground-truth values are intentionally not hardcoded; missing artifacts remain unverified. Tolerances need declaration/calibration and no scoring run has been performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "primary_evaluator": "agent_as_judge",
+      "evaluation_components": [
+        {
+          "type": "source_interpretation",
+          "methods": [
+            "agent_as_judge"
+          ],
+          "target": "Resolve the task-valid region and flood-event period from the retrieved source."
+        },
+        {
+          "type": "numerical_artifact",
+          "methods": [
+            "numerical_artifact_validation",
+            "gis_verification_agent"
+          ],
+          "target": "Verify the daily precipitation fields against independent aggregation of archived task-valid inputs."
+        }
+      ]
     },
     {
       "task_ID": "TASK_260713_000059_600059",
-      "evaluation_strategy": "numerical_artifact",
+      "evaluation_strategy": "hybrid",
       "evaluation_methods": [
         "numerical_artifact_validation",
         "agent_as_judge",
@@ -11664,10 +12953,28 @@
           "measurement_tool": "ArtifactInspector.validate_netcdf(operation=resample, ...)"
         }
       },
-      "evaluation_notes": "Runtime numerical reference defined: independently resample archived task-valid candidate inputs, align dates/calendar months and units, and compare fields/masks. AAJ verifies source-grounded region and period. Ground-truth values are intentionally not hardcoded; missing artifacts remain unverified. Tolerances need declaration/calibration and no scoring run has been performed.",
+      "evaluation_notes": "Runtime numerical reference defined: independently resample archived task-valid candidate inputs, align dates/calendar months and units, and compare fields/masks. AAJ verifies source-grounded region and period. Ground-truth values are intentionally not hardcoded; missing artifacts remain unverified. Tolerances need declaration/calibration and no scoring run has been performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "primary_evaluator": "agent_as_judge",
+      "evaluation_components": [
+        {
+          "type": "source_interpretation",
+          "methods": [
+            "agent_as_judge"
+          ],
+          "target": "Resolve the task-valid region and flood-event period from the retrieved source."
+        },
+        {
+          "type": "numerical_artifact",
+          "methods": [
+            "numerical_artifact_validation",
+            "gis_verification_agent"
+          ],
+          "target": "Verify the daily precipitation fields against independent aggregation of archived task-valid inputs."
+        }
+      ]
     },
     {
       "task_ID": "TASK_260713_000061_600061",
@@ -11716,7 +13023,22 @@
       },
       "fixed_task_requirements": {
         "region": "Braga, Portugal and surroundings"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000062_600062",
@@ -11765,7 +13087,22 @@
       },
       "fixed_task_requirements": {
         "region": "Annecy, France and surroundings"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 0.1,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "K"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000063_600063",
@@ -11811,7 +13148,22 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000064_600064",
@@ -11982,7 +13334,22 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 0.1,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "K"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000068_600068",
@@ -12030,7 +13397,202 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "daily_values.2023-01-01": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-02": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-03": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-04": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-05": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-06": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-07": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-08": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-09": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-10": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-11": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-12": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-13": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-14": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-15": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-16": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-17": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-18": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-19": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-20": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-21": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-22": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-23": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-24": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-25": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-26": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-27": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-28": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-29": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-30": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        },
+        "daily_values.2023-01-31": {
+          "abs_tol": 10,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "daily_values.2023-01-01": "Pa",
+        "daily_values.2023-01-02": "Pa",
+        "daily_values.2023-01-03": "Pa",
+        "daily_values.2023-01-04": "Pa",
+        "daily_values.2023-01-05": "Pa",
+        "daily_values.2023-01-06": "Pa",
+        "daily_values.2023-01-07": "Pa",
+        "daily_values.2023-01-08": "Pa",
+        "daily_values.2023-01-09": "Pa",
+        "daily_values.2023-01-10": "Pa",
+        "daily_values.2023-01-11": "Pa",
+        "daily_values.2023-01-12": "Pa",
+        "daily_values.2023-01-13": "Pa",
+        "daily_values.2023-01-14": "Pa",
+        "daily_values.2023-01-15": "Pa",
+        "daily_values.2023-01-16": "Pa",
+        "daily_values.2023-01-17": "Pa",
+        "daily_values.2023-01-18": "Pa",
+        "daily_values.2023-01-19": "Pa",
+        "daily_values.2023-01-20": "Pa",
+        "daily_values.2023-01-21": "Pa",
+        "daily_values.2023-01-22": "Pa",
+        "daily_values.2023-01-23": "Pa",
+        "daily_values.2023-01-24": "Pa",
+        "daily_values.2023-01-25": "Pa",
+        "daily_values.2023-01-26": "Pa",
+        "daily_values.2023-01-27": "Pa",
+        "daily_values.2023-01-28": "Pa",
+        "daily_values.2023-01-29": "Pa",
+        "daily_values.2023-01-30": "Pa",
+        "daily_values.2023-01-31": "Pa"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000069_600069",
@@ -12094,7 +13656,22 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 1e-05,
+          "rel_tol": 0.01,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "m"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000071_600071",
@@ -12160,7 +13737,22 @@
         ],
         "missing_timestamps_policy": "incomplete requested sampling is flagged separately; do not silently certify a complete period",
         "tolerances": "must be calibrated/declared before assigning a numerical pass/fail score"
-      }
+      },
+      "numerical_field_tolerances": {
+        "regional_mean": {
+          "abs_tol": 0.1,
+          "rel_tol": 0,
+          "floor_scale": 1e-06
+        }
+      },
+      "numerical_field_units": {
+        "regional_mean": "degC"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000075_600075",
@@ -12317,7 +13909,40 @@
       "evaluation_notes": "Runtime extent GT comes from independently inspected clipped coordinates. Compare W,S,E,N grid-cell-centre bounds in WGS84 degrees and -180..180 longitude. AAJ verifies region suitability separately; bounding-box clipping need not imply basin polygon masking. No exact reference bbox required. Missing artifacts remain unverified; declared tolerance required for pass/fail. No scoring run performed.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "extent.west": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.south": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.east": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.north": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "extent.west": "degrees",
+        "extent.south": "degrees",
+        "extent.east": "degrees",
+        "extent.north": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000082_600082",
@@ -12384,7 +14009,40 @@
       "evaluation_notes": "Runtime extent GT comes from independently inspected clipped coordinates. Compare W,S,E,N grid-cell-centre bounds in WGS84 degrees and -180..180 longitude. AAJ verifies region suitability separately; bounding-box clipping need not imply basin polygon masking. No exact reference bbox required. Missing artifacts remain unverified; declared tolerance required for pass/fail. No scoring run performed.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "extent.west": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.south": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.east": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.north": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "extent.west": "degrees",
+        "extent.south": "degrees",
+        "extent.east": "degrees",
+        "extent.north": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000083_600083",
@@ -12451,7 +14109,40 @@
       "evaluation_notes": "Runtime extent GT comes from independently inspected clipped coordinates. Compare W,S,E,N grid-cell-centre bounds in WGS84 degrees and -180..180 longitude. AAJ verifies region suitability separately; bounding-box clipping need not imply basin polygon masking. No exact reference bbox required. Missing artifacts remain unverified; declared tolerance required for pass/fail. No scoring run performed.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "extent.west": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.south": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.east": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        },
+        "extent.north": {
+          "abs_tol": 1e-06,
+          "rel_tol": 0,
+          "floor_scale": 1e-09
+        }
+      },
+      "numerical_field_units": {
+        "extent.west": "degrees",
+        "extent.south": "degrees",
+        "extent.east": "degrees",
+        "extent.north": "degrees"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260713_000085_600085",
@@ -12864,7 +14555,7 @@
         {
           "id": "d1",
           "type": "download_contract",
-          "expected": "MTG FCI Level 2 Active Fire Monitoring on 2024-08-15 covering Amazon; readable candidate-owned download with provenance.",
+          "expected": "MTG FCI Level 2 Active Fire Monitoring on 2025-08-15 covering Amazon; readable candidate-owned download with provenance.",
           "evidence_required": [
             "candidate_tool_trace",
             "candidate_owned_artifacts",
@@ -12937,7 +14628,7 @@
         {
           "id": "d1",
           "type": "download_contract",
-          "expected": "MTG FCI Level 2 cloud mask on 2024-06-01 covering Sahel; readable downloaded raw file.",
+          "expected": "MTG FCI Level 2 cloud mask on 2025-06-01 covering Sahel; readable downloaded raw file.",
           "evidence_required": [
             "candidate_tool_trace",
             "candidate_owned_artifacts",
@@ -13015,10 +14706,109 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each requested channel statistic with the generic scalar Hit@tol and NumScore, using configured initial tolerances pending empirical calibration. Stored GT is the captured 1 October 2024 observation over the Alps, read from all 40 exact chunk paths. Compare directly only after verifying matching acquisition, crop, calibration, units and valid-pixel mask; independently recompute for other task-valid observations. Rerun candidates for the revised date and corrected path handoff.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "numerical_field_tolerances": {
+        "band_statistics.vis_04.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_04.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_04.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_05.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_05.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_05.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_06.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_06.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_06.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_08.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_08.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_08.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_09.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_09.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.vis_09.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_statistics.vis_04.min": "percent reflectance",
+        "band_statistics.vis_04.max": "percent reflectance",
+        "band_statistics.vis_04.mean": "percent reflectance",
+        "band_statistics.vis_05.min": "percent reflectance",
+        "band_statistics.vis_05.max": "percent reflectance",
+        "band_statistics.vis_05.mean": "percent reflectance",
+        "band_statistics.vis_06.min": "percent reflectance",
+        "band_statistics.vis_06.max": "percent reflectance",
+        "band_statistics.vis_06.mean": "percent reflectance",
+        "band_statistics.vis_08.min": "percent reflectance",
+        "band_statistics.vis_08.max": "percent reflectance",
+        "band_statistics.vis_08.mean": "percent reflectance",
+        "band_statistics.vis_09.min": "percent reflectance",
+        "band_statistics.vis_09.max": "percent reflectance",
+        "band_statistics.vis_09.mean": "percent reflectance"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references."
     },
     {
       "task_ID": "TASK_260716_000005_700017",
@@ -13040,10 +14830,31 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_statistics.HRV.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.HRV.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_statistics.HRV.min": "percent reflectance",
+        "band_statistics.HRV.max": "percent reflectance"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260716_000006_700018",
@@ -13065,10 +14876,55 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_statistics.IR_108.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.IR_108.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.IR_108.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.IR_120.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.IR_120.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.IR_120.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_statistics.IR_108.min": "K",
+        "band_statistics.IR_108.max": "K",
+        "band_statistics.IR_108.mean": "K",
+        "band_statistics.IR_120.min": "K",
+        "band_statistics.IR_120.max": "K",
+        "band_statistics.IR_120.mean": "K"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260716_000007_700019",
@@ -13090,10 +14946,43 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Tolerances and executable reference procedures remain to be defined. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
-      "coverage_status": "mapped; not a claim of executed validation"
+      "coverage_status": "mapped; not a claim of executed validation",
+      "numerical_field_tolerances": {
+        "band_statistics.VIS006.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.VIS006.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.VIS008.min": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        },
+        "band_statistics.VIS008.max": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
+        }
+      },
+      "numerical_field_units": {
+        "band_statistics.VIS006.min": "percent reflectance",
+        "band_statistics.VIS006.max": "percent reflectance",
+        "band_statistics.VIS008.min": "percent reflectance",
+        "band_statistics.VIS008.max": "percent reflectance"
+      },
+      "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
+      "numerical_scoring_target": "final_written_answer",
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "ground_truth_status": "observed_valid_input_snapshot",
+      "ground_truth_source": "data/tasks/ground_truths.json"
     },
     {
       "task_ID": "TASK_260718_000001_700020",

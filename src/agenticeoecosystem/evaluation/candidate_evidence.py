@@ -66,11 +66,43 @@ class CandidateEvidence:
         task.evaluator_evidence[label] = {"candidate_fingerprint": cls.fingerprint(task),
                                          "observations": observations}
 
+    @classmethod
+    def runtime_distance_reference(cls, task: Task, label: str | None = None) -> dict[str, Any] | None:
+        """Replay candidate-bound GIS measurements; reject stale, altered or conflicting evidence."""
+        from .gis_judge_agent import ArtifactInspector
+
+        packages = [task.evaluator_evidence.get(label, {})] if label else list(task.evaluator_evidence.values())
+        references = []
+        for package in packages:
+            if package.get("candidate_fingerprint") != cls.fingerprint(task):
+                continue
+            for observation in package.get("observations", []):
+                if observation.get("kind") != "gis_inspection":
+                    continue
+                for call in observation.get("result", {}).get("tool_calls", []):
+                    recorded = call.get("result", {})
+                    if call.get("tool") != "measure_geodetic_distance" or "error" in recorded:
+                        continue
+                    try:
+                        args = call["arguments"]
+                        args = json.loads(args) if isinstance(args, str) else args
+                        path = Path(args["source_path"])
+                        measured = ArtifactInspector([path]).measure_geodetic_distance(**args)
+                        if measured != recorded:
+                            continue
+                    except (ValueError, TypeError, KeyError, OSError, ImportError):
+                        continue
+                    references.append(measured)
+        if not references or any(reference != references[0] for reference in references[1:]):
+            return None
+        return references[0]
+
     @staticmethod
-    def artifact_paths(task: Task, output_root: Path) -> list[Path]:
+    def artifact_paths(task: Task, output_root: Path | tuple[Path, ...]) -> list[Path]:
         """Resolve exact paths in responses/arguments, confined to candidate outputs."""
         paths: set[Path] = set()
-        root = output_root.resolve()
+        roots = tuple(path.resolve() for path in
+                      (output_root if isinstance(output_root, tuple) else (output_root,)))
 
         def visit(value: Any) -> None:
             if isinstance(value, dict):
@@ -88,10 +120,10 @@ class CandidateEvidence:
                     visit(decoded)
                 if len(value) > 4096 or "\n" in value:
                     return
-                for path in (Path(value), root / value):
+                for path in (Path(value), *(root / value for root in roots)):
                     try:
                         resolved = path.resolve()
-                        if resolved.is_relative_to(root) and resolved.is_file():
+                        if any(resolved.is_relative_to(root) for root in roots) and resolved.is_file():
                             paths.add(resolved)
                     except (OSError, ValueError):
                         continue
@@ -109,7 +141,7 @@ class CandidateEvidence:
             return hashlib.file_digest(stream, "sha256").hexdigest()
 
     @classmethod
-    def archive(cls, task: Task, output_root: Path, archive_root: Path) -> None:
+    def archive(cls, task: Task, output_root: Path | tuple[Path, ...], archive_root: Path) -> None:
         """Copy current candidate files before subsequent runs can overwrite them.
 
         Exact recorded paths only. Unrecorded files need an explicit manifest;

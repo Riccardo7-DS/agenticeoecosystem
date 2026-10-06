@@ -1,95 +1,99 @@
-"""
-numerical_metrics.py — Tolerance-based scoring for `numerical_answer` tasks.
+"""Generic scalar tolerance scoring, including distance, area and statistics.
 
-Implements Hit@tol and NumScore from TerraBench ("Can Agents Reason Over
-Heterogeneous Earth-System Data?", arXiv:2606.13148), verified against the
-paper directly rather than only the pasted summary:
+For each scalar, effective_tol = max(abs_tol, rel_tol * abs(y), floor_scale).
+Hit@tol is one within tolerance; NumScore is one within tolerance and
+2 ** (-(normalized_error - 1)) outside it. Scores average over all required
+GT fields, including missing/invalid predictions as zeros. Extra predictions
+are ignored; field-key alignment is the default.
 
-  lambda = max(tau_abs, tau_rel * |y|, floor)     — effective per-field tolerance
-  AE     = |y_hat - y|                            — absolute error
-  n      = AE / lambda                            — unit-normalized error
-
-  Hit@tol_field  = 1 if AE <= lambda else 0                       — binary pass/fail
-  NumScore_field = 1 if n <= 1 else 2 ** -(n - 1)                 — smooth partial credit
-                   (errors of 2*lambda, 3*lambda, 4*lambda score 1/2, 1/4, 1/8)
-
-These correspond to `task_evaluation_strategies.json`'s declared-but-not-yet-
-implemented `"evaluation_methods"` strings for every `numerical_answer` task:
-  numeric_tolerance_accuracy -> hit_at_tol()
-  unit_normalized_error      -> num_score()      (the metric IS the normalized error n)
-
-Per the paper: tau_abs/tau_rel/floor are field-specific — there is no
-universal default. Callers must supply a ToleranceSpec per field (or a
-single default applied uniformly, see `uniform_tolerances()`); this module
-deliberately does not invent numbers the paper didn't give.
-
-Multi-field aggregation follows the paper exactly: fields are aligned by
-key when keys are unique and match on both sides, else by position.
-A ground-truth field missing from the prediction scores 0 on both metrics
-(the paper's "missing predictions receive zero credit") rather than being
-skipped — a candidate can't improve its average by omitting hard fields.
-Non-numeric fields use exact match, contributing the same 0/1 value to
-both metrics (the paper specifies exact-match scoring for non-numeric
-fields but doesn't separately define NumScore's behavior there — treating
-them identically to Hit@tol for that field is the natural reading, since
-"exact or not" has no partial-credit notion to begin with).
-
-Aggregation is two-level, exactly as described: average over fields within
-an item, then average over items (unweighted row means) — the item, not
-the individual field or tool step, is the unit of evaluation.
+Legacy band/coordinate tolerance presets and constructor aliases are retained.
+Other numeric fields require explicitly configured tolerances. GT creation,
+source suitability, units and artifact verification are separate from scoring.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Dict, List
+import math
+from numbers import Real
 
 
 # ---------------------------------------------------------------------------
 # Per-field tolerance spec and the core single-value metrics
 # ---------------------------------------------------------------------------
 
-@dataclass
+@dataclass(init=False)
 class ToleranceSpec:
-    """lambda = max(tau_abs, tau_rel * |y|, floor) for one numeric field."""
-    tau_abs: float = 0.0
-    tau_rel: float = 0.0
-    floor: float = 0.0
+    """Finite, nonnegative scalar tolerances in the same units as the field.
 
-    def __post_init__(self):
-        if self.tau_abs < 0 or self.tau_rel < 0 or self.floor < 0:
-            raise ValueError("tau_abs, tau_rel, and floor must all be >= 0.")
-        if self.tau_abs == 0 and self.tau_rel == 0 and self.floor == 0:
-            raise ValueError(
-                "At least one of tau_abs/tau_rel/floor must be > 0, or lambda "
-                "collapses to 0 and any nonzero error becomes an automatic miss."
-            )
+    Legacy tau_abs/tau_rel/floor names remain accepted as constructor aliases.
+    A strictly positive effective tolerance is required for each ground truth.
+    """
+    abs_tol: float
+    rel_tol: float
+    floor_scale: float
+
+    def __init__(self, abs_tol: float = 0.0, rel_tol: float = 0.0,
+                 floor_scale: float = 0.0, *, tau_abs: float | None = None,
+                 tau_rel: float | None = None, floor: float | None = None) -> None:
+        pairs = (("abs_tol", abs_tol, tau_abs), ("rel_tol", rel_tol, tau_rel),
+                 ("floor_scale", floor_scale, floor))
+        for name, value, alias in pairs:
+            if alias is not None:
+                if value != 0.0 and value != alias:
+                    raise ValueError(f"Conflicting canonical and legacy tolerance: {name}")
+                value = alias
+            if not isinstance(value, Real) or isinstance(value, bool) or not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and nonnegative.")
+            setattr(self, name, float(value))
+        if not any((self.abs_tol, self.rel_tol, self.floor_scale)):
+            raise ValueError("At least one tolerance must be positive.")
+
+    @property
+    def tau_abs(self) -> float:
+        return self.abs_tol
+
+    @property
+    def tau_rel(self) -> float:
+        return self.rel_tol
+
+    @property
+    def floor(self) -> float:
+        return self.floor_scale
 
 
 def effective_tolerance(y: float, spec: ToleranceSpec) -> float:
-    """lambda = max(tau_abs, tau_rel * |y|, floor)"""
-    return max(spec.tau_abs, spec.tau_rel * abs(y), spec.floor)
+    """Compute a finite, positive effective tolerance; never invent a floor."""
+    if not _is_number(y) or not math.isfinite(y):
+        raise ValueError("Ground truth must be a finite numeric scalar.")
+    tolerance = max(spec.abs_tol, spec.rel_tol * abs(y), spec.floor_scale)
+    if not math.isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("Effective tolerance must be finite and positive; supply abs_tol or floor_scale near zero.")
+    return tolerance
 
 
-def hit_at_tol(y_hat: float, y: float, spec: ToleranceSpec) -> int:
-    """numeric_tolerance_accuracy — 1 if |y_hat - y| <= lambda, else 0."""
-    lam = effective_tolerance(y, spec)
-    return int(abs(y_hat - y) <= lam)
+def hit_at_tol(y_hat: Any, y: float, spec: ToleranceSpec) -> int:
+    """Scalar Hit@tol; missing, invalid and unparseable predictions get zero."""
+    return int(score_scalar(y_hat, y, spec).hit)
 
 
-def num_score(y_hat: float, y: float, spec: ToleranceSpec) -> float:
-    """unit_normalized_error — 1 if n <= 1, else 2**-(n-1), where n = AE / lambda."""
-    lam = effective_tolerance(y, spec)
-    n = abs(y_hat - y) / lam
-    return 1.0 if n <= 1 else 2.0 ** -(n - 1)
+def num_score(y_hat: Any, y: float, spec: ToleranceSpec) -> float:
+    """Scalar NumScore using the same tolerance rule for every quantity."""
+    return score_scalar(y_hat, y, spec).num_score
 
 
 def uniform_tolerances(fields: List[str], tau_abs: float = 0.0,
-                        tau_rel: float = 0.0, floor: float = 0.0) -> Dict[str, ToleranceSpec]:
-    """Convenience: the same ToleranceSpec for every field in `fields`, for
-    callers that don't need per-field tuning."""
-    spec = ToleranceSpec(tau_abs=tau_abs, tau_rel=tau_rel, floor=floor)
-    return {f: spec for f in fields}
+                       tau_rel: float = 0.0, floor: float = 0.0, *,
+                       abs_tol: float | None = None, rel_tol: float | None = None,
+                       floor_scale: float | None = None) -> Dict[str, ToleranceSpec]:
+    """Apply one explicitly supplied tolerance configuration to all fields."""
+    spec = ToleranceSpec(abs_tol=abs_tol or 0.0, rel_tol=rel_tol or 0.0,
+                         floor_scale=floor_scale or 0.0,
+                         tau_abs=tau_abs if abs_tol is None or tau_abs != 0.0 else None,
+                         tau_rel=tau_rel if rel_tol is None or tau_rel != 0.0 else None,
+                         floor=floor if floor_scale is None or floor != 0.0 else None)
+    return {field: spec for field in fields}
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +152,7 @@ _STAT_KEYS = {"min", "max", "mean", "std"}
 
 
 def _is_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
+    return isinstance(value, Real) and not isinstance(value, bool)
 
 
 def _is_band_stat_group(d: Any) -> bool:
@@ -166,25 +170,37 @@ def _is_latlon_group(d: Any) -> bool:
     return isinstance(d, dict) and "lat" in d and "lon" in d and _is_number(d["lat"]) and _is_number(d["lon"])
 
 
-def extract_scorable_fields(gt: Dict[str, Any]) -> "tuple[Dict[str, float], Dict[str, ToleranceSpec]]":
-    """
-    Recursively walk a curated ground-truth blob (e.g. one entry from the
-    lean data/tasks/numerical_ground_truths.json) and pull out only the field groups
-    this module has a fixed tolerance preset for: band-stat groups
-    (BAND_STAT_TOLERANCE) and lat/lon pairs (LATLON_TOLERANCE), wherever
-    they're nested, under dotted-path keys (e.g. "band_statistics.B02.min",
-    "point1_ESRIN.lat").
+def extract_scorable_fields(
+    gt: Dict[str, Any],
+    field_tolerances: Dict[str, ToleranceSpec] | None = None,
+) -> "tuple[Dict[str, float], Dict[str, ToleranceSpec]]":
+    """Select explicitly configured scalar fields from nested GT by dotted path.
 
-    Everything else — distance_km, area_km2, a projected x/y transform, a
-    UTM zone/CRS code string, a bare percentage — is deliberately left out,
-    not guessed at with an invented tolerance. Call this, check whether the
-    result is non-empty, and the caller decides what "not fully covered"
-    means for its purposes (numerical_judge.py reports it, doesn't hide it).
-
-    Returns (values, tolerances), both keyed by the same dotted paths, ready
-    to pass straight into score_item() as the `ground_truth` and
-    `tolerances` arguments.
+    With field_tolerances, only those fields are scored, including distances,
+    areas, projected coordinates, percentages or counts. No metric depends on
+    task or quantity type. Unknown paths/invalid GT are configuration errors.
+    Without it, preserve legacy band-stat/lat-lon extraction and presets.
     """
+    if field_tolerances is not None:
+        selected = {}
+        for path, spec in field_tolerances.items():
+            value = gt
+            remaining = path
+            while remaining:
+                if not isinstance(value, dict):
+                    raise KeyError(f"Configured numerical GT field not found: {path}")
+                parts = remaining.split(".")
+                # Prefer literal keys: percentages such as gt_0.5 contain dots.
+                match = next((index for index in range(len(parts), 0, -1)
+                              if ".".join(parts[:index]) in value), None)
+                if match is None:
+                    raise KeyError(f"Configured numerical GT field not found: {path}")
+                value = value[".".join(parts[:match])]
+                remaining = ".".join(parts[match:])
+            effective_tolerance(value, spec)
+            selected[path] = float(value)
+        return selected, dict(field_tolerances)
+
     values: Dict[str, float] = {}
     tolerances: Dict[str, ToleranceSpec] = {}
 
@@ -200,7 +216,6 @@ def extract_scorable_fields(gt: Dict[str, Any]) -> "tuple[Dict[str, float], Dict
                 key = f"{prefix}.{axis}" if prefix else axis
                 values[key] = node[axis]
                 tolerances[key] = LATLON_TOLERANCE
-            return
         if isinstance(node, dict):
             for k, v in node.items():
                 if k == "task_ID":
@@ -210,6 +225,8 @@ def extract_scorable_fields(gt: Dict[str, Any]) -> "tuple[Dict[str, float], Dict
         # intentionally dropped — see docstring.
 
     walk(gt, "")
+    for field, value in values.items():
+        effective_tolerance(value, tolerances[field])
     return values, tolerances
 
 
@@ -219,109 +236,107 @@ def extract_scorable_fields(gt: Dict[str, Any]) -> "tuple[Dict[str, float], Dict
 
 @dataclass
 class FieldResult:
+    """Per-field credit and unrounded error diagnostics."""
     field: str
     y_hat: Any
     y: Any
-    hit: float          # 0 or 1 (int for numeric fields, exact-match bool-as-int otherwise)
-    num_score: float     # 0..1
-    missing: bool        # True if the field was absent from the prediction
-    numeric: bool        # False for exact-match (non-numeric) fields
+    hit: float
+    num_score: float
+    missing: bool
+    numeric: bool
+    effective_tol: float | None = None
+    absolute_error: float | None = None
+    normalized_error: float | None = None
+    invalid: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        """JSON-safe diagnostics; invalid predictions have no calculable error."""
+        from dataclasses import asdict
+        data = asdict(self)
+        for key, value in data.items():
+            if isinstance(value, Real) and not isinstance(value, bool):
+                data[key] = float(value) if math.isfinite(value) else str(value)
+        return data
 
 
 @dataclass
 class ItemResult:
+    """Mean credit across all required fields; missing fields stay in denominator."""
     fields: List[FieldResult]
 
     @property
     def hit_at_tol(self) -> float:
-        """Field-averaged Hit@tol for this one item."""
-        return sum(f.hit for f in self.fields) / len(self.fields) if self.fields else 0.0
+        return sum(field.hit for field in self.fields) / len(self.fields) if self.fields else 0.0
 
     @property
     def num_score(self) -> float:
-        """Field-averaged NumScore for this one item."""
-        return sum(f.num_score for f in self.fields) / len(self.fields) if self.fields else 0.0
+        return sum(field.num_score for field in self.fields) / len(self.fields) if self.fields else 0.0
 
-
-def _is_number(v: Any) -> bool:
-    return isinstance(v, (int, float)) and not isinstance(v, bool)
-
-
-def score_item(
-    prediction: Dict[str, Any],
-    ground_truth: Dict[str, Any],
-    tolerances: Dict[str, ToleranceSpec],
-    *,
-    align_by_key: bool = True,
-) -> ItemResult:
-    """
-    Score one item's predicted fields against its ground-truth fields.
-
-    Args:
-        prediction   : the candidate's extracted field -> value dict.
-        ground_truth : the curated ground truth's field -> value dict
-                       (e.g. one entry's content from the lean
-                       data/tasks/numerical_ground_truths.json).
-        tolerances   : field name -> ToleranceSpec. Every *numeric*
-                       ground-truth field must have an entry here — this
-                       module won't guess a tolerance for you (see module
-                       docstring: the paper gives no universal default).
-        align_by_key : True (default) aligns by matching dict keys, the
-                       paper's primary alignment rule. Set False to align
-                       by position instead (its documented fallback) —
-                       e.g. both sides are ordered lists under the hood.
-
-    Returns:
-        ItemResult with one FieldResult per ground-truth field.
-    """
-    gt_items = list(ground_truth.items())
-    pred_items = list(prediction.items())
-
-    if align_by_key:
-        pairs = [(k, v, prediction.get(k, _MISSING)) for k, v in gt_items]
-    else:
-        pairs = [
-            (gt_items[i][0], gt_items[i][1], pred_items[i][1] if i < len(pred_items) else _MISSING)
-            for i in range(len(gt_items))
-        ]
-
-    results = []
-    for key, y, y_hat in pairs:
-        missing = y_hat is _MISSING
-        numeric = _is_number(y)
-
-        if missing:
-            results.append(FieldResult(key, None, y, 0.0, 0.0, True, numeric))
-            continue
-
-        if numeric:
-            if not _is_number(y_hat):
-                # Candidate gave a non-numeric value for a numeric field — a miss.
-                results.append(FieldResult(key, y_hat, y, 0.0, 0.0, False, True))
-                continue
-            spec = tolerances.get(key)
-            if spec is None:
-                raise KeyError(
-                    f"No ToleranceSpec given for numeric field '{key}' — see module "
-                    f"docstring: tolerances are field-specific, this module won't "
-                    f"invent one. Pass it via `tolerances`."
-                )
-            h = hit_at_tol(float(y_hat), float(y), spec)
-            s = num_score(float(y_hat), float(y), spec)
-            results.append(FieldResult(key, y_hat, y, h, s, False, True))
-        else:
-            exact = int(y_hat == y)
-            results.append(FieldResult(key, y_hat, y, exact, float(exact), False, False))
-
-    return ItemResult(fields=results)
+    def to_dict(self) -> dict[str, Any]:
+        return {"hit_at_tol": self.hit_at_tol, "num_score": self.num_score,
+                "fields": [field.to_dict() for field in self.fields]}
 
 
 class _Missing:
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<MISSING>"
 
 
 _MISSING = _Missing()
+
+
+def _parse_prediction(value: Any) -> float | None:
+    """Accept finite numeric scalars or numeric strings, without guessing units."""
+    if isinstance(value, bool) or not isinstance(value, (Real, str)):
+        return None
+    try:
+        parsed = float(value)
+    except (ValueError, TypeError, OverflowError):
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
+def score_scalar(y_pred: Any, y: float, spec: ToleranceSpec,
+                 *, field: str = "value") -> FieldResult:
+    """Score an ordinary scalar, including geodetic distance, with one formula."""
+    tolerance = effective_tolerance(y, spec)
+    missing = y_pred is _MISSING or y_pred is None
+    predicted = None if missing else _parse_prediction(y_pred)
+    if predicted is None:
+        return FieldResult(field, None if y_pred is _MISSING else y_pred, y,
+                           0.0, 0.0, missing, True, effective_tol=tolerance,
+                           invalid=not missing)
+    absolute_error = abs(predicted - y)
+    normalized_error = absolute_error / tolerance
+    hit = int(normalized_error <= 1)
+    credit = 1.0 if hit else 2.0 ** (-(normalized_error - 1))
+    return FieldResult(field, y_pred, y, hit, credit, False, True,
+                       tolerance, absolute_error, normalized_error)
+
+
+def score_item(prediction: Dict[str, Any], ground_truth: Dict[str, Any],
+               tolerances: Dict[str, ToleranceSpec], *, align_by_key: bool = True) -> ItemResult:
+    """Align required fields and average scalar scores, counting missing as zero.
+
+    By default align on GT keys and ignore extra predictions. Explicit positional
+    alignment is retained for older callers. Non-numeric exact matching is a
+    legacy convenience, separate from the scalar numerical metric.
+    """
+    predicted_values = list(prediction.values())
+    results = []
+    for index, (key, y) in enumerate(ground_truth.items()):
+        y_hat = prediction.get(key, _MISSING) if align_by_key else (
+            predicted_values[index] if index < len(predicted_values) else _MISSING)
+        if _is_number(y):
+            if key not in tolerances:
+                raise KeyError(f"No ToleranceSpec given for numeric field '{key}'.")
+            results.append(score_scalar(y_hat, y, tolerances[key], field=key))
+        else:
+            missing = y_hat is _MISSING or y_hat is None
+            exact = 0 if missing else int(y_hat == y)
+            results.append(FieldResult(key, None if y_hat is _MISSING else y_hat,
+                                       y, exact, float(exact), missing, False))
+    return ItemResult(results)
 
 
 # ---------------------------------------------------------------------------

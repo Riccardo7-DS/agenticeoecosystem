@@ -8,15 +8,12 @@
     "strategy_counts": {
       "set_answer": 19,
       "qualitative": 88,
-      "hybrid": 31,
-      "named_entity": 2,
-      "retrieval_validation": 13,
-      "artifact_metadata": 5,
+      "hybrid": 33,
+      "retrieval_validation": 14,
+      "download_contract": 32,
       "numerical_answer": 40,
-      "categorical_identifier": 2,
-      "agent_as_judge": 36,
-      "download_contract": 27,
-      "numerical_artifact": 2
+      "categorical_identifier": 3,
+      "agent_as_judge": 36
     },
     "finding_counts": {
       "candidate_grounding_evidence_required_at_runtime": 108,
@@ -814,7 +811,7 @@
     {
       "task_ID": "TASK_260419_000067_100067",
       "task_text": "Find a MOOC lecture that explains how satellite sensors such as MODIS measure land surface temperature for environmental monitoring.",
-      "evaluation_strategy": "named_entity",
+      "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
         "canonicalized_exact_match",
         "alias_match",
@@ -1132,7 +1129,7 @@
     {
       "task_ID": "TASK_260427_000008_200008",
       "task_text": "Download a Sentinel-2 true-colour image of central Rome, Italy for March 2023, then read the raster metadata (driver, CRS, size, band count, data type, geographic extent) of the resulting file.",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
@@ -1257,10 +1254,15 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "audit_status": "consistent_mapping",
-      "findings": []
+      "findings": [],
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "ground_truth_key": "TASK_260427_000020_200020",
+      "ground_truth_observation": "AAJ verifies the selected paper, study-area centroid derivation and Rome coordinates against captured source evidence. GIS independently computes the WGS84 distance; the numerical judge consumes matching, replay-verified candidate-bound GIS observations and applies the same scalar Hit@tol/NumScore metric. No fixed paper/location/distance is required. Captured evidence and calibrated abs_tol, rel_tol and floor_scale are required; missing, stale or conflicting evidence remains unverified."
     },
     {
       "task_ID": "TASK_260427_000021_200021",
@@ -1728,7 +1730,7 @@
     {
       "task_ID": "TASK_260713_000009_400009",
       "task_text": "Download the Copernicus 30 m DEM for Mount Etna, Sicily, then read its metadata (driver, CRS, pixel resolution, band count, data type, and geographic extent).",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
@@ -1904,14 +1906,17 @@
     },
     {
       "task_ID": "TASK_260713_000026_400026",
-      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
+      "task_text": "Download a Sentinel-2 image of W National Park in Niger for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
         "numeric_tolerance_accuracy"
       ],
       "audit_status": "consistent_mapping",
-      "findings": []
+      "findings": [],
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "ground_truth_key": "TASK_260713_000026_400026",
+      "ground_truth_observation": "Verify imagery covers W National Park in Niger and the requested July 2023 period, bands and 10 m output resolution. Recompute mean and maximum EVI from task-valid candidate imagery using actual reflectance encoding, band mapping and valid-data mask. Do not require the original Sahel scene or a single incidental bbox. The old GT generation failed for the Sahel and does not apply to this revised task. Fresh candidate generation and numerical GT/validation are required; tolerance calibration remains pending."
     },
     {
       "task_ID": "TASK_260713_000022_500001",
@@ -1954,9 +1959,10 @@
       ],
       "audit_status": "consistent_mapping",
       "findings": [],
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000025_500004.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "ground_truth_observation": "10 node types and5 Treaty records with descriptions successfully retrieved; count cross-check passed. Separate description scoring remains a pending component proposal.",
-      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate.",
+      "ground_truth_key": "TASK_260713_000025_500004"
     },
     {
       "task_ID": "TASK_260713_000026_500005",
@@ -1970,8 +1976,9 @@
       ],
       "audit_status": "consistent_mapping",
       "findings": [],
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000026_500005.json",
-      "ground_truth_observation": "Scored reference is the retrieved five-node EnablingTool inventory, not the historical empty direct-link set."
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "ground_truth_observation": "Scored reference is the retrieved five-node EnablingTool inventory, not the historical empty direct-link set.",
+      "ground_truth_key": "TASK_260713_000026_500005"
     },
     {
       "task_ID": "TASK_260713_000027_500006",
@@ -2139,9 +2146,10 @@
       ],
       "audit_status": "consistent_mapping",
       "findings": [],
-      "ground_truth_source": "data/tasks/ground_truth/TASK_260713_000039_500018.json",
+      "ground_truth_source": "data/tasks/ground_truths.json",
       "ground_truth_observation": "Three variants and reader dictionary captured from actual server catalogue function; stored native-format fallback separately. Mapping-metric addition remains pending approval.",
-      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate."
+      "approved_component_addition": "Approved2026-10-01; task-component mapping complete, validator/evaluation execution separate.",
+      "ground_truth_key": "TASK_260713_000039_500018"
     },
     {
       "task_ID": "TASK_260713_000040_500019",
@@ -2387,7 +2395,7 @@
     {
       "task_ID": "TASK_260713_000062_500041",
       "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for June 2022 over Trento, Italy, and its surroundings, then inspect the resulting file to check which variables and time dimensions are present.",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
@@ -2398,7 +2406,7 @@
     {
       "task_ID": "TASK_260713_000063_500042",
       "task_text": "Download ERA5 total precipitation for January 2021 over the Tigray region of Ethiopia, then verify that the resulting file contains the expected variables and time coordinates.",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
@@ -2409,7 +2417,7 @@
     {
       "task_ID": "TASK_260713_000064_500043",
       "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2021, then inspect the resulting NetCDF file to confirm its structure.",
-      "evaluation_strategy": "artifact_metadata",
+      "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
         "metadata_field_accuracy"
@@ -2670,7 +2678,7 @@
     {
       "task_ID": "TASK_260713_000002_600002",
       "task_text": "What is the exact CDS API variable name for 2-metre air temperature in ERA5?",
-      "evaluation_strategy": "named_entity",
+      "evaluation_strategy": "categorical_identifier",
       "evaluation_methods": [
         "canonicalized_exact_match"
       ],
@@ -3234,7 +3242,7 @@
     {
       "task_ID": "TASK_260713_000058_600058",
       "task_text": "Search EO Dashboard narratives about flooding events in East Africa. Based on the specific event location and time period described in the narrative, download hourly ERA5 precipitation for a 2° × 2° region around the affected area and convert to daily totals to quantify the event.",
-      "evaluation_strategy": "numerical_artifact",
+      "evaluation_strategy": "hybrid",
       "evaluation_methods": [
         "numerical_artifact_validation",
         "agent_as_judge",
@@ -3246,7 +3254,7 @@
     {
       "task_ID": "TASK_260713_000059_600059",
       "task_text": "Search MOOC content about extreme precipitation events and disaster risk reduction. Based on a major flood case study discussed in the content, download hourly ERA5 precipitation for the affected region and period and aggregate to daily sums.",
-      "evaluation_strategy": "numerical_artifact",
+      "evaluation_strategy": "hybrid",
       "evaluation_methods": [
         "numerical_artifact_validation",
         "agent_as_judge",
@@ -3752,7 +3760,7 @@
     },
     {
       "task_ID": "TASK_260716_000004_700016",
-      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 10 March 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
+      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 1 October 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
@@ -3866,7 +3874,7 @@
       ],
       "evidence_requirements_added": 7
     },
-    "runtime_reference_defined_tasks": 6,
+    "runtime_reference_defined_tasks": 7,
     "approved_fixes": {
       "affected_tasks": 35,
       "question_changes": [
@@ -3905,5 +3913,117 @@
     "GIS_obligations": "Read current mapping rather than fixed suffix list.",
     "series_inspection": "Read saved series or compute bounded monthly summaries from saved daily files, without downloads.",
     "verification": "16 offline tests passed: 14 judge/inspector regression tests and 2 climate-tool body tests with inline executor to avoid sandbox thread-wakeup stalls. Changed modules compile. No live judge or candidate run launched."
+  },
+  "scalar_numerical_scoring_implementation": {
+    "status": "implemented_with_offline_tests",
+    "metric_policy": "One standardized Hit@tol/NumScore formula for all ordinary scalar outputs, including distance.",
+    "field_selection": "Explicit field tolerance configuration selects only required numeric outputs; legacy presets retained.",
+    "diagnostics": "Unrounded absolute error, normalized error and effective tolerance; unavailable errors remain null.",
+    "pending": "Task-specific tolerance calibration, missing GTs, and source-grounded runtime GT computation remain separate requirements. No live scoring run performed."
+  },
+  "runtime_distance_reference_implementation": {
+    "task_ID": "TASK_260427_000020_200020",
+    "provider": "agenticeoecosystem.evaluation.candidate_evidence.CandidateEvidence.runtime_distance_reference",
+    "status": "implemented_pending_candidate_evidence_and_tolerances",
+    "policy": "Flexible, source-dependent reference; no universal distance; no new source downloads in judge."
+  },
+  "numerical_gt_generation_2026_10_02": {
+    "original_missing_tasks": [
+      "TASK_260427_000017_200017",
+      "TASK_260713_000019_400019",
+      "TASK_260713_000032_500011",
+      "TASK_260713_000034_500013",
+      "TASK_260713_000049_500028",
+      "TASK_260713_000053_600053",
+      "TASK_260713_000061_600061",
+      "TASK_260713_000062_600062",
+      "TASK_260713_000063_600063",
+      "TASK_260713_000067_600067",
+      "TASK_260713_000068_600068",
+      "TASK_260713_000070_600070",
+      "TASK_260713_000073_600073",
+      "TASK_260713_000081_600081",
+      "TASK_260713_000082_600082",
+      "TASK_260713_000083_600083",
+      "TASK_260716_000004_700016",
+      "TASK_260716_000005_700017",
+      "TASK_260716_000006_700018",
+      "TASK_260716_000007_700019"
+    ],
+    "new_reference_count": 19,
+    "unavailable_task": "TASK_260716_000004_700016",
+    "stored_numerical_components_configured": 38,
+    "report": "docs/numerical_gt_generation.md",
+    "reference_scope": "Input-bound observations; different valid sources require recomputation. No scoring batch run.",
+    "schema_warning_task": "TASK_260713_000034_500013"
+  },
+  "fci_date_revision_2026_10_02": {
+    "task_ID": "TASK_260716_000004_700016",
+    "requested_date": "2024-10-01",
+    "ground_truth_status": "observed_valid_input_snapshot",
+    "rerun_required": true,
+    "reader_handoff": "exact downloaded chunk paths; 40 chunks for one observation"
+  },
+  "numerical_gt_retry_2026_10_02": {
+    "fci_task": "TASK_260716_000004_700016",
+    "fci_status": "computed_and_stored",
+    "evi_task": "TASK_260713_000026_400026",
+    "evi_status": "computed_and_stored",
+    "primary_numeric_counts": {
+      "stored": 39,
+      "runtime_reference": 1,
+      "pending": 0
+    },
+    "download_path_regression_tests": 3
+  },
+  "evi_credentials_retry_2026_10_02": {
+    "task_ID": "TASK_260713_000026_400026",
+    "authentication_status": 200,
+    "evi_mean": 0.4070399488270284,
+    "evi_max": 0.7570676449806785,
+    "valid_pixels": 1001000,
+    "reference_policy": "matching captured scene/support/mask only; recompute permitted alternatives"
+  },
+  "category_consolidation_2026_10_03": {
+    "date": "2026-10-03",
+    "changed_tasks": {
+      "TASK_260419_000067_100067": {
+        "from": "named_entity",
+        "to": "retrieval_validation"
+      },
+      "TASK_260427_000008_200008": {
+        "from": "artifact_metadata",
+        "to": "download_contract"
+      },
+      "TASK_260713_000009_400009": {
+        "from": "artifact_metadata",
+        "to": "download_contract"
+      },
+      "TASK_260713_000062_500041": {
+        "from": "artifact_metadata",
+        "to": "download_contract"
+      },
+      "TASK_260713_000063_500042": {
+        "from": "artifact_metadata",
+        "to": "download_contract"
+      },
+      "TASK_260713_000064_500043": {
+        "from": "artifact_metadata",
+        "to": "download_contract"
+      },
+      "TASK_260713_000002_600002": {
+        "from": "named_entity",
+        "to": "categorical_identifier"
+      },
+      "TASK_260713_000058_600058": {
+        "from": "numerical_artifact",
+        "to": "hybrid"
+      },
+      "TASK_260713_000059_600059": {
+        "from": "numerical_artifact",
+        "to": "hybrid"
+      }
+    },
+    "policy": "Primary categories consolidated; specific numerical, entity, CRS and metadata validators retained. No candidate generation or judge execution performed."
   }
 }

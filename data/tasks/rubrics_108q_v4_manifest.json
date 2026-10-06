@@ -1,0 +1,51 @@
+{
+  "version": "4.0",
+  "created_utc": "2026-10-02T12:54:20.377733+00:00",
+  "source": "rubrics_108q_v3.json",
+  "source_sha256": "1fb6a5362c09a17ad823eeff306d1bca5bd3a0ca23b8b2f904a850d378527288",
+  "task_count": 108,
+  "profiles": {
+    "trace": {
+      "file": "rubrics_108q_v4_trace.json",
+      "inputs": [
+        "original task",
+        "recorded tool names and arguments",
+        "candidate final answer"
+      ],
+      "score_label": "trace-supported task fulfillment"
+    },
+    "evidence": {
+      "file": "rubrics_108q_v4_evidence.json",
+      "inputs": [
+        "original task",
+        "candidate trace",
+        "final answer",
+        "candidate-bound source responses and relevant visual/numerical artifact evidence"
+      ],
+      "score_label": "evidence-verified task fulfillment"
+    }
+  },
+  "changed_trace_criteria": 324,
+  "evidence_descriptions_identical_to_v3": true,
+  "task_text_ids_types_weights_unchanged": true,
+  "exclude_pending_revised_task_ids": [
+    "TASK_260713_000061_500040",
+    "TASK_260713_000071_600071",
+    "TASK_260713_000074_500053"
+  ],
+  "runtime_note": "The batch runner reads the explicit v4 profile and shared instructions. Trace mode uses calls/arguments/final answer without the evidence-required C2 gate; evidence mode retains verification requirements. Version/profile and rubric hash bind cached scores. No evaluations launched.",
+  "historical_subset": {
+    "file": "rubrics_105q_v4_trace_historical.json",
+    "task_count": 105,
+    "excluded_task_ids": [
+      "TASK_260713_000061_500040",
+      "TASK_260713_000071_600071",
+      "TASK_260713_000074_500053"
+    ]
+  },
+  "profile_sha256": {
+    "rubrics_108q_v4_trace.json": "5ea690cccb814760677d30cb46747fb82eb7dab17fbceb8440a369b987950c54",
+    "rubrics_108q_v4_evidence.json": "387c56cf193f70aeba76218d3f4aa6430b4d027e13362164a6fc97c598f99145",
+    "rubrics_105q_v4_trace_historical.json": "3b919fff6ec0e91a2eec8f9486486f3c52537cf2c0417407503573b64808a7c8"
+  }
+}

@@ -57,10 +57,10 @@ def main() -> int:
                         help="Port to launch/reach the vLLM server on when --provider vllm "
                              "(default: 8000). Use a non-default port to run alongside another "
                              "vLLM instance already serving on 8000.")
-    parser.add_argument("--task-timeout",         type=float, default=None,
+    parser.add_argument("--task-timeout",         type=float, default=1800,
                         help="Max wall-clock seconds for a single task before it's "
                              "abandoned and the run moves to the next task (default: "
-                             "no limit).")
+                             "1800 seconds / 30 minutes).")
     parser.add_argument("--skip-solved",          action="store_true", help="Skip tasks that already have a solution")
     parser.add_argument("--shuffle-seed", type=int, default=None,
                         help="Shuffle task execution order reproducibly using this seed")

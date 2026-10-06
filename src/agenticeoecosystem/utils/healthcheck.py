@@ -99,6 +99,10 @@ async def run_preflight_healthcheck() -> dict[str, bool]:
     mcp_names: list[str] = []
     mcp_checks = []
     for agent in ALL_SUB_AGENTS:
+        # CDSE remains available to agents but is excluded from startup gating.
+        if agent.name == "cdse_agent":
+            logger.info("Skipping CDSE startup health check")
+            continue
         for i, tool in enumerate(getattr(agent, "tools", [])):
             if isinstance(tool, McpToolset):
                 name = agent.name if i == 0 else f"{agent.name}[{i}]"

@@ -38,14 +38,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 # ---------------------------------------------------------------------------
-# Task loading — merge both benchmark files into a single TaskSet
+# Task loading — use the consolidated benchmark
 # ---------------------------------------------------------------------------
 
-eo_tasks = TaskSet.read_from_file("eo_benchmark_tasks.json")
-arxiv_gis_tasks = TaskSet.read_from_file("arxiv_gis_benchmark_tasks.json")
-
-all_tasks = TaskSet(metadata=eo_tasks.metadata.copy(), tasks=list(eo_tasks.tasks))
-all_tasks.extend(arxiv_gis_tasks.tasks)
+all_tasks = TaskSet.read_from_file("benchmark_tasks.json")
 
 # ---------------------------------------------------------------------------
 # Task selection

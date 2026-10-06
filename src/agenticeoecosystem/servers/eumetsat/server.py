@@ -27,7 +27,7 @@ import sys
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -157,6 +157,13 @@ def _is_readable_data_file(path: Path) -> bool:
     if "CHK-TRAIL" in path.name:
         return False
     return True
+
+
+def _downloaded_product_paths(identifier: Optional[str], files: list[str], product_count: int) -> list[str]:
+    """Attribute chunked files only when one product makes ownership unambiguous."""
+    if product_count == 1:
+        return list(files)
+    return [path for path in files if identifier and identifier in Path(path).name]
 
 
 def _extract_leftover_zips(directory: Path) -> None:
@@ -390,13 +397,15 @@ def download_eumetsat_product(args: DownloadParams) -> str:
     )
 
     downloaded = []
-    for p in getattr(downloader, "file_list", []):
+    downloaded_products = list(getattr(downloader, "file_list", []))
+    for p in downloaded_products:
         identifier = p._browse_properties.get("identifier")
         # Best-effort per-product attribution: reliable when the identifier
         # appears in the filename (true for SEVIRI's single-file products),
-        # not for chunked products like FCI — see the top-level `new_files`
-        # for the definitive list of everything this call downloaded.
-        matches = [f for f in new_files if identifier and identifier in f]
+        # Chunked products can also use all returned files when this call
+        # downloaded just one observation. For multiple observations, do not
+        # assign the full call's chunks to every product.
+        matches = _downloaded_product_paths(identifier, new_files, len(downloaded_products))
         downloaded.append(
             {
                 "identifier": identifier,
@@ -489,6 +498,73 @@ class ReadParams(BaseModel):
     )
 
 
+def _crop_stacked_band(dataset: Any, bbox: list[float]) -> Any:
+    """Slice HRV area components without resampling calibrated native pixels."""
+    import numpy as np
+    import xarray as xr
+    from pyresample.geometry import AreaDefinition, StackedAreaDefinition
+
+    target = AreaDefinition("crop", "crop", "latlong", "EPSG:4326", 100, 100, tuple(bbox))
+    pieces = []
+    offset = 0
+    for area in dataset.attrs["area"].defs:
+        try:
+            x_slice, y_slice = area.get_area_slices(target)
+        except NotImplementedError as exc:
+            # Pyresample uses a bare NotImplementedError for non-overlap.
+            # Errors with a message indicate an unsupported geometry instead.
+            if str(exc):
+                raise
+        else:
+            if x_slice.stop > x_slice.start and y_slice.stop > y_slice.start:
+                piece = dataset.isel(y=slice(offset + y_slice.start, offset + y_slice.stop), x=x_slice)
+                piece.attrs = dict(dataset.attrs, area=area[y_slice, x_slice])
+                pieces.append(piece)
+        offset += area.height
+    if not pieces:
+        raise ValueError("Requested bbox does not overlap the HRV channel coverage.")
+    if len(pieces) == 1:
+        return pieces[0]
+
+    # Windows can have different horizontal offsets. Pad to a common native
+    # grid with NaN; do not interpolate or count padding as observed pixels.
+    areas = [piece.attrs["area"] for piece in pieces]
+    left = min(area.area_extent[0] for area in areas)
+    right = max(area.area_extent[2] for area in areas)
+    pixel_size = areas[0].pixel_size_x
+    width = round((right - left) / pixel_size)
+    padded = []
+    padded_areas = []
+    for piece, area in zip(pieces, areas):
+        if not np.isclose(area.pixel_size_x, pixel_size) or area.crs != areas[0].crs:
+            raise ValueError("HRV windows must share a projection and pixel spacing.")
+        start = round((area.area_extent[0] - left) / pixel_size)
+        piece = piece.pad(x=(start, width - start - area.width), constant_values=np.nan)
+        expanded = AreaDefinition(area.area_id, area.description, area.proj_id, area.crs,
+                                  width, area.height, (left, area.area_extent[1], right, area.area_extent[3]))
+        x_coords, y_coords = expanded.get_proj_vectors()
+        piece = piece.assign_coords(x=x_coords, y=y_coords)
+        padded.append(piece)
+        padded_areas.append(expanded)
+    result = xr.concat(padded, dim="y", join="exact", coords="minimal", compat="override")
+    result.attrs = dict(dataset.attrs, area=StackedAreaDefinition(*padded_areas).squeeze())
+    return result
+
+
+def _crop_selected_bands(scene: Any, bands: list[str], bbox: list[float]) -> Any:
+    """Crop channels separately, accepting mixed stacked/single area types."""
+    cropped_scene = scene.copy()
+    for band in bands:
+        if band in scene:
+            dataset = scene[band]
+            area = getattr(dataset, "attrs", {}).get("area")
+            if hasattr(area, "defs"):
+                cropped_scene[band] = _crop_stacked_band(dataset, bbox)
+            else:
+                cropped_scene[band] = scene.copy(datasets=[band]).crop(ll_bbox=tuple(bbox))[band]
+    return cropped_scene
+
+
 def _read_product(
     product: str,
     identifier: Optional[str],
@@ -505,6 +581,11 @@ def _read_product(
     invalid — and returns per-band summary stats, mirroring the calibration
     split in eumetsearch's `EUMDownloader._read_satpy_convert`.
     """
+    if paths is not None and not paths:
+        raise ValueError(
+            "Explicit paths must not be empty. For a single-product chunked "
+            "download, pass its nonempty `new_files` list."
+        )
     if product not in products_list:
         raise ValueError(
             f"Unknown product '{product}'. Call list_eumetsat_products for valid keys."
@@ -573,7 +654,9 @@ def _read_product(
                 "count": 0,
                 "message": (
                     "No downloaded files found for this product/identifier/paths. Call "
-                    "download_eumetsat_product first."
+                    "download_eumetsat_product first. For chunked FCI products, pass "
+                    "the exact paths returned by the download (`new_files` for a "
+                    "single-product call); chunk filenames do not contain the parent identifier."
                 ),
             }
         )
@@ -605,7 +688,10 @@ def _read_product(
         if len(bbox) != 4:
             raise ValueError("bbox must be exactly [west, south, east, north].")
         west, south, east, north = bbox
-        scn = scn.crop(ll_bbox=(west, south, east, north))
+        # HRV can use a stacked area while ordinary VIS/IR bands use a single
+        # area. Cropping a mixed-area Scene makes satpy compare incompatible
+        # area types. Crop each requested channel independently instead.
+        scn = _crop_selected_bands(scn, requested_bands, [west, south, east, north])
 
     import dask
     import numpy as np

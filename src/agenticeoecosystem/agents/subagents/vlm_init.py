@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
@@ -16,9 +17,9 @@ logger = logging.getLogger(__name__)
 #   ssh -L 18001:localhost:18001 <user>@<llava-vm-host>
 # `-L` always lands on localhost on THIS side regardless of the remote host,
 # so this must stay "localhost", not a specific IP.
-VLM_BASE_URL = "http://localhost:18001/v1"
+VLM_BASE_URL = os.getenv("VLM_ENDPOINT", "http://localhost:18001/v1")
 vlm = LiteLlm(
-    model="openai/Qwen3-VL",
+    model=f"openai/{os.getenv('VLM_MODEL', 'Qwen3-VL')}",
     base_url=VLM_BASE_URL,
     api_key="EMPTY",   # vLLM doesn't check this, but LiteLLM requires something non-empty
     temperature=0,

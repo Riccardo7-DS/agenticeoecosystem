@@ -49,7 +49,13 @@ def main() -> int:
     parser.add_argument("--task-ids",             default=None,   help="Comma-separated task IDs to select")
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
+    parser.add_argument("--archive-evidence", action="store_true",
+                        help="Copy recorded candidate artifacts into run-specific evidence storage before reuse")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
+    parser.add_argument("--vllm-port",            type=int, default=8000,
+                        help="Port to launch/reach the vLLM server on when --provider vllm "
+                             "(default: 8000). Use a non-default port to run alongside another "
+                             "vLLM instance already serving on 8000.")
     parser.add_argument("--task-timeout",         type=float, default=None,
                         help="Max wall-clock seconds for a single task before it's "
                              "abandoned and the run moves to the next task (default: "
@@ -106,8 +112,8 @@ def main() -> int:
     try:
         if args.provider == "vllm":
             from agenticeoecosystem.utils.registry import launch_vllm
-            proc = launch_vllm(args.model, startup_timeout=args.vllm_startup_timeout)
-            os.environ["VLLM_PORT"] = "8000"
+            proc = launch_vllm(args.model, port=args.vllm_port, startup_timeout=args.vllm_startup_timeout)
+            os.environ["VLLM_PORT"] = str(args.vllm_port)
 
         from agenticeoecosystem.evaluation.pipeline_runner import generate_solutions
         output_filename = f"results_{label_safe}.json"
@@ -122,6 +128,7 @@ def main() -> int:
             pipeline=args.pipeline,
             agent_models=agent_models,
             task_timeout=args.task_timeout,
+            archive_evidence=args.archive_evidence,
         )
         # Final save — redundant with the intermediate saves inside
         # generate_solutions() now that output_folder is passed through,

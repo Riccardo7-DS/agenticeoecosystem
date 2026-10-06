@@ -75,6 +75,12 @@ def get_openai_client(
         port = os.getenv("VLLM_PORT", "8000")
         return OpenAI(base_url=f"http://{host}:{port}/v1", api_key="EMPTY")
 
+    if provider == "openrouter":
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            logger.warning("OPENROUTER_API_KEY is not set.")
+        return OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
+
     # Default: EVE with Basic Auth
     return OpenAI(
         base_url=os.getenv(base_url_env),

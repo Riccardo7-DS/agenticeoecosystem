@@ -1,8 +1,12 @@
 from agenticeoecosystem.agents.subagents.eve_patch import apply as apply_eve_patch
+from agenticeoecosystem.agents.subagents.eve_patch import _PLACEHOLDER_ASSISTANT_CONTENT
 apply_eve_patch()
 
 from agenticeoecosystem.agents.subagents.mcp_image_patch import apply as apply_mcp_image_patch
 apply_mcp_image_patch()
+
+from agenticeoecosystem.agents.subagents.strict_tool_patch import apply as apply_strict_tool_patch
+apply_strict_tool_patch()
 
 from agenticeoecosystem.agents.subagents import orphaned_tool_call_guard as _orphan_guard
 _orphan_guard.apply()
@@ -206,7 +210,26 @@ def _on_tool_error(tool, args, tool_context, error):
     letting it propagate and abort the turn (which otherwise leaves that
     tool call's id permanently unresolved in history — e.g. when the model
     hallucinates a call to a tool that isn't registered, such as
-    transfer_to_agent, which this orchestrator never exposes)."""
+    transfer_to_agent, which this orchestrator never exposes).
+
+    OrphanedToolCallStormError is deliberately excluded from this recovery:
+    it's raised by orphaned_tool_call_guard specifically to abort a stuck
+    task by propagating all the way to pipeline_runner.py's per-task
+    try/except. Swallowing it here (as every other tool error is swallowed)
+    defeated that guard entirely — the orchestrator would just catch the
+    "error", hand it back to the model as a normal tool result, and keep
+    looping, since AgentTool re-invokes the sub-agent as a plain tool call
+    that flows through this same callback. Returning None here lets ADK's
+    functions.py fall through to `raise tool_error`, so the task is
+    correctly recorded as unsolved instead of retry-storming forever.
+    """
+    from agenticeoecosystem.agents.subagents.orphaned_tool_call_guard import (
+        OrphanedToolCallStormError,
+    )
+    if isinstance(error, OrphanedToolCallStormError):
+        logger.error("Tool '%s' hit storm guard, aborting task: %s", getattr(tool, "name", "?"), error)
+        return None
+
     logger.warning("Tool '%s' failed: %s", getattr(tool, "name", "?"), error)
     return {"error": f"Tool '{getattr(tool, 'name', '?')}' failed: {error}"}
 
@@ -246,9 +269,64 @@ runner = Runner(agent=root, # The agent we want to run
 logger.info("Runner created for agent '%s'.", runner.agent.name)
 
 import json
+import re
 import uuid
 
 from google.genai import types  # adjust import to match your actual SDK path
+
+
+# Some models (observed on gemma4-31b served via vLLM — see the "gemma4-31b"
+# entry in utils/registry.py, which has no reasoning_parser configured
+# because no vLLM-registered parser matches this model's channel-tag shape)
+# leak a malformed reasoning/"thought"-channel marker as a literal prefix on
+# the final assistant text instead of it being split out server-side, e.g.:
+#   "<|channel>thought\n<channel|>The available themes are: ..."
+# vLLM's real harmony-style channel format is "<|channel|>NAME<|message|>",
+# so this is already a mangled/partial token sequence that leaked through as
+# plain text rather than a normal special token — no --reasoning-parser flag
+# reliably strips it. Strip it defensively here instead, so it never lands in
+# a recorded final_answer.
+_LEAKED_CHANNEL_PREFIX_RE = re.compile(
+    r"^\s*<\|?channel\|?>\s*[\w-]*\s*\n?\s*<\s*channel\|?>\s*",
+    re.IGNORECASE,
+)
+
+
+def _strip_leaked_channel_marker(text: str) -> str:
+    """Remove a leaked reasoning-channel marker prefix, if present."""
+    if not text:
+        return text
+    return _LEAKED_CHANNEL_PREFIX_RE.sub("", text, count=1)
+
+
+# DeepSeek-R1-family models (e.g. deepseek-ai/DeepSeek-R1-0528-Qwen3-8B) wrap
+# reasoning in literal <think>...</think> tags. The intended fix is hosting
+# with --reasoning-parser deepseek_r1 so vLLM splits this out server-side
+# into a separate reasoning_content field (see
+# vllm.reasoning.deepseek_r1_reasoning_parser). If that flag is missing, or
+# only a partial tag leaks through anyway, defend the same way as the
+# channel-marker case above. Unlike that case, a <think> block can run for
+# many paragraphs and may never close at all if the model hits max_tokens
+# mid-thought — surfacing raw, unclosed chain-of-thought as a "final answer"
+# would be worse than reporting no answer, so an unclosed block returns None
+# instead of the leaked text.
+_THINK_BLOCK_RE = re.compile(r"^\s*<think>.*?</think>\s*", re.IGNORECASE | re.DOTALL)
+_UNCLOSED_THINK_RE = re.compile(r"^\s*<think>", re.IGNORECASE)
+
+
+def _strip_leaked_think_block(text: str) -> str | None:
+    """Remove a leaked <think>...</think> reasoning block, if present.
+    Returns None if the block is unclosed (truncated mid-thought) rather
+    than surfacing partial chain-of-thought as if it were a real answer.
+    """
+    if not text:
+        return text
+    stripped = _THINK_BLOCK_RE.sub("", text, count=1)
+    if stripped != text:
+        return stripped
+    if _UNCLOSED_THINK_RE.match(text):
+        return None
+    return text
 
 
 def _extract_final_text(event) -> str | None:
@@ -256,13 +334,41 @@ def _extract_final_text(event) -> str | None:
     Pull plain text out of the final response event, if any.
     Guards against parts that are function_call / function_response
     (which don't have a usable `.text`).
+
+    Also guards against eve_patch's synthetic role-alternation filler
+    ("(continuing)") being mistaken for a real final answer: ADK replays a
+    finished sub-agent's transcript back into the parent's history as
+    synthetic events, and that replay can surface our own injected
+    placeholder (inserted purely to satisfy OpenAI's tool->assistant role
+    ordering) as if it were a genuine is_final_response() event — silently
+    discarding the model's actual answer. Observed affecting ~5-15% of
+    tasks across every "multi"-pipeline candidate run.
+
+    Also skips reasoning/"thought" parts. When a server-side reasoning
+    parser (e.g. vLLM's --reasoning-parser deepseek_r1) correctly splits a
+    model's chain-of-thought into a separate reasoning_content field, ADK's
+    LiteLlm wrapper (_convert_reasoning_value_to_parts in
+    google/adk/models/lite_llm.py) converts it into its own
+    types.Part(text=..., thought=True) — prepended before the real content
+    part in the *same* event.content.parts list. Without this check we'd
+    return that reasoning text as the "final answer" (it has a normal
+    .text attribute), before ever reaching the actual content part —
+    exactly the kind of chain-of-thought leak that would bias an evaluator
+    LLM's judgment, just via a different path than a raw <think> tag leak.
     """
     if not (event.content and event.content.parts):
         return None
     for part in event.content.parts:
+        if getattr(part, "thought", False):
+            continue
         text = getattr(part, "text", None)
+        if text and text.strip() == _PLACEHOLDER_ASSISTANT_CONTENT:
+            continue
         if text:
-            return text
+            cleaned = _strip_leaked_channel_marker(text)
+            cleaned = _strip_leaked_think_block(cleaned)
+            if cleaned is not None:
+                return cleaned
     return None
 
 
@@ -364,7 +470,8 @@ async def get_ans_tool_path(query: str) -> str:
                     # same tool name (matches by name since concurrent calls to
                     # the same sub-agent are disallowed by the system prompt).
                     for entry in reversed(tools_called):
-                        if entry["function_name"] == fr.name and "error" not in entry:
+                        if entry["function_name"] == fr.name and "tool_result" not in entry:
+                            entry["tool_result"] = resp
                             if error_text:
                                 entry["error"] = error_text
                             break
@@ -441,7 +548,7 @@ async def debug_agent_async(query: str, runner, user_id, session_id):
 async def run_conversation():
     await debug_agent_async(
 
-    "Search arXiv for papers on sea-level rise monitoring using satellite altimetry published since 2024 and return up to 15 results.",
+    "Can you get the most recent imagery related to the forest fires near bordeaux, france",
     runner, USER_ID, SESSION_ID,
     )
 if __name__ == "__main__":

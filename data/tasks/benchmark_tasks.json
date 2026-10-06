@@ -8112,11 +8112,11 @@
     },
     {
       "task_ID": "TASK_260713_000021_400021",
-      "task_text": "Create a 20 km buffer around the 2018 Camp Fire origin point near Paradise, Butte County, California representing the potential smoke-impact zone, then retrieve ESA strategic content on disaster-risk reduction and emergency preparedness to contextualise the risk assessment.",
+      "task_text": "Create a 20 km buffer around Paradise, Butte County, California as an illustrative potential smoke-impact zone in the context of the 2018 Camp Fire, then retrieve ESA Science Strategy content on disaster-risk reduction and emergency preparedness to contextualise the risk assessment.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Geocode 'Paradise, Butte County, California, USA' with geocode_place, construct a WKT POINT from the coordinates, create a 20 km buffer, then retrieve ESA Science Strategy content on disaster-risk reduction and preparedness — the strategy document discusses natural/human-induced disasters, the Sendai Framework, civil protection, and emergency response broadly, but has no fire-specific content, so the query targets this broader disaster-risk framing rather than fabricating a fire-monitoring angle the document doesn't contain.",
+      "reference_solution_description": "Geocode Paradise, Butte County, California, construct a point from the returned coordinates and create a 20 km buffer using a suitable metric CRS or geodesic calculation. The centre is Paradise, not an asserted Camp Fire ignition point. Retrieve ESA Science Strategy content using search_eoss on disaster-risk reduction, preparedness and emergency response. Ground any contextual explanation in actual retrieved content; do not require fire-specific passages or portray the illustrative distance buffer as a smoke-dispersion prediction.",
       "reference_solutions": [
         {
           "steps": [
@@ -8125,7 +8125,7 @@
               "arguments": {
                 "place_name": "Paradise, Butte County, California, USA"
               },
-              "comment": "Expected coordinates ~39.7596, -121.6219"
+              "comment": "Use the geocoded Paradise town point as the required centre; this is not the fire ignition location."
             },
             {
               "function_name": "buffer",
@@ -8134,14 +8134,14 @@
                 "distance": 20000.0,
                 "resolution": 64
               },
-              "comment": "Construct WKT POINT(lon lat) from geocoded coordinates and create 20 km smoke-impact buffer"
+              "comment": "Create 20 km buffer from the Paradise point; ensure distance is interpreted in metres using appropriate CRS/metric handling, not 20000 degrees. Geometry reprojection or equivalent geodesic workflow is valid."
             },
             {
               "function_name": "search_eoss",
               "arguments": {
-                "question": "ESA Earth Observation strategic objectives for disaster risk reduction, preparedness, and emergency response"
+                "question": "ESA Science Strategy on disaster-risk reduction, emergency preparedness and response"
               },
-              "comment": "Retrieve ESA science strategy context on disaster-risk reduction and preparedness — the document has no fire-specific content, only this broader disaster-risk framing"
+              "comment": "Retrieve actual ESA Science Strategy passages for contextualization; no fire-specific content is required."
             }
           ]
         }
@@ -8221,20 +8221,20 @@
     },
     {
       "task_ID": "TASK_260713_000026_400026",
-      "task_text": "Download a Sentinel-2 image of the Sahel region for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
+      "task_text": "Download a Sentinel-2 image of W National Park in Niger for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "resolve_named_region for the Sahel macro-region (a real gazetteer entry — Niger/Mali/Chad-scale, not a single city), fetch_sentinel2 (as_geotiff=True) for B02, B04, B08, compute_evi (red=B04, nir=B08, blue=B02), then raster_band_statistics for the mean and max EVI.",
+      "reference_solution_description": "Geocode W National Park in Niger, verify that the chosen bounding box covers the Niger portion of the park, fetch a Sentinel-2 L2A GeoTIFF for July 2023 with B02, B04 and B08 at the requested 10 m resolution, compute EVI using the actual band order and reflectance encoding, save the result, and report the mean and maximum over valid pixels. Do not use the whole Sahel or the whole transboundary W park complex.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "resolve_named_region",
+              "function_name": "geocode_place",
               "arguments": {
-                "region_name": "Sahel"
+                "place_name": "W National Park, Niger"
               },
-              "comment": "'Sahel' is explicitly named in the task and isn't a single administrative unit a place geocoder resolves well, so use the named-region gazetteer rather than an arbitrary city within it"
+              "comment": "Resolve the Niger portion of W National Park and verify the returned region; use its bbox, not a Sahel-wide extent."
             },
             {
               "function_name": "fetch_sentinel2",
@@ -8250,25 +8250,25 @@
                 ],
                 "max_cloud_cover": 20,
                 "as_geotiff": true,
-                "save_path": "output/TASK_260713_000026_400026/sentinel2_sahel.tif"
+                "save_path": "output/TASK_260713_000026_400026/sentinel2_w_national_park_niger.tif"
               },
-              "comment": "band1=B02 (Blue), band2=B04 (Red), band3=B08 (NIR)"
+              "comment": "Use the verified park bbox and actual output dimensions appropriate for the requested 10 m resolution; verify georeferencing. Band1=B02 (Blue), band2=B04 (Red), band3=B08 (NIR). Do not assume default output dimensions satisfy 10 m."
             },
             {
               "function_name": "compute_evi",
               "arguments": {
-                "source": "output/TASK_260713_000026_400026/sentinel2_sahel.tif",
+                "source": "output/TASK_260713_000026_400026/sentinel2_w_national_park_niger.tif",
                 "red_band_index": 2,
                 "nir_band_index": 3,
                 "blue_band_index": 1,
-                "destination": "output/TASK_260713_000026_400026/evi_sahel_2023.tif"
+                "destination": "output/TASK_260713_000026_400026/evi_w_national_park_niger_2023.tif"
               },
-              "comment": "EVI = 2.5*(NIR-Red)/(NIR+6*Red-7.5*Blue+1) via the dedicated compute_evi tool, scale_factor=0.0001 default for Sentinel-2 SR"
+              "comment": "EVI = 2.5*(NIR-Red)/(NIR+6*Red-7.5*Blue+1); use the actual reflectance encoding and valid-data mask. Default scaling is appropriate only if supported by the retrieved product."
             },
             {
               "function_name": "raster_band_statistics",
               "arguments": {
-                "source": "output/TASK_260713_000026_400026/evi_sahel_2023.tif"
+                "source": "output/TASK_260713_000026_400026/evi_w_national_park_niger_2023.tif"
               },
               "comment": "Report mean and max EVI across the scene"
             }
@@ -8386,28 +8386,20 @@
     },
     {
       "task_ID": "TASK_260713_000026_500005",
-      "task_text": "Search the EOSS knowledge base for content about 'enabling tools for Earth observation', then run a structured Cypher query to retrieve all EnablingTool nodes linked to ScienceQuestion nodes.",
+      "task_text": "List all enabling tools identified in the ESA Earth Observation Science Strategy.",
       "task_labels": [
-        "Sequential Reasoning"
+        "Tool Grounding"
       ],
-      "reference_solution_description": "Step 1: search_eoss for semantic context about enabling tools. Step 2: query_ontology to retrieve structured relationships between EnablingTool and ScienceQuestion nodes.",
+      "reference_solution_description": "Retrieve the EnablingTool inventory from the EOSS knowledge graph using list_ontology_nodes(label=\"EnablingTool\") and report all tool names. An equivalent read-only query over all EnablingTool nodes is valid; no links to ScienceQuestion nodes or separate strategic-context synthesis are required. The captured inventory contains Partnerships and Cooperation; Community Approach to Science; STEM Education, Training and Outreach; Commercial Space Links; Open Science and Digital Innovation. Compare against the stored source snapshot or a refreshed inventory if the graph changes.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_eoss",
+              "function_name": "list_ontology_nodes",
               "arguments": {
-                "question": "enabling tools for Earth observation",
-                "k": 5
+                "label": "EnablingTool"
               },
-              "comment": "Retrieve semantic context about enabling EO tools"
-            },
-            {
-              "function_name": "query_ontology",
-              "arguments": {
-                "cypher": "MATCH (et:EnablingTool)-[r]-(sq:ScienceQuestion) RETURN et.name AS tool, sq.name AS science_question, type(r) AS rel ORDER BY et.name"
-              },
-              "comment": "Structured retrieval of EnablingTool to ScienceQuestion relationships"
+              "comment": "Retrieve the complete enabling-tool inventory and list the names. Equivalent MATCH (et:EnablingTool) RETURN et.id, et.name is valid."
             }
           ]
         }
@@ -8681,9 +8673,9 @@
             {
               "function_name": "query_ontology",
               "arguments": {
-                "cypher": "MATCH (sq:ScienceQuestion)-[r]->(so:StrategicObjective) RETURN sq.name AS question, count(so) AS n_objectives ORDER BY n_objectives DESC"
+                "cypher": "MATCH (sq:ScienceQuestion) OPTIONAL MATCH (sq)-[r]->(so:StrategicObjective) RETURN sq.name AS question, count(so) AS n_objectives ORDER BY question"
               },
-              "comment": "Count how many strategic objectives each science question informs"
+              "comment": "Preserve all ScienceQuestion nodes using OPTIONAL MATCH; report zero direct links where absent. Do not manufacture links from shared text chunks."
             }
           ]
         }
@@ -8865,7 +8857,7 @@
     },
     {
       "task_ID": "TASK_260713_000041_500020",
-      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2024.",
+      "task_text": "First list all EUMETSAT products available on the server to find the correct product key for MTG FCI full-disk high-spectral imagery, then search for available products on 15 January 2025.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -8882,10 +8874,10 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-01-15T09:00:00",
-                "end_date": "2024-01-15T11:00:00"
+                "start_date": "2025-01-15T09:00:00",
+                "end_date": "2025-01-15T11:00:00"
               },
-              "comment": "Search for available FCI FDHSI slots on 15 January 2024"
+              "comment": "Search for available FCI FDHSI slots on 15 January 2025"
             }
           ]
         }
@@ -8946,11 +8938,11 @@
     },
     {
       "task_ID": "TASK_260713_000043_500022",
-      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Based on the geographic area and time period described in the narrative, search the EUMETSAT server for the corresponding MTG FCI imagery products.",
+      "task_text": "Search EOdashboard for a narrative about atmospheric CO2 monitoring over Egypt. Use the geographic area described in the narrative to search the EUMETSAT server for MTG FCI imagery products during August 2025.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for the atmospheric CO2 monitoring narrative. Step 2: search_eumetsat_products for MTG FCI Level 1C imagery over the narrative's region and time period.",
+      "reference_solution_description": "Step 1: search_narratives on eodashboard for the atmospheric CO2 monitoring narrative. Step 2: search_eumetsat_products for MTG FCI Level 1C imagery over the narrative's region during August 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -8965,11 +8957,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-01T00:00:00",
-                "end_date": "2023-08-31T23:59:00",
+                "start_date": "2025-08-01T00:00:00",
+                "end_date": "2025-08-31T23:59:00",
                 "bbox": "<inferred>"
               },
-              "comment": "Search for MTG FCI Level 1C imagery over the narrative's region and time period"
+              "comment": "Search for MTG FCI Level 1C imagery over the narrative's region during August 2025"
             }
           ]
         }
@@ -8987,11 +8979,11 @@
     },
     {
       "task_ID": "TASK_260713_000044_500023",
-      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2024.",
+      "task_text": "Find ArXiv papers about Meteosat Third Generation FCI instrument calibration, then check what MTG FCI Level 1C products are available on the EUMETSAT server for the first week of June 2025.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_papers on ArXiv for MTG FCI calibration papers. Step 2: list_eumetsat_products then search_eumetsat_products for MTG-FCI-L1C-FDHSI in June 2024.",
+      "reference_solution_description": "Step 1: search_papers on ArXiv for MTG FCI calibration papers. Step 2: list_eumetsat_products then search_eumetsat_products for MTG-FCI-L1C-FDHSI in June 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -9012,10 +9004,10 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-01T00:00:00",
-                "end_date": "2024-06-07T23:59:00"
+                "start_date": "2025-06-01T00:00:00",
+                "end_date": "2025-06-07T23:59:00"
               },
-              "comment": "Check availability of FCI FDHSI products in first week of June 2024"
+              "comment": "Check availability of FCI FDHSI products in first week of June 2025"
             }
           ]
         }
@@ -9033,7 +9025,7 @@
     },
     {
       "task_ID": "TASK_260713_000046_500025",
-      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2024.",
+      "task_text": "Search for available MTG FCI Level 1C FDHSI products between 10:00 and 12:00 UTC on 10 April 2025.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -9045,8 +9037,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-04-10T10:00:00",
-                "end_date": "2024-04-10T12:00:00"
+                "start_date": "2025-04-10T10:00:00",
+                "end_date": "2025-04-10T12:00:00"
               },
               "comment": "Returns count and identifiers of available FCI FDHSI slots in that time window"
             }
@@ -9107,11 +9099,11 @@
     },
     {
       "task_ID": "TASK_260713_000048_500027",
-      "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2023. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
+      "task_text": "Search the EUMETSAT catalogue for the MTG FCI Level 2 Active Fire Monitoring (FIR) collection and determine how many products are available over the Italian peninsula during August 2025. Based on the number of matching observations, decide whether it is practical to download the full set or only a representative subset, and justify your choice.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Use search_eumetsat_products to count available MTG-FCI-L2-AFM (Active Fire Monitoring) products over the Italian peninsula in August 2023, then assess whether the count is within the per-call download limit.",
+      "reference_solution_description": "Use search_eumetsat_products to count available MTG-FCI-L2-AFM (Active Fire Monitoring) products over the Italian peninsula in August 2025, then assess whether the count is within the per-call download limit.",
       "reference_solutions": [
         {
           "steps": [
@@ -9126,11 +9118,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2023-08-01T00:00:00",
-                "end_date": "2023-08-31T23:59:00",
+                "start_date": "2025-08-01T00:00:00",
+                "end_date": "2025-08-31T23:59:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Returns count of MTG FCI Active Fire Monitoring products over Italy in August 2023"
+              "comment": "Returns count of MTG FCI Active Fire Monitoring products over Italy in August 2025"
             }
           ]
         }
@@ -9186,7 +9178,7 @@
     },
     {
       "task_ID": "TASK_260713_000050_500029",
-      "task_text": "Search for MTG FCI FDHSI products over central Europe on 5 September 2023, then download up to 3 observations using the datastore method and read them back to confirm the data is restricted to the central Europe area.",
+      "task_text": "Search for MTG FCI FDHSI products over central Europe on 5 September 2025, then download up to 3 observations using the datastore method and read them back to confirm the data is restricted to the central Europe area.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9205,8 +9197,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-09-05T08:00:00",
-                "end_date": "2023-09-05T14:00:00",
+                "start_date": "2025-09-05T08:00:00",
+                "end_date": "2025-09-05T14:00:00",
                 "bbox": "<derived from previous step>"
               },
               "comment": "Check availability of FCI FDHSI slots over central Europe"
@@ -9215,8 +9207,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-09-05T08:00:00",
-                "end_date": "2023-09-05T14:00:00",
+                "start_date": "2025-09-05T08:00:00",
+                "end_date": "2025-09-05T14:00:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 3,
@@ -9291,7 +9283,7 @@
     },
     {
       "task_ID": "TASK_260713_000052_500031",
-      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2024.",
+      "task_text": "Geocode 'Rome, Italy' to get its coordinates, then search for MTG FCI HRFI products within a 0.5-degree bounding box around Rome for 20 June 2025.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9310,11 +9302,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-HRFI",
-                "start_date": "2024-06-20T10:00:00",
-                "end_date": "2024-06-20T12:00:00",
+                "start_date": "2025-06-20T10:00:00",
+                "end_date": "2025-06-20T12:00:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Search for FCI HRFI products over the Rome area on 20 June 2024"
+              "comment": "Search for FCI HRFI products over the Rome area on 20 June 2025"
             }
           ]
         }
@@ -9332,11 +9324,11 @@
     },
     {
       "task_ID": "TASK_260713_000053_500032",
-      "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily during the 2025 fire season, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
+      "task_text": "Search for MTG FCI Level 2 Active Fire Monitoring (FIR) products covering Sicily from 3 July through 30 September 2025, and download one product. Visualize the active fire detections and assess whether fire activity is visible in the observed area.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: geocode_place to resolve Sicily's bounding box. Step 2: search_eumetsat_products to check MTG-FCI-L2-AFM availability over Sicily during the 2025 fire season (June-September). Step 3: download_eumetsat_product for one representative observation. Step 4: read_eumetsat_product with as_geotiff=true to export the fire_probability band. Step 5: create_map to render it as a viewable PNG. Steps 6-7: resolve_images/load_images to load the map into the VLM's context and assess visible fire activity.",
+      "reference_solution_description": "Step 1: geocode_place to resolve Sicily's bounding box. Step 2: search_eumetsat_products to check MTG-FCI-L2-AFM availability over Sicily from 3 July through 30 September 2025 (3 July–30 September). Step 3: download_eumetsat_product for one representative observation. Step 4: read_eumetsat_product with as_geotiff=true to export the fire_probability band. Step 5: create_map to render it as a viewable PNG. Steps 6-7: resolve_images/load_images to load the map into the VLM's context and assess visible fire activity.",
       "reference_solutions": [
         {
           "steps": [
@@ -9351,11 +9343,11 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2025-06-01T00:00:00",
+                "start_date": "2025-07-03T00:00:00",
                 "end_date": "2025-09-30T23:59:00",
                 "bbox": "<derived from previous step>"
               },
-              "comment": "Check MTG FCI Active Fire Monitoring availability over Sicily during the 2025 fire season"
+              "comment": "Check MTG FCI Active Fire Monitoring availability over Sicily from 3 July through 30 September 2025"
             },
             {
               "function_name": "download_eumetsat_product",
@@ -9432,11 +9424,11 @@
     },
     {
       "task_ID": "TASK_260713_000054_500033",
-      "task_text": "Download one MTG FCI Level 1C FDHSI full-disk observation from 15 January 2024 at 10:00 UTC using the direct datastore method.",
+      "task_text": "Download one MTG FCI Level 1C FDHSI full-disk observation from 15 January 2025 at 10:00 UTC using the direct datastore method.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call download_eumetsat_product for MTG-FCI-L1C-FDHSI for a 10-minute window on 15 January 2024.",
+      "reference_solution_description": "Call download_eumetsat_product for MTG-FCI-L1C-FDHSI for a 10-minute window on 15 January 2025.",
       "reference_solutions": [
         {
           "steps": [
@@ -9444,8 +9436,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-01-15T10:00:00",
-                "end_date": "2024-01-15T10:10:00",
+                "start_date": "2025-01-15T10:00:00",
+                "end_date": "2025-01-15T10:10:00",
                 "method": "datastore",
                 "observations_per_day": 1,
                 "start_hour": 10,
@@ -9515,7 +9507,7 @@
     },
     {
       "task_ID": "TASK_260713_000056_500035",
-      "task_text": "Download 2 MTG FCI HRFI observations per day from 10 to 12 July 2024 over northern Italy, requesting GeoTIFF output via the Data Tailor.",
+      "task_text": "Download 2 MTG FCI HRFI observations per day from 10 to 12 July 2025 over northern Italy, requesting GeoTIFF output via the Data Tailor.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -9527,8 +9519,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-HRFI",
-                "start_date": "2024-07-10T00:00:00",
-                "end_date": "2024-07-12T23:59:00",
+                "start_date": "2025-07-10T00:00:00",
+                "end_date": "2025-07-12T23:59:00",
                 "bbox": "<inferred>",
                 "format": "geotiff",
                 "method": "datatailor",
@@ -9554,7 +9546,7 @@
     },
     {
       "task_ID": "TASK_260713_000057_500036",
-      "task_text": "Search for available MTG FCI FDHSI products over the Middle East on 15 June 2024, select one representative observation, download it, and read it back to confirm that the data coverage is restricted to the Middle East region.",
+      "task_text": "Search for available MTG FCI FDHSI products over the Middle East on 15 June 2025, select one representative observation, download it, and read it back to confirm that the data coverage is restricted to the Middle East region.",
       "task_labels": [
         "Sequential Reasoning"
       ],
@@ -9573,8 +9565,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-15T08:00:00",
-                "end_date": "2024-06-15T11:00:00",
+                "start_date": "2025-06-15T08:00:00",
+                "end_date": "2025-06-15T11:00:00",
                 "bbox": "<derived from previous step>"
               },
               "comment": "Verify availability and count before downloading"
@@ -9583,8 +9575,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-06-15T09:00:00",
-                "end_date": "2024-06-15T09:15:00",
+                "start_date": "2025-06-15T09:00:00",
+                "end_date": "2025-06-15T09:15:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 1,
@@ -9618,7 +9610,7 @@
     },
     {
       "task_ID": "TASK_260713_000058_500037",
-      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Based on the geographic focus and time period of the narrative, search for and download the corresponding MTG FCI imagery products, then read them back cropped to that geographic focus.",
+      "task_text": "Search EOdashboard for narratives about atmospheric composition monitoring from space. Use the geographic focus of the narrative to search for and download MTG FCI imagery products for 15–20 August 2025, then read them back cropped to that geographic focus.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9637,8 +9629,8 @@
               "function_name": "search_eumetsat_products",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-15T00:00:00",
-                "end_date": "2023-08-20T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-20T23:59:00",
                 "bbox": "<inferred>"
               },
               "comment": "Check availability of FCI Level 1C imagery over Egypt"
@@ -9647,8 +9639,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2023-08-15T00:00:00",
-                "end_date": "2023-08-20T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-20T23:59:00",
                 "bbox": "<inferred>",
                 "method": "datastore",
                 "observations_per_day": 4,
@@ -9682,7 +9674,7 @@
     },
     {
       "task_ID": "TASK_260713_000059_500038",
-      "task_text": "Download MTG FCI cloud mask products over Spain during a heatwave period in July 2023, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
+      "task_text": "Download MTG FCI cloud mask products over Spain on 10 July 2025, read them back cropped to Spain to confirm coverage, then search the ESA Earth Observation Science Strategy for objectives related to climate monitoring, atmospheric processes, or extreme weather. Explain how cloud observations contribute to these scientific priorities.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
@@ -9701,8 +9693,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-CLM",
-                "start_date": "2023-07-10T10:00:00",
-                "end_date": "2023-07-10T12:00:00",
+                "start_date": "2025-07-10T10:00:00",
+                "end_date": "2025-07-10T12:00:00",
                 "bbox": "<derived from previous step>",
                 "method": "datastore",
                 "observations_per_day": 2,
@@ -9743,23 +9735,42 @@
     },
     {
       "task_ID": "TASK_260713_000061_500040",
-      "task_text": "Download ERA5 monthly mean 2m temperature for July 2023, then inspect the resulting file to summarise its variables, dimensions, and coordinate system.",
+      "task_text": "Download ERA5 monthly mean 2m temperature for July 2023 over Girona, Spain, and its surroundings, then inspect the resulting file to summarise its variables, dimensions, and coordinate system.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call inspect_netcdf with the given filepath to get a structured summary of the file contents.",
+      "reference_solution_description": "Call inspect_netcdf with the given filepath to get a structured summary of the file contents. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Girona, Spain"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
             {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
-                "area": "<inferred>",
-                "output_filename": "output/TASK_260713_000061_500040/era5_t2m_2023_07.nc"
-              }
+                "output_filename": "output/TASK_260713_000061_500040/era5_t2m_2023_07_global.nc"
+              },
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000061_500040/era5_t2m_2023_07_global.nc",
+                "north": "<north bound of Girona, Spain>",
+                "south": "<south bound of Girona, Spain>",
+                "east": "<east bound of Girona, Spain>",
+                "west": "<west bound of Girona, Spain>",
+                "output_filepath": "output/TASK_260713_000061_500040/era5_t2m_2023_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -9784,14 +9795,21 @@
     },
     {
       "task_ID": "TASK_260713_000062_500041",
-      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for June 2022, then inspect the resulting file to check which variables and time dimensions are present.",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for June 2022 over Trento, Italy, and its surroundings, then inspect the resulting file to check which variables and time dimensions are present.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call inspect_netcdf to retrieve the file summary including dimensions, coordinates, and variable metadata.",
+      "reference_solution_description": "Call inspect_netcdf to retrieve the file summary including dimensions, coordinates, and variable metadata. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Trento, Italy"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
             {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
@@ -9799,9 +9817,21 @@
                 "pressure_level": "500",
                 "year": "2022",
                 "month": "06",
-                "area": "<inferred>",
-                "output_filename": "output/TASK_260713_000062_500041/era5_geopotential_500hPa_2022.nc"
-              }
+                "output_filename": "output/TASK_260713_000062_500041/era5_geopotential_500hPa_2022_global.nc"
+              },
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000062_500041/era5_geopotential_500hPa_2022_global.nc",
+                "north": "<north bound of Trento, Italy>",
+                "south": "<south bound of Trento, Italy>",
+                "east": "<east bound of Trento, Italy>",
+                "west": "<west bound of Trento, Italy>",
+                "output_filepath": "output/TASK_260713_000062_500041/era5_geopotential_500hPa_2022.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -9826,30 +9856,49 @@
     },
     {
       "task_ID": "TASK_260713_000063_500042",
-      "task_text": "Download ERA5 total precipitation for January 2021, then verify that the resulting file contains the expected variables and time coordinates.",
+      "task_text": "Download ERA5 total precipitation for January 2021 over the Tigray region of Ethiopia, then verify that the resulting file contains the expected variables and time coordinates.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Fetch the ERA5 file first, then inspect it to validate variables and time coordinates.",
+      "reference_solution_description": "Resolve Tigray, Ethiopia, download ERA5 total_precipitation for 2021-01, clip to the resolved region and inspect the regional NetCDF. fetch_era5_single_levels does not accept area. Accept equivalent regional retrieval/readback and valid variable/coordinate names; filenames and exact bbox are not mandatory. Raw global input is allowed as an intermediate. The precipitation question does not fix temporal sampling; the temperature question requires monthly mean. Verify nonempty regional coverage; handle longitude convention correctly.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Tigray, Ethiopia"
+              },
+              "comment": "Resolve a suitable regional bbox. Tigray refers to the Ethiopian administrative region."
+            },
             {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
                 "year": "2021",
                 "month": "01",
-                "area": "<inferred>",
-                "output_filename": "output/TASK_260713_000063_500042/total_precipitation_2021_01.nc"
-              }
+                "output_filename": "output/TASK_260713_000063_500042/total_precipitation_2021_01_global.nc"
+              },
+              "comment": "Download monthly mean surface data; this tool has no area argument. Other task-compatible temporal sampling is valid for precipitation."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000063_500042/total_precipitation_2021_01_global.nc",
+                "north": "<resolved north>",
+                "south": "<resolved south>",
+                "east": "<resolved east>",
+                "west": "<resolved west>",
+                "output_filepath": "output/TASK_260713_000063_500042/total_precipitation_2021_01_regional.nc"
+              },
+              "comment": "Save a nonempty regional subset. Normalize longitude conventions before clipping if needed."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
-                "filepath": "output/TASK_260713_000063_500042/total_precipitation_2021_01.nc"
+                "filepath": "output/TASK_260713_000063_500042/total_precipitation_2021_01_regional.nc"
               },
-              "comment": "Validates NetCDF file contents including variable names and coordinate ranges"
+              "comment": "Verify actual regional variables, dimensions, coordinates and units."
             }
           ]
         }
@@ -9867,11 +9916,11 @@
     },
     {
       "task_ID": "TASK_260713_000064_500043",
-      "task_text": "Download ERA5 monthly mean 2-metre temperature for July 2021 and then inspect the resulting NetCDF file to confirm its structure over Europe.",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2021, then inspect the resulting NetCDF file to confirm its structure.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_single_levels for 2m temperature in July 2021. Step 2: inspect_netcdf on the downloaded file.",
+      "reference_solution_description": "Resolve Europe, download ERA5 2m_temperature for 2021-07, clip to the resolved region and inspect the regional NetCDF. fetch_era5_single_levels does not accept area. Accept equivalent regional retrieval/readback and valid variable/coordinate names; filenames and exact bbox are not mandatory. Raw global input is allowed as an intermediate. The precipitation question does not fix temporal sampling; the temperature question requires monthly mean. Verify nonempty regional coverage; handle longitude convention correctly.",
       "reference_solutions": [
         {
           "steps": [
@@ -9880,7 +9929,7 @@
               "arguments": {
                 "region_name": "Europe"
               },
-              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+              "comment": "Resolve a suitable regional bbox. Tigray refers to the Ethiopian administrative region."
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -9888,17 +9937,28 @@
                 "variable": "2m_temperature",
                 "year": "2021",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000064_500043/t2m_2021_07.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000064_500043/2m_temperature_2021_07_global.nc"
               },
-              "comment": "Download ERA5 monthly mean 2m temperature for July 2021"
+              "comment": "Download monthly mean surface data; this tool has no area argument. Other task-compatible temporal sampling is valid for precipitation."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000064_500043/2m_temperature_2021_07_global.nc",
+                "north": "<resolved north>",
+                "south": "<resolved south>",
+                "east": "<resolved east>",
+                "west": "<resolved west>",
+                "output_filepath": "output/TASK_260713_000064_500043/2m_temperature_2021_07_regional.nc"
+              },
+              "comment": "Save a nonempty regional subset. Normalize longitude conventions before clipping if needed."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
-                "filepath": "output/TASK_260713_000064_500043/t2m_2021_07.nc"
+                "filepath": "output/TASK_260713_000064_500043/2m_temperature_2021_07_regional.nc"
               },
-              "comment": "Inspect the downloaded NetCDF to verify variable names, dimensions, and coordinate metadata"
+              "comment": "Verify actual regional variables, dimensions, coordinates and units."
             }
           ]
         }
@@ -9916,11 +9976,11 @@
     },
     {
       "task_ID": "TASK_260713_000065_500044",
-      "task_text": "Download ERA5 geopotential at 500 hPa for January 2023 and inspect the resulting file to check the time and pressure dimensions over Europe.",
+      "task_text": "Download ERA5 geopotential at 500 hPa over Europe for January 2023, then inspect the resulting file to check its time and pressure dimensions.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_pressure_levels for geopotential at 500 hPa. Step 2: inspect_netcdf on the output file.",
+      "reference_solution_description": "Resolve Europe, download the requested ERA5 field, clip the global input to a suitable European bbox and inspect the regional NetCDF. Fetch tools do not accept area. Accept equivalent regional retrieval/readback and reasonable European boundaries. Metadata claims must agree with the actual regional file; handle longitude conventions before clipping and do not accept empty output.",
       "reference_solutions": [
         {
           "steps": [
@@ -9929,7 +9989,7 @@
               "arguments": {
                 "region_name": "Europe"
               },
-              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+              "comment": "Resolve an appropriate Europe bbox; use the resolved north/south/east/west boundaries for regional clipping."
             },
             {
               "function_name": "fetch_era5_pressure_levels",
@@ -9938,15 +9998,26 @@
                 "pressure_level": 500,
                 "year": "2023",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000065_500044/z500_2023_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000065_500044/z500_2023_01.nc"
               },
               "comment": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023"
             },
             {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000065_500044/z500_2023_01.nc",
+                "north": "<resolved north>",
+                "south": "<resolved south>",
+                "east": "<resolved east>",
+                "west": "<resolved west>",
+                "output_filepath": "output/TASK_260713_000065_500044/z500_2023_01_Europe.nc"
+              },
+              "comment": "Produce a nonempty Europe subset. Normalize longitude conventions before clipping if needed; reference boundaries are not mandatory."
+            },
+            {
               "function_name": "inspect_netcdf",
               "arguments": {
-                "filepath": "output/TASK_260713_000065_500044/z500_2023_01.nc"
+                "filepath": "output/TASK_260713_000065_500044/z500_2023_01_Europe.nc"
               },
               "comment": "Inspect the downloaded file to verify the pressure level and time coordinate"
             }
@@ -9970,7 +10041,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search EO Dashboard narratives for climate monitoring content, read the narrative to extract the study area and time period, download the relevant ERA5 variable for that area and period using the appropriate fetch tool, then inspect the resulting NetCDF file to report its dimensions, variables, and coordinate ranges.",
+      "reference_solution_description": "Search EO Dashboard narratives for climate monitoring content, read the narrative to extract the study area and time period, download the relevant ERA5 variable for that area and period using the appropriate fetch tool, then inspect the resulting NetCDF file to report its dimensions, variables, and coordinate ranges. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -9982,15 +10053,33 @@
               "comment": "Find EOdashboard narratives about climate monitoring with reanalysis data"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "total_precipitation",
-                "year": "2022",
-                "month": "12",
-                "output_filename": "<inferred>",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000066_500045/regional_global.nc"
               },
-              "comment": "Download ERA5 monthly mean total precipitation for December 2022"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000066_500045/regional_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000066_500045/regional.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10103,7 +10192,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_pressure_levels to download 500 hPa geopotential. Step 2: inspect_netcdf to ground the circulation-pattern description in the actual file structure.",
+      "reference_solution_description": "Step 1: fetch_era5_pressure_levels to download 500 hPa geopotential. Step 2: inspect_netcdf to ground the circulation-pattern description in the actual file structure. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10121,10 +10210,21 @@
                 "pressure_level": 500,
                 "year": "2023",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000069_500048/z500_2023_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000069_500048/z500_2023_01_global.nc"
               },
-              "comment": "Download ERA5 500 hPa geopotential for January 2023"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000069_500048/z500_2023_01_global.nc",
+                "north": "<north bound of Europe>",
+                "south": "<south bound of Europe>",
+                "east": "<east bound of Europe>",
+                "west": "<west bound of Europe>",
+                "output_filepath": "output/TASK_260713_000069_500048/z500_2023_01.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10367,11 +10467,11 @@
     },
     {
       "task_ID": "TASK_260713_000072_500051",
-      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023, then inspect the downloaded file to verify the pressure level coordinate over Europe. Visualize the geopotential field to confirm it depicts a plausible atmospheric pattern.",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa over Europe for January 2023, then inspect the downloaded file to verify the pressure level coordinate. Visualize the geopotential field to confirm it depicts a plausible atmospheric pattern.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: resolve_named_region for Europe's bbox. Step 2: fetch_era5_pressure_levels to download the data (no 'area' parameter — always full-disk). Step 3: clip_to_bbox to crop to Europe. Step 4: inspect_netcdf to verify file structure and the pressure level coordinate. Step 5: netcdf_to_geotiff to export a viewable GeoTIFF. Steps 6-7: resolve_images/load_images to visually confirm the field depicts a plausible atmospheric pattern.",
+      "reference_solution_description": "Resolve Europe, download ERA5 monthly mean geopotential at 500 hPa for January 2023, crop the global input to a suitable European bbox, inspect the regional pressure/time metadata, and visualize the actual regional field. Fetch has no area argument. Normalize longitude convention where needed before clipping and verify nonempty output. A GeoTIFF export followed by image loading is one valid visualization workflow; equivalent plots/maps are accepted. Assess plausibility from actual data, not an expected circulation pattern; distinguish geopotential units from geopotential height.",
       "reference_solutions": [
         {
           "steps": [
@@ -10380,7 +10480,7 @@
               "arguments": {
                 "region_name": "Europe"
               },
-              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+              "comment": "Resolve suitable Europe bbox; use individual north/south/east/west bounds for clipping."
             },
             {
               "function_name": "fetch_era5_pressure_levels",
@@ -10403,7 +10503,7 @@
                 "west": "<derived from previous step: west bound of Europe bbox>",
                 "output_filepath": "output/TASK_260713_000072_500051/z500_europe_2023_01.nc"
               },
-              "comment": "Crop the global download to the Europe AOI"
+              "comment": "Crop to Europe and verify nonempty coverage; normalize longitude coordinates where required."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10549,32 +10649,112 @@
     },
     {
       "task_ID": "TASK_260713_000074_500053",
-      "task_text": "Search EOdashboard for narratives related to atmospheric monitoring. Based on the geographic focus of the narrative, download ERA5 monthly mean zonal wind at 250 hPa for recent winters to quantify upper-level circulation anomalies.",
+      "task_text": "Find and read an EO Dashboard narrative about EarthCARE that discusses the Walker circulation. Download ERA5 monthly mean vertical velocity at 500 hPa for June 2025 over the western and eastern tropical Pacific. Describe the ascending and descending motion shown by the data and explain how it relates to the narrative.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives on eodashboard for jet stream context. Step 2: fetch_era5_pressure_levels for u-wind at 250 hPa for multiple winter months. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "Search EarthCARE narratives, retrieve the full text, and identify its Walker-circulation discussion. Download one June 2025 monthly mean ERA5 vertical-velocity field at 500 hPa, then crop to representative western and eastern tropical Pacific regions. Inspect actual values or maps; GeoTIFF export and raster_band_statistics provide one valid numerical inspection route. For pressure-coordinate vertical velocity in Pa s**-1, negative values indicate ascent and positive values descent. Explain how the observed motion relates to the narrative without prescribing its signs. Reference boxes are illustrative; no zonal-wind download, multi-year baseline, exact reference bbox or prescribed anomaly calculation is required.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "search_narratives",
               "arguments": {
-                "keyword": "atmosphere"
+                "keyword": "EarthCARE"
               },
-              "comment": "Find EOdashboard narratives about jet stream variability"
+              "comment": "Find the named narrative using a title keyword, rather than searching for a jet-stream narrative."
+            },
+            {
+              "function_name": "get_narrative_content",
+              "arguments": {
+                "url": "https://esa-eodashboards.github.io/eodashboard-narratives/science-hub-team-1-story.md"
+              },
+              "comment": "Read the actual western/eastern Pacific discussion and distinguish climatological context from the June 2025 observations."
             },
             {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
-                "variable": "u_component_of_wind",
-                "pressure_level": 250,
-                "year": "<any representative recent years>",
-                "month": "<any representative winter month, e.g. Dec-Feb>",
-                "output_filename": "output/TASK_260713_000074_500053/u250_winters.nc",
-                "area": "<inferred>"
+                "variable": "vertical_velocity",
+                "pressure_level": 500,
+                "year": "2025",
+                "month": "06",
+                "output_filename": "output/TASK_260713_000074_500053/w500_202506_global.nc"
               },
-              "comment": "Download ERA5 250 hPa zonal wind for January in winters 2020–2022"
+              "comment": "One monthly field only; this tool has no area argument. Crop separately and normalize longitude conventions before clipping."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_global.nc",
+                "north": 10,
+                "south": -10,
+                "east": 170,
+                "west": 140,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc"
+              },
+              "comment": "Illustrative western/eastern tropical Pacific box; other scientifically appropriate representative boxes are valid. Normalize longitude convention before clipping."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc"
+              },
+              "comment": "Confirm the actual variable name, units, pressure coordinate and June 2025 time before interpretation."
+            },
+            {
+              "function_name": "netcdf_to_geotiff",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.nc",
+                "variable": "w",
+                "time_index": 0,
+                "level_index": 0,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_west_pacific.tif"
+              },
+              "comment": "Export a numerical slice; use the actual inspected variable name if different."
+            },
+            {
+              "function_name": "raster_band_statistics",
+              "arguments": {
+                "source": "output/TASK_260713_000074_500053/w500_202506_west_pacific.tif"
+              },
+              "comment": "Inspect actual sign/range/mean rather than infer them from metadata or an unlabeled stretched preview. Equivalent numerical inspection is valid."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_global.nc",
+                "north": 10,
+                "south": -10,
+                "east": -100,
+                "west": -140,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc"
+              },
+              "comment": "Illustrative western/eastern tropical Pacific box; other scientifically appropriate representative boxes are valid. Normalize longitude convention before clipping."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc"
+              },
+              "comment": "Confirm the actual variable name, units, pressure coordinate and June 2025 time before interpretation."
+            },
+            {
+              "function_name": "netcdf_to_geotiff",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.nc",
+                "variable": "w",
+                "time_index": 0,
+                "level_index": 0,
+                "output_filepath": "output/TASK_260713_000074_500053/w500_202506_east_pacific.tif"
+              },
+              "comment": "Export a numerical slice; use the actual inspected variable name if different."
+            },
+            {
+              "function_name": "raster_band_statistics",
+              "arguments": {
+                "source": "output/TASK_260713_000074_500053/w500_202506_east_pacific.tif"
+              },
+              "comment": "Inspect actual sign/range/mean rather than infer them from metadata or an unlabeled stretched preview. Equivalent numerical inspection is valid."
             }
           ]
         }
@@ -10588,7 +10768,7 @@
       "match_score_Human": null,
       "evaluator_scores": {},
       "evaluator_reasoning": {},
-      "GT": 1
+      "GT": 99
     },
     {
       "task_ID": "TASK_260713_000075_500054",
@@ -10596,7 +10776,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 pressure-level accuracy papers. Step 2: fetch_era5_pressure_levels for temperature at 500 hPa. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 pressure-level accuracy papers. Step 2: fetch_era5_pressure_levels for temperature at 500 hPa. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative. Match temporal sampling to the selected paper: monthly means only if appropriate. Otherwise use fetch_era5_hourly_pressure_levels, fetch_era5_daily_statistics where applicable, or a documented generic CDS request. One month is not enough if the paper explicitly requires a longer reference period.",
       "reference_solutions": [
         {
           "steps": [
@@ -10609,16 +10789,34 @@
               "comment": "Find ArXiv papers on ERA5 pressure-level reanalysis accuracy"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "temperature",
                 "pressure_level": "500",
-                "year": "<derived from the reference period stated in the actual paper found>",
-                "month": "<derived from the reference period stated in the actual paper found>",
-                "output_filename": "output/TASK_260713_000075_500054/era5_t500_jan2021.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000075_500054/era5_t500_jan2021_global.nc"
               },
-              "comment": "Download ERA5 500 hPa temperature for January 2021 as reference dataset"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative. This monthly branch is valid only when the selected paper uses monthly means; choose the appropriate hourly/generic fetch branch otherwise."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000075_500054/era5_t500_jan2021_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000075_500054/era5_t500_jan2021.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -10640,7 +10838,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='2m_temperature'. Step 2: inspect_netcdf to ground the temperature-pattern description.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='2m_temperature'. Step 2: inspect_netcdf to ground the temperature-pattern description. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10657,10 +10855,21 @@
                 "variable": "2m_temperature",
                 "year": "2021",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000077_500056/t2m_2021_07.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000077_500056/t2m_2021_07_global.nc"
               },
-              "comment": "Downloads ERA5 monthly mean 2m temperature for July 2021"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000077_500056/t2m_2021_07_global.nc",
+                "north": "<north bound of Europe>",
+                "south": "<south bound of Europe>",
+                "east": "<east bound of Europe>",
+                "west": "<west bound of Europe>",
+                "output_filepath": "output/TASK_260713_000077_500056/t2m_2021_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10689,7 +10898,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='total_precipitation'. Step 2: inspect_netcdf to ground the rainfall-pattern description.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='total_precipitation'. Step 2: inspect_netcdf to ground the rainfall-pattern description. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10706,10 +10915,21 @@
                 "variable": "total_precipitation",
                 "year": "2023",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000078_500057/tp_2023_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000078_500057/tp_2023_01_global.nc"
               },
-              "comment": "Downloads ERA5 monthly mean total precipitation for January 2023"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000078_500057/tp_2023_01_global.nc",
+                "north": "<north bound of Europe>",
+                "south": "<south bound of Europe>",
+                "east": "<east bound of Europe>",
+                "west": "<west bound of Europe>",
+                "output_filepath": "output/TASK_260713_000078_500057/tp_2023_01.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10738,7 +10958,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='sea_surface_temperature'. Step 2: inspect_netcdf to ground the SST-pattern description.",
+      "reference_solution_description": "Step 1: fetch_era5_single_levels with variable='sea_surface_temperature'. Step 2: inspect_netcdf to ground the SST-pattern description. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10755,10 +10975,21 @@
                 "variable": "sea_surface_temperature",
                 "year": "2022",
                 "month": "08",
-                "output_filename": "output/TASK_260713_000079_500058/sst_2022_08.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000079_500058/sst_2022_08_global.nc"
               },
-              "comment": "Downloads ERA5 monthly mean sea surface temperature for August 2022"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000079_500058/sst_2022_08_global.nc",
+                "north": "<north bound of North Atlantic>",
+                "south": "<south bound of North Atlantic>",
+                "east": "<east bound of North Atlantic>",
+                "west": "<west bound of North Atlantic>",
+                "output_filepath": "output/TASK_260713_000079_500058/sst_2022_08.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "inspect_netcdf",
@@ -10783,11 +11014,11 @@
     },
     {
       "task_ID": "TASK_260713_000080_500059",
-      "task_text": "Download ERA5 monthly mean 2-metre temperature for July 2023, then inspect the downloaded file to verify its variable names and grid resolution over Europe.",
+      "task_text": "Download ERA5 monthly mean 2-metre temperature over Europe for July 2023, then inspect the downloaded file to verify its variable names and grid resolution.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: fetch_era5_single_levels for 2m temperature. Step 2: inspect_netcdf on the output file.",
+      "reference_solution_description": "Resolve Europe, download the requested ERA5 field, clip the global input to a suitable European bbox and inspect the regional NetCDF. Fetch tools do not accept area. Accept equivalent regional retrieval/readback and reasonable European boundaries. Metadata claims must agree with the actual regional file; handle longitude conventions before clipping and do not accept empty output.",
       "reference_solutions": [
         {
           "steps": [
@@ -10796,7 +11027,7 @@
               "arguments": {
                 "region_name": "Europe"
               },
-              "comment": "Resolve 'Europe' to a bounding box via the region gazetteer (reorder geocode_place-format [west,south,east,north] to climate's [north,west,south,east] before use)"
+              "comment": "Resolve an appropriate Europe bbox; use the resolved north/south/east/west boundaries for regional clipping."
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -10804,15 +11035,26 @@
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000080_500059/t2m_2023_07.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000080_500059/t2m_2023_07.nc"
               },
               "comment": "Download ERA5 monthly mean 2m temperature for July 2023"
             },
             {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000080_500059/t2m_2023_07.nc",
+                "north": "<resolved north>",
+                "south": "<resolved south>",
+                "east": "<resolved east>",
+                "west": "<resolved west>",
+                "output_filepath": "output/TASK_260713_000080_500059/t2m_2023_07_Europe.nc"
+              },
+              "comment": "Produce a nonempty Europe subset. Normalize longitude conventions before clipping if needed; reference boundaries are not mandatory."
+            },
+            {
               "function_name": "inspect_netcdf",
               "arguments": {
-                "filepath": "output/TASK_260713_000080_500059/t2m_2023_07.nc"
+                "filepath": "output/TASK_260713_000080_500059/t2m_2023_07_Europe.nc"
               },
               "comment": "Inspect the downloaded file to verify variable names, dimensions, and grid resolution"
             }
@@ -10836,7 +11078,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: search_eoss for extreme heat events. Step 2: fetch_era5_single_levels for 2m temperature in July 2022.",
+      "reference_solution_description": "Step 1: search_eoss for extreme heat events. Step 2: fetch_era5_single_levels for 2m temperature in July 2022. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10860,10 +11102,21 @@
                 "variable": "2m_temperature",
                 "year": "2022",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000081_500060/t2m_2022_07.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000081_500060/t2m_2022_07_global.nc"
               },
-              "comment": "Download ERA5 2m temperature for July 2022 European heatwave analysis"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000081_500060/t2m_2022_07_global.nc",
+                "north": "<north bound of Mediterranean>",
+                "south": "<south bound of Mediterranean>",
+                "east": "<east bound of Mediterranean>",
+                "west": "<west bound of Mediterranean>",
+                "output_filepath": "output/TASK_260713_000081_500060/t2m_2022_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -10885,7 +11138,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_narratives for SST and ocean heat context on eodashboard. Step 2: fetch_era5_single_levels for SST, for whichever ocean region the actual retrieved narrative highlights — the area/region is narrative-dependent, not fixed to any single ocean basin.",
+      "reference_solution_description": "Step 1: search_narratives for SST and ocean heat context on eodashboard. Step 2: fetch_era5_single_levels for SST, for whichever ocean region the actual retrieved narrative highlights — the area/region is narrative-dependent, not fixed to any single ocean basin. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10897,15 +11150,33 @@
               "comment": "Find EOdashboard narratives about SST and ocean heat"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "sea_surface_temperature",
-                "year": "2023",
-                "month": "07",
-                "output_filename": "<any output filename>",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000082_500061/regional_global.nc"
               },
-              "comment": "Download ERA5 monthly mean SST for the ocean region highlighted by the actual narrative found (any ocean basin is valid, not just North Atlantic)"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000082_500061/regional_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000082_500061/regional.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -10927,7 +11198,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 temperature trend papers. Step 2: fetch_era5_single_levels for 2m temperature.",
+      "reference_solution_description": "Step 1: search_papers on ArXiv for ERA5 temperature trend papers. Step 2: fetch_era5_single_levels for 2m temperature. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -10940,15 +11211,33 @@
               "comment": "Find ArXiv papers on ERA5 temperature trends over the Mediterranean"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
-                "year": "2021",
-                "month": "08",
-                "output_filename": "output/TASK_260713_000083_500062/t2m_2021_08.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000083_500062/t2m_2021_08_global.nc"
               },
-              "comment": "Download ERA5 monthly mean 2m temperature for August 2021"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000083_500062/t2m_2021_08_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000083_500062/t2m_2021_08.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -11028,7 +11317,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "list_era5_single_level_variables to confirm the variable name, geocode 'Germany' with geocode_place, then fetch_era5_single_levels.",
+      "reference_solution_description": "list_era5_single_level_variables to confirm the variable name, geocode 'Germany' with geocode_place, then fetch_era5_single_levels. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -11050,10 +11339,21 @@
                 "variable": "total_precipitation",
                 "year": "2022",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000003_600003/tp_germany_2022_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000003_600003/tp_germany_2022_01_global.nc"
               },
-              "comment": "Download monthly mean"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000003_600003/tp_germany_2022_01_global.nc",
+                "north": "<north bound of Germany>",
+                "south": "<south bound of Germany>",
+                "east": "<east bound of Germany>",
+                "west": "<west bound of Germany>",
+                "output_filepath": "output/TASK_260713_000003_600003/tp_germany_2022_01.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -11071,36 +11371,47 @@
     },
     {
       "task_ID": "TASK_260713_000004_600004",
-      "task_text": "A MOOC on EO applications discusses soil moisture as a key land-atmosphere variable. Check whether it is available in ERA5 single-level data, then fetch its monthly mean for a recent summer month over a mid-latitude land region.",
+      "task_text": "A MOOC on EO applications discusses soil moisture as a key land-atmosphere variable. Check whether it is available in ERA5 single-level data, then fetch its monthly mean for a summer month in 2023–2025 over a mid-latitude land region.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Search MOOCs for latent heat flux, call list_era5_single_level_variables to confirm 'surface_latent_heat_flux', then fetch.",
+      "reference_solution_description": "Confirm an appropriate ERA5 single-level soil-moisture variable using list_era5_single_level_variables. volumetric_soil_water_layer_1 is illustrative; other scientifically suitable soil-water layers are valid. Choose a hemisphere-appropriate summer month in 2023–2025 and a mid-latitude land region. Fetch the global monthly mean and clip it to that region. MOOC lookup is optional background, not an explicit retrieval requirement. No latent-heat-flux substitution is valid.",
       "reference_solutions": [
         {
           "steps": [
-            {
-              "function_name": "search_moocs",
-              "arguments": {
-                "query": "soil moisture land atmosphere satellite remote sensing"
-              },
-              "comment": "Real MOOC coverage: Soil Moisture Estimation series"
-            },
             {
               "function_name": "list_era5_single_level_variables",
               "arguments": {},
               "comment": "Confirm ERA5 variable name"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "a suitable mid-latitude land region"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "volumetric_soil_water_layer_1",
-                "year": "2023",
+                "year": "2025",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000004_600004/swvl1_2023_07.nc",
-                "area": "<inferred>"
+                "output_filename": "output/TASK_260713_000004_600004/swvl1_2023_07_global.nc"
               },
-              "comment": "Download monthly mean soil moisture"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000004_600004/swvl1_2023_07_global.nc",
+                "north": "<north bound of a suitable mid-latitude land region>",
+                "south": "<south bound of a suitable mid-latitude land region>",
+                "east": "<east bound of a suitable mid-latitude land region>",
+                "west": "<west bound of a suitable mid-latitude land region>",
+                "output_filepath": "output/TASK_260713_000004_600004/swvl1_2023_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -11203,7 +11514,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call list_era5_pressure_level_variables (confirms 'geopotential'), then fetch_era5_pressure_levels.",
+      "reference_solution_description": "Call list_era5_pressure_level_variables (confirms 'geopotential'), then fetch_era5_pressure_levels. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -11226,10 +11537,21 @@
                 "pressure_level": 500,
                 "year": "2023",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000008_600008/z500_2023_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000008_600008/z500_2023_01_global.nc"
               },
-              "comment": "Download monthly mean geopotential"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000008_600008/z500_2023_01_global.nc",
+                "north": "<north bound of Europe>",
+                "south": "<south bound of Europe>",
+                "east": "<east bound of Europe>",
+                "west": "<west bound of Europe>",
+                "output_filepath": "output/TASK_260713_000008_600008/z500_2023_01.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -11251,7 +11573,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_eoss for ESA Earth energy imbalance / heat transport content (grounded via the real SQ-46 'Earth energy imbalance' science question), then list_era5_pressure_level_variables to confirm 'u_component_of_wind', then fetch_era5_pressure_levels at 250 hPa.",
+      "reference_solution_description": "search_eoss for ESA Earth energy imbalance / heat transport content (grounded via the real SQ-46 'Earth energy imbalance' science question), then list_era5_pressure_level_variables to confirm 'u_component_of_wind', then fetch_era5_pressure_levels at 250 hPa. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -11281,10 +11603,21 @@
                 "pressure_level": 250,
                 "year": "2023",
                 "month": "01",
-                "output_filename": "output/TASK_260713_000009_600009/u250_2023_01.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000009_600009/u250_2023_01_global.nc"
               },
-              "comment": "Download jet-stream level wind"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000009_600009/u250_2023_01_global.nc",
+                "north": "<north bound of North Atlantic jet-stream corridor>",
+                "south": "<south bound of North Atlantic jet-stream corridor>",
+                "east": "<east bound of North Atlantic jet-stream corridor>",
+                "west": "<west bound of North Atlantic jet-stream corridor>",
+                "output_filepath": "output/TASK_260713_000009_600009/u250_2023_01.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             }
           ]
         }
@@ -11402,25 +11735,18 @@
     },
     {
       "task_ID": "TASK_260713_000014_600014",
-      "task_text": "An EO Dashboard narrative discusses long-term warming trends. List the available CDS datasets to identify which ones provide future climate projections and seasonal forecasts.",
+      "task_text": "Using the climate tool’s dataset catalogue, identify the dataset for future climate projections and the dataset for seasonal forecasts. Report each dataset identifier and its classification.",
       "task_labels": [
-        "Cross-agent Synthesis"
+        "Tool Grounding"
       ],
-      "reference_solution_description": "search_narratives for warming/climate change, then list_cds_datasets to identify projections-cmip6 and seasonal-original-single-levels.",
+      "reference_solution_description": "Call list_cds_datasets and classify the two entries from the climate server’s curated catalogue: projections-cmip6 → future climate projections; seasonal-original-single-levels → seasonal forecasts. Report both identifier–classification pairs. No EO Dashboard narrative retrieval, download, or exhaustive live CDS search is required.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "search_narratives",
-              "arguments": {
-                "keyword": "climate"
-              },
-              "comment": "Find relevant EO Dashboard narratives"
-            },
-            {
               "function_name": "list_cds_datasets",
               "arguments": {},
-              "comment": "Identify datasets with future projections"
+              "comment": "Read the catalogue descriptions and report projections-cmip6 as future climate projections and seasonal-original-single-levels as seasonal forecasts."
             }
           ]
         }
@@ -11438,18 +11764,64 @@
     },
     {
       "task_ID": "TASK_260713_000015_600015",
-      "task_text": "Find the CDS dataset for downloading Copernicus Sentinel-5P TROPOMI atmospheric composition data.",
+      "task_text": "Using CDSE, download three separate Sentinel-5P TROPOMI GeoTIFFs for carbon monoxide, nitrogen dioxide, and methane over Madrid and its surroundings for 1–30 June 2025. Report the data-band identifier used for each product.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "list_cds_datasets shows no Sentinel-5P dataset; TROPOMI data is distributed via CDSE/Copernicus Dataspace, not the CDS API.",
+      "reference_solution_description": "Resolve Madrid, Spain to a suitable bounding box covering the city and its surroundings, then call CDSE fetch_sentinel5p_l2 separately with presets co, no2 and ch4, dates 2025-06-01 through 2025-06-30, as_geotiff=True, and distinct output files. A scientifically reasonable Madrid-area bbox is acceptable; the example bbox in the reference is not mandatory. Report only the product–data-band identifiers: carbon monoxide → CO, nitrogen dioxide → NO2, methane → CH4, verified against the returned evalscripts. Reporting file paths is not required. These are geophysical data-band identifiers, not instrument spectral channels. The interval selects available observations, not a monthly mean or daily time series. Evaluators inspect downloaded artifacts and provenance independently of the final answer. The existing raw export omits dataMask, so finite values alone do not prove valid observations. The raw export is one valid reference workflow, not a mandatory output encoding; the task does not request quantitative concentration values.",
       "reference_solutions": [
         {
           "steps": [
             {
-              "function_name": "list_cds_datasets",
-              "arguments": {},
-              "comment": "Scope awareness: CDS does not host Sentinel-5P TROPOMI data"
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "co",
+                "as_geotiff": true,
+                "save_path": "output/madrid_co_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report CO data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
+            },
+            {
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "no2",
+                "as_geotiff": true,
+                "save_path": "output/madrid_no2_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report NO2 data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
+            },
+            {
+              "function_name": "fetch_sentinel5p_l2",
+              "arguments": {
+                "bbox": [
+                  -4.0,
+                  40.0,
+                  -3.0,
+                  41.0
+                ],
+                "start_date": "2025-06-01",
+                "end_date": "2025-06-30",
+                "preset": "ch4",
+                "as_geotiff": true,
+                "save_path": "output/madrid_ch4_202506.tif"
+              },
+              "comment": "Save a separate raw GeoTIFF; report CH4 data-band identifier from returned evalscript. This reference bbox is illustrative; any suitable bbox covering Madrid and its surroundings is valid."
             }
           ]
         }
@@ -13355,11 +13727,11 @@
     },
     {
       "task_ID": "TASK_260713_000053_600053",
-      "task_text": "Download hourly ERA5 total precipitation over Sicily, Italy, for August 2021, aggregate the hourly values into daily totals, and report the resulting daily precipitation time series.",
+      "task_text": "Download hourly ERA5 total precipitation over Sicily, Italy, for August 2021, aggregate the hourly values into daily totals. For each day, report the unweighted mean of the daily totals across valid grid cells in the downloaded Sicily region, with units.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Sicily, Italy') to get an area (no gazetteer entry exists for Sicily), fetch_era5_hourly_single_levels for total_precipitation over August 2021, then convert_hourly_to_daily with method='sum' to produce daily totals.",
+      "reference_solution_description": "geocode_place('Sicily, Italy') to get an area (no gazetteer entry exists for Sicily), fetch_era5_hourly_single_levels for total_precipitation over August 2021, then convert_hourly_to_daily with method='sum' to produce daily totals. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -13389,6 +13761,14 @@
                 "method": "sum"
               },
               "comment": "Sum hourly values to get daily totals"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000053_600053/tp_daily_sicily_aug2021.nc",
+                "variable": "tp"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -13406,11 +13786,11 @@
     },
     {
       "task_ID": "TASK_260713_000054_600054",
-      "task_text": "Download hourly ERA5 2 m air temperature over Alentejo region in Portugal for January 2023, aggregate the sub-daily values into daily mean temperatures, and identify the warmest and coldest days of the month.",
+      "task_text": "Download ERA5 daily mean 2 m air temperature for January 2023 over Alentejo, Portugal. Using the unweighted mean across valid grid cells in the downloaded region, identify the warmest and coldest days of the month.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Alentejo, Portugal') to get an area (no gazetteer entry exists for Alentejo), fetch_era5_hourly_single_levels for 2m_temperature over January 2023, convert_hourly_to_daily with method='mean' to produce daily means, then inspect_netcdf to ground identifying the warmest/coldest days.",
+      "reference_solution_description": "Geocode Alentejo to establish a bounding box, download ERA5 pre-computed daily mean 2m temperature for January 2023 within that box, then summarize_regional_timeseries to calculate the unweighted valid-cell spatial mean for each day. Report the warmest and coldest dates. If extrema are tied, any date among the corresponding tied dates is correct; reporting all tied dates is also valid. An equivalent hourly-to-daily UTC workflow is acceptable. No temperature values, unit conversion or saved derived time series are required in the final answer.",
       "reference_solutions": [
         {
           "steps": [
@@ -13419,34 +13799,27 @@
               "arguments": {
                 "place_name": "Alentejo, Portugal"
               },
-              "comment": "Geocode Alentejo to a bounding box (no gazetteer entry exists for Alentejo)"
+              "comment": "Define the region bbox; use [north, west, south, east] for the climate request."
             },
             {
-              "function_name": "fetch_era5_hourly_single_levels",
+              "function_name": "fetch_era5_daily_statistics",
               "arguments": {
                 "variable": "2m_temperature",
+                "statistic": "daily_mean",
                 "year": "2023",
                 "month": "01",
-                "area": "<derived from previous step>",
-                "output_filename": "output/TASK_260713_000054_600054/t2m_hourly_alentejo_jan2023.nc"
+                "area": "<Alentejo bbox in north, west, south, east order>",
+                "output_filename": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc"
               },
-              "comment": "Download hourly temperature over Alentejo"
+              "comment": "Retrieve January daily means. Equivalent UTC daily averaging of hourly observations is valid."
             },
             {
-              "function_name": "convert_hourly_to_daily",
+              "function_name": "summarize_regional_timeseries",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000054_600054/t2m_hourly_alentejo_jan2023.nc",
-                "output_filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc",
-                "method": "mean"
+                "input_filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc",
+                "variable": "t2m"
               },
-              "comment": "Average hourly values to daily means"
-            },
-            {
-              "function_name": "inspect_netcdf",
-              "arguments": {
-                "filepath": "output/TASK_260713_000054_600054/t2m_daily_alentejo_jan2023.nc"
-              },
-              "comment": "Inspect daily means to ground identifying the warmest and coldest days"
+              "comment": "Use unweighted means across valid regional grid cells. Return a warmest and coldest date; accept any tied extremum date, or all ties."
             }
           ]
         }
@@ -13640,14 +14013,21 @@
     },
     {
       "task_ID": "TASK_260713_000061_600061",
-      "task_text": "Download ERA5 daily total precipitation for August 2022, then resample the daily time series to a monthly total. Report the resulting monthly precipitation value.",
+      "task_text": "Download ERA5 daily total precipitation for August 2022 over Braga, Portugal, and its surroundings, then resample the daily time series to a monthly total. Report the unweighted mean of the per-cell monthly totals across valid grid cells in the downloaded region, with units.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_daily_statistics for total_precipitation with statistic='daily_sum' for August 2022, then call resample_temporal with freq='MS' and method='sum' to produce the monthly total.",
+      "reference_solution_description": "Call fetch_era5_daily_statistics for total_precipitation with statistic='daily_sum' for August 2022, then call resample_temporal with freq='MS' and method='sum' to produce the monthly total. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Braga, Portugal"
+              },
+              "comment": "Resolve a compact city-surroundings bbox containing ERA5 grid-cell centres; an illustrative centre +/-0.5 degree bbox is not mandatory."
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -13655,7 +14035,7 @@
                 "statistic": "daily_sum",
                 "year": "2022",
                 "month": "08",
-                "area": "<inferred>",
+                "area": "<resolved city-surroundings bbox in north,west,south,east order>",
                 "output_filename": "output/TASK_260713_000061_600061/tp_daily_2022.nc"
               }
             },
@@ -13667,6 +14047,14 @@
                 "method": "sum"
               },
               "comment": "Sum daily values to monthly totals"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000061_600061/tp_monthly_2022.nc",
+                "variable": "tp"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -13684,14 +14072,21 @@
     },
     {
       "task_ID": "TASK_260713_000062_600062",
-      "task_text": "Download ERA5 daily mean 2 m temperature for July 2022, then resample the daily time series to a monthly mean. Report the resulting monthly average temperature.",
+      "task_text": "Download ERA5 daily mean 2 m temperature for July 2022 over Annecy, France, and its surroundings, then resample the daily time series to a monthly mean. Report the unweighted mean of the per-cell monthly means across valid grid cells in the downloaded region, with units.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_daily_statistics for 2m_temperature with statistic='daily_mean' for July 2022, then call resample_temporal with freq='MS' and method='mean' to produce the monthly mean.",
+      "reference_solution_description": "Call fetch_era5_daily_statistics for 2m_temperature with statistic='daily_mean' for July 2022, then call resample_temporal with freq='MS' and method='mean' to produce the monthly mean. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
+            {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "Annecy, France"
+              },
+              "comment": "Resolve a compact city-surroundings bbox containing ERA5 grid-cell centres; an illustrative centre +/-0.5 degree bbox is not mandatory."
+            },
             {
               "function_name": "fetch_era5_daily_statistics",
               "arguments": {
@@ -13699,7 +14094,7 @@
                 "statistic": "daily_mean",
                 "year": "2022",
                 "month": "07",
-                "area": "<inferred>",
+                "area": "<resolved city-surroundings bbox in north,west,south,east order>",
                 "output_filename": "output/TASK_260713_000062_600062/t2m_daily_2022.nc"
               }
             },
@@ -13711,6 +14106,14 @@
                 "method": "mean"
               },
               "comment": "Average daily values to monthly means"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000062_600062/t2m_monthly_2022.nc",
+                "variable": "t2m"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -13728,11 +14131,11 @@
     },
     {
       "task_ID": "TASK_260713_000063_600063",
-      "task_text": "Download ERA5 daily total precipitation over the Sahel region for July 2022, aggregate the daily values into a monthly precipitation total, and report the accumulated rainfall for the month.",
+      "task_text": "Download ERA5 daily total precipitation over the Sahel region for July 2022, aggregate the daily values into a monthly precipitation total. Report the regional mean monthly accumulated precipitation: the unweighted mean of per-cell monthly totals across valid grid cells, with units.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "resolve_named_region('Sahel'), fetch_era5_daily_statistics with statistic='daily_sum', convert_daily_to_monthly with method='sum', then inspect_netcdf to ground the reported monthly total.",
+      "reference_solution_description": "resolve_named_region('Sahel'), fetch_era5_daily_statistics with statistic='daily_sum', convert_daily_to_monthly with method='sum', then inspect_netcdf to ground the reported monthly total. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -13770,6 +14173,14 @@
                 "filepath": "output/TASK_260713_000063_600063/tp_sahel_jul2022_monthly.nc"
               },
               "comment": "Inspect the monthly total to ground the reported accumulated rainfall"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000063_600063/tp_sahel_jul2022_monthly.nc",
+                "variable": "tp"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -13961,11 +14372,11 @@
     },
     {
       "task_ID": "TASK_260713_000067_600067",
-      "task_text": "Retrieve ERA5 daily mean 2 m temperature data over Malta for July 2023, then resample the time series to monthly frequency using a mean aggregation. Report the resulting monthly average temperature.",
+      "task_text": "Retrieve ERA5 daily mean 2 m temperature data over Malta for July 2023, then resample the time series to monthly frequency using a mean aggregation. Report the unweighted mean of the per-cell monthly means across valid grid cells in the downloaded Malta region, with units.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Malta') to get an area (no gazetteer entry exists for Malta), fetch_era5_daily_statistics with variable='2m_temperature', statistic='daily_mean', year='2023', month='07'. Then resample_temporal with freq='MS' and method='mean' to aggregate to monthly frequency and report the resulting monthly average temperature value.",
+      "reference_solution_description": "geocode_place('Malta') to get an area (no gazetteer entry exists for Malta), fetch_era5_daily_statistics with variable='2m_temperature', statistic='daily_mean', year='2023', month='07'. Then resample_temporal with freq='MS' and method='mean' to aggregate to monthly frequency and report the resulting monthly average temperature value. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -13997,6 +14408,14 @@
                 "method": "mean"
               },
               "comment": "Resample daily means to monthly frequency"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000067_600067/t2m_monthly_malta_jul2023.nc",
+                "variable": "t2m"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -14014,11 +14433,11 @@
     },
     {
       "task_ID": "TASK_260713_000068_600068",
-      "task_text": "Download ERA5 mean sea level pressure at 6-hourly intervals for January 2023 over the Azores, Portugal, then aggregate the sub-daily values to daily means. Report the resulting daily mean pressure series.",
+      "task_text": "Download ERA5 mean sea level pressure at 6-hourly intervals for January 2023 over the Azores, Portugal, then aggregate the sub-daily values to daily means. For each day, report the unweighted mean of the per-cell daily means across valid grid cells in the downloaded Azores region, with units.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Azores, Portugal') to get an area (no gazetteer entry exists for the Azores), fetch_era5_hourly_single_levels for mean_sea_level_pressure at 6-hourly intervals, then resample_temporal with freq='D' and method='mean' to produce daily means.",
+      "reference_solution_description": "geocode_place('Azores, Portugal') to get an area (no gazetteer entry exists for the Azores), fetch_era5_hourly_single_levels for mean_sea_level_pressure at 6-hourly intervals, then resample_temporal with freq='D' and method='mean' to produce daily means. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -14055,6 +14474,14 @@
                 "method": "mean"
               },
               "comment": "Resample 6-hourly data to daily means"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000068_600068/mslp_azores_daily_jan2023.nc",
+                "variable": "msl"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -14130,11 +14557,11 @@
     },
     {
       "task_ID": "TASK_260713_000070_600070",
-      "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean, then aggregate the hourly values to a monthly total precipitation. Report the resulting monthly value.",
+      "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean, then aggregate the hourly values to a monthly total precipitation. Report the unweighted mean of the per-cell monthly precipitation totals across valid grid cells in the downloaded Mediterranean region, with units.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Call fetch_era5_hourly_single_levels for total_precipitation over the Mediterranean for January 2022, then call resample_temporal with freq='MS' and method='sum' to compute the monthly total.",
+      "reference_solution_description": "Call fetch_era5_hourly_single_levels for total_precipitation over the Mediterranean for January 2022, then call resample_temporal with freq='MS' and method='sum' to compute the monthly total. First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -14165,6 +14592,14 @@
                 "method": "sum"
               },
               "comment": "Resample to monthly total"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000070_600070/tp_med_jan2022_monthly.nc",
+                "variable": "tp"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -14182,11 +14617,11 @@
     },
     {
       "task_ID": "TASK_260713_000071_600071",
-      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative, retrieve ERA5 monthly mean sea surface temperature within a 2° × 2° region around that location for three representative years from different decades, and compute the multi-year mean SST field to characterize typical ocean temperature conditions.",
+      "task_text": "Search EO Dashboard narratives related to sea surface temperature patterns. Identify a representative coastal location discussed in a narrative. Retrieve ERA5 monthly mean sea surface temperature for the same calendar month in three representative years from different decades, within a 2° × 2° box centred on that location. Compute and save the equal-weight, cell-by-cell mean SST field across the three observations on their common grid, retaining only ocean cells valid in all three inputs. Identify the location, selected month and years, report the output path and temperature units, and describe the resulting SST pattern. Explain that three selected years do not constitute a long-term climatology or establish a warming trend.",
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for SST-related narratives, geocode_place on the narrative's coastal study area to get a center point, then construct a 2°×2° bbox by taking that center's lat/lon ± 1° in each direction (geocode_place returns an administrative-boundary bbox, not a fixed-size box, so the ±1° span must be built from the returned center coordinates). For each of three representative years (e.g. 1990, 2005, 2020) fetch_era5_single_levels (this tool has no area parameter — it always returns the global field, and only accepts one year string at a time) followed by clip_to_bbox to crop to that 2°×2° box. No tool exists to merge multiple yearly NetCDF files into one series, so the multi-year mean is computed by reasoning over the three inspected fields, grounded via inspect_netcdf on each clipped file.",
+      "reference_solution_description": "Search SST-related narratives, geocode a supported coastal location, and construct a fixed centre ±1° box. For the same month in three different decades (1990, 2005, 2020 are examples), fetch ERA5 monthly mean SST and clip each file to that box. Inspect the inputs to verify matching coordinates and units. Call mean_netcdf_fields to compute and save an equal-weight cell-by-cell mean, using only cells valid in all three observations. Inspect the saved mean and describe its pattern and sampling limitations; do not substitute reasoning over metadata for actual arithmetic.",
       "reference_solutions": [
         {
           "steps": [
@@ -14275,21 +14710,41 @@
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_1990_07_region.nc"
               },
-              "comment": "Inspect 1990 field to ground the multi-year mean (no merge tool exists to combine years)"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_2005_07_region.nc"
               },
-              "comment": "Inspect 2005 field to ground the multi-year mean"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
             },
             {
               "function_name": "inspect_netcdf",
               "arguments": {
                 "filepath": "output/TASK_260713_000071_600071/sst_2020_07_region.nc"
               },
-              "comment": "Inspect 2020 field to ground the multi-year mean"
+              "comment": "Verify input variable, units and coordinates before computing the mean."
+            },
+            {
+              "function_name": "mean_netcdf_fields",
+              "arguments": {
+                "input_filepaths": [
+                  "output/TASK_260713_000071_600071/sst_1990_07_region.nc",
+                  "output/TASK_260713_000071_600071/sst_2005_07_region.nc",
+                  "output/TASK_260713_000071_600071/sst_2020_07_region.nc"
+                ],
+                "variable": "sst",
+                "output_filepath": "output/TASK_260713_000071_600071/sst_selected_years_mean.nc"
+              },
+              "comment": "Equal-weight pointwise mean on matching spatial coordinates; units must match; mask cells missing in any input. Use the actual inspected SST variable name if different."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000071_600071/sst_selected_years_mean.nc"
+              },
+              "comment": "Verify saved mean-field structure and numerical summaries. Report the sample years/month and units; characterize the field without claiming a climatology or trend."
             }
           ]
         }
@@ -14307,11 +14762,11 @@
     },
     {
       "task_ID": "TASK_260713_000073_600073",
-      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2023 over Death Valley, USA, then convert the temperature values from Kelvin to Celsius. Report the resulting temperature in Celsius.",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2023 over Death Valley, USA, then convert the temperature values from Kelvin to Celsius. Report the unweighted mean temperature across valid grid cells in the clipped Death Valley region, in degrees Celsius.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Death Valley, USA') to get an area (no gazetteer entry exists for it), fetch_era5_single_levels for 2m_temperature (this tool has no area parameter — it always returns the global field), clip_to_bbox to crop to Death Valley, then convert_units to transform from Kelvin to Celsius (subtract 273.15).",
+      "reference_solution_description": "geocode_place('Death Valley, USA') to get an area (no gazetteer entry exists for it), fetch_era5_single_levels for 2m_temperature (this tool has no area parameter — it always returns the global field), clip_to_bbox to crop to Death Valley, then convert_units to transform from Kelvin to Celsius (subtract 273.15). First aggregate time independently per grid cell, preserving missing cells; then compute an unweighted mean over finite valid regional grid cells using summarize_regional_timeseries. Report values with units. A spatial sum of rainfall depths is not the requested regional mean depth.",
       "reference_solutions": [
         {
           "steps": [
@@ -14354,6 +14809,14 @@
                 "to_unit": "C"
               },
               "comment": "Subtract 273.15 from temperature values"
+            },
+            {
+              "function_name": "summarize_regional_timeseries",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000073_600073/era5_t2m_2023_07_deathvalley_degC.nc",
+                "variable": "t2m"
+              },
+              "comment": "After temporal aggregation (and Celsius conversion where requested), report the unweighted spatial mean for each retained time. Use the actual variable alias returned by file inspection."
             }
           ]
         }
@@ -14371,11 +14834,11 @@
     },
     {
       "task_ID": "TASK_260713_000075_600075",
-      "task_text": "Download ERA5 monthly mean surface latent heat flux for July 2022 over Lake Victoria, East Africa, then convert the 'slhf' variable from J m**-2 to W m**-2.",
+      "task_text": "Download ERA5 monthly means of daily means (product_type='monthly_averaged_reanalysis') for surface latent heat flux in July 2022 over Lake Victoria, East Africa. Inspect the 'slhf' variable and convert its accumulated-energy values from J m**-2 to a mean flux in W m**-2 using this product's effective daily accumulation interval of 86,400 seconds. Save the converted dataset, report its path, units and conversion factor, and preserve the ECMWF sign convention (positive downward).",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Lake Victoria') to get an area (no gazetteer entry exists for it), fetch_era5_single_levels for surface_latent_heat_flux (this tool has no area parameter — it always returns the global field), clip_to_bbox to crop to Lake Victoria, then convert_units with from_unit='J m**-2', to_unit='W m**-2'.",
+      "reference_solution_description": "Geocode Lake Victoria, fetch surface_latent_heat_flux from the ERA5 monthly-mean single-level product (monthly_averaged_reanalysis), and clip the global download to the location's bounding box. Inspect slhf and confirm the product and units. Monthly means of daily means have an effective one-day accumulation interval: convert using slhf / 86400, not /3600 and not the number of seconds in July. Call convert_units with accumulation_seconds=86400, preserve the sign, save and inspect the output. Source: https://confluence.ecmwf.int/pages/viewpage.action?pageId=179741903 (Monthly means).",
       "reference_solutions": [
         {
           "steps": [
@@ -14409,15 +14872,30 @@
               "comment": "Crop the global field to Lake Victoria"
             },
             {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria.nc"
+              },
+              "comment": "Verify slhf units and the monthly-mean product context before conversion."
+            },
+            {
               "function_name": "convert_units",
               "arguments": {
                 "input_filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria.nc",
                 "output_filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria_wm2.nc",
                 "variable": "slhf",
                 "from_unit": "J m**-2",
-                "to_unit": "W m**-2"
+                "to_unit": "W m**-2",
+                "accumulation_seconds": 86400
               },
-              "comment": "Divide by 3600 to convert accumulated flux to mean flux rate"
+              "comment": "Divide by 86400 for monthly means of daily means; preserve positive-downward sign convention."
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000075_600075/era5_slhf_2022_victoria_wm2.nc"
+              },
+              "comment": "Check saved variable and W m**-2 units; report the applied factor 1/86400."
             }
           ]
         }
@@ -14439,7 +14917,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_single_levels then convert_units K→C.",
+      "reference_solution_description": "fetch_era5_single_levels then convert_units K→C. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -14456,10 +14934,21 @@
                 "variable": "2m_temperature",
                 "year": "2023",
                 "month": "07",
-                "output_filename": "output/TASK_260713_000076_600076/t2m_europe_2023_07.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000076_600076/t2m_europe_2023_07_global.nc"
               },
-              "comment": "Download monthly mean 2m temperature"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000076_600076/t2m_europe_2023_07_global.nc",
+                "north": "<north bound of Europe>",
+                "south": "<south bound of Europe>",
+                "east": "<east bound of Europe>",
+                "west": "<west bound of Europe>",
+                "output_filepath": "output/TASK_260713_000076_600076/t2m_europe_2023_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "convert_units",
@@ -14554,7 +15043,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_moocs for Arctic amplification, then fetch_era5_single_levels for multiple months over the Arctic, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "search_moocs for Arctic amplification, then fetch_era5_single_levels for multiple months over the Arctic, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -14566,15 +15055,33 @@
               "comment": "Real MOOC coverage: Sea Ice series (Canadian Ice Service); Global Glacier Mapping"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "2m_temperature",
-                "year": "<derived from the recent period discussed in the actual MOOC content found>",
-                "month": "<derived from the recent period discussed in the actual MOOC content found>",
-                "output_filename": "output/TASK_260713_000078_600078/t2m_arctic_2022_07.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000078_600078/t2m_arctic_2022_07_global.nc"
               },
-              "comment": "Download Arctic summer temperature as example"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000078_600078/t2m_arctic_2022_07_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000078_600078/t2m_arctic_2022_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "convert_units",
@@ -14607,7 +15114,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "search_narratives for ocean/SST, then fetch_era5_single_levels for skin temperature, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "search_narratives for ocean/SST, then fetch_era5_single_levels for skin temperature, then convert_units K→C. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative.",
       "reference_solutions": [
         {
           "steps": [
@@ -14619,15 +15126,33 @@
               "comment": "Find SST-related EO Dashboard narratives"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_single_levels",
               "arguments": {
                 "variable": "skin_temperature",
-                "year": "<derived from the region and season highlighted in the actual narrative found>",
-                "month": "<derived from the region and season highlighted in the actual narrative found>",
-                "output_filename": "output/TASK_260713_000079_600079/skt_med_2023_07.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260713_000079_600079/skt_med_2023_07_global.nc"
               },
-              "comment": "Download Mediterranean skin temperature"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260713_000079_600079/skt_med_2023_07_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260713_000079_600079/skt_med_2023_07.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "convert_units",
@@ -14656,11 +15181,11 @@
     },
     {
       "task_ID": "TASK_260713_000081_600081",
-      "task_text": "Download ERA5 monthly mean total precipitation for January 2023, then clip the result to Africa. Report the clipped dataset extent.",
+      "task_text": "Download ERA5 monthly mean total precipitation for January 2023, then clip the result to Africa. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "geocode_place('Africa') to get a bounding box (no gazetteer entry exists for Africa), call fetch_era5_single_levels for total_precipitation (this tool has no area parameter — it always returns the global field), then clip_to_bbox with the geocoded bounding box.",
+      "reference_solution_description": "geocode_place('Africa') to get a bounding box (no gazetteer entry exists for Africa), call fetch_era5_single_levels for total_precipitation (this tool has no area parameter — it always returns the global field), then clip_to_bbox with the geocoded bounding box. Inspect actual clipped coordinate arrays and report their min/max grid-cell-centre bounds in W,S,E,N order with -180..180 longitude; pixel-edge bounds are not the requested quantity.",
       "reference_solutions": [
         {
           "steps": [
@@ -14692,6 +15217,13 @@
                 "west": "<derived from previous step: west bound of Africa bbox>"
               },
               "comment": "Spatial subset to Africa"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000081_600081/tp_africa_2023_01.nc"
+              },
+              "comment": "Inspect the clipped file and derive actual coordinate-centre extrema, not the requested bbox or pixel edges."
             }
           ]
         }
@@ -14709,11 +15241,11 @@
     },
     {
       "task_ID": "TASK_260713_000082_600082",
-      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2022 at global coverage, then clip the result to the Nile River basin. Report the clipped dataset extent.",
+      "task_text": "Download ERA5 monthly mean 2 m temperature for July 2022 at global coverage, then clip the result to the Nile River basin. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_single_levels for 2m_temperature at global area for July 2022, then call clip_to_bbox with a bounding box covering the Nile River basin.",
+      "reference_solution_description": "Call fetch_era5_single_levels for 2m_temperature at global area for July 2022, then call clip_to_bbox with a bounding box covering the Nile River basin. Inspect actual clipped coordinate arrays and report their min/max grid-cell-centre bounds in W,S,E,N order with -180..180 longitude; pixel-edge bounds are not the requested quantity.",
       "reference_solutions": [
         {
           "steps": [
@@ -14738,6 +15270,13 @@
                 "west": "<inferred>"
               },
               "comment": "Clip to Nile basin extent"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000082_600082/t2m_nile_2022_07.nc"
+              },
+              "comment": "Inspect the clipped file and derive actual coordinate-centre extrema, not the requested bbox or pixel edges."
             }
           ]
         }
@@ -14755,11 +15294,11 @@
     },
     {
       "task_ID": "TASK_260713_000083_600083",
-      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 at global coverage, then clip the result to the South Asian monsoon region. Report the clipped dataset extent.",
+      "task_text": "Download ERA5 monthly mean geopotential at 500 hPa for January 2023 at global coverage, then clip the result to the South Asian monsoon region. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Call fetch_era5_pressure_levels for geopotential at 500 hPa at global area for January 2023, then call clip_to_bbox with a bounding box covering the South Asian monsoon region.",
+      "reference_solution_description": "Call fetch_era5_pressure_levels for geopotential at 500 hPa at global area for January 2023, then call clip_to_bbox with a bounding box covering the South Asian monsoon region. Inspect actual clipped coordinate arrays and report their min/max grid-cell-centre bounds in W,S,E,N order with -180..180 longitude; pixel-edge bounds are not the requested quantity.",
       "reference_solutions": [
         {
           "steps": [
@@ -14785,6 +15324,13 @@
                 "west": "<inferred>"
               },
               "comment": "Clip to South Asian monsoon domain"
+            },
+            {
+              "function_name": "inspect_netcdf",
+              "arguments": {
+                "filepath": "output/TASK_260713_000083_600083/z500_sam_jan2023.nc"
+              },
+              "comment": "Inspect the clipped file and derive actual coordinate-centre extrema, not the requested bbox or pixel edges."
             }
           ]
         }
@@ -14806,7 +15352,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "fetch_era5_single_levels → clip_to_bbox → convert_units K→C.",
+      "reference_solution_description": "Resolve sub-Saharan Africa to a bounding box, download ERA5 monthly mean 2m temperature for December 2022 globally with fetch_era5_single_levels, then clip_to_bbox to retain the requested region. The monthly fetch tool has no area argument. Keep the native temperature units; Celsius conversion is not required by the task.",
       "reference_solutions": [
         {
           "steps": [
@@ -14823,21 +15369,21 @@
                 "variable": "2m_temperature",
                 "year": "2022",
                 "month": "12",
-                "output_filename": "output/TASK_260713_000085_600085/t2m_sub_saharan__2022_12.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260713_000085_600085/t2m_global_2022_12.nc"
               },
               "comment": "Download global 2m temperature"
             },
             {
-              "function_name": "convert_units",
+              "function_name": "clip_to_bbox",
               "arguments": {
-                "input_filepath": "output/TASK_260713_000085_600085/t2m_sub_saharan__2022_12.nc",
-                "output_filepath": "output/TASK_260713_000085_600085/t2m_ssa_2022_12_degC.nc",
-                "variable": "t2m",
-                "from_unit": "K",
-                "to_unit": "C"
+                "input_filepath": "output/TASK_260713_000085_600085/t2m_global_2022_12.nc",
+                "north": "<north bound of resolved region>",
+                "south": "<south bound of resolved region>",
+                "east": "<east bound of resolved region>",
+                "west": "<west bound of resolved region>",
+                "output_filepath": "output/TASK_260713_000085_600085/t2m_sub_saharan_2022_12.nc"
               },
-              "comment": "Convert to Celsius"
+              "comment": "Save the requested regional subset in native units; no Celsius conversion is required."
             }
           ]
         }
@@ -15345,7 +15891,7 @@
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1 & 2: fetch_era5_single_levels once per component (10m_u_component_of_wind, 10m_v_component_of_wind — the tool accepts one variable per call). Step 3: compute_wind_speed to combine them into a monthly-mean surface wind speed field for wind-resource assessment.",
+      "reference_solution_description": "Step 1 & 2: fetch_era5_single_levels once per component (10m_u_component_of_wind, 10m_v_component_of_wind — the tool accepts one variable per call). Step 3: compute_wind_speed to combine them into a monthly-mean surface wind speed field for wind-resource assessment. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative. compute_wind_speed yields the magnitude of the monthly-mean vector, not the monthly mean of instantaneous speed. This alone does not establish turbine-height wind-power yield; 850 hPa is a low-level circulation indicator.",
       "reference_solutions": [
         {
           "steps": [
@@ -15362,10 +15908,21 @@
                 "variable": "10m_u_component_of_wind",
                 "year": "2023",
                 "month": "03",
-                "output_filename": "output/TASK_260715_000001_700010/u10_northsea_2023_03.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260715_000001_700010/u10_northsea_2023_03_global.nc"
               },
-              "comment": "Download monthly mean 10m zonal wind for March 2023"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260715_000001_700010/u10_northsea_2023_03_global.nc",
+                "north": "<north bound of North Sea>",
+                "south": "<south bound of North Sea>",
+                "east": "<east bound of North Sea>",
+                "west": "<west bound of North Sea>",
+                "output_filepath": "output/TASK_260715_000001_700010/u10_northsea_2023_03.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "fetch_era5_single_levels",
@@ -15373,10 +15930,21 @@
                 "variable": "10m_v_component_of_wind",
                 "year": "2023",
                 "month": "03",
-                "output_filename": "output/TASK_260715_000001_700010/v10_northsea_2023_03.nc",
-                "area": "<derived from previous step>"
+                "output_filename": "output/TASK_260715_000001_700010/v10_northsea_2023_03_global.nc"
               },
-              "comment": "Download monthly mean 10m meridional wind for March 2023"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260715_000001_700010/v10_northsea_2023_03_global.nc",
+                "north": "<north bound of North Sea>",
+                "south": "<south bound of North Sea>",
+                "east": "<east bound of North Sea>",
+                "west": "<west bound of North Sea>",
+                "output_filepath": "output/TASK_260715_000001_700010/v10_northsea_2023_03.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "compute_wind_speed",
@@ -15407,7 +15975,7 @@
       "task_labels": [
         "Cross-agent Synthesis"
       ],
-      "reference_solution_description": "Step 1: search_eoss for ESA coastal renewable energy / coastal exchange processes context (grounded via SQ-07's real National Policy tag 'Coastal renewable sources (tide, wind)'). Steps 2 & 3: fetch_era5_pressure_levels once per component at 850 hPa (one variable per call). Step 4: compute_wind_speed to combine them into a low-level wind speed field. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid.",
+      "reference_solution_description": "Step 1: search_eoss for ESA coastal renewable energy / coastal exchange processes context (grounded via SQ-07's real National Policy tag 'Coastal renewable sources (tide, wind)'). Steps 2 & 3: fetch_era5_pressure_levels once per component at 850 hPa (one variable per call). Step 4: compute_wind_speed to combine them into a low-level wind speed field. The specific date(s) shown in this reference are one illustrative example, not a strict requirement — any date genuinely grounded in the actual retrieved content is equally valid. Corrected workflow: monthly helpers have no area parameter. Resolve the task-valid region, fetch global data, then clip_to_bbox before inspection or calculation. Use actual returned paths; reference filenames and open-choice dates are illustrative. compute_wind_speed yields the magnitude of the monthly-mean vector, not the monthly mean of instantaneous speed. This alone does not establish turbine-height wind-power yield; 850 hPa is a low-level circulation indicator.",
       "reference_solutions": [
         {
           "steps": [
@@ -15419,28 +15987,57 @@
               "comment": "Find ESA strategy context on wind energy monitoring"
             },
             {
+              "function_name": "geocode_place",
+              "arguments": {
+                "place_name": "the region supported by the actual retrieved narrative, paper, MOOC or EOSS content"
+              },
+              "comment": "Resolve the selected region. For a city, use a compact surrounding bbox (illustratively centre +/-0.5 degrees), large enough to contain ERA5 grid-cell centres; no exact reference bbox is mandatory."
+            },
+            {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "u_component_of_wind",
                 "pressure_level": 850,
-                "year": "<any representative recent year>",
-                "month": "<any representative recent month>",
-                "output_filename": "output/TASK_260715_000002_700011/u850_windenergy_2023_03.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260715_000002_700011/u850_windenergy_2023_03_global.nc"
               },
-              "comment": "Download 850 hPa zonal wind for the identified region/period"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260715_000002_700011/u850_windenergy_2023_03_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260715_000002_700011/u850_windenergy_2023_03.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "fetch_era5_pressure_levels",
               "arguments": {
                 "variable": "v_component_of_wind",
                 "pressure_level": 850,
-                "year": "<any representative recent year>",
-                "month": "<any representative recent month>",
-                "output_filename": "output/TASK_260715_000002_700011/v850_windenergy_2023_03.nc",
-                "area": "<inferred>"
+                "year": "<year(s) supported by the actual retrieved source>",
+                "month": "<month(s) supported by the actual retrieved source and task>",
+                "output_filename": "output/TASK_260715_000002_700011/v850_windenergy_2023_03_global.nc"
               },
-              "comment": "Download 850 hPa meridional wind for the identified region/period"
+              "comment": "Fetch global monthly data without area; use the exact returned path for subsequent clipping. Output names are illustrative."
+            },
+            {
+              "function_name": "clip_to_bbox",
+              "arguments": {
+                "input_filepath": "output/TASK_260715_000002_700011/v850_windenergy_2023_03_global.nc",
+                "north": "<north bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "south": "<south bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "east": "<east bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "west": "<west bound of the region supported by the actual retrieved narrative, paper, MOOC or EOSS content>",
+                "output_filepath": "output/TASK_260715_000002_700011/v850_windenergy_2023_03.nc"
+              },
+              "comment": "Clip the returned global field to the independently resolved task-valid region. Use the same bbox/grid for paired wind components."
             },
             {
               "function_name": "compute_wind_speed",
@@ -15591,7 +16188,7 @@
     },
     {
       "task_ID": "TASK_260716_000001_700013",
-      "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2024, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download MTG FCI FDHSI imagery over France for 10 March 2025, read the downloaded file to summarize the value range for every band, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -15603,8 +16200,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-03-10T00:00:00",
-                "end_date": "2024-03-10T23:59:00",
+                "start_date": "2025-03-10T00:00:00",
+                "end_date": "2025-03-10T23:59:00",
                 "bbox": [
                   -5.0,
                   42.0,
@@ -15653,7 +16250,7 @@
     },
     {
       "task_ID": "TASK_260716_000002_700014",
-      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2024, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download the MTG FCI Level 2 Active Fire Monitoring product over the Amazon basin for 15 August 2025, read the fire_probability band from the downloaded file, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -15665,8 +16262,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-AFM",
-                "start_date": "2024-08-15T00:00:00",
-                "end_date": "2024-08-15T23:59:00",
+                "start_date": "2025-08-15T00:00:00",
+                "end_date": "2025-08-15T23:59:00",
                 "bbox": [
                   -70.0,
                   -15.0,
@@ -15718,7 +16315,7 @@
     },
     {
       "task_ID": "TASK_260716_000003_700015",
-      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2024, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
+      "task_text": "Download the MTG FCI Level 2 cloud mask product over the Sahel region for 1 June 2025, read the downloaded file and also export it as a georeferenced GeoTIFF, then inspect the raw downloaded netCDF file's structure.",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -15730,8 +16327,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L2-CLM",
-                "start_date": "2024-06-01T00:00:00",
-                "end_date": "2024-06-01T23:59:00",
+                "start_date": "2025-06-01T00:00:00",
+                "end_date": "2025-06-01T23:59:00",
                 "bbox": [
                   -10.0,
                   5.0,
@@ -15781,11 +16378,11 @@
     },
     {
       "task_ID": "TASK_260716_000004_700016",
-      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 10 March 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
+      "task_text": "Download the first available MTG FCI FDHSI slot over the Alps region on 1 October 2024, then read that specific downloaded file and report reflectance statistics for its visible/near-infrared channels.",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: download_eumetsat_product for a single FCI FDHSI slot over the Alps bbox (start_hour omitted, so the tool auto-selects local solar noon). Step 2: read_eumetsat_product using the identifier returned by the download to read only that file.",
+      "reference_solution_description": "Download a single FCI FDHSI observation over the Alps on 1 October 2024 (omitted start_hour selects local solar noon). Pass the exact file paths returned by that single-product download to read_eumetsat_product and crop to the Alps bbox. FCI is delivered as multiple chunks whose filenames do not contain the parent identifier; identifier-only lookup is invalid. Numerical comparisons must use the same observation, channels, crop, calibration and valid-pixel mask.",
       "reference_solutions": [
         {
           "steps": [
@@ -15793,8 +16390,8 @@
               "function_name": "download_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "start_date": "2024-03-10T00:00:00",
-                "end_date": "2024-03-10T23:59:00",
+                "start_date": "2024-10-01T00:00:00",
+                "end_date": "2024-10-01T23:59:00",
                 "bbox": [
                   5.0,
                   45.0,
@@ -15810,7 +16407,6 @@
               "function_name": "read_eumetsat_product",
               "arguments": {
                 "product": "MTG-FCI-L1C-FDHSI",
-                "identifier": "<derived from download_eumetsat_product: products[0].identifier>",
                 "bands": [
                   "vis_04",
                   "vis_05",
@@ -15823,9 +16419,10 @@
                   45.0,
                   15.0,
                   48.0
-                ]
+                ],
+                "paths": "<derived from download_eumetsat_product: new_files (single-product download)>"
               },
-              "comment": "Reads only the just-downloaded file and reports reflectance stats for its VIS/NIR channels — passing bbox here is required to actually crop the AOI: 'datastore' downloads are always the full uncropped disk, bbox during download only filtered which products matched the search"
+              "comment": "Pass all readable chunk paths from this single-observation download, not the parent identifier. Crop to the same Alps bbox before computing channel statistics."
             }
           ]
         }
@@ -15952,8 +16549,8 @@
                 "product": "MSG-SEVIRI-L1-IODC",
                 "identifier": "<derived from download_eumetsat_product: products[0].identifier>",
                 "bands": [
-                  "IR108",
-                  "IR120"
+                  "IR_108",
+                  "IR_120"
                 ],
                 "bbox": [
                   76.5,

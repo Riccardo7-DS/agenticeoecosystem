@@ -21,6 +21,16 @@ def log_block(title: str, lines: list[str]) -> None:
     logger.info("\n%s\n%s\n%s\n%s", _BORDER, title, body, _BORDER)
 
 
+def require_healthy_services(results: dict[str, bool]) -> None:
+    """Abort startup if any required endpoint or MCP server failed its check."""
+    failed = [name for name, healthy in results.items() if not healthy]
+    if failed:
+        raise RuntimeError(
+            "Startup health check failed; benchmark will not run. Unhealthy services: "
+            + ", ".join(failed)
+        )
+
+
 def _describe(e: Exception) -> str:
     """Format an exception for a log line. Some exceptions (e.g.
     asyncio.TimeoutError) stringify to '', which would otherwise produce an
@@ -55,8 +65,10 @@ async def check_mcp_toolset(name: str, toolset, timeout: float = 180.0) -> bool:
     to avoid a false-negative UNREACHABLE result.
     """
     try:
-        await asyncio.wait_for(toolset.get_tools(), timeout=timeout)
-        return True
+        tools = await asyncio.wait_for(toolset.get_tools(), timeout=timeout)
+        if not tools:
+            logger.warning("MCP server '%s' returned no tools", name)
+        return bool(tools)
     except Exception as e:
         logger.warning("MCP server '%s' UNREACHABLE (%s)", name, _describe(e))
         return False

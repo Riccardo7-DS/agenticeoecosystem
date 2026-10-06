@@ -85,15 +85,20 @@ async def _load_tools_from_mcp():
     client = MultiServerMCPClient(mcp_servers)
 
     all_tools: list = []
+    healthcheck_results: dict[str, bool] = {}
     for server_name in mcp_servers:
         try:
             session = await _mcp_exit_stack.enter_async_context(client.session(server_name))
             tools = await load_mcp_tools(session, server_name=server_name)
+            healthcheck_results[f"MCP: {server_name}"] = bool(tools)
             all_tools.extend(tools)
             logger.info("  [%s] %d tool(s) loaded (persistent session)", server_name, len(tools))
         except Exception as exc:
+            healthcheck_results[f"MCP: {server_name}"] = False
             logger.warning("  [%s] skipped — failed to load tools: %s", server_name, exc)
 
+    from agenticeoecosystem.utils.healthcheck import require_healthy_services
+    require_healthy_services(healthcheck_results)
     logger.info("MCP tool discovery complete: %d tools", len(all_tools))
     for t in all_tools:
         logger.debug("  - %s: %s", t.name, t.description)

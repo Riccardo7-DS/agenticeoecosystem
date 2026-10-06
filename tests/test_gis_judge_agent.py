@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-MODULE = Path(__file__).resolve().parents[1] / 'src/agenticeoecosystem/evaluation/gis_judge_agent.py'
+MODULE = Path(__file__).resolve().parents[1] / 'src/agenticeoecosystem/evaluation/evidence/gis_judge_agent.py'
 spec = importlib.util.spec_from_file_location('gis_judge_agent', MODULE)
 gis = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gis)
@@ -137,7 +137,7 @@ class InspectorTests(unittest.TestCase):
         from types import ModuleType
         # Avoid initializing unrelated candidate pipelines through evaluation/__init__.
         package = ModuleType('agenticeoecosystem.evaluation')
-        package.__path__ = [str(MODULE.parent)]
+        package.__path__ = [str(MODULE.parent.parent)]
         credentials = ModuleType('agenticeoecosystem.config.credentials')
         credentials.get_openai_client = lambda **kwargs: None
         previous = {name: sys.modules.get(name) for name in (
@@ -145,7 +145,7 @@ class InspectorTests(unittest.TestCase):
         sys.modules['agenticeoecosystem.evaluation'] = package
         sys.modules['agenticeoecosystem.config.credentials'] = credentials
         try:
-            from agenticeoecosystem.evaluation import agent_judge
+            from agenticeoecosystem.evaluation.judges import agent_judge
             from agenticeoecosystem.evaluation.dataclasses import Task, Solution
         finally:
             for name, original in previous.items():

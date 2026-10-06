@@ -72,6 +72,7 @@ docs/mtg_fci_date_audit.md
 data/candidate_reruns/
 data/evaluation_runs/
 data/rubric_runs/
+data/judge_runs/
 results_*.json
 summary_*.json
 src/agenticeoecosystem/servers/arxiv_papers/
@@ -80,3 +81,38 @@ scripts/*.deb
 
 # Service credentials must be supplied separately.
 src/agenticeoecosystem/servers/gee/gee-key.json
+
+# Local reference material and audit artifacts at their organized paths.
+docs/reference/MOOC.jsonl
+docs/reference/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
+docs/audits/numerical_gt_coverage.json
+docs/audits/mtg_fci_date_audit.json
+docs/audits/mtg_fci_date_audit.md
+
+# Machine-specific model launchers and downloaded installers.
+scripts/serving/*_serve.sh
+scripts/serving/vlm.sh
+scripts/local/
+
+# Local credentials, agent configuration and tooling caches.
+.aws/
+.codex/
+.env.*
+!.env.example
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# Keep only the supported benchmark generation/evaluation entry points.
+# Archived tools, manual verification, local launchers and root aliases stay local.
+/scripts/*
+!/scripts/README.md
+!/scripts/generation/
+/scripts/generation/*
+!/scripts/generation/run_generate.py
+!/scripts/generation/prepare_missing_candidate_reruns.py
+!/scripts/judging/
+!/scripts/references/
+!/scripts/reporting/
+/scripts/reporting/*
+!/scripts/reporting/organize_judge_runs.sh

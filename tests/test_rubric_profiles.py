@@ -33,8 +33,8 @@ class RubricProfileTests(unittest.TestCase):
         })
         cls.modules.start()
         spec = importlib.util.spec_from_file_location(
-            "rubric_profile_test.rubric_evaluator",
-            ROOT / "src/agenticeoecosystem/evaluation/rubric_evaluator.py",
+            "rubric_profile_test.judges.rubric_evaluator",
+            ROOT / "src/agenticeoecosystem/evaluation/judges/rubric_evaluator.py",
         )
         cls.evaluator = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.evaluator)

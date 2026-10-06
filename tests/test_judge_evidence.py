@@ -27,10 +27,10 @@ class JudgeEvidenceTests(unittest.TestCase):
         sys.modules["agenticeoecosystem.config.credentials"] = credentials
         cls.credentials = credentials
         cls.schema = importlib.import_module("agenticeoecosystem.evaluation.dataclasses")
-        cls.evidence = importlib.import_module("agenticeoecosystem.evaluation.candidate_evidence")
-        cls.rubric = importlib.import_module("agenticeoecosystem.evaluation.rubric_evaluator")
-        cls.aaj = importlib.import_module("agenticeoecosystem.evaluation.agent_judge")
-        cls.gis = importlib.import_module("agenticeoecosystem.evaluation.gis_judge_agent")
+        cls.evidence = importlib.import_module("agenticeoecosystem.evaluation.evidence.candidate_evidence")
+        cls.rubric = importlib.import_module("agenticeoecosystem.evaluation.judges.rubric_evaluator")
+        cls.aaj = importlib.import_module("agenticeoecosystem.evaluation.judges.agent_judge")
+        cls.gis = importlib.import_module("agenticeoecosystem.evaluation.evidence.gis_judge_agent")
 
     @classmethod
     def tearDownClass(cls) -> None:

@@ -14,12 +14,12 @@ class CandidateArchivingTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        source = Path(__file__).resolve().parents[1] / "src/agenticeoecosystem/evaluation/candidate_evidence.py"
+        source = Path(__file__).resolve().parents[1] / "src/agenticeoecosystem/evaluation/evidence/candidate_evidence.py"
         package = ModuleType("_archive_test")
-        package.__path__ = [str(source.parent)]
+        package.__path__ = [str(source.parent.parent)]
         schema = ModuleType("_archive_test.dataclasses")
         schema.Task = object
-        spec = importlib.util.spec_from_file_location("_archive_test.candidate_evidence", source)
+        spec = importlib.util.spec_from_file_location("_archive_test.evidence.candidate_evidence", source)
         module = importlib.util.module_from_spec(spec)
         with patch.dict(sys.modules, {"_archive_test": package, "_archive_test.dataclasses": schema}):
             spec.loader.exec_module(module)

@@ -9,6 +9,8 @@ The primary goal is to enable EVE to connect ESA's EO platforms and data cluster
 
 ## Table of Contents
 
+Guides, evaluation status, audits and reference material: [Documentation index](docs/README.md).
+
 1. [Overview](#overview)
 2. [Repository Layout](#repository-layout)
 3. [Installation](#installation)
@@ -138,7 +140,7 @@ agenticeoecosystem/
 ## Installation
 
 For model reruns using the EVE API or OpenRouter, see
-[the colleague setup and rerun guide](docs/candidate_reruns.md). It includes
+[the colleague setup and rerun guide](docs/benchmarking/candidate_reruns.md). It includes
 portable task inputs, credentials, one-model commands and checkpoint resuming.
 
 **Requirements:** Python 3.12+
@@ -183,7 +185,7 @@ pip install -e .
 
 The main entry point is `src/agenticeoecosystem/client/client.py`. Startup takes a few minutes — the MCP servers need to initialise and tool discovery runs at import time. Subsequent queries in the same session are fast.
 
-> Note: this interactive client runs the older LangChain-based architecture described in the box under [Overview](#overview) (7 agents, including EVE retrieval, no CDSE/EUMETSAT/Climate/VLM). For the current, larger sub-agent set used by the benchmark, run the `multi` pipeline via `scripts/run_generate.py` or `tests/benchmarking.py` instead (see [Benchmarking](#benchmarking)).
+> Note: this interactive client runs the older LangChain-based architecture described in the box under [Overview](#overview) (7 agents, including EVE retrieval, no CDSE/EUMETSAT/Climate/VLM). For the current, larger sub-agent set used by the benchmark, run the `multi` pipeline via `scripts/generation/run_generate.py` or `scripts/generation/verify_tools.py` instead (see [Benchmarking](#benchmarking)).
 
 ```bash
 python src/agenticeoecosystem/client/client.py
@@ -368,14 +370,14 @@ Backed by `src/agenticeoecosystem/servers/vlm_tools/server.py`, which exposes `r
 
 ## Benchmarking
 
-The evaluation framework lives in `src/agenticeoecosystem/evaluation/` and the entry point is `tests/benchmarking.py`. It runs a set of EO tasks through the agent pipeline, scores the results with one or more LLM-as-judge models, and produces a comparison table across generator models.
+The evaluation framework lives in `src/agenticeoecosystem/evaluation/`. Active commands are grouped in the [script index](scripts/README.md). Generate answers with `scripts/generation/run_generate.py`, then apply the task-specific judging methods. The manual `scripts/generation/verify_tools.py` runner checks EVE tool use without judge scoring.
 
 ### Pipeline
 
 For each generator model:
 1. **Generate** — run every task through the agent pipeline and record the tool-call sequence (Solution)
-2. **Evaluate** — for each evaluator model, compare the generated solution against the reference solution and assign a score (0 = no match, 1 = partial, 2 = full match)
-3. **Save** — write per-model results to `output/ESAEOBench/` and a summary table as CSV and HTML
+2. **Evaluate** — apply the configured rubrics, AAJ/GIS, numerical metrics or deterministic checks. Generic reference-workflow matching is retired.
+3. **Save** — retain candidate snapshots, evaluator labels, protocol metadata and verification coverage. See [judge run organization](docs/evaluation/judge_run_organization.md) for historical results and pending rejudging.
 
 ### Task format
 
@@ -436,11 +438,11 @@ download_model("gemma3-12b")              # gated — needs HF_TOKEN
 
 ### Running a single generator model (CLI)
 
-For a one-off run against a single model — e.g. comparing a new candidate LLM against EVE — use `scripts/run_generate.py` directly instead of editing `tests/benchmarking.py`. Each invocation is a fresh process: for `--provider vllm` it launches its own vLLM server (reusing one already serving the same model if present) and tears it down on exit unless `--keep-vllm-alive` is passed; for `--provider eve` it talks to `EVE_ENDPOINT` (`.env`) directly and never touches vLLM.
+For a one-off run against a single model — e.g. comparing a new candidate LLM against EVE — use `scripts/generation/run_generate.py` directly instead of editing `scripts/generation/verify_tools.py`. Each invocation is a fresh process: for `--provider vllm` it launches its own vLLM server (reusing one already serving the same model if present) and tears it down on exit unless `--keep-vllm-alive` is passed; for `--provider eve` it talks to `EVE_ENDPOINT` (`.env`) directly and never touches vLLM.
 
 ```bash
 # EVE-Instruct — provider="eve", no vLLM server launched by this process
-uv run python scripts/run_generate.py \
+uv run python scripts/generation/run_generate.py \
   --label       "EVE-Instruct" \
   --model       "EVE-Instruct" \
   --provider    "eve" \
@@ -451,7 +453,7 @@ uv run python scripts/run_generate.py \
   --task-timeout 2400
 
 # A local candidate model — provider="vllm", auto-launches on port 8000
-uv run python scripts/run_generate.py \
+uv run python scripts/generation/run_generate.py \
   --label       "Qwen3.6-27B" \
   --model       "qwen3.6-27b" \
   --provider    "vllm" \
@@ -481,100 +483,45 @@ Key flags:
 
 **Note:** the `MODEL_REGISTRY` in `registry.py` has no entry for EVE — always use `--provider eve` for it, never `--provider vllm`.
 
-### Running a comparison
+### Judging candidate answers
 
-Edit `tests/benchmarking.py` to configure which models and tasks to run:
+Use `scripts/judging/run_agent_judge.py` for AAJ/GIS inspection and
+`scripts/judging/run_rubric_judges_batch.py` for a selected rubric profile.
+Numerical candidate scoring is implemented in `evaluation/judges/numerical_judge.py`;
+the separate `scripts/references/regenerate_numeric_ground_truths.py` computes
+reference values and does not judge candidates.
 
-```python
-from agenticeoecosystem.evaluation.model_comparison import ModelRun, run_comparison
-from agenticeoecosystem.evaluation.dataclasses import TaskSet
-from agenticeoecosystem.utils.logging import setup_logging
+Run all configured passes with `scripts/judging/run_full_evaluation.py`; see
+[the one-command guide](docs/evaluation/full_evaluation.md). Retain
+separate metrics and evidence coverage. The older reference-comparison judge
+and its comparison-table scripts are [retired](scripts/README.md#retired-entry-points)
+and retained only in the local ignored archive.
 
-setup_logging(log_file="benchmarking")   # → logs/benchmarking_YYYYMMDD_HHMMSS.log
+### Outputs and rejudging inventory
 
-tasks = TaskSet.read_from_file("benchmark_tasks.json")
-selected = tasks.select_by_ids(["TASK_...", "TASK_..."])
+Candidate commands save `results_<label>.json` in the selected `--output-dir`.
+Use `--archive-evidence` to preserve recorded artifacts. Judge commands should
+use distinct labels and output directories per protocol and candidate snapshot.
 
-runs = [
-    # External API — always available, no vLLM needed
-    ModelRun(label="EVE-Instruct", model="EVE-Instruct", provider="eve"),
-
-    # Local models via vLLM — launched and shut down automatically
-    ModelRun(label="Qwen3-14B",  model="qwen3-14b",  provider="vllm",
-             launch_vllm=True, vllm_startup_timeout=600),
-    ModelRun(label="Gemma3-12B", model="gemma3-12b", provider="vllm",
-             launch_vllm=True, vllm_startup_timeout=600),
-]
-
-evaluators = [
-    ModelRun(label="Nemotron-2-12B", model="nemotron-2-12b", provider="vllm",
-             launch_vllm=True, vllm_startup_timeout=600),
-]
-
-df = run_comparison(runs, selected, evaluators=evaluators)
-print(df.to_string())
-```
-
-`ModelRun` parameters:
-
-| Parameter | Description |
-|---|---|
-| `label` | Human-readable name used in output columns |
-| `model` | Registry key (vLLM) or model identifier (eve, ollama, …) |
-| `provider` | `"eve"`, `"vllm"`, `"ollama"`, `"openai"`, `"custom"` |
-| `temperature` | Sampling temperature (default `0.0`) |
-| `launch_vllm` | Start/stop a local vLLM server automatically |
-| `vllm_startup_timeout` | Seconds to wait for `/health` (default `600`) |
-
-If a vLLM server is already running and serving the correct model, `launch_vllm=True` will reuse it instead of restarting.
-
-Run from the project root:
-```bash
-python tests/benchmarking.py
-```
-
-### Outputs
-
-Each full `benchmark.sh` run writes to a timestamped subdirectory so results from different runs never overwrite each other:
-
-| File | Description |
-|---|---|
-| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/results_<Label>.json` | Per-model task results with scores |
-| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/model_comparison.csv` | Summary table (generators × evaluators) |
-| `output/ESAEOBench/run_YYYYMMDD_HHMMSS/model_comparison.html` | Same table as HTML |
-| `logs/benchmarking_YYYYMMDD_HHMMSS.log` | Full run log |
-
-To regenerate the comparison table from any archived run:
-```bash
-python scripts/build_table.py --output-dir output/ESAEOBench/run_YYYYMMDD_HHMMSS
-```
-
-### Multi-model bash orchestration
-
-For full multi-model runs with per-process GPU isolation (required on a single GPU to avoid vLLM CUDA memory leaks), use the bash orchestrator:
+Refresh the organized view of historical runs and pending rejudging:
 
 ```bash
-bash scripts/benchmark.sh            # all runnable task categories (default)
-bash scripts/benchmark.sh --subset   # curated 9-task subset only
+bash scripts/reporting/organize_judge_runs.sh
 ```
 
-Each generator model runs in its own Python subprocess. Between runs, any orphaned vLLM workers are hard-killed via `pkill`. Evaluator models (Nemotron-2-12B, Gemma3-12B, Qwen3-14B) score every generator's results afterwards.
+See `data/judge_runs/README.md` for historical scores and per-question status.
 
-Edit `scripts/benchmark.sh` to add or remove generator and evaluator models.
+### Manual tool verification
 
-### Smoke test
+The local, ignored verification runner was moved out of `tests/` because it
+makes live model and MCP calls. It may be absent in a fresh checkout. It
+generates answers for inspection and does not score them:
 
-To run a quick sanity check on a small subset before the full run:
-
-```python
-df = run_comparison(
-    runs, tasks, evaluators=evaluators,
-    smoke_test_labels=["Tool Grounding"],
-    smoke_test_n=2,
-)
+```bash
+python scripts/generation/verify_tools.py
+python scripts/generation/verify_tools.py --no-subset
 ```
 
-This filters to 2 tasks with the `Tool Grounding` label and appends `_smoke` to all output filenames.
 
 ---
 

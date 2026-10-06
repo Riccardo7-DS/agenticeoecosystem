@@ -9,7 +9,7 @@ import numpy as np
 import xarray as xr
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location('reference_generation', ROOT / 'scripts/regenerate_numeric_ground_truths.py')
+SPEC = importlib.util.spec_from_file_location('reference_generation', ROOT / 'scripts/references/regenerate_numeric_ground_truths.py')
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)

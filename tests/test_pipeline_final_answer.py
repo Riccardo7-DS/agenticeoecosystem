@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import agenticeoecosystem.client
-from agenticeoecosystem.evaluation.pipeline_runner import run_pipeline
+from agenticeoecosystem.evaluation.runners.pipeline_runner import run_pipeline
 
 
 class FakeSingleAgent:

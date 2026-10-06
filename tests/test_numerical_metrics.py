@@ -11,7 +11,7 @@ import typing
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / 'src/agenticeoecosystem/evaluation/numerical_metrics.py'
+SOURCE = ROOT / 'src/agenticeoecosystem/evaluation/metrics/numerical_metrics.py'
 spec = importlib.util.spec_from_file_location('scalar_metrics_test', SOURCE)
 nm = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = nm
@@ -111,7 +111,7 @@ class ScalarMetricTests(unittest.TestCase):
 class NumericalJudgeTests(unittest.TestCase):
     def setUp(self):
         # Load the actual scoring function without evaluation/__init__ starting agents.
-        source = ROOT / 'src/agenticeoecosystem/evaluation/numerical_judge.py'
+        source = ROOT / 'src/agenticeoecosystem/evaluation/judges/numerical_judge.py'
         names = {'numeric_score_task_solution', '_is_usable_gt', '_has_numeric_component', '_flatten_keys'}
         nodes = [node for node in ast.parse(source.read_text()).body
                  if isinstance(node, ast.FunctionDef) and node.name in names]

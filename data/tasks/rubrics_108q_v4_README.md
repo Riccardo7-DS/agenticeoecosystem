@@ -43,7 +43,7 @@ result still receive zero under the shared task-fulfillment rule.
 and `scoring_instructions` from each rubric and enforces one profile per batch.
 Trace runs reject inspection flags/manifests to maintain uniform judge inputs.
 Evidence runs can use `--inspect-evidence`, `--inspection-evaluator-label`, or
-candidate-owned manifests as documented in `docs/agent_judge_artifact_verification.md`.
+candidate-owned manifests as documented in `docs/evaluation/agent_judge_artifact_verification.md`.
 Direct callers of `rubric_evaluate_solutions` must also pass `rubric_protocols`;
 direct calls of `rubric_score_task_solution` must pass `rubric_protocol`.
 

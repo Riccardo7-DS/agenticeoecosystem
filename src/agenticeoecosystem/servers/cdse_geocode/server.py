@@ -69,6 +69,7 @@ from agenticeoecosystem.servers.cdse_geocode.helper import (
     fetch_dem,
 )
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 
 load_dotenv()
@@ -102,9 +103,7 @@ mcp = FastMCP(
 # Output directory / default save-path handling
 # ---------------------------------------------------------------------------
 
-OUTPUT_DIR = pathlib.Path(
-    os.environ.get("CDSE_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "cdse_geocode"))
-)
+OUTPUT_DIR = server_output_dir("cdse_geocode", "CDSE_OUTPUT_DIR")
 
 
 def _default_save_path(collection: str, ext: str = "jpg") -> str:

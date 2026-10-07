@@ -1,54 +1,51 @@
-"""Shared output-path resolution for MCP servers.
+"""Shared artifact roots for candidate tools, archiving and evaluator discovery.
 
-Every MCP server used in the benchmark (cdse_geocode, eumetsat, gee, climate)
-used to decide where to write/read files its own way — some read a
-server-specific env var with a hardcoded fallback, one was fully hardcoded to
-a folder inside its own package, and others just resolved whatever path
-string the caller passed against the subprocess's current working directory.
-Since caller-supplied paths are the only thing that varies per benchmark
-task (all four servers are spawned once as long-lived subprocesses and
-reused for an entire run, not restarted per task), standardizing where data
-lands means standardizing how those path strings are resolved, not adding a
-new per-task env var.
-
-Convention: reference solutions in data/tasks/benchmark_tasks.json use
-relative paths of the form "output/<task_ID>/<filename>". This helper
-resolves any relative path against the project root (ROOT_DIR), so that
-string always lands at the same place regardless of the subprocess's CWD.
-Absolute paths pass through unchanged, as an explicit override.
-
-Agents don't always follow that convention — a model will sometimes pass a
-bare, human-friendly filename (e.g. "milano_no2_march2020.jpg") with no
-"output/" prefix at all. Resolved naively against ROOT_DIR, that lands
-directly in the repo root instead of under output/. To close that gap,
-any relative path whose first segment isn't "output" is nested under
-"output/misc/" instead, so nothing a caller passes can ever escape the
-output tree.
+EO_ARTIFACT_ROOT selects an absolute run-specific root, inherited by MCP
+subprocesses. Relative output/tool_output paths resolve under that root;
+absolute paths remain explicit overrides for existing files. Evaluators prefer
+hash-checked candidate_artifacts inventories over mutable trace paths.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 from agenticeoecosystem.definitions import ROOT_DIR
 
 _MISC_SUBDIR = "misc"
 
 
-def resolve_run_path(path_str: str) -> Path:
-    """Resolve a caller-supplied output/input path consistently.
+def artifact_root() -> Path:
+    """Return the explicit run artifact root, independent of installed package location."""
+    return Path(os.environ.get("EO_ARTIFACT_ROOT", str(ROOT_DIR / "tool_output"))).resolve()
 
-    Relative paths are resolved against ROOT_DIR (so "output/<task_ID>/x.tif"
-    always lands at "<repo_root>/output/<task_ID>/x.tif", regardless of the
-    server subprocess's working directory). A relative path that doesn't
-    already start with "output" is nested under "output/misc/" instead of
-    landing at the repo root. Absolute paths are returned as-is. Parent
-    directories are created if missing.
+
+def server_output_dir(server: str, legacy_env: str | None = None) -> Path:
+    """Use the common root; retain server overrides for standalone legacy launches."""
+    if "EO_ARTIFACT_ROOT" not in os.environ and legacy_env and os.environ.get(legacy_env):
+        return Path(os.environ[legacy_env]).resolve()
+    return artifact_root() / server
+
+
+def candidate_output_roots() -> tuple[Path, ...]:
+    """Roots for exact trace-path discovery; archived inventories take precedence."""
+    return (artifact_root(), ROOT_DIR / "output", ROOT_DIR / "tool_output")
+
+
+def resolve_run_path(path_str: str) -> Path:
+    """Resolve relative artifact paths under the shared run root.
+
+    Strip legacy output/tool_output prefixes; put bare filenames under misc.
+    Preserve absolute input or explicit output paths and create parents.
     """
     p = Path(path_str)
     if not p.is_absolute():
-        if p.parts and p.parts[0] != "output":
-            p = Path("output") / _MISC_SUBDIR / p
-        p = ROOT_DIR / p
+        if p.parts and p.parts[0] in {"output", "tool_output"}:
+            p = artifact_root().joinpath(*p.parts[1:])
+        else:
+            p = artifact_root() / _MISC_SUBDIR / p
+        if not p.resolve().is_relative_to(artifact_root()):
+            raise ValueError("Relative artifact path escapes the run artifact root")
     p.parent.mkdir(parents=True, exist_ok=True)
     return p

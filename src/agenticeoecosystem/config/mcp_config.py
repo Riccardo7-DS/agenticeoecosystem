@@ -6,6 +6,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 
 load_dotenv(dotenv_path=ROOT_DIR / ".env")
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 # under tool_output/gis_analysis/ instead of wherever this process was
 # launched from. Mirrors the same fix for the "multi" pipeline in
 # agents/subagents/sub_agent_gis.py.
-_GIS_OUTPUT_DIR = ROOT_DIR / "tool_output" / "gis_analysis"
+_GIS_OUTPUT_DIR = server_output_dir("gis_analysis")
 _GIS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -118,7 +119,7 @@ def get_mcp_servers() -> dict:
                 "run",
                 "--python", "3.12",
                 "arxiv-mcp-server",
-                "--storage-path", f"{ROOT_DIR}/tool_output/arxiv"
+                "--storage-path", str(server_output_dir("arxiv"))
             ]
         }
     }

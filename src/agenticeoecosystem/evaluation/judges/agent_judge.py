@@ -29,6 +29,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from agenticeoecosystem.utils.output_paths import candidate_output_roots
 from typing import Any, Optional
 
 from tqdm import tqdm
@@ -102,6 +103,11 @@ Distinguishing an agent's own mistake from a tool/infra limitation:
   anything.
 
 How to use your tools:
+- An empty candidate artifact allowlist means no inspectable artifacts are
+  available. Never invent file paths or repeatedly list an empty allowlist.
+  Judge the recorded execution and unmet requirements, explicitly reporting
+  unavailable evidence. If GIS consultation is required, consult it once;
+  its inability to inspect missing evidence is sufficient to finish judging.
 - `list_output_files(server)` — see what's actually sitting in a given
   output subfolder (e.g. "cdse_geocode", "gee", "era5", "arxiv",
   "gis_analysis") if a step's result doesn't give you an exact path, or to
@@ -253,7 +259,7 @@ def _candidate_artifacts(task: Task, artifact_paths: Optional[list[str]] = None)
             if resolved.is_file():
                 paths.add(resolved)
         return sorted(paths)
-    paths.update(CandidateEvidence.artifact_paths(task, OUTPUT_DIR))
+    paths.update(CandidateEvidence.artifact_paths(task, candidate_output_roots()))
 
     def visit(value):
         if isinstance(value, str):
@@ -522,16 +528,23 @@ def judge_task_agentic(
     score: Optional[ScoreValues] = None
     reasoning: Optional[str] = None
     api_error: Optional[str] = None
+    unavailable_inspections = 0
 
     try:
         for turn in range(max_turns):
+            tool_choice = "auto"
+            if unavailable_inspections >= 2:
+                needs_gis = requires_gis and not any(
+                    entry.get("tool") == "ask_gis_agent" for entry in tool_log)
+                finish_tool = "ask_gis_agent" if needs_gis else "submit_verdict"
+                tool_choice = {"type": "function", "function": {"name": finish_tool}}
             resp = client.chat.completions.create(
                 model=model,
                 temperature=temperature,
                 max_tokens=1500,
                 messages=messages,
                 tools=TOOLS,
-                tool_choice="auto",
+                tool_choice=tool_choice,
             )
             msg = resp.choices[0].message
             transcript.append(f"\n### Turn {turn + 1} — assistant")
@@ -562,6 +575,7 @@ def judge_task_agentic(
                 })
                 continue
 
+            image_previews: list[dict] = []
             for tc, args in calls:
                 name = tc.function.name
 
@@ -612,6 +626,15 @@ def judge_task_agentic(
                         full_text_result, image_uri = _execute_tool(name, args)
                 except (ValueError, OSError) as error:
                     full_text_result, image_uri = f"ERROR: {error}", None
+                if ((name == "list_output_files" and not inspector.allowed_paths)
+                        or (name == "inspect_file" and full_text_result.startswith("ERROR:"))):
+                    unavailable_inspections += 1
+                    full_text_result += (
+                        "\nEvidence is unavailable for this inspection. Do not guess paths or "
+                        "repeat unsuccessful inspections. Assess the recorded candidate trace "
+                        "and unmet requirements, and state verification limits. Consult "
+                        "ask_gis_agent once if required, then call submit_verdict."
+                    )
                 transcript.append(f"**Tool result (full):**\n```\n{full_text_result}\n```")
                 if image_uri:
                     transcript.append(f"*(image preview attached: {args.get('path')})*")
@@ -624,13 +647,15 @@ def judge_task_agentic(
                     "content": api_text_result,
                 })
                 if image_uri:
-                    messages.append({
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": f"Preview of {args.get('path')}:"},
-                            {"type": "image_url", "image_url": {"url": image_uri}},
-                        ],
-                    })
+                    image_previews.extend([
+                        {"type": "text", "text": f"Preview of {args.get('path')}:"},
+                        {"type": "image_url", "image_url": {"url": image_uri}},
+                    ])
+
+            # Keep the entire tool-response batch together before user previews.
+            # Mistral rejects a tool response that follows a user image message.
+            if image_previews:
+                messages.append({"role": "user", "content": image_previews})
 
             if score is not None:
                 break

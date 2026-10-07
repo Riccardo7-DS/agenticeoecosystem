@@ -1,5 +1,6 @@
 from agenticeoecosystem.agents.subagents.llm_init import llm
 from google.adk.agents.llm_agent import Agent
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
@@ -62,7 +63,7 @@ toolset  = [McpToolset(
                          server_params = StdioServerParameters(
                              command=_ARXIV_MCP_BIN,
                              args=[
-                                    "--storage-path", f"{ROOT_DIR}/tool_output/arxiv"
+                                    "--storage-path", str(server_output_dir("arxiv"))
                                 ]),
                              timeout=300))]
 def _fetch_agent(toolset) -> Optional[Agent]:

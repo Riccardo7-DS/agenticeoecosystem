@@ -50,7 +50,7 @@ def main() -> int:
     parser.add_argument("--task-ids",             default=None,   help="Comma-separated task IDs to select")
     parser.add_argument("--task-labels",          default=None,   help="Comma-separated task labels to select (e.g. 'Tool Grounding,Sequential Reasoning')")
     parser.add_argument("--output-dir",           required=True,  help="Directory for results_<label>.json")
-    parser.add_argument("--archive-evidence", action="store_true",
+    parser.add_argument("--archive-evidence", action=argparse.BooleanOptionalAction, default=True,
                         help="Copy recorded candidate artifacts into run-specific evidence storage before reuse")
     parser.add_argument("--vllm-startup-timeout", type=int, default=600)
     parser.add_argument("--vllm-port",            type=int, default=8000,
@@ -76,12 +76,26 @@ def main() -> int:
     parser.add_argument("--agent-models",         default=None,
                         help='JSON per-agent model overrides for pipeline=multi_legacy, e.g. \'{"gis": ["mistral-small-24b", "vllm"]}\'')
     args = parser.parse_args()
+    # Set before importing pipelines: MCP subprocesses inherit this absolute root.
+    os.environ["EO_ARTIFACT_ROOT"] = str((Path(args.output_dir) / "artifacts").resolve())
 
     label_safe = args.label.replace(" ", "_")
     setup_logging(log_file=f"generate_{label_safe}_{args.pipeline}")
     logger = logging.getLogger(__name__)
 
     output_dir = Path(args.output_dir)
+    if output_dir.is_dir():
+        existing = sorted(path.name for path in output_dir.iterdir())
+        if existing:
+            logger.warning(
+                "Output directory already contains data: %s (existing entries: %s%s). "
+                "This run may overwrite existing results, summaries, or artifact files "
+                "when their paths match. --skip-solved skips answered tasks in the "
+                "loaded input; it does not prevent all file overwrites. Use a separate "
+                "--output-dir for a different model or pipeline.",
+                output_dir.resolve(), ", ".join(existing[:5]),
+                ", ..." if len(existing) > 5 else "",
+            )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     from agenticeoecosystem.definitions import TASKS_FOLDER
@@ -95,6 +109,7 @@ def main() -> int:
             tasks = ts
         else:
             tasks.extend(ts.tasks)
+    tasks.metadata["artifact_root"] = os.environ["EO_ARTIFACT_ROOT"]
     if args.task_ids:
         ids = [x.strip() for x in args.task_ids.split(",")]
         tasks = tasks.select_by_ids(ids)

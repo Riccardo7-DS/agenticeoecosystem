@@ -96,6 +96,17 @@ does not isolate all tool resources.
 
 Results are saved after each task. `--archive-evidence` preserves generated
 artifact files under the run's `evidence/` directory; it does not archive logs.
+Archiving is enabled by default; use `--no-archive-evidence` to disable it.
+Generation sets `EO_ARTIFACT_ROOT` to `<output-dir>/artifacts` before loading
+agents. CDSE, GEE, climate, EUMETSAT, GIS and arXiv use this shared root,
+with server subdirectories. Relative `output/...` and `tool_output/...`
+paths resolve under this root; absolute paths remain explicit overrides.
+Results record the root in metadata. Each task's `candidate_artifacts`
+inventory records archived paths, original paths and SHA-256 hashes.
+Evaluators prefer this inventory and reject tampered archives rather than
+falling back to mutable originals. For historical runs, archive only files
+referenced by the saved trace from explicitly approved legacy output roots;
+an isolated evaluator should not scan unrelated repository files.
 Logs are written automatically under `logs/`. Generation exceptions may leave
 null solutions even when the CLI exits successfully; inspect `completion.json`
 for queue runs and logs for individual runs. Saved responses still need judging.

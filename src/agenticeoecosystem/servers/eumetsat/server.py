@@ -33,6 +33,7 @@ from dotenv import load_dotenv
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 
 load_dotenv()
@@ -59,9 +60,7 @@ Callback.active.clear()
 
 app = FastMCP("eumetsat-mcp")
 
-OUTPUT_DIR = Path(
-    os.environ.get("EUMETSAT_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "eumetsat"))
-)
+OUTPUT_DIR = server_output_dir("eumetsat", "EUMETSAT_OUTPUT_DIR")
 
 # Keep single tool calls fast and bounded — large batch jobs belong in
 # eumetsearch's own CLI pipeline (main.py / pipeline_data.py), not here.

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field, model_validator
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 
 
@@ -244,7 +245,7 @@ def _split_region_quadrants(region: ee.Geometry) -> List[ee.Geometry]:
 def _download_with_fallback(selected_bands: ee.Image, region: ee.Geometry, scale: int, prefix: str, depth: int = 0) -> List[str]:
 	"""Try to download a region. On size-limit error, split into quadrants recursively; as a last resort, increase scale."""
 	# Prepare output directory
-	download_dir = os.environ.get("GEE_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "gee"))
+	download_dir = str(server_output_dir("gee", "GEE_OUTPUT_DIR"))
 	os.makedirs(download_dir, exist_ok=True)
 
 	# Build download parameters
@@ -293,7 +294,7 @@ def _download_visual_quicklook(selected_bands: ee.Image, region: ee.Geometry, sc
 	of the dataset's native value range (reflectance, radiance, temperature,
 	etc.) — GEE datasets vary too widely to hardcode a single min/max. Intended
 	for visual inspection (e.g. the VLM sub-agent), not quantitative analysis."""
-	download_dir = os.environ.get("GEE_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "gee"))
+	download_dir = str(server_output_dir("gee", "GEE_OUTPUT_DIR"))
 	os.makedirs(download_dir, exist_ok=True)
 
 	band_names = selected_bands.bandNames().getInfo()

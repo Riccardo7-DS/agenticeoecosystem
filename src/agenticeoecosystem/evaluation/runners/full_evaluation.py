@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from agenticeoecosystem.utils.output_paths import candidate_output_roots
 from typing import Any
 
 from agenticeoecosystem.definitions import ROOT_DIR
@@ -144,7 +145,7 @@ class FullEvaluationRunner:
         paths = [a.get("archived_path", a.get("path", "")) for a in task.candidate_artifacts]
         paths.extend(self.manifest.get(task.task_ID, []))
         # Include trace-bound local files for historical runs without archives.
-        paths.extend(str(p) for p in CandidateEvidence.artifact_paths(task, (ROOT_DIR / "output", ROOT_DIR / "tool_output")))
+        paths.extend(str(p) for p in CandidateEvidence.artifact_paths(task, candidate_output_roots()))
         result = {}
         for name in sorted(set(paths) - {""}):
             try:

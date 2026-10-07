@@ -14,6 +14,7 @@ from typing import Union, List, Optional
 import logging
 import sys
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 from agenticeoecosystem.utils.output_paths import resolve_run_path
 
@@ -62,9 +63,7 @@ KEY = os.getenv("CDS_KEY")
 # of the retry actually being necessary.
 # ---------------------------------------------------------------------------
 
-OUTPUT_DIR = pathlib.Path(
-    os.environ.get("ERA5_OUTPUT_DIR", str(ROOT_DIR / "tool_output" / "era5"))
-)
+OUTPUT_DIR = server_output_dir("era5", "ERA5_OUTPUT_DIR")
 
 
 def _default_output_path(label: str, ext: str = "nc") -> str:

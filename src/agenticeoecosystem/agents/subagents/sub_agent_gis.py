@@ -7,6 +7,7 @@ from typing import Optional
 from pathlib import Path
 import os
 
+from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
 
 # gis-mcp is a third-party package (installed via `uv tool run gis-mcp`) that
@@ -18,7 +19,7 @@ from agenticeoecosystem.definitions import ROOT_DIR
 # tool_output/. Pinning cwd here — the one lever we have over a subprocess we
 # don't control the source of — makes every relative path gis-mcp resolves
 # land under tool_output/gis_analysis/ instead.
-_GIS_OUTPUT_DIR = ROOT_DIR / "tool_output" / "gis_analysis"
+_GIS_OUTPUT_DIR = server_output_dir("gis_analysis")
 _GIS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 import logging

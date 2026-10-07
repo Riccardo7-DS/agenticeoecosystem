@@ -222,6 +222,90 @@ class JudgeEvidenceTests(unittest.TestCase):
                 self.assertFalse(self.evidence.CandidateEvidence.context(
                     task, "agent_judge")["available"])
 
+    def test_image_previews_follow_all_tool_responses_in_batch(self) -> None:
+        class Message:
+            content = None
+
+            def __init__(self, calls: list[tuple[str, dict]]) -> None:
+                self.tool_calls = [SimpleNamespace(id=f"inspect0{i}", type="function",
+                    function=SimpleNamespace(name=name, arguments=json.dumps(args)))
+                    for i, (name, args) in enumerate(calls)]
+
+            def model_dump(self, **kwargs: object) -> dict:
+                return {"role": "assistant", "tool_calls": [
+                    {"id": call.id, "type": call.type, "function": {
+                        "name": call.function.name, "arguments": call.function.arguments}}
+                    for call in self.tool_calls]}
+
+        for suffixes in ((".jpg",), (".jpg", ".jpg"), (".jpg", ".txt"), (".txt", ".jpg")):
+            with self.subTest(suffixes=suffixes):
+                paths = [self.root / f"artifact{i}{suffix}" for i, suffix in enumerate(suffixes)]
+                for path in paths:
+                    path.touch()
+                calls = [("inspect_file", {"path": str(path)}) for path in paths]
+                sequence = iter([Message(calls), Message([
+                    ("submit_verdict", {"score": 2, "reasoning": "Inspected archived artifacts."})])])
+                requests = []
+
+                def create(**kwargs: object) -> object:
+                    requests.append(copy.deepcopy(kwargs["messages"]))
+                    return SimpleNamespace(choices=[SimpleNamespace(message=next(sequence))])
+
+                def inspect(path: str, inspector: object) -> tuple[str, str | None]:
+                    uri = f"data:image/jpeg;base64,preview{Path(path).stem}" if Path(path).suffix == ".jpg" else None
+                    return "Read archived artifact", uri
+
+                client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+                task = self.task()
+                with patch.object(self.aaj, "get_openai_client", return_value=client), \
+                        patch.object(self.aaj, "_tool_inspect_file", side_effect=inspect):
+                    self.aaj.judge_task_agentic(task, model="mock", max_turns=2,
+                                              artifact_paths=[str(path) for path in paths])
+                self.assertEqual(task.evaluator_scores["agent_judge"], 2)
+                messages = requests[1][-len(paths) - 2:]
+                self.assertEqual([message["role"] for message in messages],
+                                 ["assistant"] + ["tool"] * len(paths) + ["user"])
+                self.assertEqual([message["tool_call_id"] for message in messages[1:-1]],
+                                 [call["id"] for call in messages[0]["tool_calls"]])
+                previews = messages[-1]["content"]
+                self.assertEqual(len(previews), 2 * suffixes.count(".jpg"))
+                for index, path in enumerate(path for path in paths if path.suffix == ".jpg"):
+                    self.assertEqual(previews[2 * index], {"type": "text", "text": f"Preview of {path}:"})
+                    self.assertEqual(previews[2 * index + 1]["image_url"]["url"],
+                                     f"data:image/jpeg;base64,preview{path.stem}")
+
+    def test_empty_allowlist_forces_one_gis_consultation_then_verdict(self) -> None:
+        requests = []
+        names = iter(["list_output_files", "inspect_file", "ask_gis_agent", "submit_verdict"])
+
+        def create(**kwargs: object) -> object:
+            requests.append(copy.deepcopy(kwargs))
+            name = next(names)
+            arguments = {"path": "invented.tif"} if name == "inspect_file" else (
+                {"score": 0, "reasoning": "Download never executed; imagery unavailable."}
+                if name == "submit_verdict" else {"question": "Assess missing evidence"})
+            call = {"id": str(len(requests)), "type": "function", "function": {
+                "name": name, "arguments": json.dumps(arguments)}}
+            message = SimpleNamespace(content=None, tool_calls=[SimpleNamespace(
+                id=call["id"], type="function", function=SimpleNamespace(**call["function"]))],
+                model_dump=lambda **unused: {"role": "assistant", "tool_calls": [call]})
+            return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+        task = self.task("TASK_260619_000006_300006")
+        client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+        with patch.object(self.aaj, "get_openai_client", return_value=client), \
+                patch.object(self.aaj, "_candidate_artifacts", return_value=[]), \
+                patch.object(self.aaj.GISJudgeAgent, "examine", return_value={
+                    "summary": "No inspectable artifacts", "tool_calls": []}) as gis:
+            self.aaj.judge_task_agentic(task, model="mock", max_turns=4,
+                                      transcript_dir=str(self.root),
+                                      evaluation_requirements=SimpleNamespace(requires_gis=lambda task_id: True, tasks={}))
+        self.assertEqual(requests[2]["tool_choice"]["function"]["name"], "ask_gis_agent")
+        self.assertEqual(requests[3]["tool_choice"]["function"]["name"], "submit_verdict")
+        gis.assert_called_once()
+        self.assertEqual(task.evaluator_scores["agent_judge"], 0)
+        self.assertIn("Do not guess paths", requests[2]["messages"][-1]["content"])
+
     def test_malformed_tool_responses_retry_without_polluting_history_or_execution(self) -> None:
         class Message:
             content = "Discarded assistant text"

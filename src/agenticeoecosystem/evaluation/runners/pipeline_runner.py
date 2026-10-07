@@ -2,6 +2,8 @@
 pipeline_runner.py — Runs your agentic pipeline on a TaskSet and records results.
 """
 
+from agenticeoecosystem.utils.output_paths import candidate_output_roots
+
 import asyncio
 import logging
 import os
@@ -309,7 +311,7 @@ def generate_solutions(
                 from pathlib import Path
                 from ..evidence.candidate_evidence import CandidateEvidence
                 from agenticeoecosystem.definitions import ROOT_DIR
-                CandidateEvidence.archive(task, (ROOT_DIR / "output", ROOT_DIR / "tool_output"),
+                CandidateEvidence.archive(task, candidate_output_roots(),
                                           Path(_save_folder) / "evidence" / Path(output_filename or model).stem)
             total_input += inp_tok
             total_output += out_tok

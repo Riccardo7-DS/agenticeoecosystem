@@ -1,8 +1,37 @@
 """Read-only GIS verification agent for candidate-owned raster and NetCDF artifacts."""
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+def validated_tool_calls(message: Any, tools: list[dict[str, Any]]) -> list[tuple[Any, dict[str, Any]]]:
+    """Validate a complete call batch before it enters history or executes.
+
+    Malformed calls must never be echoed to a Mistral endpoint: its tokenizer
+    parses historical function arguments and rejects invalid JSON/name fields.
+    """
+    allowed_names = {tool["function"]["name"] for tool in tools}
+    parsed = []
+    identifiers = set()
+    for call in message.tool_calls or []:
+        if getattr(call, "type", "function") != "function":
+            raise ValueError("Only function tool calls are supported.")
+        if not isinstance(call.id, str) or not call.id or call.id in identifiers:
+            raise ValueError("Tool-call IDs must be nonempty and unique within a response.")
+        identifiers.add(call.id)
+        if call.function.name not in allowed_names:
+            raise ValueError("Tool call has an empty or unsupported function name.")
+        if not isinstance(call.function.arguments, str):
+            raise ValueError("Tool-call arguments must be a JSON object encoded as a string.")
+        arguments = json.loads(call.function.arguments)
+        if not isinstance(arguments, dict):
+            raise ValueError("Tool-call arguments must decode to a JSON object.")
+        parsed.append((call, arguments))
+    return parsed
 
 
 class ArtifactInspector:
@@ -303,18 +332,31 @@ class GISJudgeAgent:
         )}, {"role": "user", "content": question}]
         tools = self.tool_schemas()
         audit = []
+        rejected_responses = []
         for _ in range(self.max_turns):
             response = self.client.chat.completions.create(
                 model=self.model, temperature=0, max_tokens=1800,
                 messages=messages, tools=tools, tool_choice="auto")
             message = response.choices[0].message
+            try:
+                calls = validated_tool_calls(message, tools)
+            except (ValueError, TypeError, AttributeError) as error:
+                logger.warning("Discarding malformed GIS tool-call response: %s", error)
+                rejected_responses.append({"reason": str(error),
+                                           "response": message.model_dump(exclude_none=True)})
+                messages.append({"role": "user", "content": (
+                    "Your previous response contained malformed tool calls and was discarded. "
+                    "Retry using an available function name and exactly one JSON object for "
+                    "each call's arguments, or report unavailable evidence in plain text."
+                )})
+                continue
             messages.append(message.model_dump(exclude_none=True))
             if not message.tool_calls:
                 return {"summary": message.content, "tool_calls": audit,
-                        "inspection_performed": bool(audit)}
-            for call in message.tool_calls:
+                        "inspection_performed": bool(audit),
+                        "discarded_tool_responses": rejected_responses}
+            for call, args in calls:
                 try:
-                    args = json.loads(call.function.arguments)
                     if call.function.name not in {"inspect_raster", "inspect_netcdf", "inspect_extent", "inspect_timeseries", "validate_netcdf", "measure_geodetic_distance"}:
                         raise ValueError("Unsupported inspection tool.")
                     result = getattr(self.inspector, call.function.name)(**args)
@@ -325,7 +367,8 @@ class GISJudgeAgent:
                 messages.append({"role": "tool", "tool_call_id": call.id,
                                  "content": json.dumps(result, allow_nan=False)})
         return {"summary": "Specialist turn limit reached; use recorded evidence only.",
-                "tool_calls": audit, "inspection_performed": bool(audit)}
+                "tool_calls": audit, "inspection_performed": bool(audit),
+                "discarded_tool_responses": rejected_responses}
 
     @staticmethod
     def tool_schemas() -> list[dict[str, Any]]:

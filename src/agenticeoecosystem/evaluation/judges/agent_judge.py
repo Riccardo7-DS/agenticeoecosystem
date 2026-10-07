@@ -38,7 +38,7 @@ from ..dataclasses import Task, TaskSet
 from ..evidence.formatting import format_reference_solutions as _format_reference_solutions
 from agenticeoecosystem.config.credentials import get_openai_client
 from agenticeoecosystem.definitions import GEOBENCH_RESULTS, ROOT_DIR
-from ..evidence.gis_judge_agent import ArtifactInspector, GISJudgeAgent
+from ..evidence.gis_judge_agent import ArtifactInspector, GISJudgeAgent, validated_tool_calls
 from ..evidence.candidate_evidence import CandidateEvidence, EvaluationRequirements
 
 logger = logging.getLogger(__name__)
@@ -510,6 +510,13 @@ def judge_task_agentic(
             "invent coordinates, retrieve a different paper or download missing evidence. "
             "If endpoint/source evidence is unavailable, report the runtime reference as unverified."
         )})
+    if requires_gis:
+        messages.append({"role": "user", "content": (
+            "GIS verdict policy: call ask_gis_agent before submitting a verdict. "
+            "Exception: a score of 0 can be submitted directly when the candidate "
+            "has no recorded tool steps, no declared artifacts and no manifest paths. "
+            "This exception does not verify evidence or permit partial/success scores."
+        )})
     tool_log: list[dict] = []
     transcript: list[str] = []
     score: Optional[ScoreValues] = None
@@ -527,9 +534,23 @@ def judge_task_agentic(
                 tool_choice="auto",
             )
             msg = resp.choices[0].message
-            messages.append(msg.model_dump(exclude_none=True))
-
             transcript.append(f"\n### Turn {turn + 1} — assistant")
+            try:
+                calls = validated_tool_calls(msg, TOOLS)
+            except (ValueError, TypeError, AttributeError) as error:
+                logger.warning("Task %s: discarding malformed tool-call response: %s", task.task_ID, error)
+                transcript.append(
+                    f"**Rejected malformed response:** {error}\n```json\n"
+                    + json.dumps(msg.model_dump(exclude_none=True), ensure_ascii=False)
+                    + "\n```\n*(not added to API history; no tools executed)*"
+                )
+                messages.append({"role": "user", "content": (
+                    "Your previous response contained malformed tool calls and was discarded. "
+                    "Retry using an available function name and exactly one JSON object for "
+                    "each call's arguments. Call submit_verdict to finish when ready."
+                )})
+                continue
+            messages.append(msg.model_dump(exclude_none=True))
             if msg.content:
                 transcript.append(msg.content)
 
@@ -541,28 +562,27 @@ def judge_task_agentic(
                 })
                 continue
 
-            for tc in msg.tool_calls:
+            for tc, args in calls:
                 name = tc.function.name
-                try:
-                    args = json.loads(tc.function.arguments or "{}")
-                except json.JSONDecodeError:
-                    args = {}
 
                 transcript.append(f"**Tool call:** `{name}({json.dumps(args)})`")
 
                 if name == "submit_verdict":
+                    try:
+                        proposed_score = ScoreValues(int(args.get("score")))
+                    except (TypeError, ValueError):
+                        proposed_score = None
                     if (requires_gis
+                            and not CandidateEvidence.can_reject_without_inspection(
+                                task, proposed_score, artifact_paths)
                             and not any(entry.get("tool") == "ask_gis_agent" for entry in tool_log)):
                         messages.append({
                             "role": "tool", "tool_call_id": tc.id, "name": name,
-                            "content": "Numerical artifact task: call ask_gis_agent before submitting. Report unavailable evidence explicitly.",
+                            "content": "Call ask_gis_agent before submitting: only score 0 with no recorded tool steps or declared artifacts may skip GIS. Report unavailable evidence explicitly.",
                         })
                         continue
                     tool_log.append({"tool": name, "arguments": args})
-                    try:
-                        score = ScoreValues(int(args.get("score")))
-                    except (TypeError, ValueError):
-                        score = None
+                    score = proposed_score
                     reasoning = args.get("reasoning")
                     messages.append({
                         "role": "tool", "tool_call_id": tc.id, "name": name,

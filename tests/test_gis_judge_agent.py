@@ -1,6 +1,7 @@
 """Numerical evidence, delegation and candidate-isolation checks for AAJ."""
 import importlib.util
 import json
+import copy
 import tempfile
 import unittest
 import sys
@@ -14,6 +15,42 @@ spec.loader.exec_module(gis)
 
 
 class InspectorTests(unittest.TestCase):
+    def test_malformed_specialist_call_retries_with_clean_history_and_limit(self) -> None:
+        from unittest.mock import patch
+
+        malformed = SimpleNamespace(content=None, tool_calls=[SimpleNamespace(
+            id="bad", function=SimpleNamespace(name="inspect_netcdf", arguments='{}{}'))],
+            model_dump=lambda **kwargs: {"role": "assistant", "tool_calls": [{
+                "id": "bad", "type": "function", "function": {
+                    "name": "inspect_netcdf", "arguments": '{}{}'}}]})
+        complete = SimpleNamespace(content="Evidence unavailable.", tool_calls=[],
+                                   model_dump=lambda **kwargs: {
+                                       "role": "assistant", "content": "Evidence unavailable."})
+        for recover in (True, False):
+            with self.subTest(recover=recover):
+                requests = []
+                sequence = iter([malformed, complete if recover else malformed])
+
+                def create(**kwargs: object) -> object:
+                    requests.append(copy.deepcopy(kwargs["messages"]))
+                    return SimpleNamespace(choices=[SimpleNamespace(message=next(sequence))])
+
+                client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+                inspector = gis.ArtifactInspector([])
+                with patch.object(inspector, "inspect_netcdf") as inspect:
+                    result = gis.GISJudgeAgent(client, "mock", inspector, max_turns=2).examine("Check file")
+                inspect.assert_not_called()
+                self.assertEqual(len(requests), 2)
+                self.assertFalse(any(m["role"] in {"assistant", "tool"} for m in requests[1]))
+                self.assertFalse(result["inspection_performed"])
+                self.assertEqual(result["tool_calls"], [])
+                self.assertEqual(len(result["discarded_tool_responses"]), 1 if recover else 2)
+                self.assertIn("Extra data", result["discarded_tool_responses"][0]["reason"])
+                if recover:
+                    self.assertEqual(result["summary"], "Evidence unavailable.")
+                else:
+                    self.assertIn("turn limit", result["summary"])
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)

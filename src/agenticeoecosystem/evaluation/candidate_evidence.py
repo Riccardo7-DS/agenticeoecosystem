@@ -18,6 +18,23 @@ class CandidateEvidence:
     """
 
     @staticmethod
+    def can_reject_without_inspection(
+        task: Task, score: int | None, artifact_paths: list[str] | None = None,
+    ) -> bool:
+        """Allow only zero verdicts with no recorded execution or artifact declarations.
+
+        Declared artifacts count even when missing or invalid. An absent trace
+        never authorizes a positive verdict or establishes verified evidence.
+        """
+        return (
+            score == 0
+            and task.generated_solution is not None
+            and not task.generated_solution.steps
+            and not task.candidate_artifacts
+            and not artifact_paths
+        )
+
+    @staticmethod
     def fingerprint(task: Task) -> str:
         """Bind inspections to the exact candidate solution and task version."""
         content = {"task_ID": task.task_ID, "task_text": task.task_text,

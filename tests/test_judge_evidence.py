@@ -1,6 +1,7 @@
 """Offline regressions for source grounding, candidate isolation and GIS obligations."""
 
 import importlib
+import copy
 import json
 import sys
 import tempfile
@@ -155,6 +156,107 @@ class JudgeEvidenceTests(unittest.TestCase):
             self.aaj.judge_task_agentic(task, model="mock", max_turns=3)
         self.assertEqual(task.evaluator_scores["agent_judge"], 1)
         self.assertEqual(task.evaluator_tool_calls["agent_judge"][0]["tool"], "ask_gis_agent")
+
+    def test_gis_can_be_skipped_only_for_zero_without_execution_or_artifacts(self) -> None:
+        class Message:
+            content = None
+
+            def __init__(self, score: object) -> None:
+                self.tool_calls = [SimpleNamespace(id="verdict", function=SimpleNamespace(
+                    name="submit_verdict", arguments=json.dumps({
+                        "score": score, "reasoning": "No task execution was recorded."})))]
+
+            def model_dump(self, **kwargs: object) -> dict:
+                return {"role": "assistant", "tool_calls": []}
+
+        cases = [
+            ("refusal", 0, False, False, False, 0),
+            ("string_zero", "0", False, False, False, 0),
+            ("partial_without_evidence", 1, False, False, False, None),
+            ("success_without_evidence", 2, False, False, False, None),
+            ("invalid_score", "invalid", False, False, False, None),
+            ("execution_without_artifact", 0, True, False, False, None),
+            ("missing_archived_artifact", 0, False, True, False, None),
+            ("missing_manifest_artifact", 0, False, False, True, None),
+        ]
+        for name, score, steps, archive, manifest, expected in cases:
+            with self.subTest(name=name):
+                task = self.task("TASK_260713_000069_600069")
+                if not steps:
+                    task.generated_solution.steps = []
+                task.generated_solution.final_answer = "I cannot download or process this data."
+                if archive:
+                    task.candidate_artifacts = [{
+                        "archived_path": str(self.root / "missing.nc"), "sha256": "missing"}]
+                paths = [str(self.root / "missing.nc")] if manifest else None
+                client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+                    create=lambda **kwargs: SimpleNamespace(
+                        choices=[SimpleNamespace(message=Message(score))]))))
+                with patch.object(self.aaj, "get_openai_client", return_value=client), \
+                        patch.object(self.aaj.GISJudgeAgent, "examine") as inspect:
+                    self.aaj.judge_task_agentic(task, model="mock", max_turns=1,
+                                              artifact_paths=paths)
+                self.assertEqual(task.evaluator_scores["agent_judge"], expected)
+                inspect.assert_not_called()
+                self.assertFalse(self.evidence.CandidateEvidence.context(
+                    task, "agent_judge")["available"])
+
+    def test_malformed_tool_responses_retry_without_polluting_history_or_execution(self) -> None:
+        class Message:
+            content = "Discarded assistant text"
+
+            def __init__(self, calls: list[tuple[str, object, object]]) -> None:
+                self.tool_calls = [SimpleNamespace(id=identifier, type="function",
+                    function=SimpleNamespace(name=name, arguments=arguments))
+                    for name, arguments, identifier in calls]
+
+            def model_dump(self, **kwargs: object) -> dict:
+                return {"role": "assistant", "content": self.content, "tool_calls": [
+                    {"id": call.id, "type": "function", "function": {
+                        "name": call.function.name, "arguments": call.function.arguments}}
+                    for call in self.tool_calls]}
+
+        cases = [
+            [("submit_verdict", '{}{}', "bad")],
+            [("submit_verdict", '[]', "bad")],
+            [("submit_verdict", 'null', "bad")],
+            [("submit_verdict", '', "bad")],
+            [("submit_verdict", {}, "bad")],
+            [("", '{}', "bad")],
+            [("unknown_function", '{}', "bad")],
+            [("submit_verdict", '{}', "")],
+            [("ask_gis_agent", '{"question":"Check file"}', "valid"),
+             ("submit_verdict", '{}{}', "bad")],
+            [("ask_gis_agent", '{}', "duplicate"),
+             ("submit_verdict", '{}', "duplicate")],
+        ]
+        for calls in cases:
+            with self.subTest(calls=calls):
+                rejected = Message(calls)
+                valid = Message([("submit_verdict", '{"score":0,"reasoning":"No execution"}', "valid")])
+                sequence = iter([rejected, valid])
+                requests = []
+
+                def create(**kwargs: object) -> object:
+                    requests.append(copy.deepcopy(kwargs["messages"]))
+                    return SimpleNamespace(choices=[SimpleNamespace(message=next(sequence))])
+
+                client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+                task = self.task("TASK_260713_000069_600069")
+                task.generated_solution.steps = []
+                with patch.object(self.aaj, "get_openai_client", return_value=client), \
+                        patch.object(self.aaj.GISJudgeAgent, "examine") as inspect:
+                    self.aaj.judge_task_agentic(task, model="mock", max_turns=2,
+                                              transcript_dir=str(self.root))
+                self.assertEqual(task.evaluator_scores["agent_judge"], 0)
+                self.assertEqual(len(requests), 2)
+                self.assertFalse(any(m["role"] in {"assistant", "tool"} for m in requests[1]))
+                self.assertIn("discarded", requests[1][-1]["content"])
+                self.assertEqual([call["tool"] for call in task.evaluator_tool_calls["agent_judge"]],
+                                 ["submit_verdict"])
+                inspect.assert_not_called()
+                transcript = (self.root / f"{task.task_ID}_agent_judge.md").read_text()
+                self.assertIn("Rejected malformed response", transcript)
 
 
 if __name__ == "__main__":

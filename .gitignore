@@ -30,6 +30,9 @@ env/
 .vscode/
 .idea/
 
+# Local copy of the globally installed EO evaluation skill.
+/.agents/skills/eomcpevaluation/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -54,22 +57,32 @@ docs/benchmark_dataset_description.md
 docs/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
 docs/gemma4_benchmark_run_issues_2026-08-07.md
 
-scripts/vlm.sh
+scripts/**/vlm.sh
+scripts/generation/verify_tools.py
+scripts/archive/reference_comparison/
 
 # Local model-serving launchers and EUMETSAT acquisition-date analysis.
-scripts/*_serve.sh
+scripts/**/*_serve.sh
 docs/mtg_fci_date_audit.json
 docs/mtg_fci_date_audit.md
+docs/audits/mtg_fci_date_audit.json
+docs/audits/mtg_fci_date_audit.md
+docs/audits/numerical_gt_coverage.json
+docs/reference/MOOC.jsonl
+docs/reference/EO Science Strategy 2040 V6 - 20240911 (Final) (1).pdf
 
 # Generated benchmark runs and downloaded artifacts (task inputs stay versioned).
 data/candidate_reruns/
 data/evaluation_runs/
 data/rubric_runs/
+data/judge_runs/
+data/tasks/rubric_rerun_audit/
+tool_output/
 results_*.json
 summary_*.json
 src/agenticeoecosystem/servers/arxiv_papers/
 /*.nc
-scripts/*.deb
+scripts/**/*.deb
 
 # Service credentials must be supplied separately.
 src/agenticeoecosystem/servers/gee/gee-key.json

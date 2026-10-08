@@ -13,6 +13,10 @@ import asyncio
 from typing import Union, List, Optional
 import logging
 import sys
+import threading
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+import requests
 
 from agenticeoecosystem.utils.output_paths import server_output_dir
 from agenticeoecosystem.definitions import ROOT_DIR
@@ -39,6 +43,63 @@ env_path = os.path.join(ROOT_DIR, ".env")
 load_dotenv(env_path)
 URL = os.getenv("CDS_URL")
 KEY = os.getenv("CDS_KEY")
+
+
+class _CDSKeyPool:
+    """Select distinct configured credentials safely across download threads."""
+
+    def __init__(self, credentials: List[tuple[str, Optional[str]]]) -> None:
+        self.credentials: List[tuple[str, Optional[str]]] = []
+        seen = set()
+        for label, value in credentials:
+            key = value.strip() if value else None
+            if key and key not in seen:
+                self.credentials.append((label, key))
+                seen.add(key)
+        # Preserve cdsapi's environment/.cdsapirc fallback when no key is set.
+        if not self.credentials:
+            self.credentials.append(("CDS default credentials", None))
+        self._next = 0
+        self._lock = threading.Lock()
+
+    def select(self) -> int:
+        """Reserve the next credential for a new download."""
+        with self._lock:
+            index = self._next
+            self._next = (index + 1) % len(self.credentials)
+            return index
+
+    def redact(self, error: Optional[Exception]) -> str:
+        """Remove configured secrets from errors returned to callers or logs."""
+        message = str(error)
+        for _, key in self.credentials:
+            if key:
+                message = message.replace(key, "[REDACTED]")
+        return message
+
+
+_CDS_KEYS = _CDSKeyPool([("CDS_KEY", KEY), ("CDS_KEY_2", os.getenv("CDS_KEY_2"))])
+
+
+def _credential_retry_delay(error: Exception, default: float) -> Optional[float]:
+    """Return a delay for explicit auth/rate-limit failures, otherwise None."""
+    if not isinstance(error, requests.HTTPError) or error.response is None:
+        return None
+    if error.response.status_code not in (401, 429):
+        return None
+    retry_after = error.response.headers.get("Retry-After")
+    if retry_after:
+        try:
+            return max(default, float(retry_after))
+        except ValueError:
+            try:
+                deadline = parsedate_to_datetime(retry_after)
+                if deadline.tzinfo is None:
+                    deadline = deadline.replace(tzinfo=timezone.utc)
+                return max(default, (deadline - datetime.now(timezone.utc)).total_seconds())
+            except (ValueError, TypeError, OverflowError):
+                pass
+    return default
 
 # ---------------------------------------------------------------------------
 # Output directory / default save-path handling
@@ -399,15 +460,9 @@ async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filena
     output_path = resolve_run_path(output_filename)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def _blocking_download():
-        logger.info("Initializing cdsapi.Client...")
-        try:
-            c = cdsapi.Client(url=URL, key=KEY)
-        except Exception as e:
-            error_message = f"Error during CDS API request: {e}"
-            logger.error(error_message)
-            return error_message
-
+    def _blocking_download() -> str:
+        key_index = _CDS_KEYS.select()
+        c = None
         last_error: Optional[Exception] = None
         for attempt in range(1, _DOWNLOAD_MAX_ATTEMPTS + 1):
             logger.info(
@@ -416,6 +471,11 @@ async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filena
             )
             start_time = time.time()
             try:
+                if c is None:
+                    label, key = _CDS_KEYS.credentials[key_index]
+                    logger.info("Initializing cdsapi.Client with %s", label)
+                    # Explicit sessions prevent legacy cdsapi clients sharing auth.
+                    c = cdsapi.Client(url=URL, key=key, session=requests.Session())
                 c.retrieve(dataset, request, str(output_path))
                 elapsed = time.time() - start_time
                 logger.info(f"Download completed in {elapsed:.2f}s.")
@@ -425,7 +485,7 @@ async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filena
                 last_error = e
                 logger.warning(
                     f"Download attempt {attempt}/{_DOWNLOAD_MAX_ATTEMPTS} failed after "
-                    f"{time.time() - start_time:.1f}s: {e}"
+                    f"{time.time() - start_time:.1f}s: {_CDS_KEYS.redact(e)}"
                 )
                 # Drop any partial/corrupt bytes so the next attempt starts
                 # clean instead of resuming from a bad file.
@@ -435,10 +495,15 @@ async def _internal_fetch_and_inspect(dataset: str, request: dict, output_filena
                 except OSError:
                     pass
                 if attempt < _DOWNLOAD_MAX_ATTEMPTS:
-                    time.sleep(_DOWNLOAD_RETRY_BACKOFF_S)
+                    delay = _credential_retry_delay(e, _DOWNLOAD_RETRY_BACKOFF_S)
+                    if delay is not None and len(_CDS_KEYS.credentials) > 1:
+                        key_index = (key_index + 1) % len(_CDS_KEYS.credentials)
+                        c = None
+                        logger.info("Switching CDS credential to %s", _CDS_KEYS.credentials[key_index][0])
+                    time.sleep(delay if delay is not None else _DOWNLOAD_RETRY_BACKOFF_S)
 
         error_message = (
-            f"Error during CDS API request after {_DOWNLOAD_MAX_ATTEMPTS} attempts: {last_error}"
+            f"Error during CDS API request after {_DOWNLOAD_MAX_ATTEMPTS} attempts: {_CDS_KEYS.redact(last_error)}"
         )
         logger.error(error_message)
         return error_message

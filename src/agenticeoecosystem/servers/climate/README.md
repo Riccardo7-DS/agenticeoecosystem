@@ -14,6 +14,19 @@ This project provides a ready-to-run MCP (Model Context Protocol) server that in
 
 ## 1. Setup Copernicus API Key
 
+The server loads `CDS_URL` and `CDS_KEY` from the project's `.env`.
+Optionally add `CDS_KEY_2` to alternate credentials between new downloads.
+Selection is thread-safe within each server process; each download keeps its own
+client for submission, polling, and transfer. On explicit HTTP 401 or 429 errors,
+the next retry switches credentials and respects `Retry-After` (seconds or an
+HTTP date). Other failures retain the same credential and existing retry policy.
+HTTP 403 errors, including missing dataset licences, do not trigger rotation.
+The existing three-attempt limit still applies, and CDS's internal retries may
+run before an error reaches the server. Duplicate or empty keys are ignored;
+without configured keys, the normal cdsapi credential fallback is retained.
+Restart the server after changing `.env`. Every account must accept dataset
+licences separately, and rotation does not guarantee additional account quota.
+
 Before using the server, you must have a Copernicus account and an API key.
 
 1.  **Register**: Create an account on the [CDS Website](https://cds.climate.copernicus.eu/).

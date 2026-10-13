@@ -80,6 +80,50 @@ class FullEvaluationTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), original)
         self.assertEqual(report["candidates"][0]["validated_means"]["num_score"]["mean"], 1.0)
 
+    def test_task_specific_inspection_rules_exclude_reference_artifacts(self) -> None:
+        payload = json.loads(self.strategies.read_text())
+        payload['tasks'][0].update(evaluation_notes='Check the valid-pixel mask.',
+            reference_policy='candidate_inputs', reference_recomputation_rules={
+                'masking_rule': 'finite pixels', 'source': {'reference_answer': 99},
+                'policy': 'Inspect candidate-owned files.'})
+        self.strategies.write_text(json.dumps(payload))
+        runner = runner_module.FullEvaluationRunner(self.config)
+        context = runner.requirements.judging_context('q1')
+        self.assertEqual(context['recomputation_rules']['masking_rule'], 'finite pixels')
+        self.assertNotIn('source', context['recomputation_rules'])
+
+    def test_trajectory_metrics_use_benchmark_references_and_reach_summary(self) -> None:
+        payload = json.loads(self.source.read_text())
+        payload['tasks'][0]['generated_solution']['steps'] = [
+            {'function_name': 'fetch', 'arguments': {'region': 'Italy'}},
+            {'function_name': 'extra', 'arguments': {}}]
+        self.source.write_text(json.dumps(payload))
+        benchmark = json.loads(self.benchmark.read_text())
+        benchmark['tasks'][0]['reference_solutions'] = [{'steps': [
+            {'function_name': 'fetch', 'arguments': {'region': 'Italy'}}]}]
+        self.benchmark.write_text(json.dumps(benchmark))
+        report = self.run_mocked()
+        candidate = report['candidates'][0]
+        self.assertEqual(candidate['validated_method_means']['tool_exact_match']['mean'], 1)
+        self.assertEqual(candidate['validated_method_means']['tool_efficiency']['mean'], 2)
+        self.assertEqual(candidate['method_coverage']['agents_in_order'], {'unverified': 1})
+
+    def test_agent_ownership_metrics_are_aggregated_without_recorded_handoffs(self) -> None:
+        mapping = self.save('tool_agents.json', {'tools': {
+            'fetch': {'agents': ['climate']}, 'clip': {'agents': ['gis']}}})
+        payload = json.loads(self.source.read_text())
+        payload['tasks'][0]['generated_solution']['steps'] = [
+            {'function_name': 'fetch'}, {'function_name': 'fetch'}, {'function_name': 'clip'}]
+        self.source.write_text(json.dumps(payload))
+        benchmark = json.loads(self.benchmark.read_text())
+        benchmark['tasks'][0]['reference_solutions'] = [{'steps': [
+            {'function_name': 'fetch'}, {'function_name': 'clip'}]}]
+        self.benchmark.write_text(json.dumps(benchmark))
+        report = self.run_mocked(replace(self.config, tool_agent_mapping=mapping))
+        candidate = report['candidates'][0]
+        self.assertEqual(candidate['validated_method_means']['agent_exact_match']['mean'], 1)
+        self.assertEqual(candidate['method_coverage']['agents_in_order'], {'scored': 1})
+
     def test_resume_and_changed_answer(self) -> None:
         self.run_mocked()
         self.calls.clear()

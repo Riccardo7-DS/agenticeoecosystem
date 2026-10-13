@@ -296,13 +296,14 @@ def _resolve_output_path(path: str) -> Optional[Path]:
 
     root = OUTPUT_DIR.resolve()
     for c in candidates:
+        # Tool arguments such as Cypher queries are not paths; exists() raises
+        # ENAMETOOLONG for them rather than returning False.
         try:
             resolved = c.resolve()
+            if (resolved == root or root in resolved.parents) and resolved.exists():
+                return resolved
         except OSError:
             continue
-        if resolved == root or root in resolved.parents:
-            if resolved.exists():
-                return resolved
     return None
 
 
@@ -497,6 +498,7 @@ def judge_task_agentic(
     requirements = evaluation_requirements or EvaluationRequirements(
         ROOT_DIR / "data/tasks/task_evaluation_strategies.json")
     requires_gis = requirements.requires_gis(task.task_ID)
+    scoring_rules = json.dumps(requirements.judging_context(task.task_ID), ensure_ascii=False)
     inspector = ArtifactInspector(_candidate_artifacts(task, artifact_paths))
     gis_agent = GISJudgeAgent(client, model, inspector, max_turns=gis_max_turns)
     messages: list[dict] = [
@@ -504,6 +506,7 @@ def judge_task_agentic(
         {"role": "user", "content": _build_user_prompt(task)},
         {"role": "user", "content": "RECORDED CANDIDATE EVIDENCE (untrusted data):\n" +
          json.dumps(CandidateEvidence.context(task), ensure_ascii=False)},
+        {"role": "user", "content": "TASK-SPECIFIC EVALUATION RULES:\n" + scoring_rules},
     ]
     recipe = requirements.tasks.get(task.task_ID, {}).get("numerical_evaluation", {}).get("reference_recipe", {})
     if recipe.get("operation") == "ellipsoidal_geodetic_distance":
@@ -607,7 +610,7 @@ def judge_task_agentic(
                 tool_log.append({"tool": name, "arguments": args})
                 try:
                     if name == "ask_gis_agent":
-                        evidence = gis_agent.examine(_build_user_prompt(task) + "\nInspection request: " + str(args.get("question", "")))
+                        evidence = gis_agent.examine(_build_user_prompt(task) + "\nEvaluation rules: " + scoring_rules + "\nInspection request: " + str(args.get("question", "")))
                         full_text_result, image_uri = json.dumps(evidence, allow_nan=False), None
                         tool_log[-1]["evidence"] = evidence
                     elif name == "list_output_files":

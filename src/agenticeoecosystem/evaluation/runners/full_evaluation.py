@@ -17,9 +17,13 @@ from agenticeoecosystem.utils.output_paths import candidate_output_roots
 from typing import Any
 
 from agenticeoecosystem.definitions import ROOT_DIR
-from ..evidence.candidate_evidence import CandidateEvidence, EvaluationRequirements
-from ..dataclasses import Task, TaskSet
+from ..evidence.candidate_evidence import (
+    CandidateEvidence, EvaluationRequirements, all_numeric_outputs_missing, recorded_catalogue_matches,
+    recorded_theme_reference,
+)
+from ..dataclasses import Solution, Task, TaskSet
 from ..judges.deterministic_judge import DeterministicAnswerJudge
+from ..judges.trajectory_judge import TRAJECTORY_METHODS, TrajectoryJudge
 
 LOGGER = logging.getLogger(__name__)
 PROTOCOL_VERSION = "task_specific_v1"
@@ -62,6 +66,7 @@ class FullEvaluationConfig:
     benchmark_file: Path = ROOT_DIR / "data/tasks/benchmark_tasks.json"
     artifact_manifest: Path | None = None
     reference_validations: Path | None = None
+    candidate_references: Path | None = None
     task_ids: tuple[str, ...] = ()
     temperature: float = 0.0
     seed: int = 42
@@ -69,6 +74,7 @@ class FullEvaluationConfig:
     gis_max_turns: int = 5
     resume: bool = True
     dry_run: bool = False
+    tool_agent_mapping: Path = ROOT_DIR / "data/tasks/tool_agent_mapping.json"
 
 
 class FullEvaluationRunner:
@@ -84,10 +90,13 @@ class FullEvaluationRunner:
             raise ValueError("Provide candidate files with distinct filenames")
         if config.artifact_manifest and len(config.results_files) != 1:
             raise ValueError("An artifact manifest is allowed for exactly one candidate file")
+        if config.candidate_references and len(config.results_files) != 1:
+            raise ValueError("Candidate references are allowed for exactly one candidate file")
         if config.max_turns < 1 or config.gis_max_turns < 1:
             raise ValueError("Judge turn limits must be positive")
         self.strategies = self._index(self._read(config.strategies_file)["tasks"])
         self.ground_truths = self._read(config.ground_truths_file)
+        self.tool_agent_mapping = self._read(config.tool_agent_mapping)
         self.benchmark = self._index(self._read(config.benchmark_file)["tasks"])
         self.rubrics = self._index(self._read(config.rubrics_file))
         modes = {entry["rubric"].get("evidence_mode") for entry in self.rubrics.values()}
@@ -106,6 +115,11 @@ class FullEvaluationRunner:
         self.validations = self._read(config.reference_validations) if config.reference_validations else {}
         if not isinstance(self.validations, dict):
             raise ValueError("Reference validations must be a task-ID-keyed object")
+        self.candidate_references = self._read(config.candidate_references) if config.candidate_references else {}
+        if not isinstance(self.candidate_references, dict) or any(
+                not isinstance(entry, dict) or entry.get("task_ID") != task_id
+                for task_id, entry in self.candidate_references.items()):
+            raise ValueError("Candidate references must map task IDs to entries for the same task")
         self.requirements = EvaluationRequirements(config.strategies_file)
         self.answer_judge = DeterministicAnswerJudge(config.model, config.provider, config.temperature)
         self.artifact_state_hashes: dict[str, str] = {}
@@ -116,6 +130,7 @@ class FullEvaluationRunner:
             "temperature": config.temperature, "seed": config.seed,
             "max_turns": config.max_turns, "gis_max_turns": config.gis_max_turns,
             "strategies": self.strategies, "gt": self.ground_truths,
+            "tool_agent_mapping": self.tool_agent_mapping,
             "rubrics": self.rubrics, "benchmark": self.benchmark,
             "implementation": self._implementation_digests(),
         })
@@ -161,11 +176,26 @@ class FullEvaluationRunner:
                        "candidate": CandidateEvidence.fingerprint(task),
                        "artifacts": artifact_state,
                        "manifest": self.manifest.get(task.task_ID, []),
-                       "reference_validation": self.validations.get(task.task_ID)})
+                       "reference_validation": self.validations.get(task.task_ID),
+                       "candidate_reference": self.candidate_references.get(task.task_ID)})
+
+    def _candidate_binding(self, task: Task) -> dict[str, Any]:
+        """Accept candidate evidence only for this exact solution and artifact content."""
+        entry = self.candidate_references.get(task.task_ID)
+        if entry is None:
+            return {"status": "absent"}
+        state = self.artifact_state_hashes.get(task.task_ID) or digest(self._artifact_state(task))
+        if entry.get("candidate_fingerprint") != CandidateEvidence.fingerprint(task):
+            return {"status": "rejected", "reason": "Evidence belongs to a different candidate solution"}
+        if entry.get("artifact_state_sha256") != state:
+            return {"status": "rejected", "reason": "Candidate artifact state changed since recovery"}
+        return {"status": "bound", "entry": entry}
 
     def _reference_verified(self, task: Task, gt: dict[str, Any], strategy: dict[str, Any]) -> bool:
         """Allow fixed contracts or explicit candidate/reference-bound validity records."""
         if (strategy.get("reference_policy") or "").startswith("fixed_"):
+            return True
+        if recorded_catalogue_matches(task, gt):
             return True
         validation = self.validations.get(task.task_ID, {})
         if (validation.get("status") == "verified" and validation.get("reason")
@@ -188,7 +218,8 @@ class FullEvaluationRunner:
         if strategy is None:
             status = "out_of_scope" if "Scope Awareness" in task.task_labels else "missing_strategy"
             return {"status": status, "methods": [], "phases": []}
-        methods = list(strategy.get("evaluation_methods", []))
+        methods = list(dict.fromkeys([*strategy.get("evaluation_methods", []),
+                                      *sorted(TRAJECTORY_METHODS)]))
         current = self.benchmark.get(task.task_ID)
         if current is None or current["task_text"] != task.task_text:
             return {"status": "question_version_mismatch", "methods": methods, "phases": []}
@@ -202,11 +233,11 @@ class FullEvaluationRunner:
             phases.append("aaj")
         if set(methods) & NUMERIC_METHODS:
             phases.append("numeric")
-        if set(methods) - INSPECTION_METHODS - NUMERIC_METHODS - {"rubrics", "llm_judge"}:
+        if set(methods) - INSPECTION_METHODS - NUMERIC_METHODS - TRAJECTORY_METHODS - {"rubrics", "llm_judge"}:
             phases.append("deterministic")
         if "rubrics" in methods:
             phases.append("rubric")
-        available = INSPECTION_METHODS | NUMERIC_METHODS | {"rubrics"}
+        available = INSPECTION_METHODS | NUMERIC_METHODS | TRAJECTORY_METHODS | {"rubrics"}
         if "rubrics" in methods:
             available |= {"llm_judge"}
         available |= self.answer_judge.supported(strategy, self.ground_truths.get(task.task_ID, {}))
@@ -237,21 +268,47 @@ class FullEvaluationRunner:
 
         strategy = self.strategies[task.task_ID]
         gt = self.ground_truths.get(task.task_ID, {})
+        binding = self._candidate_binding(task)
+        entry = binding.get("entry", {})
+        # Recomputed values or demonstrated invalidity replace the static GT;
+        # other recovered evidence is reported but never becomes a reference.
+        usable = (entry.get("status") in {"recomputed", "reconstructable"}
+                  or entry.get("validity", {}).get("status") == "invalid")
+        candidate = {"binding": binding["status"], "reason": binding.get("reason"),
+                     "evidence_status": entry.get("status"), "validity": entry.get("validity"),
+                     "answer_trace_consistency": entry.get("answer_trace_consistency")}
         result = numeric_score_task_solution(
             task, self.strategies, self.ground_truths, model=self.config.model,
             provider=self.config.provider, temperature=self.config.temperature,
-            evaluator_label=self.labels["numeric"], inspection_label=self.labels["aaj"])
+            evaluator_label=self.labels["numeric"], inspection_label=self.labels["aaj"],
+            candidate_reference=entry if usable else None)
         if result is None:
-            return {"status": "unverified", "reason": "No usable GT, selected numeric fields, or verified runtime reference"}
+            return {"status": "unverified", "candidate_evidence": candidate,
+                    "reason": "No usable GT, selected numeric fields, or verified runtime reference"}
         evidence = task.evaluator_evidence[self.labels["numeric"]]
+        if evidence.get("reference_kind") == "candidate_bound_recomputation":
+            evidence["reference_validated"] = True
+            invalid = evidence["validity"].get("status") == "invalid"
+            return {"status": "scored", "hit_at_tol": evidence["hit_at_tol"], "num_score": evidence["num_score"],
+                    "fields": task.evaluator_criteria[self.labels["numeric"]], "reference_validated": True,
+                    "reference_kind": "candidate_bound_recomputation",
+                    "validity": evidence["validity"], "independent_agreement": evidence["independent_agreement"],
+                    "fields_not_produced": evidence["fields_not_produced"], "candidate_evidence": candidate,
+                    "zero_credit_basis": evidence["zero_credit_basis"],
+                    "reason": "Candidate's own trace demonstrates an invalid operation; zero credit" if invalid
+                              else "Candidate inputs not archived; unverifiable, conservative zero credit"
+                              if evidence["zero_credit_basis"] else
+                              "Reference recomputed from the candidate's own archived inputs"}
         comparable = bool(evidence.get("runtime_reference")) or self._reference_verified(task, gt, strategy)
         evidence["reference_validated"] = comparable
         record = {"status": "scored" if comparable else "diagnostic",
                 "hit_at_tol": evidence["hit_at_tol"], "num_score": evidence["num_score"],
                 "fields": task.evaluator_criteria[self.labels["numeric"]],
-                "reference_validated": comparable,
+                "reference_validated": comparable, "candidate_evidence": candidate,
                 "reason": "Comparable reference" if comparable else
                           "Reference source/support validity is unverified; excluded from validated averages"}
+        if not comparable and all_numeric_outputs_missing(record["fields"]):
+            record.update(status="scored", reason="All required numerical outputs absent or invalid; zero credit without comparing reference values")
         if "coordinate_distance_error" in strategy.get("evaluation_methods", []):
             fields = {field["field"]: field for field in record["fields"]}
             lat, lon = fields.get("lat", {}), fields.get("lon", {})
@@ -265,14 +322,15 @@ class FullEvaluationRunner:
 
     def _deterministic(self, task: Task) -> dict[str, Any]:
         strategy = self.strategies[task.task_ID]
-        gt = self.ground_truths.get(task.task_ID, {})
+        source_reference = recorded_theme_reference(task)
+        gt = source_reference or self.ground_truths.get(task.task_ID, {})
         supported = self.answer_judge.supported(strategy, gt) & set(strategy["evaluation_methods"])
         if not supported:
             return {"status": "unsupported", "reason": "No executable deterministic answer contract", "metrics": {}}
         values = self.answer_judge.extract(task)
         metrics = self.answer_judge.score(values, strategy, gt)
         metrics = {method: metrics.get(method) for method in sorted(supported)}
-        comparable = self._reference_verified(task, gt, strategy)
+        comparable = source_reference is not None or self._reference_verified(task, gt, strategy)
         record = {"status": "scored" if comparable else "diagnostic", "metrics": metrics,
                   "reference_validated": comparable, "extracted_values": values,
                   "reason": "Explicit deterministic contract" if comparable else "Source snapshot validity unverified"}
@@ -306,6 +364,10 @@ class FullEvaluationRunner:
         gis_calls = [call for tool in tools for call in tool.get("evidence", {}).get("tool_calls", [])
                      if isinstance(call.get("result"), dict) and "error" not in call["result"]]
         methods = {}
+        references = [Solution.model_validate(reference) for reference in
+                      self.benchmark.get(task.task_ID, {}).get("reference_solutions", []) or []]
+        trajectory = (TrajectoryJudge(self.tool_agent_mapping).evaluate(task.generated_solution, references)
+                      if task.generated_solution is not None else {})
         for method in record["methods"]:
             if self.config.dry_run and record["status"] == "pending" and method in record.get("unsupported_methods", []):
                 methods[method] = {"status": "unsupported", "reason": "No executable contract"}
@@ -313,6 +375,8 @@ class FullEvaluationRunner:
                 methods[method] = {"status": "planned"}
             elif record["status"] not in {"evaluated", "pending"}:
                 methods[method] = {"status": record["status"]}
+            elif method in TRAJECTORY_METHODS:
+                methods[method] = trajectory[method]
             elif method in {"rubrics", "llm_judge"} and "rubrics" in record["methods"]:
                 methods[method] = phases.get("rubric", {"status": "unsupported"})
             elif method == "agent_as_judge":
@@ -454,10 +518,29 @@ class FullEvaluationRunner:
             values = [value for value in values if isinstance(value, (int, float))]
             if values:
                 method_means[method] = {"n": len(values), "mean": sum(values) / len(values)}
+        numeric = [record["phase_results"].get("numeric", {}) for record in records]
+        candidate = [phase for phase in numeric if phase.get("candidate_evidence")]
+        bound = [phase for phase in numeric if phase.get("reference_kind") == "candidate_bound_recomputation"]
+        valid = [phase["independent_agreement"]["num_score"] for phase in bound
+                 if phase["validity"].get("status") != "invalid" and phase.get("independent_agreement")]
+        consistency = [phase["candidate_evidence"]["answer_trace_consistency"].get("consistent_fraction")
+                       for phase in candidate if (phase["candidate_evidence"].get("answer_trace_consistency") or {})]
+        candidate_summary = {
+            "binding": dict(Counter(phase["candidate_evidence"]["binding"] for phase in candidate)),
+            "evidence_status": dict(Counter(str(phase["candidate_evidence"]["evidence_status"]) for phase in candidate)),
+            "validity": dict(Counter(phase["validity"].get("status") for phase in bound)),
+            "zero_credit_basis": dict(Counter(str(phase.get("zero_credit_basis")) for phase in bound)),
+            "independent_agreement_num_score": {"n": len(valid), "mean": sum(valid) / len(valid) if valid else None},
+            "answer_trace_consistency": {"n": len([v for v in consistency if v is not None]),
+                                         "mean": (sum(v for v in consistency if v is not None) /
+                                                  len([v for v in consistency if v is not None]))
+                                                 if any(v is not None for v in consistency) else None},
+            "unverified": sum(phase.get("status") in {"unverified", "diagnostic"} for phase in candidate)}
         issues = {"error", "unsupported", "unverified", "diagnostic", "question_version_mismatch",
                   "rubric_question_mismatch", "missing_strategy", "missing_answer"}
         return {"questions": len(tasks), "task_statuses": dict(Counter(r["status"] for r in records)),
                 "method_coverage": coverage, "validated_means": means, "validated_method_means": method_means,
+                "candidate_evidence": candidate_summary,
                 "incomplete": (any(status in issues for counts in coverage.values() for status in counts)
                                or any(record["status"] in issues for record in records)),
                 "tasks": [{"task_ID": task.task_ID, **record} for task, record in zip(tasks, records)]}

@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "purpose": "Generate fresh candidate answers for rewritten questions"
+  },
+  "tasks": [
+    {
+      "task_ID": "TASK_260419_000006_100006",
+      "task_text": "Which narratives in the EO Dashboard reference the indicator collection FNF_Palsar (ALOS PALSAR forest/non-forest map)?",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent uses the reverse-lookup tool to find narratives for a specific indicator collection code.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "find_narratives_for_indicator",
+              "arguments": {
+                "indicator_code": "FNF_Palsar"
+              },
+              "comment": "Reverse-lookup narratives that list FNF_Palsar among their collections"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "GT": 99
+    },
+    {
+      "task_ID": "TASK_260419_000010_100010",
+      "task_text": "Which EO Dashboard narratives reference the CryoSat-2 sea ice thickness dataset with indicator code SIC_sea_ice_thickness_cryosat?",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "Agent performs a reverse lookup to find all narratives that reference the given sea ice indicator code.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "find_narratives_for_indicator",
+              "arguments": {
+                "indicator_code": "SIC_sea_ice_thickness_cryosat"
+              },
+              "comment": "Reverse-lookup all narratives referencing this sea ice collection code"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "GT": 99
+    },
+    {
+      "task_ID": "TASK_260713_000029_500008",
+      "task_text": "Use the EOSS knowledge graph to find all science questions whose knowledge advancement objectives mention temperature.",
+      "task_labels": [
+        "Tool Grounding"
+      ],
+      "reference_solution_description": "The query_ontology tool queries the EOSS scientific strategy ontology, not Earth observation data archives. The correct response is a Cypher query that follows ScienceQuestion-[:HAS_KAO]->KnowledgeAdvancementObjective links and filters objectives whose name or description mentions temperature, returning the distinct science questions.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "query_ontology",
+              "arguments": {
+                "cypher": "MATCH (sq:ScienceQuestion)-[:HAS_KAO]->(k:KnowledgeAdvancementObjective) WHERE toLower(k.description) CONTAINS 'temperature' OR toLower(k.name) CONTAINS 'temperature' RETURN DISTINCT sq.id AS id, sq.name AS name ORDER BY id"
+              },
+              "comment": "Scope awareness: this returns strategy-level science questions, not measured temperature values"
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {},
+      "GT": 99
+    },
+    {
+      "task_ID": "TASK_260713_000034_500013",
+      "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many knowledge advancement objectives each science question has (HAS_KAO relationships).",
+      "task_labels": [
+        "Sequential Reasoning"
+      ],
+      "reference_solution_description": "Step 1: list_ontology_nodes with ScienceQuestion to get all questions. Step 2: query_ontology to count HAS_KAO links to KnowledgeAdvancementObjective nodes per science question.",
+      "reference_solutions": [
+        {
+          "steps": [
+            {
+              "function_name": "list_ontology_nodes",
+              "arguments": {
+                "label": "ScienceQuestion"
+              },
+              "comment": "Retrieve all science question nodes"
+            },
+            {
+              "function_name": "query_ontology",
+              "arguments": {
+                "cypher": "MATCH (sq:ScienceQuestion) OPTIONAL MATCH (sq)-[:HAS_KAO]->(k:KnowledgeAdvancementObjective) RETURN sq.name AS question, count(k) AS n_kaos ORDER BY question"
+              },
+              "comment": "Preserve all ScienceQuestion nodes using OPTIONAL MATCH; count explicit HAS_KAO edges only."
+            }
+          ]
+        }
+      ],
+      "generated_solution": null,
+      "generated_solution_input_tokens": null,
+      "generated_solution_output_tokens": null,
+      "match_reasoning_LLM": null,
+      "match_score_LLM": null,
+      "match_reasoning_Human": null,
+      "match_score_Human": null,
+      "evaluator_scores": {},
+      "evaluator_reasoning": {},
+      "GT": 99
+    }
+  ]
+}

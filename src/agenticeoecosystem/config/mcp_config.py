@@ -3,7 +3,6 @@
 import logging
 import os
 
-import requests
 from dotenv import load_dotenv
 
 from agenticeoecosystem.utils.output_paths import server_output_dir
@@ -66,41 +65,11 @@ def _check_cdse_env() -> None:
         raise RuntimeError(f"CDSE env vars not set: {', '.join(missing)} (check .env)")
 
 
-_EVE_RETRIEVAL_URL = (
-    "https://bedrock-agentcore.eu-west-1.amazonaws.com/runtimes/"
-    "arn%3Aaws%3Abedrock-agentcore%3Aeu-west-1%3A686812424034%3A"
-    "runtime%2Feve_retrieval-GgFENBBHN0/invocations?qualifier=DEFAULT"
-)
-
 def _check_gee_mcp_env() -> None:
     """Raise RuntimeError if GEE creds are missing."""
     cred_path = ROOT_DIR / "src/agenticeoecosystem/servers/gee/gee-key.json"
     if not cred_path.exists():
         raise RuntimeError("GEE credentials file not found.")
-
-
-def _get_eve_retrieval_token() -> str:
-    client_id = os.getenv("EVE_RETRIEVAL_CLIENT_ID")
-    client_secret = os.getenv("EVE_RETRIEVAL_CLIENT_SECRET")
-    if not client_id or not client_secret:
-        raise RuntimeError(
-            "EVE retrieval credentials are missing. Set EVE_RETRIEVAL_CLIENT_ID and EVE_RETRIEVAL_CLIENT_SECRET."
-        )
-
-    logger.info("Requesting EVE retrieval access token")
-    resp = requests.post(
-        url=os.getenv("EVE_RETRIEVAL_TOKEN_URL"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        data={
-            "grant_type": "client_credentials",
-            "client_id": client_id,
-            "client_secret": client_secret,
-        },
-        timeout=20,
-    )
-    resp.raise_for_status()
-    logger.info("EVE retrieval token acquired")
-    return resp.json()["access_token"]
 
 
 def get_mcp_servers() -> dict:
@@ -134,11 +103,8 @@ def get_mcp_servers() -> dict:
     except Exception as exc:
         print(f"Warning: GEE MCP disabled: {exc}")
 
-    _try_register(servers, "eve_retrieval", lambda: {
-        "transport": "streamable_http",
-        "url": _EVE_RETRIEVAL_URL,
-        "headers": {"Authorization": f"Bearer {_get_eve_retrieval_token()}"},
-    })
+    # EVE retrieval is outside the benchmark toolset. Strategy questions use
+    # eoss_graphrag, matching the multi-agent framework.
 
     _try_register(servers, "gis-mcp", lambda: {
         "transport": "stdio",

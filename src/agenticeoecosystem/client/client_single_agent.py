@@ -137,7 +137,6 @@ coordinate transforms, spatial statistics (Moran's I, LISA, spatial regression),
 map creation (static PNG/PDF or interactive HTML), and geospatial data downloads \
 (GADM boundaries, ESA WorldCover, ERA5 climate, OSM street networks, Sentinel-2 NDVI).
 - ArXiv: search papers, retrieve abstracts, download full texts, semantic search, citation graphs.
-- EVE Knowledge Base: retrieve ESA and Earth Observation background information.
 - ESA EO Science Strategy (hybrid RAG): semantic + knowledge-graph retrieval over strategy PDF documents.
 - EO MOOCs: search educational course transcripts for EO concepts and methods.
 
@@ -153,6 +152,17 @@ files) in your response — they are required for downstream GIS processing.
 6. Prefer get_abstract over download_paper unless the user explicitly requests full text. \
 Never download more than one full paper per task.
 7. Return results clearly: include titles, themes, URLs, file paths, and any other key metadata.
+8. For ESA EO Science Strategy questions, use the eoss_graphrag tools (such as search_eoss, \
+list_ontology_nodes, or query_eoss_graph). For requests spanning several application domains, make \
+at most one distinct strategy search and one distinct MOOC search per domain, then synthesize the \
+results. Never repeat the same tool call with the same or equivalent arguments.
+9. Use EUMETSAT tools only when the request explicitly concerns Meteosat, MTG, MSG, or another \
+EUMETSAT product. For ERA5 wind, temperature, precipitation, or pressure-level data, use the \
+climate tools.
+10. When the request asks to download, calculate, convert, inspect, or visualize data, perform those \
+operations with tools before answering; do not stop at a plan or tutorial. If a required region or \
+date is not explicit, derive it from retrieved source content or choose and state a defensible \
+representative sample.
 """
 
 # ---------------------------------------------------------------------------

@@ -32,8 +32,9 @@ class ReferenceInput:
 class NumericalReferenceGenerator:
     """Validate sources and persist requested numeric outputs with provenance."""
 
-    def __init__(self, inventory_path: Path) -> None:
+    def __init__(self, inventory_path: Path, extraction_dir: Path | None = None) -> None:
         self.inventory_path = inventory_path
+        self.extraction_dir = extraction_dir or Path('output/ground_truth/extracted_inputs')
         self.results: dict[str, dict] = {}
         self.failures: dict[str, str] = {}
 
@@ -54,7 +55,7 @@ class NumericalReferenceGenerator:
                 if len(members) != 1:
                     raise ValueError('Archive needs an explicit unique NetCDF member selection')
                 member = members[0]
-                directory = Path('output/ground_truth/extracted_inputs')
+                directory = self.extraction_dir
                 directory.mkdir(parents=True, exist_ok=True)
                 prepared = directory / (self.source_identity(source.path)['sha256'] + '.nc')
                 if not prepared.exists():
@@ -164,8 +165,9 @@ class NumericalReferenceGenerator:
                                           'failed': failures}, indent=2) + '\n')
 
 
-if __name__ == '__main__':
-    sources = [
+def default_sources() -> list[ReferenceInput]:
+    """Return the identified input inventory shared by regeneration and discovery."""
+    return [
         ReferenceInput('TASK_260713_000053_600053', Path('output/era5/precip/era5_hourly_precip_sicily_2021_08.nc'), 'tp', '2021-08', 744, 'daily_sum'),
         ReferenceInput('TASK_260713_000061_600061', Path('output/ground_truth/city_climate/600061.nc'), 'tp', '2022-08', 744, 'monthly_hourly_sum'),
         ReferenceInput('TASK_260713_000062_600062', Path('output/ground_truth/city_climate/600062.nc'), 't2m', '2022-07', 744, 'monthly_hourly_mean'),
@@ -178,4 +180,46 @@ if __name__ == '__main__':
         ReferenceInput('TASK_260713_000082_600082', Path('output/era5/global_2m_temp_2022_07.nc'), 't2m', '2022-07', 1, 'extent', (24., -5., 40., 32.)),
         ReferenceInput('TASK_260713_000083_600083', Path('output/era5/data/500hPa_geopotential_2023_01.nc'), 'z', '2023-01', 1, 'extent', (60., 5., 100., 35.)),
     ]
-    NumericalReferenceGenerator(Path('data/tasks/ground_truths.json')).run(sources)
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--discover-missing', action='store_true',
+                        help='Discover proposed references for excluded tasks without modifying canonical GT')
+    parser.add_argument('--output-dir', type=Path)
+    parser.add_argument('--complete-references', action='store_true',
+                        help='Compute geometry/count references and replay imagery reference workflows')
+    parser.add_argument('--skip-imagery', action='store_true')
+    parser.add_argument('--task-suffixes', nargs='+', default=[], help='Limit reference completion to these task suffixes')
+    parser.add_argument('--export-reference-review', action='store_true', help='Join staged references and candidate answer traces into task-ID packets')
+    parser.add_argument('--prepare-evaluation', action='store_true', help='Stage combined corrected references and audit evaluation readiness')
+    args = parser.parse_args()
+    if args.prepare_evaluation:
+        if args.output_dir is None:
+            parser.error('--prepare-evaluation requires --output-dir')
+        from reference_completion import EvaluationPreparation
+
+        EvaluationPreparation(args.output_dir).run()
+    elif args.export_reference_review:
+        if args.output_dir is None:
+            parser.error('--export-reference-review requires --output-dir')
+        from reference_completion import ReferenceReviewExporter
+
+        ReferenceReviewExporter(args.output_dir).run()
+    elif args.complete_references:
+        if args.output_dir is None:
+            parser.error('--complete-references requires --output-dir')
+        from reference_completion import CompletionConfig, ReferenceCompletion
+
+        ReferenceCompletion(CompletionConfig(args.output_dir, replay_imagery=not args.skip_imagery,
+                                            task_suffixes=tuple(args.task_suffixes))).run()
+    elif args.discover_missing:
+        if args.output_dir is None:
+            parser.error('--discover-missing requires --output-dir')
+        from ground_truth_discovery import DiscoveryConfig, GroundTruthDiscovery
+
+        GroundTruthDiscovery(DiscoveryConfig(args.output_dir)).run()
+    else:
+        NumericalReferenceGenerator(Path('data/tasks/ground_truths.json')).run(default_sources())

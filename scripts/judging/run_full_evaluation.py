@@ -28,9 +28,13 @@ def parse_config() -> FullEvaluationConfig:
     parser.add_argument("--ground-truths", type=Path, default=FullEvaluationConfig.ground_truths_file)
     parser.add_argument("--rubrics-file", type=Path, default=FullEvaluationConfig.rubrics_file)
     parser.add_argument("--benchmark-file", type=Path, default=FullEvaluationConfig.benchmark_file)
+    parser.add_argument("--tool-agent-mapping", type=Path, default=FullEvaluationConfig.tool_agent_mapping,
+                        help="Tool ownership contract for derived agent trajectory metrics")
     parser.add_argument("--artifact-manifest", type=Path)
     parser.add_argument("--reference-validations", type=Path,
                         help="Candidate-bound source/support validity attestations, keyed by task ID")
+    parser.add_argument("--candidate-references", type=Path,
+                        help="One candidate's recovered references (recover_candidate_numeric_evidence.py), keyed by task ID")
     parser.add_argument("--task-ids", nargs="+", default=[])
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=42)
@@ -44,7 +48,9 @@ def parse_config() -> FullEvaluationConfig:
         model=args.evaluator_model, provider=args.evaluator_provider, label=args.evaluator_label,
         strategies_file=args.evaluation_strategies, ground_truths_file=args.ground_truths,
         rubrics_file=args.rubrics_file, benchmark_file=args.benchmark_file,
+        tool_agent_mapping=args.tool_agent_mapping,
         artifact_manifest=args.artifact_manifest, reference_validations=args.reference_validations,
+        candidate_references=args.candidate_references,
         task_ids=tuple(args.task_ids), temperature=args.temperature, seed=args.seed,
         max_turns=args.max_turns, gis_max_turns=args.gis_max_turns,
         resume=args.resume, dry_run=args.dry_run)
@@ -52,6 +58,17 @@ def parse_config() -> FullEvaluationConfig:
 
 def main() -> int:
     """Write durable results and return 2 for incomplete coverage, 1 for failure."""
+    if "--recover-saved-results" in sys.argv:
+        from agenticeoecosystem.evaluation.runners.recovery import RecoveryConfig, SavedEvaluationRecovery
+
+        parser = argparse.ArgumentParser(description="Recover saved deterministic metrics without model calls")
+        parser.add_argument("--recover-saved-results", required=True, type=Path,
+                            help="Root containing saved evaluation summary.json files")
+        parser.add_argument("--output-dir", required=True, type=Path)
+        args = parser.parse_args()
+        report = SavedEvaluationRecovery(RecoveryConfig(args.recover_saved_results, args.output_dir)).run()
+        print(f"Recovered {len(report['candidates'])} candidate evaluations into {args.output_dir}")
+        return 0
     from dotenv import load_dotenv
 
     config = parse_config()

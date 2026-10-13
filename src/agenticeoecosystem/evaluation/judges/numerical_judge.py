@@ -23,6 +23,13 @@ A task is in scope only if ALL of:
      required numeric outputs; distance uses the same metric as other scalars.
      Unselected GT fields are reported as unscored, not silently included.
 
+A caller-verified candidate-bound reference (the task operation recomputed
+from that candidate's own archived inputs) replaces the static GT. Required
+fields the candidate's inputs cannot support score zero; an operation shown
+to be invalid scores zero, with agreement kept only as a diagnostic. Inputs
+that were never archived (re-retrievable only by fresh downloads) get a
+conservative zero, labelled as unverifiable rather than as a failure.
+
 Tasks failing any of these are left untouched, same convention as
 rubric_evaluate_solutions() — "not an error", so a caller can run this over
 every evaluation strategy's tasks in one TaskSet and let each judge pick up
@@ -31,6 +38,7 @@ only what applies to it.
 
 import json
 import logging
+import math
 from typing import Any, Dict, Optional
 
 from tqdm import tqdm
@@ -144,6 +152,23 @@ def extract_candidate_values(
 # Single-task scoring
 # ---------------------------------------------------------------------------
 
+def _select_available(values: dict, specifications: Dict[str, "nm.ToleranceSpec"]
+                      ) -> "tuple[Dict[str, float], Dict[str, nm.ToleranceSpec], list[str]]":
+    """Split configured fields into those a candidate reference supports and those absent."""
+    selected, tolerances, absent = {}, {}, []
+    for field, spec in specifications.items():
+        try:
+            value, _ = nm.extract_scorable_fields(values, {field: spec})
+            if not all(math.isfinite(v) for v in value.values()):
+                raise ValueError(field)
+        except (KeyError, TypeError, ValueError):
+            absent.append(field)
+            continue
+        selected.update(value)
+        tolerances[field] = spec
+    return selected, tolerances, absent
+
+
 def numeric_score_task_solution(
     task: Task,
     strategies_by_id: Dict[str, dict],
@@ -153,12 +178,16 @@ def numeric_score_task_solution(
     temperature: float = 0.0,
     evaluator_label: str = "numeric_tolerance",
     inspection_label: Optional[str] = None,
+    candidate_reference: Optional[dict] = None,
 ) -> Optional[Task]:
     """Score one task numerically if (and only if) it's in scope — see
     module docstring. Returns the same Task with fields populated if scored,
     or None if out of scope for this judge (left completely untouched, not
     even a None placeholder written — matches rubric_evaluate_solutions()'s
-    "not an error" convention for tasks it doesn't own)."""
+    "not an error" convention for tasks it doesn't own).
+
+    `candidate_reference` must already be bound by the caller to this exact
+    candidate solution and artifact state; it is ignored for runtime tasks."""
     strategy_entry = strategies_by_id.get(task.task_ID)
     if not _has_numeric_component(strategy_entry):
         return None
@@ -172,6 +201,10 @@ def numeric_score_task_solution(
             return None
         gt_entry = {"distance_m": runtime_reference["distance_m"],
                     "field_tolerances": gt_entry.get("field_tolerances", {})}
+        candidate_reference = None
+    if candidate_reference is not None:
+        return _score_candidate_reference(task, strategy_entry, gt_entry or {}, candidate_reference,
+                                          model, provider, temperature, evaluator_label)
     if not _is_usable_gt(gt_entry):
         logger.info("Task %s: numerical_answer strategy but no usable ground truth yet (status=%s) — skipping.",
                     task.task_ID, (gt_entry or {}).get("_status", "missing"))
@@ -223,6 +256,70 @@ def numeric_score_task_solution(
         f"Hit@tol={item.hit_at_tol:.2f}  NumScore={item.num_score:.2f}  "
         f"({len(item.fields) - missing_n}/{len(item.fields)} fields stated by candidate). "
         f"Scored fields: {field_names}."
+    )
+    return task
+
+
+def _score_candidate_reference(task: Task, strategy_entry: dict, gt_entry: dict, reference: dict,
+                               model: str, provider: str, temperature: float,
+                               evaluator_label: str) -> Optional[Task]:
+    """Score the final answer against values recomputed from the candidate's own inputs."""
+    configured = strategy_entry.get("numerical_field_tolerances") or gt_entry.get("field_tolerances")
+    if not configured:
+        return None
+    specifications = {field: nm.ToleranceSpec(**parameters) for field, parameters in configured.items()}
+    validity = reference.get("validity") or {}
+    invalid = validity.get("status") == "invalid"
+    # Policy: unarchived inputs are not reconstructed by downloads; score them zero.
+    unverifiable = not invalid and reference.get("status") == "reconstructable"
+    values = reference.get("reference_values")
+    if values is None and not (invalid or unverifiable):
+        raise ValueError("Candidate reference has neither reference values nor a zero-credit status")
+    gt_values, tolerances, absent = _select_available(values or {}, specifications)
+    field_names = list(specifications)
+    # Without recomputed values, an invalid operation needs no extraction call.
+    predicted = {} if task.generated_solution is None or values is None else extract_candidate_values(
+        task, field_names, model=model, provider=provider, temperature=temperature,
+        field_units=strategy_entry.get("numerical_field_units"))
+    predicted = {k: v for k, v in predicted.items() if v is not None}
+    agreement = nm.score_item(predicted, gt_values, tolerances)
+    # Required outputs the candidate's own inputs cannot support earn no credit.
+    fields = agreement.fields + [nm.FieldResult(field, predicted.get(field), None, 0.0, 0.0,
+                                                field not in predicted, True) for field in absent]
+    agreement = nm.ItemResult(fields)
+    hit, score = (0.0, 0.0) if invalid or values is None else (agreement.hit_at_tol, agreement.num_score)
+
+    task.evaluator_scores_raw[evaluator_label] = score
+    task.evaluator_scores[evaluator_label] = 2 if score >= 0.75 else 1 if score >= 0.25 else 0
+    task.evaluator_criteria[evaluator_label] = [field.to_dict() for field in fields]
+    task.evaluator_evidence[evaluator_label] = {
+        "method": "standardized_scalar_hit_at_tol_and_num_score",
+        "reference_kind": "candidate_bound_recomputation",
+        "hit_at_tol": hit, "num_score": score,
+        "validity": validity,
+        "zero_credit_basis": ("demonstrated_invalid_operation" if invalid else
+                              "unverifiable_conservative_zero" if unverifiable else None),
+        "independent_agreement": None if values is None else {
+            "hit_at_tol": agreement.hit_at_tol, "num_score": agreement.num_score,
+            "fields_without_reference": absent},
+        "field_tolerances": {
+            field: {"abs_tol": spec.abs_tol, "rel_tol": spec.rel_tol, "floor_scale": spec.floor_scale}
+            for field, spec in specifications.items()
+        },
+        "candidate_fingerprint": CandidateEvidence.fingerprint(task),
+        "candidate_reference": {key: reference.get(key) for key in (
+            "candidate_fingerprint", "artifact_state_sha256", "recipe_version",
+            "artifact_hashes", "evidence_status", "status")},
+        "fields_scored": field_names,
+        "fields_not_produced": absent,
+        "runtime_reference": None,
+    }
+    task.evaluator_reasoning[evaluator_label] = (
+        f"Candidate-bound reference ({reference.get('evidence_status')}). "
+        + (f"Invalid operation: {[f.get('code') for f in validity.get('findings', []) if f.get('invalidates')]}; "
+           f"zero credit. " if invalid else "")
+        + ("Candidate inputs not archived; unverifiable, conservative zero credit. " if unverifiable else "")
+        + f"Hit@tol={hit:.2f} NumScore={score:.2f}; fields without candidate-supported reference: {absent}."
     )
     return task
 

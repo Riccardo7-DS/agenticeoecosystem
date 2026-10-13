@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -37,10 +38,13 @@ class CandidateEvidence:
     @staticmethod
     def fingerprint(task: Task) -> str:
         """Bind inspections to the exact candidate solution and task version."""
+        solution = task.generated_solution.model_dump() if task.generated_solution is not None else None
+        # Preserve historical evidence hashes when agent activations were not recorded.
+        if solution is not None and solution.get("agents_called") is None:
+            solution.pop("agents_called", None)
         content = {"task_ID": task.task_ID, "task_text": task.task_text,
                    "artifact_hashes": [a["sha256"] for a in task.candidate_artifacts],
-                   "solution": task.generated_solution.model_dump()
-                   if task.generated_solution is not None else None}
+                   "solution": solution}
         return hashlib.sha256(json.dumps(content, sort_keys=True, default=str).encode()).hexdigest()
 
     @classmethod
@@ -188,3 +192,66 @@ class EvaluationRequirements:
     def requires_gis(self, task_id: str) -> bool:
         """Require GIS consultation whenever the task mapping requests it."""
         return "gis_verification_agent" in self.tasks.get(task_id, {}).get("evaluation_methods", [])
+
+    def judging_context(self, task_id: str) -> dict[str, Any]:
+        """Expose task-specific scoring rules without supplying stored reference answers."""
+        entry = self.tasks.get(task_id, {})
+        rules = entry.get("reference_recomputation_rules", {})
+        return {"evaluation_notes": entry.get("evaluation_notes", ""),
+                "reference_policy": entry.get("reference_policy"),
+                "recomputation_rules": {key: rules[key] for key in
+                    ("masking_rule", "aggregation", "policy") if key in rules}}
+
+
+# Explicit deterministic contracts grounded in recorded source responses.
+
+def all_numeric_outputs_missing(fields: list[dict[str, Any]]) -> bool:
+    """A zero for absent/invalid required values needs no reference-value comparison."""
+    return bool(fields) and all(field.get("missing") or field.get("invalid") for field in fields)
+
+
+def response_text(result: Any) -> str | None:
+    """Read a successful MCP text response; reject errors and ambiguous formats."""
+    if isinstance(result, str):
+        return result
+    if not isinstance(result, dict) or result.get("isError"):
+        return None
+    structured = result.get("structuredContent", {}).get("result")
+    if isinstance(structured, str):
+        return structured
+    content = result.get("content", [])
+    texts = [item["text"] for item in content if item.get("type") == "text"]
+    return "\n".join(texts) if texts else None
+
+
+def recorded_theme_reference(task: Task) -> dict[str, Any] | None:
+    """Recover the exhaustive theme list from this candidate's source response."""
+    if task.task_ID != "TASK_260419_000001_100001" or task.generated_solution is None:
+        return None
+    references = []
+    for step in task.generated_solution.steps:
+        if step.function_name != "list_themes":
+            continue
+        text = response_text(step.tool_result)
+        if text is None:
+            continue
+        header = re.search(r"Available themes \((\d+)\):", text)
+        items = re.findall(r"^\s*-\s+([\w-]+)\s+\(\d+ narratives?\)\s*$", text, re.M)
+        if header and len(items) == int(header[1]) and len(set(items)) == len(items):
+            references.append(items)
+    if not references or any(set(items) != set(references[0]) for items in references[1:]):
+        return None
+    return {"reference_set": references[0], "basis": "candidate_recorded_source_response"}
+
+
+def recorded_catalogue_matches(task: Task, gt: dict[str, Any]) -> bool:
+    """Validate a climate catalogue snapshot against the actual recorded response."""
+    snapshot = gt.get("catalogue_snapshot")
+    if not snapshot or gt.get("provenance", {}).get("tool") != "list_cds_datasets":
+        return False
+    texts = [response_text(step.tool_result) for step in task.generated_solution.steps
+             if step.function_name == "list_cds_datasets"] if task.generated_solution else []
+    texts = [text for text in texts if text is not None]
+    return bool(texts) and all(all(f"[{name}]" in text and
+        all(str(value) in text for value in fields.values())
+        for name, fields in snapshot.items()) for text in texts)

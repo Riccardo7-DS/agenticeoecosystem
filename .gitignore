@@ -128,3 +128,28 @@ scripts/local/
 !/scripts/reporting/
 /scripts/reporting/*
 !/scripts/reporting/organize_judge_runs.sh
+
+# Benchmark ground truths are versioned in data/tasks/.
+# Candidate runs, scores and score-derived paper figures stay local.
+data/candidate_numeric_evidence_*/
+data/provisional_scores_*/
+data/evaluation_prepared_*/
+figs/
+
+# Intermediate reference-construction runs and audit leftovers.
+data/budget_resume_*/
+data/ground_truth_discovery_*/
+data/reference_completion_*/
+data/reference_corrections_*/
+data/reference_counts_retry_*/
+data/reference_review_*/
+data/**/*.log
+
+# Offline recovery of numeric evidence from candidate traces stays local.
+scripts/judging/recover_candidate_numeric_evidence.py
+src/agenticeoecosystem/evaluation/evidence/numeric_recovery.py
+src/agenticeoecosystem/evaluation/runners/recovery.py
+tests/test_numeric_recovery.py
+
+# Stray local snapshot kept out of the repo.
+data/tasks/4096/

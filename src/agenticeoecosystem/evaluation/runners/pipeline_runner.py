@@ -81,7 +81,8 @@ def run_pipeline(
             for t in data.get("tools_called", [])
         ]
         return (
-            Solution(steps=steps, final_answer=data.get("final_answer")),
+            Solution(steps=steps, final_answer=data.get("final_answer"),
+                     agents_called=data.get("agents_called")),
             data.get("input_tokens", 0),
             data.get("output_tokens", 0),
         )

@@ -266,7 +266,7 @@
         "set_f1",
         "exact_set_match"
       ],
-      "evaluation_target": "narrative IDs matching the specified indicator",
+      "evaluation_target": "narrative titles referencing the specified collection code",
       "reference_policy": "source_snapshot",
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
@@ -385,7 +385,7 @@
         "set_f1",
         "exact_set_match"
       ],
-      "evaluation_target": "narrative IDs matching the specified indicator",
+      "evaluation_target": "narrative titles referencing the specified collection code",
       "reference_policy": "source_snapshot",
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
@@ -1980,18 +1980,16 @@
     },
     {
       "task_ID": "TASK_260427_000005_200005",
-      "evaluation_strategy": "set_answer",
+      "evaluation_strategy": "agent_as_judge",
       "evaluation_methods": [
-        "set_precision",
-        "set_recall",
-        "set_f1",
-        "exact_set_match"
+        "agent_as_judge"
       ],
       "evaluation_target": "downloaded arXiv paper IDs",
-      "reference_policy": "candidate_local_inventory",
-      "assignment_status": "proposed",
-      "requires_additional_evaluation": false,
-      "evaluation_notes": "Canonicalize stable IDs/aliases, deduplicate, and compare against the same source snapshot. Score multiple requested sets separately.",
+      "reference_policy": "candidate_recorded_list_papers_response",
+      "assignment_status": "approved",
+      "requires_additional_evaluation": true,
+      "primary_evaluator": "agent_as_judge",
+      "evaluation_notes": "AAJ only: inspect the recorded list_papers invocation and response from this candidate execution, then assess whether the final answer accurately and completely reports that inventory. An explicitly evidenced empty inventory is valid. No invocation followed by refusal is a tool-grounding failure. Distinguish service errors from successful empty results and assess the agent's handling of the failure; unavailable evidence is unverified. Do not consult today's storage or require a fixed inventory. No deterministic set metrics are assigned. No new evaluation run has been performed.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation"
@@ -2127,7 +2125,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "metadata_field_accuracy"
+        "metadata_field_accuracy",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "No fixed reference dimensions or filename; record numeric metadata tolerances. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
@@ -2178,7 +2177,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -2193,7 +2194,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -2301,14 +2302,57 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "display_name": "Barcelona, Barcelonès, Barcelona, Catalunya, España",
+            "centre": [
+              2.177073,
+              41.3825802
+            ],
+            "bbox": [
+              2.153573,
+              41.36508,
+              2.200573,
+              41.40008
+            ],
+            "area_definition": "central Barcelona: about 4 km x 4 km box centred on the geocoded city-centre point"
+          },
+          "raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000009_200009/sentinel2_barcelona.tif",
+            "sha256": "4f0bd6c40b4bc1edf1d64c734ec2f6b8764dc53c5b01c7cfed51cfa464eef6da",
+            "crs": "EPSG:4326",
+            "width": 393,
+            "height": 388,
+            "bounds": [
+              2.153573,
+              41.36508,
+              2.200573,
+              41.40008
+            ],
+            "cloud_fraction_scl": 0.00013116130216940793,
+            "gsd_m": [
+              9.988964143034284,
+              9.97445876288765
+            ],
+            "masked_pixels": 1580
+          }
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000010_200010",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -2323,7 +2367,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -2342,6 +2386,11 @@
           "abs_tol": 0.01,
           "rel_tol": 0.01,
           "floor_scale": 0.01
+        },
+        "ndvi_stats.mean": {
+          "abs_tol": 0,
+          "rel_tol": 0.05,
+          "floor_scale": 0.01
         }
       },
       "numerical_field_units": {
@@ -2353,14 +2402,43 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "raster": {
+            "path": "data/reference_completion_20261012/artifacts/TASK_260427_000010_200010/sentinel2_po_valley_200010.tif",
+            "sha256": "6b45044643185680c5a83045fb97eae0eb527ae7a77b96d009dd6272c18f5d71",
+            "crs": "EPSG:4326",
+            "width": 512,
+            "height": 512,
+            "bounds": [
+              7.5,
+              44.5,
+              12.5,
+              45.7
+            ],
+            "gsd_m": [
+              767.3596020307692,
+              259.1578125000006
+            ],
+            "masked_pixels": 2999
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000010_200010/ndvi_po_valley.tif"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000011_200011",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -2375,7 +2453,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -2459,14 +2537,38 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only; reprojection fill and source no-data excluded",
+        "aggregation": null,
+        "source": {
+          "input_raster": "data/reference_completion_20261012/artifacts/TASK_260427_000011_200011/sentinel2_alps.tif",
+          "input_sha256": "4749f58c52f320e46eed90f42ce7cf23440d1711b36cbb0b903649fe6472bea9",
+          "reprojected_raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000011_200011/sentinel2_alps_utm32n.tif",
+            "sha256": "5d6a0d9563af7883c47c9d7d131e038614476049dd0df27076a96e78728dff55",
+            "crs": "EPSG:32632",
+            "width": 623,
+            "height": 395,
+            "pixel_size_m": [
+              573.72526918566,
+              573.72526918566
+            ],
+            "fill_pixels_excluded": 16907
+          }
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000012_200012",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -2481,7 +2583,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -2517,14 +2619,44 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "raster": {
+            "path": "data/reference_completion_retry_20261012/artifacts/TASK_260427_000012_200012/sentinel2_spain_clipped.tif",
+            "sha256": "d714d810a5f52572aefd7efa78d01aa1f97553662398f6ccf13b45d13af06380",
+            "crs": "EPSG:4326",
+            "width": 512,
+            "height": 512,
+            "bounds": [
+              -3.0372,
+              35.9376,
+              -2.2022,
+              37.0
+            ],
+            "gsd_m": [
+              145.99679768404252,
+              229.44104999999928
+            ],
+            "masked_pixels": 2511
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000012_200012/ndvi_spain.tif",
+          "area": "Almeria province bbox from geocoder (includes coastal sea)"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000013_200013",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -2539,7 +2671,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -2563,7 +2695,52 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "geocode_query": "Bila Tserkva, Kyiv Oblast, Ukraine",
+            "display_name": "Біла Церква, Білоцерківська міська громада, Білоцерківський район, Київська область, Україна",
+            "osm_type": "relation",
+            "osm_id": 2069683,
+            "centre": [
+              30.1158069,
+              49.7969703
+            ],
+            "area_definition": "town-centre point +/- 0.1 deg",
+            "bbox": [
+              30.015807,
+              49.69697,
+              30.215807,
+              49.89697
+            ]
+          },
+          "raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000013_200013/sentinel2_bila_tserkva.tif",
+            "sha256": "6609cb9d1efd81fff2d2b7e8ce7940bc4a169a71a14f71232b71c38f37f83710",
+            "crs": "EPSG:4326",
+            "width": 1438,
+            "height": 2212,
+            "bounds": [
+              30.015807,
+              49.69697,
+              30.215807,
+              49.89697
+            ],
+            "cloud_fraction_scl": 2.5150462642760315e-05,
+            "gsd_m": [
+              9.99399807447261,
+              9.997649186256924
+            ],
+            "masked_pixels": 0
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000013_200013/ndvi_sentinel2_bila_tserkva.tif"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000014_200014",
@@ -3309,7 +3486,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -3324,7 +3503,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -3354,14 +3533,73 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "geocode_query": "Yahotyn, Kyiv Oblast, Ukraine",
+            "display_name": "Яготин, Яготинська міська громада, Бориспільський район, Київська область, Україна",
+            "osm_type": "relation",
+            "osm_id": 1954883,
+            "centre": [
+              31.7634861,
+              50.2758913
+            ],
+            "area_definition": "town-centre point +/- 0.1 deg",
+            "bbox": [
+              31.663486,
+              50.175891,
+              31.863486,
+              50.375891
+            ]
+          },
+          "raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/sentinel2_yahotyn.tif",
+            "sha256": "377e1d5ddc582d97430f8345e2d3b257f992a329244a4171f1a7a5fae7310663",
+            "crs": "EPSG:4326",
+            "width": 1423,
+            "height": 2212,
+            "bounds": [
+              31.663486,
+              50.175891,
+              31.863486,
+              50.375891
+            ],
+            "cloud_fraction_scl": 0.0,
+            "gsd_m": [
+              9.999109893655351,
+              9.997649186256924
+            ],
+            "masked_pixels": 0
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/ndvi_sentinel2_yahotyn.tif",
+          "reprojected_raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/ndvi_sentinel2_yahotyn_utm.tif",
+            "sha256": "c7fe3bb1d530fa43d552049a5fef0090ece0665c031132c2e1e2b185ba80b9b4",
+            "crs": "EPSG:32636",
+            "width": 1456,
+            "height": 2238,
+            "pixel_size_m": [
+              10.043054605661672,
+              10.043054605661672
+            ],
+            "fill_pixels_excluded": 115828
+          }
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000036_200036",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -3376,7 +3614,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -3412,7 +3650,52 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "geocode_query": "Mopti, Mali",
+            "display_name": "Mopti, Mali",
+            "osm_type": "relation",
+            "osm_id": 2096899,
+            "centre": [
+              -3.6464581,
+              14.514489
+            ],
+            "area_definition": "town-centre point +/- 0.1 deg",
+            "bbox": [
+              -3.746458,
+              14.414489,
+              -3.546458,
+              14.614489
+            ]
+          },
+          "raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000036_200036/sentinel2_mopti.tif",
+            "sha256": "6875da539ecf503415c8baab9b4ab5f12ce14b2909df3bab673f45f8b04cb349",
+            "crs": "EPSG:4326",
+            "width": 2156,
+            "height": 2212,
+            "bounds": [
+              -3.746458,
+              14.414489,
+              -3.546458,
+              14.614489
+            ],
+            "cloud_fraction_scl": 5.8711631948521643e-05,
+            "gsd_m": [
+              9.996952088326747,
+              9.997649186256835
+            ],
+            "masked_pixels": 1
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000036_200036/ndvi_sentinel2_mopti.tif"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260427_000037_200037",
@@ -4143,7 +4426,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "metadata_field_accuracy"
+        "metadata_field_accuracy",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Distinguish nominal 30 m product resolution from stored angular pixel spacing. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
@@ -4896,7 +5180,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -4911,7 +5197,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -4941,14 +5227,61 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "stored_reference",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "geocode_query": "Lodi, Lombardy, Italy",
+            "display_name": "Lodi, Lombardia, Italia",
+            "osm_type": "relation",
+            "osm_id": 44181,
+            "centre": [
+              9.4916781,
+              45.2613104
+            ],
+            "area_definition": "town-centre point +/- 0.1 deg",
+            "bbox": [
+              9.391678,
+              45.16131,
+              9.591678,
+              45.36131
+            ]
+          },
+          "raster": {
+            "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000025_400025/sentinel2_lodi.tif",
+            "sha256": "88f0d33c3658b623788933d6ff90912a4b848a88fa28bf82a3f1cc1c80737247",
+            "crs": "EPSG:4326",
+            "width": 1568,
+            "height": 2212,
+            "bounds": [
+              9.391678,
+              45.16131,
+              9.591678,
+              45.36131
+            ],
+            "cloud_fraction_scl": 0.0,
+            "gsd_m": [
+              9.994299979679244,
+              9.997649186256924
+            ],
+            "masked_pixels": 9
+          },
+          "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260713_000025_400025/ndvi_sentinel2_lodi.tif"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260713_000026_400026",
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -4963,7 +5296,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "The revised W National Park, Niger task now has independently regenerated EVI mean/max for a documented approximately 10 m July 2023 scene sample inside the Niger park boundary. Score only mean and maximum with the generic scalar Hit@tol and NumScore and configured initial tolerances pending empirical calibration. Compare stored values only for matching verified source, spatial support, reflectance encoding and mask; independently recompute from other task-valid candidate scenes. Rerun candidate generation and evaluation for the revised region.",
+      "evaluation_notes": "The revised W National Park, Niger task now has independently regenerated EVI mean/max for a documented approximately 10 m July 2023 scene sample inside the Niger park boundary. Score only mean and maximum with the generic scalar Hit@tol and NumScore and configured initial tolerances pending empirical calibration. Compare stored values only for matching verified source, spatial support, reflectance encoding and mask; independently recompute from other task-valid candidate scenes. Rerun candidate generation and evaluation for the revised region. Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -5003,7 +5336,330 @@
       },
       "numerical_tolerance_status": "Existing statistics/lat-lon presets retained; added quantity-specific tolerances are initial defaults pending empirical calibration.",
       "numerical_scoring_target": "final_written_answer",
-      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references."
+      "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only; restricted to the park polygon; EVI outside [-1, 1] excluded as non-physical; no cloud masking (not requested)",
+        "aggregation": null,
+        "source": {
+          "area": {
+            "display_name": "Parc W du Niger, Say, Tillabéri, Niger",
+            "osm_type": "relation",
+            "osm_id": 2695663,
+            "area_definition": "OSM park boundary polygon"
+          },
+          "tiles": [
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_0.tif",
+              "sha256": "5a1a1d4e6f4a4cebf6009e4d235b4c48540aed4b537841bb992d19a482acc1bc",
+              "crs": "EPSG:4326",
+              "width": 2107,
+              "height": 1870,
+              "bounds": [
+                2.065015,
+                11.902544,
+                2.258488,
+                12.071659
+              ],
+              "cloud_fraction_scl": 0.004050922694659259,
+              "gsd_m": [
+                9.998945284574578,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_1.tif",
+              "sha256": "e15877e4d12a19314a69eeddb4d323d5fd56b4b9a0dc9a18bdcf85851d03f81c",
+              "crs": "EPSG:4326",
+              "width": 2107,
+              "height": 1870,
+              "bounds": [
+                2.258488,
+                11.902544,
+                2.451962,
+                12.071659
+              ],
+              "cloud_fraction_scl": 0.00083957473052646,
+              "gsd_m": [
+                9.998996965921773,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_2.tif",
+              "sha256": "088f8875c88d6900682972eed7aebc389b01dac0faea2751674e11fee606784a",
+              "crs": "EPSG:4326",
+              "width": 2107,
+              "height": 1870,
+              "bounds": [
+                2.451962,
+                11.902544,
+                2.645435,
+                12.071659
+              ],
+              "cloud_fraction_scl": 0.0,
+              "gsd_m": [
+                9.998945284574578,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_3.tif",
+              "sha256": "7a0dcbbfbf68c5b1ad0d3c7842a13787481a897eebb587f5fa7911b927f65792",
+              "crs": "EPSG:4326",
+              "width": 2107,
+              "height": 1870,
+              "bounds": [
+                2.645435,
+                11.902544,
+                2.838909,
+                12.071659
+              ],
+              "cloud_fraction_scl": 0.0022197462494511545,
+              "gsd_m": [
+                9.998996965921773,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_0.tif",
+              "sha256": "3ded5914956d41f6471328c3ab5dd458da4d22eb05dce0e1fc350ebb3e6c2e47",
+              "crs": "EPSG:4326",
+              "width": 2106,
+              "height": 1870,
+              "bounds": [
+                2.065015,
+                12.071659,
+                2.258488,
+                12.240774
+              ],
+              "cloud_fraction_scl": 0.0004225259127219912,
+              "gsd_m": [
+                9.997380336613823,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_1.tif",
+              "sha256": "f803f21c48ff0d147a329c019d6c91c3fb9ce349669884088633aeaa98eb7018",
+              "crs": "EPSG:4326",
+              "width": 2106,
+              "height": 1870,
+              "bounds": [
+                2.258488,
+                12.071659,
+                2.451962,
+                12.240774
+              ],
+              "cloud_fraction_scl": 0.0011302060321668164,
+              "gsd_m": [
+                9.997432009872304,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_2.tif",
+              "sha256": "32657c6f5dbfc4926582f1c518c36eb363541eb95a3256d93dd0b3bbcf93578e",
+              "crs": "EPSG:4326",
+              "width": 2106,
+              "height": 1870,
+              "bounds": [
+                2.451962,
+                12.071659,
+                2.645435,
+                12.240774
+              ],
+              "cloud_fraction_scl": 0.0004997181467769703,
+              "gsd_m": [
+                9.997380336613823,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_3.tif",
+              "sha256": "fdf29498c7b258ae56625cf60ba19f79e6612692be58f2c260d3fd711cf182c3",
+              "crs": "EPSG:4326",
+              "width": 2106,
+              "height": 1870,
+              "bounds": [
+                2.645435,
+                12.071659,
+                2.838909,
+                12.240774
+              ],
+              "cloud_fraction_scl": 6.094123741182565e-06,
+              "gsd_m": [
+                9.997432009872304,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_0.tif",
+              "sha256": "bec33714dc067a1f377d36b77ffa0e4d438d00cf217776e8bfd5bbb9f533b43b",
+              "crs": "EPSG:4326",
+              "width": 2105,
+              "height": 1870,
+              "bounds": [
+                2.065015,
+                12.240774,
+                2.258488,
+                12.40989
+              ],
+              "cloud_fraction_scl": 0.0,
+              "gsd_m": [
+                9.995726743990256,
+                9.999910472727315
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_1.tif",
+              "sha256": "adbdc3986bd668e53cbaa8daf4e4a690d09037e00d9be6e183b88518e18cd7f7",
+              "crs": "EPSG:4326",
+              "width": 2105,
+              "height": 1870,
+              "bounds": [
+                2.258488,
+                12.240774,
+                2.451962,
+                12.40989
+              ],
+              "cloud_fraction_scl": 0.0,
+              "gsd_m": [
+                9.995778408701847,
+                9.999910472727315
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_2.tif",
+              "sha256": "95fa7b9371fd5db05ff4edadcd29aba545334d56a2a8b812a0fb203a7dee6793",
+              "crs": "EPSG:4326",
+              "width": 2105,
+              "height": 1870,
+              "bounds": [
+                2.451962,
+                12.240774,
+                2.645435,
+                12.40989
+              ],
+              "cloud_fraction_scl": 0.0001442961118802952,
+              "gsd_m": [
+                9.995726743990256,
+                9.999910472727315
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_3.tif",
+              "sha256": "bf3ad3912baa15aa1dd4a2e1c35e755568a20a2ecac41fc37eddcd2fdcb60740",
+              "crs": "EPSG:4326",
+              "width": 2105,
+              "height": 1870,
+              "bounds": [
+                2.645435,
+                12.240774,
+                2.838909,
+                12.40989
+              ],
+              "cloud_fraction_scl": 7.824507475199106e-05,
+              "gsd_m": [
+                9.995778408701847,
+                9.999910472727315
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_0.tif",
+              "sha256": "b75ea75f25a082ae6d3fe30c8e481cc6d1af2e0fecc534744720bb8762778f84",
+              "crs": "EPSG:4326",
+              "width": 2103,
+              "height": 1870,
+              "bounds": [
+                2.065015,
+                12.40989,
+                2.258488,
+                12.579005
+              ],
+              "cloud_fraction_scl": 0.0,
+              "gsd_m": [
+                9.998736705957862,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_1.tif",
+              "sha256": "e8bb68d5f2885277c7bedd30e80497a6cb167a2b41731ad9043533314c98f6ac",
+              "crs": "EPSG:4326",
+              "width": 2103,
+              "height": 1870,
+              "bounds": [
+                2.258488,
+                12.40989,
+                2.451962,
+                12.579005
+              ],
+              "cloud_fraction_scl": 0.0,
+              "gsd_m": [
+                9.99878838622698,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_2.tif",
+              "sha256": "3af138ba2635daa54a2870886954b39e92f6d83066afacbe86b88644455561ac",
+              "crs": "EPSG:4326",
+              "width": 2103,
+              "height": 1870,
+              "bounds": [
+                2.451962,
+                12.40989,
+                2.645435,
+                12.579005
+              ],
+              "cloud_fraction_scl": 0.0017362514970973475,
+              "gsd_m": [
+                9.998736705957862,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            },
+            {
+              "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_3.tif",
+              "sha256": "79f43e2738e8b89d27173c61a8b30e713d57078ddff995fadc69c8785104fe12",
+              "crs": "EPSG:4326",
+              "width": 2103,
+              "height": 1870,
+              "bounds": [
+                2.645435,
+                12.40989,
+                2.838909,
+                12.579005
+              ],
+              "cloud_fraction_scl": 0.0006896183450685422,
+              "gsd_m": [
+                9.99878838622698,
+                9.99985134224597
+              ],
+              "masked_pixels": 0
+            }
+          ],
+          "park_pixels": 22305554,
+          "valid_fraction_of_park": 0.9999992826898628,
+          "approx_cloud_fraction_scl_tile_weighted": 0.0005238472392550675
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260713_000022_500001",
@@ -5237,7 +5893,7 @@
         "set_f1",
         "exact_set_match"
       ],
-      "evaluation_target": "science questions about land surface temperature",
+      "evaluation_target": "science questions whose HAS_KAO objectives mention temperature",
       "reference_policy": "source_snapshot",
       "assignment_status": "proposed",
       "requires_additional_evaluation": false,
@@ -5495,122 +6151,122 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Schema verification found no direct ScienceQuestion/StrategicObjective edges. Stored counts are all zero and mean explicit graph links only; shared text chunks do not establish an INFORMS edge.",
+      "evaluation_notes": "Evaluate each per-question count separately. Counts are explicit ScienceQuestion-[:HAS_KAO]->KnowledgeAdvancementObjective edges in the same source snapshot; every ScienceQuestion node must be reported, including any with zero links.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
       "numerical_field_tolerances": {
-        "objectives_per_question.Climate sensitivity": {
+        "kaos_per_question.Climate sensitivity": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Coastal carbon cycle": {
+        "kaos_per_question.Coastal carbon cycle": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Coastal process mediation of exchanges": {
+        "kaos_per_question.Coastal process mediation of exchanges": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Coastal sea level": {
+        "kaos_per_question.Coastal sea level": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Coupled energy, water and carbon cycles": {
+        "kaos_per_question.Coupled energy, water and carbon cycles": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Coupled litho-, atmo-, iono- and mesosphere": {
+        "kaos_per_question.Coupled litho-, atmo-, iono- and mesosphere": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Drivers of sea-ice state and variability": {
+        "kaos_per_question.Drivers of sea-ice state and variability": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Earth energy imbalance": {
+        "kaos_per_question.Earth energy imbalance": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Earth's crust dynamics": {
+        "kaos_per_question.Earth's crust dynamics": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Ecosystems transitions": {
+        "kaos_per_question.Ecosystems transitions": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Erosional processes of drainage basins": {
+        "kaos_per_question.Erosional processes of drainage basins": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Global carbon cycle": {
+        "kaos_per_question.Global carbon cycle": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Ice mass balance": {
+        "kaos_per_question.Ice mass balance": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Land biosphere responses": {
+        "kaos_per_question.Land biosphere responses": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Ocean carbon cycle": {
+        "kaos_per_question.Ocean carbon cycle": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Planetary heat exchange": {
+        "kaos_per_question.Planetary heat exchange": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Polar and high-mountain climate relationship": {
+        "kaos_per_question.Polar and high-mountain climate relationship": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Polar ecosystem impacts": {
+        "kaos_per_question.Polar ecosystem impacts": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Seismic deformation processes": {
+        "kaos_per_question.Seismic deformation processes": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Solid Earth deformation": {
+        "kaos_per_question.Solid Earth deformation": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.State of land ecosystems": {
+        "kaos_per_question.State of land ecosystems": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Volcanic processes and their impact": {
+        "kaos_per_question.Volcanic processes and their impact": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
         },
-        "objectives_per_question.Water cycle": {
+        "kaos_per_question.Water cycle": {
           "abs_tol": 0,
           "rel_tol": 0,
           "floor_scale": 1e-09
@@ -5963,7 +6619,8 @@
       "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
         "normalized_topic_keyword_match",
-        "deterministic_retrieval_checks"
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "No AAJ or rubric for paper relevance; explicit topic mentions suffice. Validators/scoring remain placeholders; no evaluation run performed.",
@@ -6032,7 +6689,8 @@
       "task_ID": "TASK_260713_000046_500025",
       "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
-        "deterministic_retrieval_checks"
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Define boundary/time semantics before evaluation; AAJ only for ambiguous product naming. Validators/scoring remain placeholders; no evaluation run performed.",
@@ -6083,7 +6741,8 @@
       "task_ID": "TASK_260713_000047_500026",
       "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
-        "deterministic_retrieval_checks"
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Specify temporal tolerance before execution; a failed API call does not prove unavailability. Validators/scoring remain placeholders; no evaluation run performed.",
@@ -6264,7 +6923,8 @@
       "task_ID": "TASK_260713_000050_500029",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -6517,7 +7177,8 @@
       "task_ID": "TASK_260713_000052_500031",
       "evaluation_strategy": "retrieval_validation",
       "evaluation_methods": [
-        "deterministic_retrieval_checks"
+        "deterministic_retrieval_checks",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Accept either reasonable bbox-size interpretation. Validators/scoring remain placeholders; no evaluation run performed.",
@@ -6616,7 +7277,8 @@
       "task_ID": "TASK_260713_000054_500033",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -6780,7 +7442,8 @@
       "task_ID": "TASK_260713_000055_500034",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -6960,7 +7623,8 @@
       "task_ID": "TASK_260713_000056_500035",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -7144,7 +7808,8 @@
       "task_ID": "TASK_260713_000057_500036",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -7513,7 +8178,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "metadata_field_accuracy"
+        "metadata_field_accuracy",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Verify pressure and monthly statistic from request/product evidence; no fixed reference layout. Validators/scoring remain placeholders; no evaluation run performed. Accept any task-valid workflow yielding a readable regional artifact. Global monthly input is permitted as an intermediate; verify the required regional output independently. Do not require the original unsupported area call or one illustrative bbox. Required region: Trento, Italy and surroundings; check nonempty grid coverage and source provenance. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
@@ -7568,7 +8234,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "metadata_field_accuracy"
+        "metadata_field_accuracy",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "No mandatory hourly/daily/monthly sampling; bbox subset acceptable, polygon mask not required. Global raw input permitted only as intermediate. Rerun required. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
@@ -7638,7 +8305,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "metadata_field_accuracy"
+        "metadata_field_accuracy",
+        "agent_as_judge"
       ],
       "assignment_status": "approved",
       "evaluation_notes": "Monthly mean required. Global raw input permitted only as intermediate; global-only final output acceptance superseded. Rerun required. Validators/scoring remain placeholders; no evaluation run performed. Primary category consolidated on 2026-10-03; task-specific methods and validation requirements remain in force.",
@@ -8934,7 +9602,8 @@
       "task_ID": "TASK_260713_000003_600003",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -9351,7 +10020,8 @@
       "task_ID": "TASK_260713_000008_600008",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -9926,7 +10596,8 @@
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
         "deterministic_artifact_checks",
-        "product_band_mapping_accuracy"
+        "product_band_mapping_accuracy",
+        "agent_as_judge"
       ],
       "evaluation_notes": "Validate three separate CDSE GeoTIFF downloads and the final product–data-band mappings. No file paths are required in the written answer; obtain artifact paths from the tool trace/manifest. Accept a suitable bbox covering Madrid and its surroundings, rather than the illustrative reference bbox. Calls may occur in any order and equivalent custom-band/evalscript requests are valid. No numerical concentration metric or open-ended rubric is required. Validators and scoring remain placeholders. No mandatory raw/unscaled encoding or concentration-accuracy score. Inspect provenance and distinguish product-derived display exports from quantitative geophysical values.",
       "download_parameter_basis": "fixed_with_context",
@@ -10885,7 +11556,8 @@
       "task_ID": "TASK_260713_000032_600032",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -11047,7 +11719,8 @@
       "task_ID": "TASK_260713_000033_600033",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -11209,7 +11882,8 @@
       "task_ID": "TASK_260713_000034_600034",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -11578,7 +12252,8 @@
       "task_ID": "TASK_260713_000040_600040",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -11758,7 +12433,8 @@
       "task_ID": "TASK_260713_000041_600041",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -11920,7 +12596,8 @@
       "task_ID": "TASK_260713_000042_600042",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -13109,7 +13786,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -13124,7 +13803,7 @@
       ],
       "assignment_status": "approved",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed.",
+      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed. Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -13163,7 +13842,36 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "observed_valid_input_snapshot",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": null,
+        "aggregation": "per-cell temporal sum, then unweighted mean over finite cells",
+        "source": {
+          "region": {
+            "region_name": "sahel",
+            "bbox": "-18.0,10.0,40.0,20.0",
+            "bbox_array": [
+              -18.0,
+              10.0,
+              40.0,
+              20.0
+            ]
+          },
+          "cells": 9553,
+          "time_steps": 31,
+          "grid_cell_centres": {
+            "west": -18.0,
+            "east": 40.0,
+            "south": 10.0,
+            "north": 20.0
+          },
+          "units": "m",
+          "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000063_600063/tp_600063.nc",
+          "sha256": "d0e844b48f2b1bf8fd1defaa56feaa421b4f4de9b20185eb0fc066304a5959ce"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260713_000064_600064",
@@ -13617,7 +14325,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -13632,7 +14342,7 @@
       ],
       "assignment_status": "approved",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed.",
+      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed. Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -13671,7 +14381,36 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "observed_valid_input_snapshot",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": null,
+        "aggregation": "per-cell temporal sum, then unweighted mean over finite cells",
+        "source": {
+          "region": {
+            "region_name": "mediterranean",
+            "bbox": "-6.0,30.0,37.0,46.0",
+            "bbox_array": [
+              -6.0,
+              30.0,
+              37.0,
+              46.0
+            ]
+          },
+          "cells": 11245,
+          "time_steps": 744,
+          "grid_cell_centres": {
+            "west": -6.0,
+            "east": 37.0,
+            "south": 30.0,
+            "north": 46.0
+          },
+          "units": "m",
+          "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000070_600070/tp_600070.nc",
+          "sha256": "c4e03c8d9a08d333676573ea344b79df64a9e8cc8cd032f8c7af91e97cf370b3"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260713_000071_600071",
@@ -13698,7 +14437,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -13713,7 +14454,7 @@
       ],
       "assignment_status": "approved",
       "requires_additional_evaluation": false,
-      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed.",
+      "evaluation_notes": "Approved explicit spatial reduction. Recompute from archived candidate inputs with temporal aggregation first, then unweighted valid-cell spatial mean; normalize units and align dates/calendar periods. Validate region suitability separately. No fixed numerical answer invented and no evaluation run performed. Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -13752,7 +14493,41 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "observed_valid_input_snapshot",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": null,
+        "aggregation": null,
+        "source": {
+          "geocode": {
+            "display_name": "Death Valley, California, 92328, United States",
+            "bbox": "-117.6510,35.5515,-116.2576,37.2960",
+            "bbox_array": [
+              -117.651,
+              35.5515,
+              -116.2576,
+              37.296
+            ],
+            "lat": 36.4228722,
+            "lon": -116.913718,
+            "osm_type": "relation",
+            "class": "natural",
+            "type": "desert"
+          },
+          "cells": 35,
+          "time_steps": 1,
+          "grid_cell_centres": {
+            "west": -117.5,
+            "east": -116.5,
+            "south": 35.75,
+            "north": 37.25
+          },
+          "units": "K",
+          "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000073_600073/t2m_death_valley_2023_07.nc",
+          "sha256": "37f2296f7c5ef3b4c52877f828adfe5df342a61d958f36dfe05a995b8bbd92f3"
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260713_000075_600075",
@@ -14148,7 +14923,8 @@
       "task_ID": "TASK_260713_000085_600085",
       "evaluation_strategy": "download_contract",
       "evaluation_methods": [
-        "deterministic_artifact_checks"
+        "deterministic_artifact_checks",
+        "agent_as_judge"
       ],
       "deterministic_checks": [
         {
@@ -14815,7 +15591,9 @@
       "evaluation_strategy": "numerical_answer",
       "evaluation_methods": [
         "unit_normalized_error",
-        "numeric_tolerance_accuracy"
+        "numeric_tolerance_accuracy",
+        "agent_as_judge",
+        "gis_verification_agent"
       ],
       "evaluation_components": [
         {
@@ -14830,7 +15608,7 @@
       ],
       "assignment_status": "proposed",
       "requires_additional_evaluation": true,
-      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result.",
+      "evaluation_notes": "Evaluate each required numerical output separately after aligning units, spatial support, timestamps, masks, and aggregation. Requested fields and initial tolerances are configured. Empirical tolerance calibration and candidate-bound source validation remain required. For permitted alternative datasets or locations, recompute against the candidate selected valid inputs rather than a single reference result. Candidates that read the first item of the search listing (descending, 12:55 slot) made a defensible choice; recompute on their own file.",
       "audit_status": "consistent_mapping",
       "audit_findings": [],
       "coverage_status": "mapped; not a claim of executed validation",
@@ -14854,7 +15632,18 @@
       "numerical_scoring_target": "final_written_answer",
       "numerical_reference_policy": "Stored observations apply only to matching verified source/support/encoding; otherwise independently recompute from task-valid candidate inputs. Fixed geometry/coordinate inputs can use direct references.",
       "ground_truth_status": "observed_valid_input_snapshot",
-      "ground_truth_source": "data/tasks/ground_truths.json"
+      "ground_truth_source": "data/tasks/ground_truths.json",
+      "reference_policy": "independently_recomputed_from_candidate_valid_inputs",
+      "reference_recomputation_rules": {
+        "masking_rule": null,
+        "aggregation": null,
+        "source": {
+          "paths": [
+            "data/reference_corrections_20261012/artifacts/eumetsat/MSG4-SEVI-MSG15-0100-NA-20240705110416.599000000Z-NA.nat"
+          ]
+        },
+        "policy": "Reference artifacts are reference-owned and must not be substituted for candidate-owned inputs."
+      }
     },
     {
       "task_ID": "TASK_260716_000006_700018",

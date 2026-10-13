@@ -53,6 +53,7 @@ class Solution(BaseModel):
     just whether the right tools were called)."""
     steps: List[Step] = Field(default_factory=list)
     final_answer: Optional[str] = None
+    agents_called: Optional[List[str]] = None  # Ordered activations; None means unrecorded
 
     def __len__(self):
         return len(self.steps)

@@ -352,20 +352,20 @@
     },
     {
       "task_ID": "TASK_260419_000006_100006",
-      "task_text": "Which narratives in the EO Dashboard reference the indicator collection EO:EEA:DAT:CLMS_CORINE_CLCPLUS_RASTER_2018_V1_1?",
+      "task_text": "Which narratives in the EO Dashboard reference the indicator collection FNF_Palsar (ALOS PALSAR forest/non-forest map)?",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "Agent uses the reverse-lookup tool to find narratives for a specific indicator code.",
+      "reference_solution_description": "Agent uses the reverse-lookup tool to find narratives for a specific indicator collection code.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "find_narratives_for_indicator",
               "arguments": {
-                "indicator_code": "EO:EEA:DAT:CLMS_CORINE_CLCPLUS_RASTER_2018_V1_1"
+                "indicator_code": "FNF_Palsar"
               },
-              "comment": "Reverse-lookup narratives that reference this collection code"
+              "comment": "Reverse-lookup narratives that list FNF_Palsar among their collections"
             }
           ]
         }
@@ -534,7 +534,7 @@
     },
     {
       "task_ID": "TASK_260419_000010_100010",
-      "task_text": "Which EO Dashboard narratives reference the sea ice dataset with indicator code EO:ESA:DAT:CRYOSAT:SEA_ICE_THICKNESS?",
+      "task_text": "Which EO Dashboard narratives reference the CryoSat-2 sea ice thickness dataset with indicator code SIC_sea_ice_thickness_cryosat?",
       "task_labels": [
         "Tool Grounding"
       ],
@@ -545,7 +545,7 @@
             {
               "function_name": "find_narratives_for_indicator",
               "arguments": {
-                "indicator_code": "EO:ESA:DAT:CRYOSAT:SEA_ICE_THICKNESS"
+                "indicator_code": "SIC_sea_ice_thickness_cryosat"
               },
               "comment": "Reverse-lookup all narratives referencing this sea ice collection code"
             }
@@ -8494,18 +8494,18 @@
     },
     {
       "task_ID": "TASK_260713_000029_500008",
-      "task_text": "Use the EOSS knowledge graph to find all science questions related to land surface temperature monitoring.",
+      "task_text": "Use the EOSS knowledge graph to find all science questions whose knowledge advancement objectives mention temperature.",
       "task_labels": [
         "Tool Grounding"
       ],
-      "reference_solution_description": "The query_ontology tool queries the EOSS scientific strategy ontology, not Earth observation data archives. It cannot retrieve satellite measurements or land surface temperature readings. The correct response is a Cypher query for ScienceQuestion nodes related to land surface temperature as a scientific topic — not actual temperature data.",
+      "reference_solution_description": "The query_ontology tool queries the EOSS scientific strategy ontology, not Earth observation data archives. The correct response is a Cypher query that follows ScienceQuestion-[:HAS_KAO]->KnowledgeAdvancementObjective links and filters objectives whose name or description mentions temperature, returning the distinct science questions.",
       "reference_solutions": [
         {
           "steps": [
             {
               "function_name": "query_ontology",
               "arguments": {
-                "cypher": "MATCH (sq:ScienceQuestion) WHERE toLower(sq.name) CONTAINS 'land surface' OR toLower(sq.description) CONTAINS 'land surface temperature' RETURN sq.id, sq.name, sq.description"
+                "cypher": "MATCH (sq:ScienceQuestion)-[:HAS_KAO]->(k:KnowledgeAdvancementObjective) WHERE toLower(k.description) CONTAINS 'temperature' OR toLower(k.name) CONTAINS 'temperature' RETURN DISTINCT sq.id AS id, sq.name AS name ORDER BY id"
               },
               "comment": "Scope awareness: this returns strategy-level science questions, not measured temperature values"
             }
@@ -8655,11 +8655,11 @@
     },
     {
       "task_ID": "TASK_260713_000034_500013",
-      "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many strategic objectives each science question informs.",
+      "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many knowledge advancement objectives each science question has (HAS_KAO relationships).",
       "task_labels": [
         "Sequential Reasoning"
       ],
-      "reference_solution_description": "Step 1: list_ontology_nodes with ScienceQuestion to get all questions. Step 2: query_ontology to count strategic objective links per science question.",
+      "reference_solution_description": "Step 1: list_ontology_nodes with ScienceQuestion to get all questions. Step 2: query_ontology to count HAS_KAO links to KnowledgeAdvancementObjective nodes per science question.",
       "reference_solutions": [
         {
           "steps": [
@@ -8673,9 +8673,9 @@
             {
               "function_name": "query_ontology",
               "arguments": {
-                "cypher": "MATCH (sq:ScienceQuestion) OPTIONAL MATCH (sq)-[r]->(so:StrategicObjective) RETURN sq.name AS question, count(so) AS n_objectives ORDER BY question"
+                "cypher": "MATCH (sq:ScienceQuestion) OPTIONAL MATCH (sq)-[:HAS_KAO]->(k:KnowledgeAdvancementObjective) RETURN sq.name AS question, count(k) AS n_kaos ORDER BY question"
               },
-              "comment": "Preserve all ScienceQuestion nodes using OPTIONAL MATCH; report zero direct links where absent. Do not manufacture links from shared text chunks."
+              "comment": "Preserve all ScienceQuestion nodes using OPTIONAL MATCH; count explicit HAS_KAO edges only."
             }
           ]
         }

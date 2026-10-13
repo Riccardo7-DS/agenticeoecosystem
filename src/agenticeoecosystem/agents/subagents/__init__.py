@@ -13,8 +13,18 @@ ALL_SUB_AGENTS: list[Agent] = []
 _PACKAGE = __name__ if __name__ != "__main__" else "agenticeoecosystem.agents.subagents"
 _PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Comma-separated list of suffixes (the part after "sub_agent_") to load, e.g.
+# "vlm,gee". Unset/empty means "load every sub_agent_*.py module" (default).
+_ENABLED = {
+    name.strip()
+    for name in os.environ.get("AGENTICEO_SUBAGENTS", "").split(",")
+    if name.strip()
+}
+
 for _, module_name, _ in pkgutil.iter_modules([_PKG_DIR]):
     if not module_name.startswith("sub_agent_"):
+        continue
+    if _ENABLED and module_name[len("sub_agent_"):] not in _ENABLED:
         continue
     module = importlib.import_module(f"{_PACKAGE}.{module_name}")
     for value in vars(module).values():

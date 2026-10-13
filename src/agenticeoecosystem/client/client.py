@@ -245,6 +245,14 @@ _GIS_SYSTEM_PROMPT = (
     "Return file paths for saved outputs (maps, rasters, vectors)."
 )
 
+_TLE_SYSTEM_PROMPT = (
+    "You are an orbital propagation and overpass prediction assistant. Use the available tools to compute satellite positions, " \
+    "predict overpasses, and generate acquisition schedules from TLE data. " \
+    "Extract all parameters from the user's request and call the appropriate tools. " \
+    "Compute overpass times, ground tracks, and visibility windows as needed. " \
+    "Return results in a clear format, including timestamps, and coordinates. If requested, provide visualizations of ground tracks or overpass paths."
+)
+
 _SUPERVISOR_SYSTEM_PROMPT = (
     "You are a routing agent. "
     "You can get data from EO Dashboards, Google Earth Engine, "

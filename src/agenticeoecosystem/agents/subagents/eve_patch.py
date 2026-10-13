@@ -53,6 +53,11 @@ logger = logging.getLogger(__name__)
 
 _PLACEHOLDER_ASSISTANT_CONTENT = "(continuing)"
 
+# google-adk's LiteLlm wrapper renames the tool-response role to
+# "tool_responses" for gemma4 models (their chat template requires it to
+# recognize function_response parts) — "tool" for every other model.
+_TOOL_ROLES = {"tool", "tool_responses"}
+
 _original_acompletion = litellm.acompletion
 _original_completion = litellm.completion
 
@@ -71,7 +76,7 @@ def _sanitize_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     inserted = 0
     for msg in messages:
         role = msg.get("role")
-        if fixed and fixed[-1].get("role") == "tool" and role == "user":
+        if fixed and fixed[-1].get("role") in _TOOL_ROLES and role == "user":
             fixed.append(
                 {"role": "assistant", "content": _PLACEHOLDER_ASSISTANT_CONTENT}
             )

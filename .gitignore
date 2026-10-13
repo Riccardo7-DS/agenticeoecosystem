@@ -3,10 +3,13 @@ data/eodashboard-catalog/
 # docs/
 models/
 # data/
+data/ImpactMesh-Fire/
+
 .env
 script.sh
 output/
 tool_output/
+data/visual_tasks/images/
 
 # Local agent setup and generated rubric comparison reports.
 .agents/
@@ -51,7 +54,7 @@ test_eve_retrieval_mcp.py
 test_eve.py
 test_eve_auth.py    
 
-logs/
+# logs/
 *.sif
 container.def
 .claude/*
@@ -153,3 +156,9 @@ tests/test_numeric_recovery.py
 
 # Stray local snapshot kept out of the repo.
 data/tasks/4096/
+
+# Wildfire analysis local inputs and outputs.
+scripts/vlm.sh
+data/visual_tasks/context/knowledge.tex
+data/visual_tasks/labels/FireImages-Jul-Aug.json
+src/agenticeoecosystem/evaluation/confidence_evaluation.py

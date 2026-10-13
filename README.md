@@ -105,6 +105,41 @@ graph TD
 
 The orchestrator routes each user query to one or more specialised sub-agents. Each sub-agent calls its MCP server(s) and returns a synthesised result. The orchestrator passes the result through to the user.
 
+### Wildfire Acquisition Planning: `vlm_agent` + `tle_agent`
+
+The diagram above documents the legacy client (`pipeline="multi_legacy"`). The current default, Google ADK-based orchestrator (`pipeline="multi"`, `agents/multi_agent.py` and the wildfire-reconstruction variant `agents/multi_agent_coordination.py`) adds a sub-flow that turns a single wildfire image into a satellite tasking order, by chaining two of its sub-agents:
+
+- **`vlm_agent`** — inspects image file(s) on disk and reports on five wildfire features (Active Fire, Smoke/Plume, Burned Area/Scar, Flame Fronts, Clouds) via the `vlm_tools` MCP server's `resolve_images`/`load_images` tools.
+- **`tle_agent`** — given satellite name(s)/NORAD IDs and a target lat/lon, fetches TLEs (Celestrak, Space-Track fallback) and predicts each satellite's next overpass via SGP4 propagation (`tle_helper.py`), or reports a fixed position for geostationary platforms (MSG/MTG), which don't have a periodic overpass.
+
+The supervisor does not call these independently — it uses the VLM's findings to decide which satellites (via the `SATELLITE_CAPABILITY_MATRIX` capability reference) to ask the TLE agent about, then merges both results into a tasking recommendation:
+
+```mermaid
+graph TD
+
+    Start([Image + acquisition time/lat/lon])
+    End([Tasking Order])
+
+    Start --> Supervisor[orchestrator_agent]
+
+    Supervisor -->|"1. inspect image for wildfire\nfeatures"| VLM[vlm_agent]
+    VLM --> VLM_MCP["vlm_tools MCP\nresolve_images / load_images"]
+    VLM_MCP --> VLM
+    VLM -->|"Features Analysis:\nActive Fire / Smoke / Burn Scar /\nFlame Fronts / Clouds"| Supervisor
+
+    Supervisor -->|"2. look up capability scores\nfor the evidence gaps found"| Matrix[("SATELLITE_CAPABILITY_MATRIX\n(knowledge.tex)")]
+    Matrix --> Supervisor
+
+    Supervisor -->|"3. get_acquisition_schedule(\ntarget lat/lon, candidate satellites)"| TLE[tle_agent]
+    TLE --> TLE_HELPER["tle_helper.py\nCelestrak / Space-Track TLE fetch\n+ skyfield &amp; pyorbital SGP4 propagation"]
+    TLE_HELPER --> TLE
+    TLE -->|"next overpass per satellite\n(fixed position for GEO)"| Supervisor
+
+    Supervisor -->|"4. Features Analysis +\nData Acquisition Plan +\nTasking Order"| End
+```
+
+Note: neither sub-agent knows a real image's true acquisition timestamp today — no EXIF/STAC metadata is threaded through the CDSE/EUMETSAT/VLM pipeline yet, so the acquisition time and target lat/lon are supplied explicitly by the caller (see `scripts/run_visual_decision_wildfire.py`) rather than read off the image itself.
+
 ---
 
 ## Repository Layout

@@ -16,8 +16,9 @@ Guides, evaluation status, audits and reference material: [Documentation index](
 3. [Installation](#installation)
 4. [Running the Client](#running-the-client)
 5. [MCP Servers](#mcp-servers)
-6. [Benchmarking](#benchmarking)
-7. [Adding Custom Sub-agents](#adding-custom-sub-agents)
+6. [Wildfire Analysis](#wildfire-analysis)
+7. [Benchmarking](#benchmarking)
+8. [Adding Custom Sub-agents](#adding-custom-sub-agents)
 
 ---
 
@@ -401,6 +402,88 @@ ssh -L 18001:localhost:18001 <user>@<llava-vm-host>
 
 Backed by `src/agenticeoecosystem/servers/vlm_tools/server.py`, which exposes `resolve_images(path, limit)` (list what images exist at a path) and `load_images(path, limit)` (load them into context — downscaled before base64-encoding to control per-image token cost). Its own system prompt enforces calling `load_images` at most once per distinct path, to avoid burning context on duplicate loads.
 
+#### VLM domains (`VLM_DOMAIN`)
+
+By default `vlm_agent` does generic, domain-agnostic visual analysis. Deeper, domain-specific visual criteria live in pluggable **domain packs** under [`agents/subagents/vlm_domains/`](src/agenticeoecosystem/agents/subagents/vlm_domains/). Each module there defines a module-level `DOMAIN = VLMDomain(key, trigger_hint, guidance, defer_to_orchestrator)`, and the package auto-discovers them the same way `subagents/__init__.py` discovers `sub_agent_*.py` files.
+
+Activation is **per request and driven by the prompt**. When the orchestrator wants a domain applied, it starts its handoff message to the VLM with a marker line:
+
+```
+VLM_DOMAIN: wildfire
+Analyze this image and ...
+```
+
+The VLM applies the matching domain's guidance. If the marker is missing or the key is unknown, it falls back to generic analysis, and an unknown key logs a warning. The supervisor prompt in `multi_agent.py` (and in the wildfire pipelines) only adds `VLM_DOMAIN: wildfire` for wildfire, active-fire, smoke-plume or burn-scar requests. Every other visual request stays generic.
+
+Registered domains:
+
+| Key | Module | What it adds |
+|---|---|---|
+| `wildfire` | [`vlm_domains/wildfire.py`](src/agenticeoecosystem/agents/subagents/vlm_domains/wildfire.py) | Classifies the scene into a regime first (clear daytime, smoke-hazed daytime, nighttime), then assesses **active flame**, **smoke/plume** and **burn scar** separately. A burn scar alone counts as a positive wildfire finding, and burn scars are never claimed at night. After reporting, the VLM hands control back to the orchestrator, which owns the final output format. |
+
+Caveat: the VLM instruction is assembled once at import time, so every registered domain's guidance is always in the VLM's context. Activation is a convention the model follows, not a structural guarantee. The `sub_agent_vlm.py` docstring describes a follow-up design backed by session state that would give a hard guarantee. See [Adding a VLM domain](#adding-a-vlm-domain) to add a new one.
+
+### TLE / Orbit (`tle_agent`)
+
+`tle_agent` ([`sub_agent_tle.py`](src/agenticeoecosystem/agents/subagents/sub_agent_tle.py)) is not backed by an MCP server. It exposes local function tools from [`tle_helper.py`](src/agenticeoecosystem/agents/subagents/tle_helper.py), which fetch TLEs from Celestrak (with Space-Track as a fallback) and propagate them with SGP4 (`skyfield`/`pyorbital`):
+
+- `get_satellite_position` / `get_positions_for_set`: where a satellite, or a set of satellites, is at a given UTC time.
+- `get_target_overpasses`: the next passes of one satellite over a target lat/lon.
+- `get_acquisition_schedule`: overpasses of a target across a set of satellites, merged and sorted by time. If no satellites are given, it defaults to a polar-orbiting EO constellation relevant to wildfires (Sentinel-2A/B, Sentinel-3A/B, Terra, Aqua, Suomi NPP, NOAA-20/21, Landsat-8/9). Geostationary platforms (Meteosat-11, MTG-I1) get a fixed position instead of an overpass.
+
+The tools accept satellite names or NORAD IDs. They don't fetch or analyse imagery. The Space-Track fallback is optional:
+
+```env
+SPACETRACK_USER=your-space-track-login
+SPACETRACK_PASSWORD=your-space-track-password
+```
+
+---
+
+## Wildfire Analysis
+
+The wildfire work combines `vlm_agent` (with the `wildfire` domain) and `tle_agent` to go from a wildfire image to a satellite tasking recommendation. The flow is described in [Wildfire Acquisition Planning](#wildfire-acquisition-planning-vlm_agent--tle_agent).
+
+### Orchestrators
+
+Besides the general `agents/multi_agent.py`, which also routes wildfire requests through the VLM domain and the TLE agent, there are two wildfire-specific ADK orchestrators:
+
+| Module | Purpose |
+|---|---|
+| [`agents/multi_agent_wildfires.py`](src/agenticeoecosystem/agents/multi_agent_wildfires.py) | Wildfire detection: hands each image to the VLM with `VLM_DOMAIN: wildfire` and returns a features analysis. |
+| [`agents/multi_agent_coordination.py`](src/agenticeoecosystem/agents/multi_agent_coordination.py) | Detection plus acquisition planning: combines the VLM features analysis, a satellite capability matrix (`SATELLITE_CAPABILITY_MATRIX`, from `knowledge.tex`) and TLE overpass predictions into a **Data Acquisition Plan** and a ranked **Tasking Order**. |
+
+The scripts below restrict which sub-agents get loaded through `AGENTICEO_SUBAGENTS` (for example `vlm` or `vlm,tle`), so no other MCP toolsets have to start.
+
+### Data
+
+These files are local and gitignored, so you need to get them separately:
+
+```
+data/visual_tasks/
+├── images/FireImages-Jul-Aug/       ← wildfire image set (.jpg/.png)
+├── labels/labels.xlsx               ← manual smoke / burn-area labels
+├── labels/FireImages-Jul-Aug.json   ← COCO labels built from labels.xlsx
+└── context/knowledge.tex            ← satellite capability matrix (table:capability_matrix)
+```
+
+### Scripts
+
+Run these from the repo root with `uv run python scripts/<name>.py`:
+
+| Script | What it does |
+|---|---|
+| `build_fire_labels_coco.py` | Converts the smoke/burn-area columns in `labels.xlsx` into COCO classification JSON with the classes `smoke`, `burn_area` and `smoke_and_burn_area`. Needs `uv run --with openpyxl --with pillow`. |
+| `run_visual_tasks_wildfire.py` | Asks "Do you see a wildfire?" for every image under `--images-dir` (default `data/visual_tasks`), with `--limit N` for a quick run. Uses `multi_agent_wildfires` with the VLM only. |
+| `run_visual_tasks_wildfire_structured.py` | Same run mechanics, but asks an 11-field structured questionnaire (smoke, flame, containment, size, hotspots, intensity, infrastructure, settlements, vegetation, weather, cloud visibility) in a `Field: value` block, so answers can be scored field by field. |
+| `eval_wildfire_labels.py` | *(Work in progress.)* Scores the VLM wildfire answers against the COCO ground truth. An LLM classifier maps each free-text answer onto `none`/`smoke`/`burn_area`/`smoke_and_burn_area`, with the classifications cached on disk. The script writes a per-image CSV and prints accuracy metrics. |
+| `run_visual_decision_wildfire.py` | Single-shot test of the tasking-order reasoning in `multi_agent_coordination` (VLM + TLE) on one image (`--image`, or a random one picked with `--seed`). It uses a synthetic acquisition time and lat/lon. |
+| `run_acquisition_coverage_emsr859.py` | Tests `get_acquisition_schedule` on its own (TLE only) against the real AOI of Copernicus EMS event EMSR859_1 (Chile, from the ImpactMesh-Fire dataset). |
+
+Logs go to `logs/<script>_<timestamp>.log`, next to a JSON result file with the same timestamp.
+
+A typical evaluation loop is `build_fire_labels_coco.py`, then `run_visual_tasks_wildfire.py` (once per VLM backend, e.g. Qwen3-VL and Gemma4-12B), then `eval_wildfire_labels.py`.
+
 ---
 
 ## Benchmarking
@@ -606,6 +689,23 @@ Build the MCP server itself the same way as for the legacy pipeline (see [Creati
 Two more steps, both in [`agents/multi_agent.py`](src/agenticeoecosystem/agents/multi_agent.py):
 1. Add a paragraph to `_SUPERVISOR_SYSTEM_PROMPT` describing when to route to the new sub-agent, and any scope boundaries it should respect relative to existing sub-agents (see how the CDSE/GEE/EUMETSAT split is worded there as an example of avoiding overlapping responsibilities).
 2. Nothing else — `root = Agent(..., sub_agents=ALL_SUB_AGENTS, ...)` already picks up every agent discovered in step 1 automatically.
+
+### Adding a VLM domain
+
+If you need domain-specific visual criteria (floods, for example), add a domain pack instead of a new sub-agent. To do that, drop a module into [`agents/subagents/vlm_domains/`](src/agenticeoecosystem/agents/subagents/vlm_domains/). It's discovered automatically, and modules whose names start with `_` are skipped:
+
+```python
+# agents/subagents/vlm_domains/flood.py
+from agenticeoecosystem.agents.subagents.vlm_domains._types import VLMDomain
+
+DOMAIN = VLMDomain(
+    key="flood",  # matched case-insensitively against the `VLM_DOMAIN: <key>` marker
+    trigger_hint="the handoff instruction asks about flooding or standing water in the image(s)",
+    guidance="""Visual cues to apply when this domain is active ...""",
+)
+```
+
+Then tell the orchestrator when to emit the marker. In `_SUPERVISOR_SYSTEM_PROMPT` in `agents/multi_agent.py`, add a line saying when to start the VLM handoff with `VLM_DOMAIN: flood`, following the existing `VLM_DOMAIN: wildfire` rule. Domain keys must be unique: if two modules register the same key, the first one wins and a warning is logged. `tests/test_vlm_domains.py` covers discovery and marker parsing.
 
 ### For the `single`/`multi_legacy` pipelines (LangChain, `client/client.py`)
 

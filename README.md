@@ -1,45 +1,18 @@
-
 # Agentic EO Ecosystems
 
-This project explores the integration of **EVE (Earth Virtual Expert)**, a Large Language Model specialised in **Earth Observation (EO)** and Earth Sciences, developed by Pi School in collaboration with ESA.
+An Earth observation agent ecosystem and benchmark built around **EVE (Earth
+Virtual Expert)**, developed by Pi School in collaboration with ESA.
 
-The primary goal is to enable EVE to connect ESA's EO platforms and data clusters, creating an **integrated ecosystem for the EO community**. This approach leverages **agentic capabilities**, allowing EVE to dynamically interact with EO tools, databases, and APIs to reason and act autonomously.
+The system connects language models to satellite imagery, climate data,
+scientific literature and geospatial tools through the **Model Context Protocol
+(MCP)**. It supports both single-agent and multi-agent execution, with recorded
+candidate answers, tool traces and artifact-based evaluation.
 
----
+## How it works
 
-## Table of Contents
-
-Guides, evaluation status, audits and reference material: [Documentation index](docs/README.md).
-
-1. [Overview](#overview)
-2. [Repository Layout](#repository-layout)
-3. [Installation](#installation)
-4. [Running the Client](#running-the-client)
-5. [MCP Servers](#mcp-servers)
-6. [Wildfire Analysis](#wildfire-analysis)
-7. [Benchmarking](#benchmarking)
-8. [Adding Custom Sub-agents](#adding-custom-sub-agents)
-
----
-
-## Overview
-
-This project implements a **multi-agent orchestrator architecture** (built on [google-adk](https://github.com/google/adk-python), see [`agents/multi_agent.py`](src/agenticeoecosystem/agents/multi_agent.py)) in which an orchestrator agent routes each user query to one or more specialised sub-agents. This is the current, default system (`--pipeline multi`, used by both the interactive client and the benchmark). Each sub-agent connects to its own MCP server:
-
-- **CDSE agent** (`cdse_agent`) — the primary source for satellite quicklooks/GeoTIFFs: Sentinel-1/2/3, Sentinel-5P, Landsat, and DEM via the Copernicus Data Space Ecosystem (Sentinel Hub), plus place name ↔ bbox/lat-lon geocoding (OpenStreetMap Nominatim, free)
-- **EUMETSAT agent** (`eumetsat_agent`) — searches and downloads geostationary products from EUMETSAT's Data Store: MTG FCI and MSG SEVIRI only
-- **GEE agent** (`gee_agent`) — Google Earth Engine, used only for collections CDSE/EUMETSAT don't cover (e.g. NASA VIIRS/MODIS, JAXA GPM/GSMaP or ALOS); includes a live GEE STAC catalog search so it doesn't rely on memorised, possibly stale dataset IDs
-- **Climate agent** (`climate_agent`) — ERA5/ERA5-Land reanalysis data (monthly, hourly, daily-statistics) via the Copernicus Climate Data Store, plus local NetCDF processing (temporal aggregation, unit conversion, spatial clipping)
-- **EO Dashboard agent** (`eo_stac_agent`) — browses narratives, themes, and STAC collections from the ESA/NASA/JAXA [EO Dashboard](https://eodashboard.org/)
-- **EOSS GraphRAG agent** (`graph_rag_agent`) — retrieves from the ESA EO Science Strategy via GraphRAG: semantic vector search plus a Memgraph knowledge graph (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, KAOs). Backed by a remote MCP server (the `graphrag` sibling repo)
-- **MOOCs agent** (`mooc_rag_agent`) — semantic search over Earth Observation MOOC (online course) transcripts, backed by a local Qdrant store
-- **ArXiv agent** (`arxiv_rag_agent`) — searches and retrieves scientific papers from ArXiv (semantic search, abstracts, full-text download)
-- **GIS agent** (`gis_agent`) — spatial analysis, raster processing, coordinate transforms, map visualization, and spectral indices (NDVI, EVI, NDWI, NDMI, NBR) on rasters already on disk (it doesn't fetch imagery itself — that's CDSE/GEE/EUMETSAT's job)
-- **VLM agent** (`vlm_agent`) — vision-language reasoning over image files already on disk (e.g. "does this scene show cloud cover", "what changed between these two images"). Runs its own fixed model (Qwen3-VL) via a separately-hosted vLLM server, independent of whichever model is driving the orchestrator and the other sub-agents — see [VLM (Vision-Language Model)](#vlm-vision-language-model) below.
-
-> An older architecture (LangChain supervisor + sub-agents, [`client/client.py`](src/agenticeoecosystem/client/client.py)) is still used by `--pipeline single`/`multi_legacy` and by the interactive client fallback. It has a smaller, different agent set (7 agents, including an **EVE retrieval agent** for the EVE knowledge base over AWS Bedrock, which the current `multi` pipeline does not have) and is superseded by the architecture described above for benchmarking purposes.
-
-Using the **[MCP protocol](https://modelcontextprotocol.io/)**, sub-agents can perform multi-step reasoning: for example, geocoding a place name, fetching the matching Sentinel-2 scene, and computing NDVI over it.
+The default multi-agent pipeline uses a Google ADK orchestrator to route requests
+to specialist agents for imagery acquisition, climate analysis, retrieval,
+geospatial processing and visual interpretation.
 
 ```mermaid
 graph TD
@@ -104,671 +77,94 @@ graph TD
     Orchestrator --> End
 ```
 
-The orchestrator routes each user query to one or more specialised sub-agents. Each sub-agent calls its MCP server(s) and returns a synthesised result. The orchestrator passes the result through to the user.
+| Capability | Sources and tools |
+|---|---|
+| Satellite imagery | Copernicus Data Space, EUMETSAT and Google Earth Engine |
+| Climate data | Copernicus Climate Data Store, ERA5 and ERA5-Land |
+| Scientific information | EO Dashboard, ESA EO Science Strategy, MOOC content and arXiv |
+| Analysis | GIS operations, raster and NetCDF processing, and image interpretation |
 
-### Wildfire Acquisition Planning: `vlm_agent` + `tle_agent`
+Available capabilities depend on the selected pipeline, configured credentials
+and reachable services. The wildfire workflow also supports image analysis and
+satellite acquisition planning.
 
-The diagram above documents the legacy client (`pipeline="multi_legacy"`). The current default, Google ADK-based orchestrator (`pipeline="multi"`, `agents/multi_agent.py` and the wildfire-reconstruction variant `agents/multi_agent_coordination.py`) adds a sub-flow that turns a single wildfire image into a satellite tasking order, by chaining two of its sub-agents:
+## Setup
 
-- **`vlm_agent`** — inspects image file(s) on disk and reports on five wildfire features (Active Fire, Smoke/Plume, Burned Area/Scar, Flame Fronts, Clouds) via the `vlm_tools` MCP server's `resolve_images`/`load_images` tools.
-- **`tle_agent`** — given satellite name(s)/NORAD IDs and a target lat/lon, fetches TLEs (Celestrak, Space-Track fallback) and predicts each satellite's next overpass via SGP4 propagation (`tle_helper.py`), or reports a fixed position for geostationary platforms (MSG/MTG), which don't have a periodic overpass.
+Requires **Python 3.12** and [uv](https://docs.astral.sh/uv/).
 
-The supervisor does not call these independently — it uses the VLM's findings to decide which satellites (via the `SATELLITE_CAPABILITY_MATRIX` capability reference) to ask the TLE agent about, then merges both results into a tasking recommendation:
-
-```mermaid
-graph TD
-
-    Start([Image + acquisition time/lat/lon])
-    End([Tasking Order])
-
-    Start --> Supervisor[orchestrator_agent]
-
-    Supervisor -->|"1. inspect image for wildfire\nfeatures"| VLM[vlm_agent]
-    VLM --> VLM_MCP["vlm_tools MCP\nresolve_images / load_images"]
-    VLM_MCP --> VLM
-    VLM -->|"Features Analysis:\nActive Fire / Smoke / Burn Scar /\nFlame Fronts / Clouds"| Supervisor
-
-    Supervisor -->|"2. look up capability scores\nfor the evidence gaps found"| Matrix[("SATELLITE_CAPABILITY_MATRIX\n(knowledge.tex)")]
-    Matrix --> Supervisor
-
-    Supervisor -->|"3. get_acquisition_schedule(\ntarget lat/lon, candidate satellites)"| TLE[tle_agent]
-    TLE --> TLE_HELPER["tle_helper.py\nCelestrak / Space-Track TLE fetch\n+ skyfield &amp; pyorbital SGP4 propagation"]
-    TLE_HELPER --> TLE
-    TLE -->|"next overpass per satellite\n(fixed position for GEO)"| Supervisor
-
-    Supervisor -->|"4. Features Analysis +\nData Acquisition Plan +\nTasking Order"| End
-```
-
-Note: neither sub-agent knows a real image's true acquisition timestamp today — no EXIF/STAC metadata is threaded through the CDSE/EUMETSAT/VLM pipeline yet, so the acquisition time and target lat/lon are supplied explicitly by the caller (see `scripts/run_visual_decision_wildfire.py`) rather than read off the image itself.
-
----
-
-## Repository Layout
-
-```
-AgenticEOEcosystem/
-├── agenticeoecosystem/     ← this repo
-└── graphrag/               ← EOSS GraphRAG pipeline + MCP server (sibling)
-```
-
-The `graphrag` repository hosts the EOSS GraphRAG MCP server, which the client reaches over HTTP (not as a local subprocess). If `GRAPHRAG_MCP_URL` / `GRAPHRAG_AUTH_HEADER` are unset or the server is unreachable, the EOSS GraphRAG server is skipped gracefully at startup — every other server continues to work. Each optional server is registered independently, so a missing credential only disables that one tool.
-
-```
-agenticeoecosystem/
-├── src/agenticeoecosystem/
-│   ├── agents/         ← sub-agent definitions and system prompts
-│   ├── client/         ← supervisor + interactive client
-│   ├── config/         ← MCP config, credentials
-│   ├── evaluation/     ← benchmarking framework
-│   ├── servers/        ← MCP server implementations
-│   └── utils/          ← registry, logging, helpers
-├── tests/
-│   └── benchmarking.py ← benchmark entry point
-├── data/tasks/         ← task JSON files
-├── output/ESAEOBench/  ← benchmark results (CSV, HTML, JSON) — the actual deliverable
-└── tool_output/        ← raw MCP tool downloads (CDSE, EUMETSAT, ERA5, GEE, ArXiv, GIS)
-```
-
-`output/` and `tool_output/` are deliberately separate: `output/` holds the benchmark's own results plus whatever a task's reference solution explicitly asks a tool to save under `output/<task_ID>/...` (see [`utils/output_paths.py`](src/agenticeoecosystem/utils/output_paths.py) — this convention is unchanged and still anchored to `output/`, including its `output/misc/` catch-all for stray paths). `tool_output/` holds each MCP server's *default* download location — where files land when a model doesn't specify a path at all (e.g. `CDSE_OUTPUT_DIR`, `EUMETSAT_OUTPUT_DIR`). Keeping these separate means `output/` doesn't get buried under tens of gigabytes of raw satellite/climate downloads.
-
----
-
-## Installation
-
-For model reruns using the EVE API or OpenRouter, see
-[the colleague setup and rerun guide](docs/benchmarking/candidate_reruns.md). It includes
-portable task inputs, credentials, one-model commands and checkpoint resuming.
-
-**Requirements:** Python 3.12+
-
-Clone the repository:
 ```bash
 git clone https://gitlab.esa.int/PhiLab/internal/agenticeoecosystem.git
 cd agenticeoecosystem
-```
-
-### Option 1: Using uv (recommended)
-
-Install uv if not already installed:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-Install dependencies and the local package:
-```bash
 uv sync
+cp .env.example .env
 ```
 
-### Option 2: Standard pip
+Configure `.env` for your model provider and required data services. See the
+[setup guide](docs/benchmarking/candidate_reruns.md) and
+[detailed server configuration](docs/project_guide.md#mcp-servers).
+
+## Generate candidate answers
+
+Run a model through the multi-agent pipeline:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-### Option 3: Conda
-
-```bash
-conda create -n multi_agent python=3.12
-conda activate multi_agent
-pip install -e .
-```
-
----
-
-## Running the Client
-
-The main entry point is `src/agenticeoecosystem/client/client.py`. Startup takes a few minutes — the MCP servers need to initialise and tool discovery runs at import time. Subsequent queries in the same session are fast.
-
-> Note: this interactive client runs the older LangChain-based architecture described in the box under [Overview](#overview) (7 agents, including EVE retrieval, no CDSE/EUMETSAT/Climate/VLM). For the current, larger sub-agent set used by the benchmark, run the `multi` pipeline via `scripts/generation/run_generate.py` or `scripts/generation/verify_tools.py` instead (see [Benchmarking](#benchmarking)).
-
-```bash
-python src/agenticeoecosystem/client/client.py
-```
-
-By default the client uses **EVE** as the LLM backend. To override:
-
-```bash
-python src/agenticeoecosystem/client/client.py --model <model_name> --provider <provider>
-```
-
-Once loaded, the client enters an interactive loop. Type your query and press Enter. Type `quit` to exit.
-
-```
-Query (or 'quit' to exit): Is there a narrative about COVID-19?
-```
-
-Each session writes a timestamped log to `logs/client_YYYYMMDD_HHMMSS.log`.
-
----
-
-## MCP Servers
-
-The sections below cover every MCP server in the repo; which ones are actually reachable depends on which pipeline you run. In the legacy `single`/`multi_legacy` pipelines, `client.py` registers up to nine servers at startup via [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py) — seven back a dedicated sub-agent (EO Dashboard, GEE, EVE retrieval, EOSS GraphRAG, MOOCs, ArXiv, GIS); two more (EUMETSAT Data Store and Climate/CDS) load their tools when credentials are present but aren't wired to a sub-agent there, so they're unreachable from that pipeline's supervisor. The current `multi` pipeline (`agents/multi_agent.py`) wires up ten servers instead, each behind its own dedicated sub-agent, including EUMETSAT and Climate/CDS (now reachable) plus two servers the legacy pipeline doesn't have at all — CDSE and VLM. Either way, each server is registered independently — if its dependency or credential is missing, that one server/sub-agent is skipped with a warning and the client still starts.
-
-### EO Dashboard
-
-No setup required. The server fetches data from public ESA EO Dashboard endpoints and exposes tools for browsing narratives, themes, and STAC collections. It starts automatically as a stdio subprocess with the client.
-
-**Exposing it externally** (e.g. as an MCP connector on the ASK ESA / Mistral platform): run it in streamable-HTTP mode instead, via the NEOHPC gateway — same pattern as EOSS GraphRAG below.
-
-```bash
-cd agenticeoecosystem
-screen -dmS eodashboard-http bash -c 'source .venv/bin/activate && python src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py --transport streamable-http --port 13000; exec bash'
-```
-
-Connector URL: `https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/13000/mcp`, same gateway Basic Auth credential as GraphRAG below. `--transport` defaults to `stdio`, so the local client's usage (`mcp_config.py`) is unaffected by running this in parallel.
-
-### CDSE (Copernicus Data Space Ecosystem)
-
-The primary source for satellite quicklooks/GeoTIFFs in the current (`multi`) pipeline — used by `cdse_agent`. Backed by `src/agenticeoecosystem/servers/cdse_geocode/server.py`, which wraps the Sentinel Hub API. Covers Sentinel-1 GRD (SAR), Sentinel-2 (L1C/L2A optical), Sentinel-3 (OLCI, SLSTR, SYN L2), Sentinel-5P (trace gases), Landsat (OT L1), and DEM elevation — each via its own `fetch_*` tool with sensor-appropriate presets (e.g. `true_color`, `ndvi`, `elevation_color`) plus a custom-bands/evalscript escape hatch. Also exposes `geocode_place` / `reverse_geocode_place` (place name ↔ bbox/lat-lon via OpenStreetMap Nominatim — free, no API key) and `resolve_named_region` for macro-regions (e.g. "the Sahel") that Nominatim doesn't resolve as a single place.
-
-Requires a Sentinel Hub OAuth client from the [Copernicus Data Space Ecosystem](https://dataspace.copernicus.eu/) (free registration → Dashboard → create an OAuth client):
-
-```env
-CDSE_CLIENT_ID=your-client-id
-CDSE_CLIENT_SECRET=your-client-secret
-```
-
-Downloads land under `tool_output/cdse_geocode/` by default (override with `CDSE_OUTPUT_DIR`). It starts automatically as a stdio subprocess with the client.
-
-### Google Earth Engine (GEE)
-
-In the current (`multi`) pipeline, `gee_agent` is the **secondary** imagery source — the orchestrator only routes to it for collections CDSE/EUMETSAT don't cover (e.g. NASA VIIRS/MODIS, JAXA GPM/GSMaP or ALOS). It includes a `search_gee_catalog` tool that queries the live GEE STAC catalog for the exact, current Earth Engine asset ID (dataset IDs are frequently re-versioned, so a memorised ID is often stale) rather than relying only on a small hardcoded list of known-safe dataset IDs (Sentinel-2 SR, Landsat 8 SR, Sentinel-5P NO2).
-
-Enables satellite image downloads via the [Earth Engine Python API](https://developers.google.com/earth-engine/guides/python_install). One-time setup:
-
-1. **Create a Google account** and sign up for [Google Earth Engine](https://earthengine.google.com/). Academic/research access is free.
-2. **Create a Google Cloud project** at [console.cloud.google.com](https://console.cloud.google.com) and note the **Project ID**.
-3. **Enable the Earth Engine API**: APIs & Services → Enable APIs → search *Earth Engine API*.
-4. **Create a service account**: IAM & Admin → Service Accounts → Create. Assign the role *Earth Engine Resource Writer*.
-5. **Register with Earth Engine**: [code.earthengine.google.com/register](https://code.earthengine.google.com/register), select your Cloud project, complete registration.
-6. **Download a JSON key**: Service Accounts → your account → Keys → Add Key → JSON.
-7. Add to `.env`:
-
-```env
-GEE_PROJECT=your-gcp-project-id
-GEE_SERVICE_ACCOUNT=your-service-account@your-project.iam.gserviceaccount.com
-GEE_PRIVATE_KEY_PATH=/absolute/path/to/your-key.json
-GOOGLE_MAPS_API_KEY=your-google-maps-api-key   # used by get_lat_lon to geocode place names
-```
-
-### EVE Knowledge Retrieval
-
-Provides retrieval-augmented access to the EVE knowledge base. **Only used by the `single`/`multi_legacy` pipelines** (`client/client.py`'s `get_eve_knowledge` tool) — the current default `multi` pipeline (`agents/multi_agent.py`) has no equivalent sub-agent. Requires OAuth2 credentials:
-
-```env
-EVE_RETRIEVAL_CLIENT_ID=your-client-id
-EVE_RETRIEVAL_CLIENT_SECRET=your-client-secret
-```
-
-Contact the EVE platform team to obtain these. If not set, the server is skipped and `get_eve_knowledge` will be unavailable.
-
-### EO Science Strategy (EOSS GraphRAG)
-
-Provides GraphRAG retrieval over the **ESA Earth Observation Science Strategy** — combining semantic vector search with a **Memgraph** knowledge graph that links document chunks to domain concepts (science themes, science questions, strategic objectives, enabling tools, tipping points, treaties, and KAOs). It exposes three tools: `search_eoss` (natural-language GraphRAG search), `query_ontology` (read-only Cypher), and `list_ontology_nodes` (enumerate nodes by label).
-
-Unlike the other servers, this one runs as a **standalone HTTP MCP server** in the `graphrag` sibling repo, and the client connects to it remotely. Point the client at it via `.env`:
-
-```env
-GRAPHRAG_MCP_URL=https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/12000/mcp
-GRAPHRAG_AUTH_HEADER=Basic <base64(user:pass)>
-```
-
-`GRAPHRAG_MCP_URL` is the gateway URL of the running GraphRAG server (must end in `/mcp`). `GRAPHRAG_AUTH_HEADER` is the full `Authorization` header value; use `graphrag/gen_auth_header.py` to generate it.
-
-**Start the server** (from the `graphrag` repo, e.g. inside a `screen` session), after loading the Memgraph graph via the numbered pipeline scripts (`00_schema.py` … `03_link_chunks.py`):
-
-```bash
-uv run python 05_mcp_server.py            # listens on 0.0.0.0:12000
-```
-
-If the server is unreachable or the env vars are unset, the EOSS GraphRAG tools are skipped and the client starts without them.
-
-### EO MOOCs
-
-Provides semantic search over Earth Observation MOOC (online course) transcripts via the `search_moocs` tool. The server uses a **local, file-based Qdrant store** bundled in `src/agenticeoecosystem/servers/moocs/qdrant_storage/` — no cloud service or credentials required. On first launch it embeds and indexes the bundled `data/MOOC.jsonl`; subsequent starts reuse the existing collection. It starts automatically as a stdio subprocess with the client.
-
-**Exposing it externally** (e.g. as an MCP connector on the ASK ESA / Mistral platform): run it in HTTP mode via the NEOHPC gateway. The local Qdrant store takes an exclusive file lock, so a second process can't share the same `qdrant_storage/` directory as the stdio instance above — point it at a separate `--storage-path` instead (auto-ingested on first run, ~30s; instant afterwards):
-
-```bash
-cd agenticeoecosystem
-screen -dmS moocs-http bash -c 'source .venv/bin/activate && python src/agenticeoecosystem/servers/moocs/server.py --transport http --port 14000 --storage-path src/agenticeoecosystem/servers/moocs/qdrant_storage_http; exec bash'
-```
-
-Connector URL: `https://phi-gateway.tce.ples.dedyn.io/neohpc-phi-gpu-01/14000/mcp`, same gateway Basic Auth credential as EOSS GraphRAG above.
-
-### ArXiv
-
-Provides access to scientific papers via the [arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server). No API key required. The server runs in an isolated uv tool environment.
-
-Pre-install (one-time, speeds up the first connection):
-```bash
-uv tool install arxiv-mcp-server
-```
-
-Papers fetched during a session are cached in `tool_output/arxiv/` (both the current `multi` pipeline and the legacy `single`/`multi_legacy` one point at this same location). Available tools include `search_papers`, `get_abstract`, `download_paper`, `semantic_search`, `citation_graph`, and `watch_topic`. `arxiv_rag_agent`'s system prompt caps usage to avoid context blowups: at most one `download_paper` and at most five `get_abstract` calls per task, preferring the lighter discovery tools otherwise.
-
-### GIS Analysis
-
-Provides spatial analysis tools via [gis-mcp](https://github.com/mahdin75/gis-mcp): geometry operations (Shapely), vector file processing (GeoPandas), raster analysis (Rasterio), spatial statistics (PySAL), and map visualisation (Folium/matplotlib). **`gis_agent` only performs analysis on files already on disk — it cannot fetch imagery itself.** gis-mcp's own data-download tools (`download_worldcover`, `compute_s2_ndvi`, `download_boundaries`, `download_climate_data`, `download_street_network`, `download_species_occurrences`, etc.) are explicitly filtered out of its toolset (`_GIS_DOWNLOAD_TOOL_NAMES` in [`sub_agent_gis.py`](src/agenticeoecosystem/agents/subagents/sub_agent_gis.py)) since that responsibility now belongs to the CDSE/GEE/EUMETSAT/Climate sub-agents — routing a "download X" request here will fail.
-
-On top of gis-mcp's own `compute_ndvi`, the sub-agent adds four spectral-index tools implemented directly in `sub_agent_gis.py` (not part of the third-party package): `compute_evi`, `compute_ndwi`, `compute_ndmi`, `compute_nbr` — each takes a local multi-band raster + 1-based band indices and writes a single-band float32 GeoTIFF. It also adds `clip_raster_with_bbox`, for clipping a raster to a `[west, south, east, north]` bbox without needing a shapefile (use gis-mcp's own `clip_raster_with_shapefile` when one is available).
-
-The server runs in an isolated uv tool environment (`uv tool run --python 3.12 gis-mcp`, cwd pinned to `tool_output/gis_analysis/` so relative output paths land there instead of wherever the process was launched from) to avoid numpy version conflicts with other dependencies. Install once:
-```bash
-uv tool install "gis-mcp[visualize]"
-```
-
-No `.env` variables are required — none of gis-mcp's download extras (`administrative-boundaries`, `climate`) are relevant since those tools are filtered out for this sub-agent.
-
-### EUMETSAT Data Store
-
-Wired to `eumetsat_agent` in the current (`multi`) pipeline — searches and downloads geostationary products from EUMETSAT's Data Store: **MTG FCI and MSG SEVIRI only** (not Sentinel/Landsat — that's CDSE's job). Backed by `src/agenticeoecosystem/servers/eumetsat/server.py`, which exposes four tools:
-
-| Tool | Purpose |
-|---|---|
-| `list_eumetsat_products()` | Look up valid product keys (e.g. `MTG-FCI-L1C-FDHSI`) with their `product_id`, `satpy_reader`, and bands |
-| `search_eumetsat_products(product, start_date, end_date, bbox)` | Dry-run count of matching products before downloading (results capped at 20) |
-| `download_eumetsat_product(args)` | Downloads matching files to `EUMETSAT_OUTPUT_DIR`. `method="datastore"` (default) is a fast raw archived file; `method="datatailor"` reprojects/clips/converts format server-side (slower, polls until done). Refuses any request matching more than 20 products in one call. |
-| `read_eumetsat_product(args)` | Opens downloaded files with `satpy`, returns per-band stats with correct calibration (reflectance for VIS/NIR, brightness temperature for IR/WV); `as_geotiff=true` also writes GeoTIFFs so `gis_agent` can process them (the raw `.nat`/`.nc` files aren't directly GIS-readable) |
-
-```env
-EUMETSAT_CONSUMER_KEY=your-consumer-key
-EUMETSAT_CONSUMER_SECRET=your-consumer-secret
-```
-
-> **Known issue:** `method="datatailor"` downloads can land in the repo root instead of `EUMETSAT_OUTPUT_DIR`, due to a bug in the third-party `eumetsearch` package's success-path file write (bare `open(filename)` instead of joining it to the configured output directory). See `docs/gemma4_benchmark_run_issues_2026-08-07.md` (issue #12) — unfixed as of that doc. `method="datastore"` is unaffected.
-
-### Climate / CDS
-
-Wired to `climate_agent` in the current (`multi`) pipeline — ERA5/ERA5-Land reanalysis data via the Copernicus Climate Data Store. Backed by `src/agenticeoecosystem/servers/climate/server.py`, which exposes discovery (`list_era5_single_level_variables`, `list_era5_pressure_level_variables`, `list_cds_datasets`), download (`fetch_era5_single_levels`/`fetch_era5_pressure_levels` for monthly means; `fetch_era5_hourly_single_levels`/`fetch_era5_hourly_pressure_levels`/`fetch_era5_land` for hourly; `fetch_era5_daily_statistics` for pre-computed daily stats; `fetch_cds_dataset` as a generic escape hatch for any other CDS dataset), and local NetCDF processing tools (`inspect_netcdf`, `convert_hourly_to_daily`/`convert_daily_to_monthly`/`resample_temporal` for temporal aggregation, `convert_units`, `clip_to_bbox`).
-
-```env
-CDS_URL=https://cds.climate.copernicus.eu/api
-CDS_KEY=your-cds-api-key
-```
-
-### VLM (Vision-Language Model)
-
-`vlm_agent` reasons over image files already on disk (a downloaded quicklook, a single scene, or a directory of up to 10 images) — e.g. "does this scene show visible cloud cover", "what changed between these two images". It's the only sub-agent in the current pipeline that runs its **own separate, fixed model** (`Qwen3-VL`, via [`vlm_init.py`](src/agenticeoecosystem/agents/subagents/vlm_init.py)) rather than whichever candidate model `MULTI_AGENT_MODEL`/`MULTI_AGENT_PROVIDER` selects for the orchestrator and every other sub-agent.
-
-The VLM is served by a separate vLLM instance and reached over an SSH local port-forward — this tunnel must be established before starting the client/benchmark, or `vlm_agent` calls will fail to connect:
-
-```bash
-ssh -L 18001:localhost:18001 <user>@<llava-vm-host>
-```
-
-Backed by `src/agenticeoecosystem/servers/vlm_tools/server.py`, which exposes `resolve_images(path, limit)` (list what images exist at a path) and `load_images(path, limit)` (load them into context — downscaled before base64-encoding to control per-image token cost). Its own system prompt enforces calling `load_images` at most once per distinct path, to avoid burning context on duplicate loads.
-
-#### VLM domains (`VLM_DOMAIN`)
-
-By default `vlm_agent` does generic, domain-agnostic visual analysis. Deeper, domain-specific visual criteria live in pluggable **domain packs** under [`agents/subagents/vlm_domains/`](src/agenticeoecosystem/agents/subagents/vlm_domains/). Each module there defines a module-level `DOMAIN = VLMDomain(key, trigger_hint, guidance, defer_to_orchestrator)`, and the package auto-discovers them the same way `subagents/__init__.py` discovers `sub_agent_*.py` files.
-
-Activation is **per request and driven by the prompt**. When the orchestrator wants a domain applied, it starts its handoff message to the VLM with a marker line:
-
-```
-VLM_DOMAIN: wildfire
-Analyze this image and ...
-```
-
-The VLM applies the matching domain's guidance. If the marker is missing or the key is unknown, it falls back to generic analysis, and an unknown key logs a warning. The supervisor prompt in `multi_agent.py` (and in the wildfire pipelines) only adds `VLM_DOMAIN: wildfire` for wildfire, active-fire, smoke-plume or burn-scar requests. Every other visual request stays generic.
-
-Registered domains:
-
-| Key | Module | What it adds |
-|---|---|---|
-| `wildfire` | [`vlm_domains/wildfire.py`](src/agenticeoecosystem/agents/subagents/vlm_domains/wildfire.py) | Classifies the scene into a regime first (clear daytime, smoke-hazed daytime, nighttime), then assesses **active flame**, **smoke/plume** and **burn scar** separately. A burn scar alone counts as a positive wildfire finding, and burn scars are never claimed at night. After reporting, the VLM hands control back to the orchestrator, which owns the final output format. |
-
-Caveat: the VLM instruction is assembled once at import time, so every registered domain's guidance is always in the VLM's context. Activation is a convention the model follows, not a structural guarantee. The `sub_agent_vlm.py` docstring describes a follow-up design backed by session state that would give a hard guarantee. See [Adding a VLM domain](#adding-a-vlm-domain) to add a new one.
-
-### TLE / Orbit (`tle_agent`)
-
-`tle_agent` ([`sub_agent_tle.py`](src/agenticeoecosystem/agents/subagents/sub_agent_tle.py)) is not backed by an MCP server. It exposes local function tools from [`tle_helper.py`](src/agenticeoecosystem/agents/subagents/tle_helper.py), which fetch TLEs from Celestrak (with Space-Track as a fallback) and propagate them with SGP4 (`skyfield`/`pyorbital`):
-
-- `get_satellite_position` / `get_positions_for_set`: where a satellite, or a set of satellites, is at a given UTC time.
-- `get_target_overpasses`: the next passes of one satellite over a target lat/lon.
-- `get_acquisition_schedule`: overpasses of a target across a set of satellites, merged and sorted by time. If no satellites are given, it defaults to a polar-orbiting EO constellation relevant to wildfires (Sentinel-2A/B, Sentinel-3A/B, Terra, Aqua, Suomi NPP, NOAA-20/21, Landsat-8/9). Geostationary platforms (Meteosat-11, MTG-I1) get a fixed position instead of an overpass.
-
-The tools accept satellite names or NORAD IDs. They don't fetch or analyse imagery. The Space-Track fallback is optional:
-
-```env
-SPACETRACK_USER=your-space-track-login
-SPACETRACK_PASSWORD=your-space-track-password
-```
-
----
-
-## Wildfire Analysis
-
-The wildfire work combines `vlm_agent` (with the `wildfire` domain) and `tle_agent` to go from a wildfire image to a satellite tasking recommendation. The flow is described in [Wildfire Acquisition Planning](#wildfire-acquisition-planning-vlm_agent--tle_agent).
-
-### Orchestrators
-
-Besides the general `agents/multi_agent.py`, which also routes wildfire requests through the VLM domain and the TLE agent, there are two wildfire-specific ADK orchestrators:
-
-| Module | Purpose |
-|---|---|
-| [`agents/multi_agent_wildfires.py`](src/agenticeoecosystem/agents/multi_agent_wildfires.py) | Wildfire detection: hands each image to the VLM with `VLM_DOMAIN: wildfire` and returns a features analysis. |
-| [`agents/multi_agent_coordination.py`](src/agenticeoecosystem/agents/multi_agent_coordination.py) | Detection plus acquisition planning: combines the VLM features analysis, a satellite capability matrix (`SATELLITE_CAPABILITY_MATRIX`, from `knowledge.tex`) and TLE overpass predictions into a **Data Acquisition Plan** and a ranked **Tasking Order**. |
-
-The scripts below restrict which sub-agents get loaded through `AGENTICEO_SUBAGENTS` (for example `vlm` or `vlm,tle`), so no other MCP toolsets have to start.
-
-### Data
-
-These files are local and gitignored, so you need to get them separately:
-
-```
-data/visual_tasks/
-├── images/FireImages-Jul-Aug/       ← wildfire image set (.jpg/.png)
-├── labels/labels.xlsx               ← manual smoke / burn-area labels
-├── labels/FireImages-Jul-Aug.json   ← COCO labels built from labels.xlsx
-└── context/knowledge.tex            ← satellite capability matrix (table:capability_matrix)
-```
-
-### Scripts
-
-Run these from the repo root with `uv run python scripts/<name>.py`:
-
-| Script | What it does |
-|---|---|
-| `build_fire_labels_coco.py` | Converts the smoke/burn-area columns in `labels.xlsx` into COCO classification JSON with the classes `smoke`, `burn_area` and `smoke_and_burn_area`. Needs `uv run --with openpyxl --with pillow`. |
-| `run_visual_tasks_wildfire.py` | Asks "Do you see a wildfire?" for every image under `--images-dir` (default `data/visual_tasks`), with `--limit N` for a quick run. Uses `multi_agent_wildfires` with the VLM only. |
-| `run_visual_tasks_wildfire_structured.py` | Same run mechanics, but asks an 11-field structured questionnaire (smoke, flame, containment, size, hotspots, intensity, infrastructure, settlements, vegetation, weather, cloud visibility) in a `Field: value` block, so answers can be scored field by field. |
-| `eval_wildfire_labels.py` | *(Work in progress.)* Scores the VLM wildfire answers against the COCO ground truth. An LLM classifier maps each free-text answer onto `none`/`smoke`/`burn_area`/`smoke_and_burn_area`, with the classifications cached on disk. The script writes a per-image CSV and prints accuracy metrics. |
-| `run_visual_decision_wildfire.py` | Single-shot test of the tasking-order reasoning in `multi_agent_coordination` (VLM + TLE) on one image (`--image`, or a random one picked with `--seed`). It uses a synthetic acquisition time and lat/lon. |
-| `run_acquisition_coverage_emsr859.py` | Tests `get_acquisition_schedule` on its own (TLE only) against the real AOI of Copernicus EMS event EMSR859_1 (Chile, from the ImpactMesh-Fire dataset). |
-
-Logs go to `logs/<script>_<timestamp>.log`, next to a JSON result file with the same timestamp.
-
-A typical evaluation loop is `build_fire_labels_coco.py`, then `run_visual_tasks_wildfire.py` (once per VLM backend, e.g. Qwen3-VL and Gemma4-12B), then `eval_wildfire_labels.py`.
-
----
-
-## Benchmarking
-
-The evaluation framework lives in `src/agenticeoecosystem/evaluation/`. Active commands are grouped in the [script index](scripts/README.md). Generate answers with `scripts/generation/run_generate.py`, then apply the task-specific judging methods. The manual `scripts/generation/verify_tools.py` runner checks EVE tool use without judge scoring.
-
-### Pipeline
-
-For each generator model:
-1. **Generate** — run every task through the agent pipeline and record the tool-call sequence (Solution)
-2. **Evaluate** — apply the configured rubrics, AAJ/GIS, numerical metrics or deterministic checks. Generic reference-workflow matching is retired.
-3. **Save** — retain candidate snapshots, evaluator labels, protocol metadata and verification coverage. See [judge run organization](docs/evaluation/judge_run_organization.md) for historical results and pending rejudging.
-
-### Task format
-
-Tasks are stored as JSON files in `data/tasks/` and loaded as a `TaskSet`:
-
-```python
-from agenticeoecosystem.evaluation.dataclasses import TaskSet
-
-tasks = TaskSet.read_from_file("benchmark_tasks.json")
-```
-
-Each `Task` has:
-- `task_text` — the natural-language query
-- `task_labels` — one or more of: `Tool Grounding`, `Sequential Reasoning`, `Cross-agent Synthesis`, `Scope Awareness`
-- `reference_solutions` — list of acceptable tool-call sequences
-- `generated_solution` — populated after the pipeline runs
-- `evaluator_scores` / `evaluator_reasoning` — populated after LLM-as-judge runs
-
-Useful selection helpers:
-```python
-tasks.select_by_ids(["TASK_...", "TASK_..."])   # by ID
-tasks.select_by_labels(["Tool Grounding"])       # by category
-tasks.subset("Sequential Reasoning", n=5)        # single category, capped
-tasks.sample_stratified(20)                      # stratified random sample
-```
-
-### Model registry
-
-Generator and evaluator models are defined in [`src/agenticeoecosystem/utils/registry.py`](src/agenticeoecosystem/utils/registry.py). Models that need a local vLLM server are listed in `MODEL_REGISTRY`:
-
-| Key | Model | Gated |
-|---|---|---|
-| `qwen3-14b` | Qwen/Qwen3-14B | free |
-| `qwen2.5-14b` | Qwen/Qwen2.5-14B-Instruct | free |
-| `qwen3-30b-moe` | Qwen/Qwen3-30B-A3B | free |
-| `deepseek-r1-14b` | deepseek-ai/DeepSeek-R1-Distill-Qwen-14B | free |
-| `phi4-mini` | microsoft/Phi-4-mini-instruct | free |
-| `nemotron-2-12b` | nvidia/NVIDIA-Nemotron-Nano-12B-v2 | free |
-| `gemma3-12b` | google/gemma-3-12b-it | gated |
-| `gemma4-31b` | google/gemma-4-31B-it | free |
-| `qwen3.6-27b` | Qwen/Qwen3.6-27B | free |
-| `qwen3.6-35b-a3b` | Qwen/Qwen3.6-35B-A3B (MoE, 3B active) | free |
-| `mistral-small-24b` | mistralai/Mistral-Small-3.1-24B-Instruct-2503 | gated |
-| `llama3.1-8b` | meta-llama/Llama-3.1-8B-Instruct | gated |
-| `llama3.2-3b` | meta-llama/Llama-3.2-3B-Instruct | gated |
-
-Gated models require accepting the licence on huggingface.co and setting `HF_TOKEN` in `.env`.
-
-Download models before running (skips if already cached):
-
-```python
-from agenticeoecosystem.utils.registry import download_model, list_downloaded
-
-list_downloaded()                          # show download status for all models
-download_model("qwen3-14b")               # free model
-download_model("gemma3-12b")              # gated — needs HF_TOKEN
-```
-
-### Running a single generator model (CLI)
-
-For a one-off run against a single model — e.g. comparing a new candidate LLM against EVE — use `scripts/generation/run_generate.py` directly instead of editing `scripts/generation/verify_tools.py`. Each invocation is a fresh process: for `--provider vllm` it launches its own vLLM server (reusing one already serving the same model if present) and tears it down on exit unless `--keep-vllm-alive` is passed; for `--provider eve` it talks to `EVE_ENDPOINT` (`.env`) directly and never touches vLLM.
-
-```bash
-# EVE-Instruct — provider="eve", no vLLM server launched by this process
 uv run python scripts/generation/run_generate.py \
-  --label       "EVE-Instruct" \
-  --model       "EVE-Instruct" \
-  --provider    "eve" \
-  --pipeline    "multi" \
-  --tasks-file  benchmark_tasks.json \
-  --task-labels "Tool Grounding,Sequential Reasoning,Cross-agent Synthesis,Scope Awareness" \
-  --output-dir  "output/ESAEOBench/run_$(date +%Y%m%d_%H%M%S)" \
-  --task-timeout 2400
-
-# A local candidate model — provider="vllm", auto-launches on port 8000
-uv run python scripts/generation/run_generate.py \
-  --label       "Qwen3.6-27B" \
-  --model       "qwen3.6-27b" \
-  --provider    "vllm" \
-  --pipeline    "multi" \
-  --tasks-file  benchmark_tasks.json \
-  --task-labels "Tool Grounding,Sequential Reasoning,Cross-agent Synthesis,Scope Awareness" \
-  --output-dir  "output/ESAEOBench/run_$(date +%Y%m%d_%H%M%S)" \
-  --vllm-startup-timeout 1800 \
-  --task-timeout 2400
+  --model EVE-Instruct --provider eve \
+  --pipeline multi --label EVE-Instruct-multi \
+  --tasks-file benchmark_tasks.json \
+  --output-dir data/candidate_reruns/eve_multi \
+  --archive-evidence
 ```
 
-Key flags:
+Use `--pipeline single` for single-agent runs. Give each model and pipeline a
+separate output directory. To resume generation, load its saved results file and
+add `--skip-solved`; see the [checkpoint guide](docs/benchmarking/candidate_reruns.md#resume-and-queue).
 
-| Flag | Description |
+The [interactive client](src/agenticeoecosystem/client/client.py) is also
+available; its architecture differs from the default multi-agent benchmark
+pipeline. See [client usage](docs/project_guide.md#running-the-client).
+
+## Benchmark and evaluation
+
+The benchmark covers tool grounding, sequential reasoning and cross-agent
+synthesis. Evaluation combines task-specific numerical and deterministic checks,
+agent-as-judge inspection, GIS verification and evidence-aware rubrics.
+
+![Earth observation benchmark overview](figs/eva_fig.png)
+
+![Model size versus benchmark score](figs/size_vs_score.png)
+
+Judge a saved candidate file:
+
+```bash
+uv run python scripts/judging/run_full_evaluation.py \
+  --results-file data/candidate_reruns/eve_multi/results_EVE-Instruct-multi.json \
+  --evaluator-model Mistral-Small-3.2-24B-Instruct-2506 \
+  --evaluator-provider eve --evaluator-label mistral32 \
+  --output-dir data/judge_runs/eve_multi_mistral32
+```
+
+The example requires that model to be served at the configured `EVE_ENDPOINT`.
+Use a separate output directory for each candidate and judge. Evaluation resumes
+matching checkpoints automatically. Preserve scored, unverified, unsupported and
+diagnostic outcomes separately when reporting results.
+
+Candidate-owned recomputed references can be supplied with
+`--candidate-references path/to/candidate_references/model.json`. Their candidate
+fingerprints and artifact hashes must match. See the
+[evaluation guide](docs/evaluation/full_evaluation.md) and
+[artifact verification guide](docs/evaluation/agent_judge_artifact_verification.md).
+
+## Repository and documentation
+
+| Location | Contents |
 |---|---|
-| `--label` | Human-readable name, used in the output filename (`results_<label>.json`) |
-| `--model` | Registry key (for `vllm`) or model identifier (for `eve`) |
-| `--provider` | `eve`, `vllm`, `openai`, … |
-| `--pipeline` | `multi` (google-adk orchestrator), `single` (one LangGraph agent), or `multi_legacy` |
-| `--tasks-file` | One or more task JSON filenames from `data/tasks/` (merged if multiple) |
-| `--task-labels` / `--task-ids` | Filter to specific categories or task IDs |
-| `--output-dir` | Directory for `results_<label>.json` |
-| `--vllm-startup-timeout` | Seconds to wait for the vLLM server's `/health` (only relevant for `--provider vllm`) |
-| `--task-timeout` | Max wall-clock seconds per task before it's abandoned and the run moves on |
-| `--skip-solved` | Skip tasks that already have a `generated_solution` in the loaded file |
-| `--keep-vllm-alive` | Don't tear down the vLLM server this process launched, so a following call for the same model can reuse it |
+| `src/agenticeoecosystem/` | Agents, MCP servers, configuration and evaluation implementation |
+| `scripts/` | Generation, judging and reference-processing entry points |
+| `data/tasks/` | Current task definitions and evaluation configuration; one previous snapshot |
+| `tests/` | Automated checks |
+| `docs/` | Setup, evaluation protocols and development guides |
 
-**Note:** the `MODEL_REGISTRY` in `registry.py` has no entry for EVE — always use `--provider eve` for it, never `--provider vllm`.
-
-### Judging candidate answers
-
-Use `scripts/judging/run_agent_judge.py` for AAJ/GIS inspection and
-`scripts/judging/run_rubric_judges_batch.py` for a selected rubric profile.
-Numerical candidate scoring is implemented in `evaluation/judges/numerical_judge.py`;
-the separate `scripts/references/regenerate_numeric_ground_truths.py` computes
-reference values and does not judge candidates.
-
-Run all configured passes with `scripts/judging/run_full_evaluation.py`; see
-[the one-command guide](docs/evaluation/full_evaluation.md). Retain
-separate metrics and evidence coverage. The older reference-comparison judge
-and its comparison-table scripts are [retired](scripts/README.md#retired-entry-points)
-and retained only in the local ignored archive.
-
-### Outputs and rejudging inventory
-
-Candidate commands save `results_<label>.json` in the selected `--output-dir`.
-Use `--archive-evidence` to preserve recorded artifacts. Judge commands should
-use distinct labels and output directories per protocol and candidate snapshot.
-
-Refresh the organized view of historical runs and pending rejudging:
-
-```bash
-bash scripts/reporting/organize_judge_runs.sh
-```
-
-See `data/judge_runs/README.md` for historical scores and per-question status.
-
-### Manual tool verification
-
-The local, ignored verification runner was moved out of `tests/` because it
-makes live model and MCP calls. It may be absent in a fresh checkout. It
-generates answers for inspection and does not score them:
-
-```bash
-python scripts/generation/verify_tools.py
-python scripts/generation/verify_tools.py --no-subset
-```
-
-
----
-
-## Adding Custom Sub-agents
-
-The two subsections below target different pipelines — pick the one matching what you're actually running. Most new work should go through **the current (`multi`) pipeline** below; the LangChain instructions further down are for `--pipeline single`/`multi_legacy` only.
-
-### For the current (`multi`) pipeline
-
-Every sub-agent lives in its own `src/agenticeoecosystem/agents/subagents/sub_agent_<name>.py` file. [`subagents/__init__.py`](src/agenticeoecosystem/agents/subagents/__init__.py) auto-discovers them: it scans the package for any module starting with `sub_agent_` and collects every `google.adk.agents.llm_agent.Agent` instance it defines into `ALL_SUB_AGENTS` — so a new file is picked up automatically, no manual registration list to edit. Follow [`sub_agent_mooc.py`](src/agenticeoecosystem/agents/subagents/sub_agent_mooc.py) as the simplest template (a single stdio MCP server, no extra local tools):
-
-```python
-from agenticeoecosystem.agents.subagents.llm_init import llm
-from google.adk.agents.llm_agent import Agent
-from google.adk.tools.mcp_tool import McpToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from mcp import StdioServerParameters
-from typing import Optional
-from agenticeoecosystem.definitions import ROOT_DIR
-
-_MY_SYSTEM_PROMPT = "You are a retrieval assistant for <domain>. Use the available tools to ..."
-
-toolset = [McpToolset(
-    connection_params=StdioConnectionParams(
-        server_params=StdioServerParameters(
-            command='python',
-            args=[f"{ROOT_DIR}/src/agenticeoecosystem/servers/my_server/server.py"]),
-        timeout=300))]
-
-def _fetch_agent(toolset) -> Optional[Agent]:
-    if toolset:
-        return Agent(
-            model=llm,               # shared candidate model (MULTI_AGENT_MODEL/PROVIDER); use vlm_init.vlm instead for a fixed vision model, as vlm_agent does
-            name='my_agent',
-            description='A helpful assistant for answering user questions related to <domain>.',
-            instruction=_MY_SYSTEM_PROMPT,
-            tools=toolset,
-            mode='single_turn'
-        )
-    return None
-
-my_agent = _fetch_agent(toolset)
-```
-
-Build the MCP server itself the same way as for the legacy pipeline (see [Creating the MCP tools](#creating-the-mcp-tools) below) — the server side doesn't change between pipelines, only how the client wires it up.
-
-Two more steps, both in [`agents/multi_agent.py`](src/agenticeoecosystem/agents/multi_agent.py):
-1. Add a paragraph to `_SUPERVISOR_SYSTEM_PROMPT` describing when to route to the new sub-agent, and any scope boundaries it should respect relative to existing sub-agents (see how the CDSE/GEE/EUMETSAT split is worded there as an example of avoiding overlapping responsibilities).
-2. Nothing else — `root = Agent(..., sub_agents=ALL_SUB_AGENTS, ...)` already picks up every agent discovered in step 1 automatically.
-
-### Adding a VLM domain
-
-If you need domain-specific visual criteria (floods, for example), add a domain pack instead of a new sub-agent. To do that, drop a module into [`agents/subagents/vlm_domains/`](src/agenticeoecosystem/agents/subagents/vlm_domains/). It's discovered automatically, and modules whose names start with `_` are skipped:
-
-```python
-# agents/subagents/vlm_domains/flood.py
-from agenticeoecosystem.agents.subagents.vlm_domains._types import VLMDomain
-
-DOMAIN = VLMDomain(
-    key="flood",  # matched case-insensitively against the `VLM_DOMAIN: <key>` marker
-    trigger_hint="the handoff instruction asks about flooding or standing water in the image(s)",
-    guidance="""Visual cues to apply when this domain is active ...""",
-)
-```
-
-Then tell the orchestrator when to emit the marker. In `_SUPERVISOR_SYSTEM_PROMPT` in `agents/multi_agent.py`, add a line saying when to start the VLM handoff with `VLM_DOMAIN: flood`, following the existing `VLM_DOMAIN: wildfire` rule. Domain keys must be unique: if two modules register the same key, the first one wins and a warning is logged. `tests/test_vlm_domains.py` covers discovery and marker parsing.
-
-### For the `single`/`multi_legacy` pipelines (LangChain, `client/client.py`)
-
-#### Creating the MCP tools
-
-Follow the example server at [`src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py`](src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py) or any other server in the [`servers/`](src/agenticeoecosystem/servers) folder. Once created, add an entry to `get_mcp_servers()` in [`mcp_config.py`](src/agenticeoecosystem/config/mcp_config.py):
-
-```python
-"example": {
-    "transport": "stdio",
-    "command": "python",
-    "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/example/stdio_localserver/example_server.py"],
-},
-```
-
-See the [MCP documentation](https://modelcontextprotocol.io/docs/develop/build-server) for more on building MCP servers.
-
-#### Creating the sub-agent
-
-Declare the agent:
-
-```python
-my_custom_agent = create_agent(
-    model,
-    tools=[t for t in mcp_tools if t.name in ("my_tool_a", "my_tool_b")],
-    system_prompt="..."
-)
-```
-
-Wrap it as a tool for the supervisor:
-
-```python
-@tool
-async def my_agent_as_tool(request: str) -> str:
-    """Describe the functionality of the agent."""
-    logger.info("[TOOL CALL] my_agent_as_tool: %s", request)
-    result = await my_custom_agent.ainvoke({"messages": [{"role": "user", "content": request}]})
-    text_output = result["messages"][-1].text
-    if isinstance(text_output, tuple):
-        text_output = " ".join(str(t) for t in text_output)
-    return str(text_output)
-```
-
-Register it with the supervisor:
-
-```python
-supervisor_agent = create_agent(
-    model,
-    tools=[
-        get_eo_stac_data, get_gee_data, get_eve_knowledge,
-        get_eossgraphrag_context, get_arxiv_data, get_gis_analysis,
-        my_agent_as_tool,
-    ],
-    system_prompt=(
-        "You are a routing agent. "
-        "You can get data from EO Dashboards, Google Earth Engine, "
-        "the EVE knowledge base, the ESA EO Science Strategy knowledge base, "
-        "ArXiv scientific papers, the GIS analysis server, "
-        "and <describe your custom agent here>. "
-        "Break down user requests into appropriate tool calls and coordinate the results. "
-        "Return tool results directly to the user without summarising."
-    )
-)
-```
-
-If you run into any trouble, feel free to open an issue.
+Start with the [documentation index](docs/README.md),
+[script index](scripts/README.md), or
+[detailed setup and development guide](docs/project_guide.md).

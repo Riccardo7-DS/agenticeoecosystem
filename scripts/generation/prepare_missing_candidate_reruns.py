@@ -63,7 +63,7 @@ class MissingCandidateReruns:
         """Write validated, clean task inputs and a provenance manifest."""
         current = json.loads((ROOT / "data/tasks/benchmark_tasks.json").read_text())
         current_tasks = {task["task_ID"]: task for task in current["tasks"]}
-        rerun_source = ROOT / "data/tasks/benchmark_rerun_required.md"
+        rerun_source = ROOT / "data/archive/tasks_20261013/benchmark_rerun_required.md"
         required_ids = set(re.findall(r"^\| (TASK_\w+) \|", rerun_source.read_text(), re.MULTILINE)) if self.config.include_changed else set()
         unknown_ids = required_ids - current_tasks.keys()
         if unknown_ids:

@@ -1,0 +1,4006 @@
+{
+  "TASK_260713_000010_400010": {
+    "band_stats": {
+      "SR_B4": {
+        "min": 6868.0,
+        "max": 29243.0,
+        "mean": 12664.113816108033,
+        "std": 2387.974667388722
+      },
+      "SR_B3": {
+        "min": 7712.0,
+        "max": 27013.0,
+        "mean": 11957.356700919998,
+        "std": 1732.5731822413331
+      },
+      "SR_B2": {
+        "min": 3132.0,
+        "max": 24060.0,
+        "mean": 10424.090439554528,
+        "std": 1480.350103816251
+      },
+      "SR_B5": {
+        "min": 6509.0,
+        "max": 30803.0,
+        "mean": 17895.26787539678,
+        "std": 2486.7086823056165
+      }
+    }
+  },
+  "TASK_260427_000020_200020": {
+    "_status": "runtime_reference",
+    "_reason": "Each valid selected paper can identify a different study-area centroid. Recompute the WGS84 distance after AAJ source/endpoint verification; no universal stored distance.",
+    "reference_type": "source_dependent_runtime",
+    "source_dependency": {
+      "paper_id": null,
+      "paper_evidence": null,
+      "study_area": null,
+      "centroid_lon_lat": null,
+      "centroid_derivation": null
+    },
+    "destination": {
+      "place": "Rome, Italy",
+      "coordinates_lon_lat": null,
+      "coordinate_policy": "Use independently accepted Rome coordinates from recorded geocoding; allow documented defensible city-centre choices."
+    },
+    "expected_distance": {
+      "value": null,
+      "units": "metres; accept equivalent converted units",
+      "ellipsoid": "WGS84"
+    },
+    "evaluation_policy": {
+      "source_validation": "AAJ checks the selected paper satisfies the question and that the study area/centroid is supported by its captured content. No fixed paper ID or study-area name is required.",
+      "numerical_validation": "Independently recompute the ellipsoidal distance from the verified centroid to accepted Rome coordinates; compare the reported distance with declared units and calibrated tolerance.",
+      "evidence_required": [
+        "candidate-selected paper identity and captured full text",
+        "study-area evidence and centroid derivation",
+        "accepted Rome coordinates and geocoding evidence",
+        "candidate reported distance and units"
+      ],
+      "missing_evidence": "unverified/not_evaluated; never invent a location, distance or zero score",
+      "implementation_status": "Runtime GIS measurement and candidate-bound numerical-judge handoff implemented. Declared task tolerances and actual candidate source evidence are still required; missing evidence remains unverified.",
+      "evidence_binding": "Matching candidate fingerprint, allowlisted captured text quote, independently verified endpoints, source SHA-256 and replayed GIS calculation. Stale, altered or conflicting observations cannot supply runtime GT."
+    },
+    "runtime_provider": "agenticeoecosystem.evaluation.candidate_evidence.CandidateEvidence.runtime_distance_reference",
+    "reference_field": "distance_m"
+  },
+  "TASK_260619_000014_300014": {
+    "lat": -1.2864,
+    "lon": 36.8172
+  },
+  "TASK_260713_000001_400001": {
+    "lat": 41.8264,
+    "lon": 12.6738
+  },
+  "TASK_260713_000002_400002": {
+    "lat": -3.119,
+    "lon": -60.0217
+  },
+  "TASK_260713_000003_400003": {
+    "lat": 19.5362,
+    "lon": -155.5763
+  },
+  "TASK_260427_000014_200014": {
+    "transform": {
+      "x": 291945.99417400925,
+      "y": 4640626.597171321,
+      "target_crs": "EPSG:32633"
+    }
+  },
+  "TASK_260713_000015_400015": {
+    "transform": {
+      "x": 148988.41422357768,
+      "y": -1893077.2944427815,
+      "target_crs": "EPSG:3413"
+    }
+  },
+  "TASK_260713_000016_400016": {
+    "utm_crs": {
+      "zone": 37,
+      "hemisphere": "N",
+      "epsg": "EPSG:32637"
+    },
+    "transform": {
+      "x": 472182.59586809395,
+      "y": 997625.7474430806,
+      "target_crs": "EPSG:32637"
+    }
+  },
+  "TASK_260427_000016_200016": {
+    "point1_ESRIN": {
+      "lat": 41.8264,
+      "lon": 12.6738
+    },
+    "point2_ESAC": {
+      "lat": 40.4527,
+      "lon": -4.009
+    },
+    "distance_m": 1406681.4392356377,
+    "distance_km": 1406.6814392356378
+  },
+  "TASK_260713_000020_400020": {
+    "area_km2": 4733663.738810978
+  },
+  "TASK_260427_000009_200009": {
+    "task_ID": "TASK_260427_000009_200009",
+    "task_text": "Download a multi-band Sentinel-2 image of central Barcelona, Spain for July 2022, then calculate the minimum, maximum, mean, and standard deviation for each band.",
+    "recorded_at_utc": "2026-10-12T16:05:08.697497+00:00",
+    "band_statistics": {
+      "B02": {
+        "min": 0.0013000000035390258,
+        "max": 2.3032000064849854,
+        "mean": 0.09836364850751461,
+        "std": 0.058191667405572065,
+        "valid_pixels": 150904
+      },
+      "B03": {
+        "min": 0.006399999838322401,
+        "max": 2.0920000076293945,
+        "mean": 0.1220576108992807,
+        "std": 0.06610621316719613,
+        "valid_pixels": 150904
+      },
+      "B04": {
+        "min": 0.00039999998989515007,
+        "max": 1.9176000356674194,
+        "mean": 0.1500600038002144,
+        "std": 0.09271028170651907,
+        "valid_pixels": 150904
+      },
+      "B08": {
+        "min": 9.999999747378752e-05,
+        "max": 1.7688000202178955,
+        "mean": 0.217884215212031,
+        "std": 0.10597889577815002,
+        "valid_pixels": 150904
+      }
+    },
+    "units": "surface reflectance (0-1)",
+    "source": {
+      "area": {
+        "display_name": "Barcelona, Barcelonès, Barcelona, Catalunya, España",
+        "centre": [
+          2.177073,
+          41.3825802
+        ],
+        "bbox": [
+          2.153573,
+          41.36508,
+          2.200573,
+          41.40008
+        ],
+        "area_definition": "central Barcelona: about 4 km x 4 km box centred on the geocoded city-centre point"
+      },
+      "raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000009_200009/sentinel2_barcelona.tif",
+        "sha256": "4f0bd6c40b4bc1edf1d64c734ec2f6b8764dc53c5b01c7cfed51cfa464eef6da",
+        "crs": "EPSG:4326",
+        "width": 393,
+        "height": 388,
+        "bounds": [
+          2.153573,
+          41.36508,
+          2.200573,
+          41.40008
+        ],
+        "cloud_fraction_scl": 0.00013116130216940793,
+        "gsd_m": [
+          9.988964143034284,
+          9.97445876288765
+        ],
+        "masked_pixels": 1580
+      }
+    },
+    "correction": "Previous reference geocoded a power-station building in Sant Adria de Besos (170 m box upsampled to 0.3 m pixels).",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000009_200009_tool_calls.json"
+  },
+  "TASK_260427_000010_200010": {
+    "task_ID": "TASK_260427_000010_200010",
+    "task_text": "Compute NDVI for the Po Valley agricultural region in northern Italy using Sentinel-2 imagery for July 2022, save the result, and report the NDVI value range and the percentage of the area with NDVI greater than 0.6.",
+    "recorded_at_utc": "2026-10-12T16:04:26.230710+00:00",
+    "ndvi_stats": {
+      "min": -0.9953757226892169,
+      "max": 0.9996906897655379,
+      "mean": 0.5167987253079077,
+      "std": 0.2998243875552033,
+      "valid_pixels": 259145
+    },
+    "pct_pixels_ndvi_gt_0.6": 43.77973721275733,
+    "source": {
+      "raster": {
+        "path": "data/reference_completion_20261012/artifacts/TASK_260427_000010_200010/sentinel2_po_valley_200010.tif",
+        "sha256": "6b45044643185680c5a83045fb97eae0eb527ae7a77b96d009dd6272c18f5d71",
+        "crs": "EPSG:4326",
+        "width": 512,
+        "height": 512,
+        "bounds": [
+          7.5,
+          44.5,
+          12.5,
+          45.7
+        ],
+        "gsd_m": [
+          767.3596020307692,
+          259.1578125000006
+        ],
+        "masked_pixels": 2999
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000010_200010/ndvi_po_valley.tif"
+    },
+    "correction": "Previous range (-7000 to 307) came from near-zero/negative reflectance; same input recomputed with the masking rule.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/evaluation_prepared_20261012/correction_source_audit.json",
+    "original_provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000010_200010_tool_calls.json"
+  },
+  "TASK_260427_000011_200011": {
+    "task_ID": "TASK_260427_000011_200011",
+    "task_text": "Download a Sentinel-2 true-colour image of the Swiss Alps for September 2022, reproject it from its native CRS to UTM zone 32N (EPSG:32632) using bilinear resampling, then compute per-band statistics on the reprojected result.",
+    "recorded_at_utc": "2026-10-12T16:04:26.505834+00:00",
+    "band_stats": {
+      "R(B04)": {
+        "min": 9.999999747378752e-05,
+        "max": 1.3494629859924316,
+        "mean": 0.09302602771767537,
+        "std": 0.13832977761573917,
+        "valid_pixels": 229178
+      },
+      "G(B03)": {
+        "min": 0.0031999999191612005,
+        "max": 1.384743094444275,
+        "mean": 0.10181169375112199,
+        "std": 0.13508785158595782,
+        "valid_pixels": 229178
+      },
+      "B(B02)": {
+        "min": 0.00019999999494757503,
+        "max": 1.4651108980178833,
+        "mean": 0.08031175499167409,
+        "std": 0.13979620691189387,
+        "valid_pixels": 229178
+      }
+    },
+    "units": "surface reflectance (0-1)",
+    "source": {
+      "input_raster": "data/reference_completion_20261012/artifacts/TASK_260427_000011_200011/sentinel2_alps.tif",
+      "input_sha256": "4749f58c52f320e46eed90f42ce7cf23440d1711b36cbb0b903649fe6472bea9",
+      "reprojected_raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000011_200011/sentinel2_alps_utm32n.tif",
+        "sha256": "5d6a0d9563af7883c47c9d7d131e038614476049dd0df27076a96e78728dff55",
+        "crs": "EPSG:32632",
+        "width": 623,
+        "height": 395,
+        "pixel_size_m": [
+          573.72526918566,
+          573.72526918566
+        ],
+        "fill_pixels_excluded": 16907
+      }
+    },
+    "correction": "Previous statistics counted reprojection fill and mosaic no-data zeros as data.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only; reprojection fill and source no-data excluded",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/evaluation_prepared_20261012/correction_source_audit.json",
+    "original_provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000011_200011_tool_calls.json"
+  },
+  "TASK_260427_000012_200012": {
+    "task_ID": "TASK_260427_000012_200012",
+    "task_text": "Download a Sentinel-2 image of the Almería region in southern Spain for June 2023 with bands B2, B3, B4, and B8. Clip the image to the Almería study area, compute NDVI using B4 (Red) and B8 (NIR), and report the minimum, maximum, mean NDVI, and the percentage of pixels with NDVI greater than 0.5.",
+    "recorded_at_utc": "2026-10-12T16:04:26.584969+00:00",
+    "ndvi_stats": {
+      "min": -0.9862068962564178,
+      "max": 0.9873105390110619,
+      "mean": 0.03893260212269296,
+      "std": 0.1295081635993177,
+      "valid_pixels": 259660
+    },
+    "pct_pixels_ndvi_gt_0.5": 1.0170992836786568,
+    "source": {
+      "raster": {
+        "path": "data/reference_completion_retry_20261012/artifacts/TASK_260427_000012_200012/sentinel2_spain_clipped.tif",
+        "sha256": "d714d810a5f52572aefd7efa78d01aa1f97553662398f6ccf13b45d13af06380",
+        "crs": "EPSG:4326",
+        "width": 512,
+        "height": 512,
+        "bounds": [
+          -3.0372,
+          35.9376,
+          -2.2022,
+          37.0
+        ],
+        "gsd_m": [
+          145.99679768404252,
+          229.44104999999928
+        ],
+        "masked_pixels": 2511
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000012_200012/ndvi_spain.tif",
+      "area": "Almeria province bbox from geocoder (includes coastal sea)"
+    },
+    "correction": "Previous min/max (-51.5/3200) and mean were driven by zero-denominator pixels.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/evaluation_prepared_20261012/correction_source_audit.json",
+    "original_provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000012_200012_tool_calls.json"
+  },
+  "TASK_260427_000013_200013": {
+    "task_ID": "TASK_260427_000013_200013",
+    "task_text": "Download a Sentinel-2 image of the agricultural area around Bila Tserkva, Kyiv Oblast, Ukraine for June 2023 with bands B4 (Red) and B8 (NIR) at 10 m resolution and a maximum cloud cover of 20%. Compute NDVI from the downloaded imagery, save the resulting raster, and report the mean and maximum NDVI values for the study area.",
+    "recorded_at_utc": "2026-10-12T16:05:20.237092+00:00",
+    "ndvi_stats": {
+      "min": -0.23145397501883302,
+      "max": 0.9414853728732981,
+      "mean": 0.582303466570155,
+      "std": 0.24770644495925015,
+      "valid_pixels": 3180856
+    },
+    "source": {
+      "area": {
+        "geocode_query": "Bila Tserkva, Kyiv Oblast, Ukraine",
+        "display_name": "Біла Церква, Білоцерківська міська громада, Білоцерківський район, Київська область, Україна",
+        "osm_type": "relation",
+        "osm_id": 2069683,
+        "centre": [
+          30.1158069,
+          49.7969703
+        ],
+        "area_definition": "town-centre point +/- 0.1 deg",
+        "bbox": [
+          30.015807,
+          49.69697,
+          30.215807,
+          49.89697
+        ]
+      },
+      "raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000013_200013/sentinel2_bila_tserkva.tif",
+        "sha256": "6609cb9d1efd81fff2d2b7e8ce7940bc4a169a71a14f71232b71c38f37f83710",
+        "crs": "EPSG:4326",
+        "width": 1438,
+        "height": 2212,
+        "bounds": [
+          30.015807,
+          49.69697,
+          30.215807,
+          49.89697
+        ],
+        "cloud_fraction_scl": 2.5150462642760315e-05,
+        "gsd_m": [
+          9.99399807447261,
+          9.997649186256924
+        ],
+        "masked_pixels": 0
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000013_200013/ndvi_sentinel2_bila_tserkva.tif"
+    },
+    "correction": "Re-fetched at true ~10 m pixels over the town surroundings; previous reference used default 512x512 output (coarser than 10 m) and unmasked NDVI.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000013_200013_tool_calls.json"
+  },
+  "TASK_260427_000031_200031": {
+    "ndvi_stats": {
+      "min": -0.21447965502738953,
+      "max": 0.9718029499053955,
+      "mean": 0.3808482587337494,
+      "std": 0.24345868825912476
+    }
+  },
+  "TASK_260427_000035_200035": {
+    "task_ID": "TASK_260427_000035_200035",
+    "task_text": "Download a Sentinel-2 image of the agricultural area around Yahotyn, Kyiv Oblast, Ukraine for June 2023 with bands B8 and B4 at 10 m resolution and max 20% cloud cover. Compute NDVI from the downloaded GeoTIFF (NIR = B8 = band 1, Red = B4 = band 2) and save the result. Reproject the NDVI raster to UTM Zone 36N (EPSG:32636) and save the reprojected result. Finally report band statistics (mean, max, std) for the reprojected raster.",
+    "recorded_at_utc": "2026-10-12T16:05:28.823548+00:00",
+    "ndvi_stats": {
+      "min": -0.3110344409942627,
+      "max": 0.9496814012527466,
+      "mean": 0.4784910501296584,
+      "std": 0.2724175616729048,
+      "valid_pixels": 3142700
+    },
+    "source": {
+      "area": {
+        "geocode_query": "Yahotyn, Kyiv Oblast, Ukraine",
+        "display_name": "Яготин, Яготинська міська громада, Бориспільський район, Київська область, Україна",
+        "osm_type": "relation",
+        "osm_id": 1954883,
+        "centre": [
+          31.7634861,
+          50.2758913
+        ],
+        "area_definition": "town-centre point +/- 0.1 deg",
+        "bbox": [
+          31.663486,
+          50.175891,
+          31.863486,
+          50.375891
+        ]
+      },
+      "raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/sentinel2_yahotyn.tif",
+        "sha256": "377e1d5ddc582d97430f8345e2d3b257f992a329244a4171f1a7a5fae7310663",
+        "crs": "EPSG:4326",
+        "width": 1423,
+        "height": 2212,
+        "bounds": [
+          31.663486,
+          50.175891,
+          31.863486,
+          50.375891
+        ],
+        "cloud_fraction_scl": 0.0,
+        "gsd_m": [
+          9.999109893655351,
+          9.997649186256924
+        ],
+        "masked_pixels": 0
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/ndvi_sentinel2_yahotyn.tif",
+      "reprojected_raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000035_200035/ndvi_sentinel2_yahotyn_utm.tif",
+        "sha256": "c7fe3bb1d530fa43d552049a5fef0090ece0665c031132c2e1e2b185ba80b9b4",
+        "crs": "EPSG:32636",
+        "width": 1456,
+        "height": 2238,
+        "pixel_size_m": [
+          10.043054605661672,
+          10.043054605661672
+        ],
+        "fill_pixels_excluded": 115828
+      }
+    },
+    "correction": "Re-fetched at true ~10 m pixels over the town surroundings; previous reference used default 512x512 output (coarser than 10 m) and unmasked NDVI.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000035_200035_tool_calls.json"
+  },
+  "TASK_260427_000036_200036": {
+    "task_ID": "TASK_260427_000036_200036",
+    "task_text": "Query the ESA Science Strategy for its objectives on food security and vegetation monitoring, then download a Sentinel-2 image of the agricultural area around Mopti, Mali for August 2023 with bands B8 and B4 at 10 m resolution, compute NDVI from it, and calculate per-band statistics on the NDVI result.",
+    "recorded_at_utc": "2026-10-12T16:05:42.110717+00:00",
+    "ndvi_stats": {
+      "min": -0.18240618155943705,
+      "max": 0.9379615946952745,
+      "mean": 0.4025036208557903,
+      "std": 0.14249020799015372,
+      "valid_pixels": 4769071
+    },
+    "source": {
+      "area": {
+        "geocode_query": "Mopti, Mali",
+        "display_name": "Mopti, Mali",
+        "osm_type": "relation",
+        "osm_id": 2096899,
+        "centre": [
+          -3.6464581,
+          14.514489
+        ],
+        "area_definition": "town-centre point +/- 0.1 deg",
+        "bbox": [
+          -3.746458,
+          14.414489,
+          -3.546458,
+          14.614489
+        ]
+      },
+      "raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260427_000036_200036/sentinel2_mopti.tif",
+        "sha256": "6875da539ecf503415c8baab9b4ab5f12ce14b2909df3bab673f45f8b04cb349",
+        "crs": "EPSG:4326",
+        "width": 2156,
+        "height": 2212,
+        "bounds": [
+          -3.746458,
+          14.414489,
+          -3.546458,
+          14.614489
+        ],
+        "cloud_fraction_scl": 5.8711631948521643e-05,
+        "gsd_m": [
+          9.996952088326747,
+          9.997649186256835
+        ],
+        "masked_pixels": 1
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260427_000036_200036/ndvi_sentinel2_mopti.tif"
+    },
+    "correction": "Re-fetched at true ~10 m pixels over the town surroundings; previous reference used default 512x512 output (coarser than 10 m) and unmasked NDVI.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260427_000036_200036_tool_calls.json"
+  },
+  "TASK_260713_000025_400025": {
+    "task_ID": "TASK_260713_000025_400025",
+    "task_text": "Download a Sentinel-2 image with NIR (B8) and Red (B4) bands for the agricultural area near Lodi in the Po Valley, Lombardy, Italy for June-August 2023 at 10 m resolution with less than 20% cloud cover. Compute NDVI from the downloaded image and save the result. Then report the mean, max, and standard deviation of NDVI for the study area.",
+    "recorded_at_utc": "2026-10-12T16:05:51.212625+00:00",
+    "ndvi_stats": {
+      "min": -0.42516556879568645,
+      "max": 0.99839529280909,
+      "mean": 0.5353845244920622,
+      "std": 0.26512397826673745,
+      "valid_pixels": 3468407
+    },
+    "source": {
+      "area": {
+        "geocode_query": "Lodi, Lombardy, Italy",
+        "display_name": "Lodi, Lombardia, Italia",
+        "osm_type": "relation",
+        "osm_id": 44181,
+        "centre": [
+          9.4916781,
+          45.2613104
+        ],
+        "area_definition": "town-centre point +/- 0.1 deg",
+        "bbox": [
+          9.391678,
+          45.16131,
+          9.591678,
+          45.36131
+        ]
+      },
+      "raster": {
+        "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000025_400025/sentinel2_lodi.tif",
+        "sha256": "88f0d33c3658b623788933d6ff90912a4b848a88fa28bf82a3f1cc1c80737247",
+        "crs": "EPSG:4326",
+        "width": 1568,
+        "height": 2212,
+        "bounds": [
+          9.391678,
+          45.16131,
+          9.591678,
+          45.36131
+        ],
+        "cloud_fraction_scl": 0.0,
+        "gsd_m": [
+          9.994299979679244,
+          9.997649186256924
+        ],
+        "masked_pixels": 9
+      },
+      "ndvi_raster": "data/reference_corrections_20261012/artifacts/TASK_260713_000025_400025/ndvi_sentinel2_lodi.tif"
+    },
+    "correction": "Re-fetched at true ~10 m pixels over the town surroundings; previous reference used default 512x512 output (coarser than 10 m) and unmasked NDVI.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000025_400025_tool_calls.json"
+  },
+  "TASK_260713_000026_400026": {
+    "task_ID": "TASK_260713_000026_400026",
+    "task_text": "Download a Sentinel-2 image of W National Park in Niger for July 2023 with bands B2, B4, and B8 at 10 m resolution. Compute EVI (NIR = B8, Red = B4, Blue = B2) and save the result. Report the mean and maximum EVI values across the scene to assess overall vegetation productivity.",
+    "recorded_at_utc": "2026-10-12T16:13:21.462553+00:00",
+    "evi_stats": {
+      "min": -0.21596959630859203,
+      "max": 0.9973974075411077,
+      "mean": 0.3425147844398772,
+      "std": 0.10717740073242615,
+      "valid_pixels": 22305538
+    },
+    "formula": "2.5*(B08-B04)/(B08+6*B04-7.5*B02+1)",
+    "source": {
+      "area": {
+        "display_name": "Parc W du Niger, Say, Tillabéri, Niger",
+        "osm_type": "relation",
+        "osm_id": 2695663,
+        "area_definition": "OSM park boundary polygon"
+      },
+      "tiles": [
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_0.tif",
+          "sha256": "5a1a1d4e6f4a4cebf6009e4d235b4c48540aed4b537841bb992d19a482acc1bc",
+          "crs": "EPSG:4326",
+          "width": 2107,
+          "height": 1870,
+          "bounds": [
+            2.065015,
+            11.902544,
+            2.258488,
+            12.071659
+          ],
+          "cloud_fraction_scl": 0.004050922694659259,
+          "gsd_m": [
+            9.998945284574578,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_1.tif",
+          "sha256": "e15877e4d12a19314a69eeddb4d323d5fd56b4b9a0dc9a18bdcf85851d03f81c",
+          "crs": "EPSG:4326",
+          "width": 2107,
+          "height": 1870,
+          "bounds": [
+            2.258488,
+            11.902544,
+            2.451962,
+            12.071659
+          ],
+          "cloud_fraction_scl": 0.00083957473052646,
+          "gsd_m": [
+            9.998996965921773,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_2.tif",
+          "sha256": "088f8875c88d6900682972eed7aebc389b01dac0faea2751674e11fee606784a",
+          "crs": "EPSG:4326",
+          "width": 2107,
+          "height": 1870,
+          "bounds": [
+            2.451962,
+            11.902544,
+            2.645435,
+            12.071659
+          ],
+          "cloud_fraction_scl": 0.0,
+          "gsd_m": [
+            9.998945284574578,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_0_3.tif",
+          "sha256": "7a0dcbbfbf68c5b1ad0d3c7842a13787481a897eebb587f5fa7911b927f65792",
+          "crs": "EPSG:4326",
+          "width": 2107,
+          "height": 1870,
+          "bounds": [
+            2.645435,
+            11.902544,
+            2.838909,
+            12.071659
+          ],
+          "cloud_fraction_scl": 0.0022197462494511545,
+          "gsd_m": [
+            9.998996965921773,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_0.tif",
+          "sha256": "3ded5914956d41f6471328c3ab5dd458da4d22eb05dce0e1fc350ebb3e6c2e47",
+          "crs": "EPSG:4326",
+          "width": 2106,
+          "height": 1870,
+          "bounds": [
+            2.065015,
+            12.071659,
+            2.258488,
+            12.240774
+          ],
+          "cloud_fraction_scl": 0.0004225259127219912,
+          "gsd_m": [
+            9.997380336613823,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_1.tif",
+          "sha256": "f803f21c48ff0d147a329c019d6c91c3fb9ce349669884088633aeaa98eb7018",
+          "crs": "EPSG:4326",
+          "width": 2106,
+          "height": 1870,
+          "bounds": [
+            2.258488,
+            12.071659,
+            2.451962,
+            12.240774
+          ],
+          "cloud_fraction_scl": 0.0011302060321668164,
+          "gsd_m": [
+            9.997432009872304,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_2.tif",
+          "sha256": "32657c6f5dbfc4926582f1c518c36eb363541eb95a3256d93dd0b3bbcf93578e",
+          "crs": "EPSG:4326",
+          "width": 2106,
+          "height": 1870,
+          "bounds": [
+            2.451962,
+            12.071659,
+            2.645435,
+            12.240774
+          ],
+          "cloud_fraction_scl": 0.0004997181467769703,
+          "gsd_m": [
+            9.997380336613823,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_1_3.tif",
+          "sha256": "fdf29498c7b258ae56625cf60ba19f79e6612692be58f2c260d3fd711cf182c3",
+          "crs": "EPSG:4326",
+          "width": 2106,
+          "height": 1870,
+          "bounds": [
+            2.645435,
+            12.071659,
+            2.838909,
+            12.240774
+          ],
+          "cloud_fraction_scl": 6.094123741182565e-06,
+          "gsd_m": [
+            9.997432009872304,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_0.tif",
+          "sha256": "bec33714dc067a1f377d36b77ffa0e4d438d00cf217776e8bfd5bbb9f533b43b",
+          "crs": "EPSG:4326",
+          "width": 2105,
+          "height": 1870,
+          "bounds": [
+            2.065015,
+            12.240774,
+            2.258488,
+            12.40989
+          ],
+          "cloud_fraction_scl": 0.0,
+          "gsd_m": [
+            9.995726743990256,
+            9.999910472727315
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_1.tif",
+          "sha256": "adbdc3986bd668e53cbaa8daf4e4a690d09037e00d9be6e183b88518e18cd7f7",
+          "crs": "EPSG:4326",
+          "width": 2105,
+          "height": 1870,
+          "bounds": [
+            2.258488,
+            12.240774,
+            2.451962,
+            12.40989
+          ],
+          "cloud_fraction_scl": 0.0,
+          "gsd_m": [
+            9.995778408701847,
+            9.999910472727315
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_2.tif",
+          "sha256": "95fa7b9371fd5db05ff4edadcd29aba545334d56a2a8b812a0fb203a7dee6793",
+          "crs": "EPSG:4326",
+          "width": 2105,
+          "height": 1870,
+          "bounds": [
+            2.451962,
+            12.240774,
+            2.645435,
+            12.40989
+          ],
+          "cloud_fraction_scl": 0.0001442961118802952,
+          "gsd_m": [
+            9.995726743990256,
+            9.999910472727315
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_2_3.tif",
+          "sha256": "bf3ad3912baa15aa1dd4a2e1c35e755568a20a2ecac41fc37eddcd2fdcb60740",
+          "crs": "EPSG:4326",
+          "width": 2105,
+          "height": 1870,
+          "bounds": [
+            2.645435,
+            12.240774,
+            2.838909,
+            12.40989
+          ],
+          "cloud_fraction_scl": 7.824507475199106e-05,
+          "gsd_m": [
+            9.995778408701847,
+            9.999910472727315
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_0.tif",
+          "sha256": "b75ea75f25a082ae6d3fe30c8e481cc6d1af2e0fecc534744720bb8762778f84",
+          "crs": "EPSG:4326",
+          "width": 2103,
+          "height": 1870,
+          "bounds": [
+            2.065015,
+            12.40989,
+            2.258488,
+            12.579005
+          ],
+          "cloud_fraction_scl": 0.0,
+          "gsd_m": [
+            9.998736705957862,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_1.tif",
+          "sha256": "e8bb68d5f2885277c7bedd30e80497a6cb167a2b41731ad9043533314c98f6ac",
+          "crs": "EPSG:4326",
+          "width": 2103,
+          "height": 1870,
+          "bounds": [
+            2.258488,
+            12.40989,
+            2.451962,
+            12.579005
+          ],
+          "cloud_fraction_scl": 0.0,
+          "gsd_m": [
+            9.99878838622698,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_2.tif",
+          "sha256": "3af138ba2635daa54a2870886954b39e92f6d83066afacbe86b88644455561ac",
+          "crs": "EPSG:4326",
+          "width": 2103,
+          "height": 1870,
+          "bounds": [
+            2.451962,
+            12.40989,
+            2.645435,
+            12.579005
+          ],
+          "cloud_fraction_scl": 0.0017362514970973475,
+          "gsd_m": [
+            9.998736705957862,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        },
+        {
+          "path": "data/reference_corrections_20261012/artifacts/TASK_260713_000026_400026/sentinel2_w_park_tile_3_3.tif",
+          "sha256": "79f43e2738e8b89d27173c61a8b30e713d57078ddff995fadc69c8785104fe12",
+          "crs": "EPSG:4326",
+          "width": 2103,
+          "height": 1870,
+          "bounds": [
+            2.645435,
+            12.40989,
+            2.838909,
+            12.579005
+          ],
+          "cloud_fraction_scl": 0.0006896183450685422,
+          "gsd_m": [
+            9.99878838622698,
+            9.99985134224597
+          ],
+          "masked_pixels": 0
+        }
+      ],
+      "park_pixels": 22305554,
+      "valid_fraction_of_park": 0.9999992826898628,
+      "approx_cloud_fraction_scl_tile_weighted": 0.0005238472392550675
+    },
+    "correction": "Previous reference used ~150 m pixels over the bbox; now ~10 m over the park polygon.",
+    "reference_type": "corrected_reference_observation",
+    "masking_rule": "valid = dataMask==1 (or not all-zero bands) AND all used reflectance bands > 0; float64 index; statistics over valid pixels only; restricted to the park polygon; EVI outside [-1, 1] excluded as non-physical; no cloud masking (not requested)",
+    "evaluation_policy": "Stored values are one valid observation. Score candidates by recomputing the same statistics with the same masking rule on their own task-valid downloads; compare stored values only for identical scene, area, pixel size and mask.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000026_400026_tool_calls.json"
+  },
+  "TASK_260713_000014_600014": {
+    "task_ID": "TASK_260713_000014_600014",
+    "task_text": "Using the climate tool’s dataset catalogue, identify the dataset for future climate projections and the dataset for seasonal forecasts. Report each dataset identifier and its classification.",
+    "status": "extracted_from_current_server_catalogue",
+    "recorded_date": "2026-10-01",
+    "ground_truth_scope": "Two requested categories in the repository climate tool’s curated catalogue, not exhaustive live CDS holdings.",
+    "reference_dictionary": {
+      "projections-cmip6": "future climate projections",
+      "seasonal-original-single-levels": "seasonal forecasts"
+    },
+    "reference_count": 2,
+    "catalogue_snapshot": {
+      "projections-cmip6": {
+        "description": "CMIP6 climate model projections from multiple modelling centres. Various scenarios (SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5).",
+        "temporal_resolution": "varies (daily to monthly)",
+        "spatial_resolution": "varies by model",
+        "period": "1850–2100 (historical + projections)"
+      },
+      "seasonal-original-single-levels": {
+        "description": "Copernicus Climate Change Service seasonal forecast data on single levels.",
+        "temporal_resolution": "monthly",
+        "spatial_resolution": "varies by system",
+        "period": "varies by system"
+      }
+    },
+    "provenance": {
+      "tool": "list_cds_datasets",
+      "server_module": "src/agenticeoecosystem/servers/climate/server.py",
+      "server_sha256": "263ec44bc1110db6617b3f262d52c15e4e47ea3a2d9c309f0864e17c0d20ce85",
+      "extraction_method": "AST extraction of _CDS_DATASETS; no network request or download.",
+      "refresh_policy": "Review GT when the curated catalogue changes."
+    },
+    "evaluation_policy": {
+      "methods": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match",
+        "dataset_classification_accuracy"
+      ],
+      "normalization": "Ignore order and superficial formatting; accept equivalent classification wording, including climate projections/CMIP6 projections and seasonal predictions/forecasts. Dataset identifiers must resolve to the canonical entries.",
+      "pairing": "Check each identifier with its own classification; swapped labels are incorrect.",
+      "classification_score": "Correct required pairs / 2, on a 0–1 scale; missing pairs count as incorrect.",
+      "execution_status": "GT stored; validator and candidate scoring pending.",
+      "classification_aliases": {
+        "future climate projections": [
+          "future climate projections",
+          "climate projections",
+          "future projections",
+          "CMIP6 projections",
+          "climate model projections"
+        ],
+        "seasonal forecasts": [
+          "seasonal forecasts",
+          "seasonal forecast",
+          "seasonal predictions",
+          "seasonal prediction"
+        ]
+      },
+      "unrecognized_label_policy": "Normalize case/whitespace/punctuation and match explicit aliases. Ambiguous or unrecognized paraphrases require manual adjudication; record unresolved rather than silently using fuzzy/model matching as a deterministic score."
+    }
+  },
+  "TASK_260713_000025_500004": {
+    "task_ID": "TASK_260713_000025_500004",
+    "task_text": "First, list all node types available in the EOSS knowledge graph, then query for all Treaty nodes with their descriptions.",
+    "status": "retrieved_and_inventory_count_verified",
+    "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00",
+    "ground_truth_scope": "All node labels returned by the current EOSS graph and all nodes labelled Treaty, with their source descriptions. This uses the graph taxonomy, not an independent legal classification.",
+    "components": {
+      "node_types": {
+        "reference_set": [
+          "Acronym",
+          "AreaOfAction",
+          "EnablingTool",
+          "KnowledgeAdvancementObjective",
+          "NationalPolicy",
+          "ScienceQuestion",
+          "ScienceTheme",
+          "StrategicObjective",
+          "TippingPoint",
+          "Treaty"
+        ],
+        "reference_count": 10,
+        "source_counts_for_context_only": [
+          {
+            "label": "Acronym",
+            "count": 148
+          },
+          {
+            "label": "AreaOfAction",
+            "count": 4
+          },
+          {
+            "label": "EnablingTool",
+            "count": 5
+          },
+          {
+            "label": "KnowledgeAdvancementObjective",
+            "count": 167
+          },
+          {
+            "label": "NationalPolicy",
+            "count": 6
+          },
+          {
+            "label": "ScienceQuestion",
+            "count": 23
+          },
+          {
+            "label": "ScienceTheme",
+            "count": 6
+          },
+          {
+            "label": "StrategicObjective",
+            "count": 16
+          },
+          {
+            "label": "TippingPoint",
+            "count": 18
+          },
+          {
+            "label": "Treaty",
+            "count": 5
+          }
+        ],
+        "request": {
+          "name": "list_ontology_nodes",
+          "arguments": {}
+        },
+        "retrieved_at_utc": "2026-10-01T15:56:56.234635+00:00"
+      },
+      "treaties": {
+        "reference_set": [
+          {
+            "id": "CBD",
+            "name": "Convention on Biodiversity",
+            "description": "CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education."
+          },
+          {
+            "id": "EUGD",
+            "name": "EU Green Deal",
+            "description": "Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility."
+          },
+          {
+            "id": "PARIS",
+            "name": "Paris Agreement",
+            "description": "UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake."
+          },
+          {
+            "id": "SDG",
+            "name": "UN Sustainable Development Goals",
+            "description": "17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land."
+          },
+          {
+            "id": "SENDAI",
+            "name": "Sendai Framework",
+            "description": "Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness."
+          }
+        ],
+        "reference_count": 5,
+        "reference_key": "id",
+        "request": {
+          "name": "query_ontology",
+          "arguments": {
+            "cypher": "MATCH (t:Treaty) RETURN t.id AS id, t.name AS name, t.description AS description ORDER BY t.id"
+          }
+        },
+        "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00",
+        "aliases": {
+          "CBD": [
+            "CBD",
+            "Convention on Biodiversity",
+            "Convention on Biological Diversity"
+          ],
+          "EUGD": [
+            "EUGD",
+            "EU Green Deal",
+            "European Green Deal"
+          ],
+          "PARIS": [
+            "PARIS",
+            "Paris Agreement",
+            "UNFCCC Paris Agreement"
+          ],
+          "SDG": [
+            "SDG",
+            "SDGs",
+            "UN Sustainable Development Goals",
+            "United Nations Sustainable Development Goals"
+          ],
+          "SENDAI": [
+            "SENDAI",
+            "Sendai Framework",
+            "Sendai Framework for Disaster Risk Reduction"
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "server": {
+        "name": "EOSS GraphRAG",
+        "version": "3.3.1"
+      },
+      "endpoint_configuration_variable": "GRAPHRAG_MCP_URL",
+      "graph_version": null,
+      "snapshot_sha256": "2196b847387ac7bd9aad7d6e553f0d17bf33e64a9d7fa4b86c3e3b13c9d235e3",
+      "snapshot_scope": "Captured node-label counts and complete Treaty records; not a complete graph backup.",
+      "refresh_policy": "Use only with frozen/unchanged graph state; otherwise refresh and version both reference components."
+    },
+    "evaluation_policy": {
+      "set_metrics": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "component_reporting": "Score node types and Treaty identities separately; do not merge their sets.",
+      "description_comparison": "Match description to canonical Treaty ID, accept faithful paraphrase of source content rather than requiring verbatim wording. Description evaluation is distinct from identity metrics. Do not require external details absent from source.",
+      "node_counts": "Counts are provenance/completeness evidence, not an additional requested answer requirement.",
+      "normalization": "Normalize casing/spacing/punctuation and established aliases; deduplicate; ordering is not scored.",
+      "sequence": "Existing intermediate tool-order metrics may check node listing precedes Treaty query as explicitly requested. Do not prescribe exact Cypher syntax.",
+      "query_errors": "Infrastructure/unverified, not empty valid references.",
+      "execution_status": "Ground truth retrieved; candidate scores and description evaluator have not been run."
+    },
+    "raw_evidence": [
+      {
+        "request": {
+          "name": "list_ontology_nodes",
+          "arguments": {}
+        },
+        "response": {
+          "jsonrpc": "2.0",
+          "id": 103,
+          "result": {
+            "_meta": {
+              "fastmcp": {
+                "wrap_result": true
+              }
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+              }
+            ],
+            "structuredContent": {
+              "result": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+            },
+            "isError": false
+          }
+        },
+        "attempts": [
+          {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "result": {
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Error calling tool 'list_ontology_nodes': failed to send chunk data"
+                }
+              ],
+              "isError": true
+            }
+          },
+          {
+            "jsonrpc": "2.0",
+            "id": 103,
+            "result": {
+              "_meta": {
+                "fastmcp": {
+                  "wrap_result": true
+                }
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+                }
+              ],
+              "structuredContent": {
+                "result": "[\n  {\n    \"label\": \"Acronym\",\n    \"count\": 148\n  },\n  {\n    \"label\": \"AreaOfAction\",\n    \"count\": 4\n  },\n  {\n    \"label\": \"EnablingTool\",\n    \"count\": 5\n  },\n  {\n    \"label\": \"KnowledgeAdvancementObjective\",\n    \"count\": 167\n  },\n  {\n    \"label\": \"NationalPolicy\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"ScienceQuestion\",\n    \"count\": 23\n  },\n  {\n    \"label\": \"ScienceTheme\",\n    \"count\": 6\n  },\n  {\n    \"label\": \"StrategicObjective\",\n    \"count\": 16\n  },\n  {\n    \"label\": \"TippingPoint\",\n    \"count\": 18\n  },\n  {\n    \"label\": \"Treaty\",\n    \"count\": 5\n  }\n]"
+              },
+              "isError": false
+            }
+          }
+        ],
+        "retrieved_at_utc": "2026-10-01T15:56:56.234635+00:00"
+      },
+      {
+        "request": {
+          "name": "query_ontology",
+          "arguments": {
+            "cypher": "MATCH (t:Treaty) RETURN t.id AS id, t.name AS name, t.description AS description ORDER BY t.id"
+          }
+        },
+        "response": {
+          "jsonrpc": "2.0",
+          "id": 4,
+          "result": {
+            "_meta": {
+              "fastmcp": {
+                "wrap_result": true
+              }
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+              }
+            ],
+            "structuredContent": {
+              "result": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+            },
+            "isError": false
+          }
+        },
+        "attempts": [
+          {
+            "jsonrpc": "2.0",
+            "id": 4,
+            "result": {
+              "_meta": {
+                "fastmcp": {
+                  "wrap_result": true
+                }
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+                }
+              ],
+              "structuredContent": {
+                "result": "[\n  {\n    \"id\": \"CBD\",\n    \"name\": \"Convention on Biodiversity\",\n    \"description\": \"CBD. Key articles: Art 6 Conservation measures, Art 7 Identification/Monitoring, Art 8 In-situ conservation, Art 9 Ex-situ conservation, Art 11 Incentives, Art 13 Public education.\"\n  },\n  {\n    \"id\": \"EUGD\",\n    \"name\": \"EU Green Deal\",\n    \"description\": \"Net Zero by 2050, Clean energy, Circular economy, Energy efficiency, Zero pollution, Ecosystems and biodiversity, Farm to fork, Sustainable mobility.\"\n  },\n  {\n    \"id\": \"PARIS\",\n    \"name\": \"Paris Agreement\",\n    \"description\": \"UNFCCC Paris Agreement. Key articles: Art 4 Mitigation, Art 5 Sinks/reservoirs, Art 7 Adaptation, Art 8 Loss/damage, Art 12 Public engagement, Art 13 Transparency, Art 14 Global Stocktake.\"\n  },\n  {\n    \"id\": \"SDG\",\n    \"name\": \"UN Sustainable Development Goals\",\n    \"description\": \"17 SDGs including SDG6 Clean water, SDG7 Clean energy, SDG11 Sustainable cities, SDG13 Climate action, SDG14 Life below water, SDG15 Life on land.\"\n  },\n  {\n    \"id\": \"SENDAI\",\n    \"name\": \"Sendai Framework\",\n    \"description\": \"Sendai Framework on Disaster Risk Reduction. Priority 1: Understanding risk, Priority 2: Governance, Priority 3: Investment in resilience, Priority 4: Preparedness.\"\n  }\n]"
+              },
+              "isError": false
+            }
+          }
+        ],
+        "retrieved_at_utc": "2026-10-01T15:56:56.333556+00:00"
+      }
+    ]
+  },
+  "TASK_260713_000026_500005": {
+    "task_ID": "TASK_260713_000026_500005",
+    "task_text": "List all enabling tools identified in the ESA Earth Observation Science Strategy.",
+    "status": "retrieved_inventory",
+    "retrieved_at_utc": "2026-10-01T15:00:20.242686+00:00",
+    "ground_truth_scope": "All EnablingTool nodes listed by the EOSS knowledge graph; no ScienceQuestion-link restriction.",
+    "reference_set": [
+      {
+        "id": "ET-01",
+        "name": "Partnerships and Cooperation"
+      },
+      {
+        "id": "ET-02",
+        "name": "Community Approach to Science"
+      },
+      {
+        "id": "ET-03",
+        "name": "STEM Education, Training and Outreach"
+      },
+      {
+        "id": "ET-04",
+        "name": "Commercial Space Links"
+      },
+      {
+        "id": "ET-05",
+        "name": "Open Science and Digital Innovation"
+      }
+    ],
+    "reference_count": 5,
+    "reference_key": "id; map candidate names and harmless formatting variants to canonical inventory IDs",
+    "query": {
+      "name": "list_ontology_nodes",
+      "arguments": {
+        "label": "EnablingTool"
+      }
+    },
+    "provenance": {
+      "server": {
+        "name": "EOSS GraphRAG",
+        "version": "3.3.1"
+      },
+      "endpoint_configuration_variable": "GRAPHRAG_MCP_URL",
+      "auth_configuration_variable": "GRAPHRAG_AUTH_HEADER",
+      "graph_version": null,
+      "snapshot_sha256": "b5a961b76a044ac79d96cf0ffb76bab4070cc1333c9996dbaad91ed1c551b011",
+      "snapshot_scope": "Captured complete EnablingTool inventory response, not a complete graph backup.",
+      "refresh_policy": "Only compare to this frozen snapshot if graph state is unchanged or deliberately frozen. Otherwise refresh and version the reference."
+    },
+    "service_notes": [
+      "Inventory listing succeeded with five enabling-tool nodes. Historical direct-link query failures and empty successful results are retained only for provenance, not as current scoring targets."
+    ],
+    "evaluation_policy": {
+      "metrics": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "normalization": "Canonicalize names or IDs, normalize whitespace/case/Unicode/punctuation, deduplicate. Preserve semantic identity; ambiguous approximate matches require review rather than automatic acceptance.",
+      "expected_answer": "All five inventory tools; order and descriptions are not scored.",
+      "source_snapshot": "Compare to captured inventory only while the source graph state is unchanged/frozen; otherwise refresh/version the reference.",
+      "query_errors": "Record as infrastructure error, not an empty valid reference.",
+      "full_task": "Only list the enabling tools. No context retrieval, separate summary, direct relationships, descriptions or tool-call ordering required."
+    },
+    "raw_evidence": {
+      "relationship_query": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "_meta": {
+            "fastmcp": {
+              "wrap_result": true
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "[]"
+            }
+          ],
+          "structuredContent": {
+            "result": "[]"
+          },
+          "isError": false
+        }
+      },
+      "count_query": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "_meta": {
+            "fastmcp": {
+              "wrap_result": true
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "[\n  {\n    \"linked_tool_count\": 0,\n    \"direct_link_count\": 0\n  }\n]"
+            }
+          ],
+          "structuredContent": {
+            "result": "[\n  {\n    \"linked_tool_count\": 0,\n    \"direct_link_count\": 0\n  }\n]"
+          },
+          "isError": false
+        }
+      },
+      "node_inventory": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "_meta": {
+            "fastmcp": {
+              "wrap_result": true
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "[\n  {\n    \"id\": \"ET-01\",\n    \"name\": \"Partnerships and Cooperation\",\n    \"description\": \"Strategic partnerships with national agencies, EUMETSAT, NASA, JAXA, European Commission, UN organisations and international financial institutions.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-02\",\n    \"name\": \"Community Approach to Science\",\n    \"description\": \"ESA Science Clusters and Earth System Science Hub for collaborative scientific research.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-03\",\n    \"name\": \"STEM Education, Training and Outreach\",\n    \"description\": \"Strengthen STEM education and training programmes at all levels, and maximise outreach of EO science results.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-04\",\n    \"name\": \"Commercial Space Links\",\n    \"description\": \"Explore potential of commercial space missions to support Earth system understanding, with scientific data quality metrics.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-05\",\n    \"name\": \"Open Science and Digital Innovation\",\n    \"description\": \"FAIR principles, AI/ML, HPC, Quantum Computing, Digital Twin Earth, open innovation ecosystem.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  }\n]"
+            }
+          ],
+          "structuredContent": {
+            "result": "[\n  {\n    \"id\": \"ET-01\",\n    \"name\": \"Partnerships and Cooperation\",\n    \"description\": \"Strategic partnerships with national agencies, EUMETSAT, NASA, JAXA, European Commission, UN organisations and international financial institutions.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-02\",\n    \"name\": \"Community Approach to Science\",\n    \"description\": \"ESA Science Clusters and Earth System Science Hub for collaborative scientific research.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-03\",\n    \"name\": \"STEM Education, Training and Outreach\",\n    \"description\": \"Strengthen STEM education and training programmes at all levels, and maximise outreach of EO science results.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-04\",\n    \"name\": \"Commercial Space Links\",\n    \"description\": \"Explore potential of commercial space missions to support Earth system understanding, with scientific data quality metrics.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  },\n  {\n    \"id\": \"ET-05\",\n    \"name\": \"Open Science and Digital Innovation\",\n    \"description\": \"FAIR principles, AI/ML, HPC, Quantum Computing, Digital Twin Earth, open innovation ecosystem.\",\n    \"meaning\": null,\n    \"selected_for_observables\": null\n  }\n]"
+          },
+          "isError": false
+        }
+      }
+    },
+    "equivalent_cypher": "MATCH (et:EnablingTool) RETURN et.id AS id, et.name AS name ORDER BY et.id",
+    "historical_direct_link_diagnostic": {
+      "previous_task_text": "Search the EOSS knowledge base for content about 'enabling tools for Earth observation', then run a structured Cypher query to retrieve all EnablingTool nodes linked to ScienceQuestion nodes.",
+      "previous_scope": "Direct undirected EnablingTool-to-ScienceQuestion links, matching the existing reference query. This is not the set of all enabling tools.",
+      "previous_query": {
+        "name": "query_ontology",
+        "arguments": {
+          "cypher": "MATCH (et:EnablingTool)-[r]-(sq:ScienceQuestion) RETURN et.id AS tool_id, et.name AS tool, sq.id AS science_question_id, sq.name AS science_question, type(r) AS relationship ORDER BY tool, science_question"
+        }
+      },
+      "previous_reference_set": [],
+      "previous_count_verification": {
+        "request": {
+          "name": "query_ontology",
+          "arguments": {
+            "cypher": "MATCH (et:EnablingTool)-[]-(sq:ScienceQuestion) RETURN count(DISTINCT et) AS linked_tool_count, count(*) AS direct_link_count"
+          }
+        },
+        "result": [
+          {
+            "linked_tool_count": 0,
+            "direct_link_count": 0
+          }
+        ]
+      },
+      "note": "Historical diagnostic only; never use this empty linked-node set to score the revised inventory question."
+    },
+    "inventory_metadata": [
+      {
+        "id": "ET-01",
+        "name": "Partnerships and Cooperation",
+        "description": "Strategic partnerships with national agencies, EUMETSAT, NASA, JAXA, European Commission, UN organisations and international financial institutions.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ET-02",
+        "name": "Community Approach to Science",
+        "description": "ESA Science Clusters and Earth System Science Hub for collaborative scientific research.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ET-03",
+        "name": "STEM Education, Training and Outreach",
+        "description": "Strengthen STEM education and training programmes at all levels, and maximise outreach of EO science results.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ET-04",
+        "name": "Commercial Space Links",
+        "description": "Explore potential of commercial space missions to support Earth system understanding, with scientific data quality metrics.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ET-05",
+        "name": "Open Science and Digital Innovation",
+        "description": "FAIR principles, AI/ML, HPC, Quantum Computing, Digital Twin Earth, open innovation ecosystem.",
+        "meaning": null,
+        "selected_for_observables": null
+      }
+    ]
+  },
+  "TASK_260713_000039_500018": {
+    "task_ID": "TASK_260713_000039_500018",
+    "task_text": "What MSG SEVIRI product variants are available on the EUMETSAT server and what satpy reader should be used to open them?",
+    "status": "extracted_from_current_server_catalogue",
+    "retrieved_at_utc": "2026-10-01T16:01:59.557350+00:00",
+    "ground_truth_scope": "MSG SEVIRI variants exposed by this repository server, not all EUMETSAT holdings.",
+    "reference_dictionary": {
+      "MSG-SEVIRI-L1-HRY": "seviri_l1b_hrit",
+      "MSG-SEVIRI-L1-IODC": "seviri_l1b_hrit",
+      "MSG-SEVIRI-RSS": "seviri_l1b_hrit"
+    },
+    "reference_count": 3,
+    "products": {
+      "MSG-SEVIRI-L1-HRY": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI",
+        "advertised_satpy_reader": "seviri_l1b_hrit",
+        "native_format_reader": "seviri_l1b_native",
+        "aliases": [
+          "MSG-SEVIRI-L1-HRY",
+          "Prime",
+          "MSG SEVIRI Prime",
+          "HRSEVIRI",
+          "EO:EUM:DAT:MSG:HRSEVIRI"
+        ],
+        "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+      },
+      "MSG-SEVIRI-L1-IODC": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI-IODC",
+        "advertised_satpy_reader": "seviri_l1b_hrit",
+        "native_format_reader": "seviri_l1b_native",
+        "aliases": [
+          "MSG-SEVIRI-L1-IODC",
+          "IODC",
+          "MSG SEVIRI IODC",
+          "HRSEVIRI-IODC",
+          "EO:EUM:DAT:MSG:HRSEVIRI-IODC"
+        ],
+        "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+      },
+      "MSG-SEVIRI-RSS": {
+        "product_id": "EO:EUM:DAT:MSG:MSG15-RSS",
+        "advertised_satpy_reader": "seviri_l1b_hrit",
+        "native_format_reader": "seviri_l1b_native",
+        "aliases": [
+          "MSG-SEVIRI-RSS",
+          "RSS",
+          "Rapid Scan Service",
+          "MSG15-RSS",
+          "EO:EUM:DAT:MSG:MSG15-RSS"
+        ],
+        "reader_acceptance": "Accept advertised reader for catalogue answer; accept native reader when explicitly qualified for native .nat archives. Do not treat readers as interchangeable for every format."
+      }
+    },
+    "reader_fallbacks": {
+      "seviri_l1b_hrit": "seviri_l1b_native"
+    },
+    "provenance": {
+      "tool": "list_eumetsat_products",
+      "extraction_method": "Executed the exact tool function against AST-extracted static products_list constants without importing downloader clients or starting the MCP server. No live EUMETSAT API/download called.",
+      "catalogue_module": ".venv/lib/python3.12/site-packages/eumetsearch/data_collection/downloader.py",
+      "catalogue_version": "0.1.3",
+      "catalogue_sha256": "d1c4ace3d9a99f1f783786a6595038dcbee647506bf2085f221693420831d19c",
+      "server_module": "src/agenticeoecosystem/servers/eumetsat/server.py",
+      "server_sha256": "a004b3691cdf1f42883eb09d2cb3a1c23bf77247d8c93a35be82bd27b50bf0a6",
+      "snapshot_sha256": "271a37046958a2a79db81b050ff88ff1e6e6531574160c7e38095722e53cf6bc",
+      "refresh_policy": "Refresh when installed eumetsearch catalogue or server reader handling changes."
+    },
+    "evaluation_policy": {
+      "product_set_metrics": [
+        "set_precision",
+        "set_recall",
+        "set_f1",
+        "exact_set_match"
+      ],
+      "reader_dictionary_metric": "product_reader_mapping_accuracy",
+      "normalization": "Resolve product names, keys and collection-ID aliases to canonical keys. Normalize formatting; reader identifiers must identify the correct reader.",
+      "pairing": "Check each product-reader pair, not independent sets of products and readers. Missing products count in set recall; report mapping coverage separately rather than hiding omissions.",
+      "format_exception": "seviri_l1b_native is valid for native .nat files, as the server fallback indicates; seviri_l1b_hrit is the advertised reader and is appropriate for HRIT data. Accept explanations distinguishing the two.",
+      "not_required": "No download, format inspection, numeric statistics or product-availability precondition is requested.",
+      "execution_status": "GT retrieved; candidate scoring/validator not run."
+    },
+    "catalogue_snapshot": {
+      "MSG-SEVIRI-L1-HRY": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134",
+          "HRV"
+        ]
+      },
+      "MSG-SEVIRI-L1-IODC": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI-IODC",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134",
+          "HRV"
+        ]
+      },
+      "MSG-SEVIRI-RSS": {
+        "product_id": "EO:EUM:DAT:MSG:MSG15-RSS",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134"
+        ]
+      }
+    }
+  },
+  "TASK_260427_000017_200017": {
+    "task_ID": "TASK_260427_000017_200017",
+    "area_km2": 78.54072295863718,
+    "area_m2": 78540722.95863718,
+    "reference_type": "fixed_geometry",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T09:47:30.963601+00:00",
+      "centre": [
+        625000,
+        9000000
+      ],
+      "centre_crs": "EPSG:32722",
+      "buffer_crs": "EPSG:32722",
+      "radius_m": 5000,
+      "quad_segs": 32,
+      "ellipsoid": "WGS84",
+      "geometry_path": "output/ground_truth/buffer_references/TASK_260427_000017_200017.wkt",
+      "geometry_sha256": "87c19693225f31ec16ecc414324bc651efa48b4be38488a90deb1773fbf6b6ad"
+    },
+    "evaluation_policy": "Accept task-valid alternative buffer discretization or independently geocoded facility centre. Recompute from the verified candidate geometry when construction differs; do not require incidental reference coordinates."
+  },
+  "TASK_260713_000019_400019": {
+    "task_ID": "TASK_260713_000019_400019",
+    "area_km2": 28.26582732102014,
+    "area_m2": 28265827.32102014,
+    "reference_type": "documented_geometry_observation",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T09:47:31.480547+00:00",
+      "centre": [
+        30.0989,
+        51.3894
+      ],
+      "centre_crs": "EPSG:4326",
+      "buffer_crs": "EPSG:32636",
+      "radius_m": 3000,
+      "quad_segs": 64,
+      "ellipsoid": "WGS84",
+      "geometry_path": "output/ground_truth/buffer_references/TASK_260713_000019_400019.wkt",
+      "geometry_sha256": "a1d0b141d230cf7042cd4af9286922b2ffdd094aeac25f369c4ebe2c83daa6db"
+    },
+    "evaluation_policy": "Accept task-valid alternative buffer discretization or independently geocoded facility centre. Recompute from the verified candidate geometry when construction differs; do not require incidental reference coordinates."
+  },
+  "TASK_260713_000053_600053": {
+    "daily_values": {
+      "2021-08-01": 0.00013345152547117323,
+      "2021-08-02": 1.7192338418681175e-05,
+      "2021-08-03": 0.0001133614860009402,
+      "2021-08-04": 2.2112667465989944e-06,
+      "2021-08-05": 2.8819829367421335e-07,
+      "2021-08-06": 3.143981430753229e-08,
+      "2021-08-07": 0.0,
+      "2021-08-08": 4.522093149716966e-06,
+      "2021-08-09": 2.169346998925903e-06,
+      "2021-08-10": 2.1944988475297578e-05,
+      "2021-08-11": 5.6591663451399654e-05,
+      "2021-08-12": 4.925570920022437e-07,
+      "2021-08-13": 8.551104838261381e-05,
+      "2021-08-14": 0.00012794956273864955,
+      "2021-08-15": 2.777183567559405e-07,
+      "2021-08-16": 1.988044095924124e-05,
+      "2021-08-17": 5.480483378050849e-05,
+      "2021-08-18": 0.00015399220865219831,
+      "2021-08-19": 0.00020222087914589792,
+      "2021-08-20": 0.00016193075862247497,
+      "2021-08-21": 0.00019776166300289333,
+      "2021-08-22": 4.049971903441474e-05,
+      "2021-08-23": 1.8392290712654358e-06,
+      "2021-08-24": 3.0355138733284548e-05,
+      "2021-08-25": 0.0001570471067680046,
+      "2021-08-26": 0.001047024386934936,
+      "2021-08-27": 0.00014108092000242323,
+      "2021-08-28": 0.00047019810881465673,
+      "2021-08-29": 0.00025530700804665685,
+      "2021-08-30": 9.91454508039169e-05,
+      "2021-08-31": 1.0438017852720805e-05
+    },
+    "task_ID": "TASK_260713_000053_600053",
+    "units": "m",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:19:58.886667+00:00",
+      "source": {
+        "path": "output/era5/precip/era5_hourly_precip_sicily_2021_08.nc",
+        "sha256": "b52f3cb89296fb4f11beeede66de78154798233c155c29f0ee92d82b92f9712b"
+      },
+      "variable": "tp",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/era5/precip/era5_hourly_precip_sicily_2021_08.nc",
+        "sha256": "b52f3cb89296fb4f11beeede66de78154798233c155c29f0ee92d82b92f9712b"
+      },
+      "month": "2021-08",
+      "original_samples": 744,
+      "input_variable_attributes": {
+        "GRIB_paramId": 228,
+        "GRIB_dataType": "fc",
+        "GRIB_numberOfPoints": 91,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "accum",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 13,
+        "GRIB_Ny": 7,
+        "GRIB_cfName": "unknown",
+        "GRIB_cfVarName": "tp",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 38.25,
+        "GRIB_latitudeOfLastGridPointInDegrees": 36.75,
+        "GRIB_longitudeOfFirstGridPointInDegrees": 12.5,
+        "GRIB_longitudeOfLastGridPointInDegrees": 15.5,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "Total precipitation",
+        "GRIB_shortName": "tp",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "m",
+        "long_name": "Total precipitation",
+        "units": "m",
+        "standard_name": "unknown",
+        "GRIB_surface": 0.0
+      },
+      "operation": "daily_sum",
+      "selected_grid_cell_centres": {
+        "west": 12.5,
+        "south": 36.75,
+        "east": 15.5,
+        "north": 38.25
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000061_600061": {
+    "regional_mean": 0.011737614870071411,
+    "task_ID": "TASK_260713_000061_600061",
+    "units": "m",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:19:58.931604+00:00",
+      "source": {
+        "path": "output/ground_truth/city_climate/600061.nc",
+        "sha256": "8491a58abdd3b87f4e857602ebcf0e271db0ab936b4005ef5b9a52a268e2b126"
+      },
+      "variable": "tp",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/ground_truth/city_climate/600061.nc",
+        "sha256": "8491a58abdd3b87f4e857602ebcf0e271db0ab936b4005ef5b9a52a268e2b126"
+      },
+      "month": "2022-08",
+      "original_samples": 744,
+      "input_variable_attributes": {
+        "GRIB_paramId": 228,
+        "GRIB_dataType": "fc",
+        "GRIB_numberOfPoints": 16,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "accum",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 4,
+        "GRIB_Ny": 4,
+        "GRIB_cfName": "unknown",
+        "GRIB_cfVarName": "tp",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 42.0,
+        "GRIB_latitudeOfLastGridPointInDegrees": 41.25,
+        "GRIB_longitudeOfFirstGridPointInDegrees": -8.75,
+        "GRIB_longitudeOfLastGridPointInDegrees": -8.0,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "Total precipitation",
+        "GRIB_shortName": "tp",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "m",
+        "long_name": "Total precipitation",
+        "units": "m",
+        "standard_name": "unknown",
+        "GRIB_surface": 0.0
+      },
+      "operation": "monthly_hourly_sum",
+      "selected_grid_cell_centres": {
+        "west": -8.75,
+        "south": 41.25,
+        "east": -8.0,
+        "north": 42.0
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000062_600062": {
+    "regional_mean": 293.78607177734375,
+    "task_ID": "TASK_260713_000062_600062",
+    "units": "K",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:19:58.993307+00:00",
+      "source": {
+        "path": "output/ground_truth/city_climate/600062.nc",
+        "sha256": "2c6c948564465daad64a029cfec4c882ea05d12458fad086f032aa2bad228ec6"
+      },
+      "variable": "t2m",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/ground_truth/city_climate/600062.nc",
+        "sha256": "2c6c948564465daad64a029cfec4c882ea05d12458fad086f032aa2bad228ec6"
+      },
+      "month": "2022-07",
+      "original_samples": 744,
+      "input_variable_attributes": {
+        "GRIB_paramId": 167,
+        "GRIB_dataType": "an",
+        "GRIB_numberOfPoints": 16,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "instant",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 4,
+        "GRIB_Ny": 4,
+        "GRIB_cfName": "unknown",
+        "GRIB_cfVarName": "t2m",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 46.25,
+        "GRIB_latitudeOfLastGridPointInDegrees": 45.5,
+        "GRIB_longitudeOfFirstGridPointInDegrees": 5.75,
+        "GRIB_longitudeOfLastGridPointInDegrees": 6.5,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "2 metre temperature",
+        "GRIB_shortName": "2t",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "K",
+        "long_name": "2 metre temperature",
+        "units": "K",
+        "standard_name": "unknown",
+        "GRIB_surface": 0.0
+      },
+      "operation": "monthly_hourly_mean",
+      "selected_grid_cell_centres": {
+        "west": 5.75,
+        "south": 45.5,
+        "east": 6.5,
+        "north": 46.25
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000063_600063": {
+    "task_ID": "TASK_260713_000063_600063",
+    "task_text": "Download ERA5 daily total precipitation over the Sahel region for July 2022, aggregate the daily values into a monthly precipitation total. Report the regional mean monthly accumulated precipitation: the unweighted mean of per-cell monthly totals across valid grid cells, with units.",
+    "recorded_at_utc": "2026-10-12T16:11:19.211228+00:00",
+    "regional_mean": 0.08687035739421844,
+    "units": "m",
+    "source": {
+      "region": {
+        "region_name": "sahel",
+        "bbox": "-18.0,10.0,40.0,20.0",
+        "bbox_array": [
+          -18.0,
+          10.0,
+          40.0,
+          20.0
+        ]
+      },
+      "cells": 9553,
+      "time_steps": 31,
+      "grid_cell_centres": {
+        "west": -18.0,
+        "east": 40.0,
+        "south": 10.0,
+        "north": 20.0
+      },
+      "units": "m",
+      "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000063_600063/tp_600063.nc",
+      "sha256": "d0e844b48f2b1bf8fd1defaa56feaa421b4f4de9b20185eb0fc066304a5959ce"
+    },
+    "aggregation": "per-cell temporal sum, then unweighted mean over finite cells",
+    "correction": "Previous reference came from an older file whose region did not match resolve_named_region(\"Sahel\").",
+    "reference_type": "replayed_reference_workflow",
+    "evaluation_policy": "Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000063_600063_tool_calls.json"
+  },
+  "TASK_260713_000067_600067": {
+    "regional_mean": 300.2471923828125,
+    "task_ID": "TASK_260713_000067_600067",
+    "units": "K",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:19:59.173440+00:00",
+      "source": {
+        "path": "output/era5/malta_temperature/malta_2m_temp_daily_2023_07.nc",
+        "sha256": "1e7ae5fa648b718aa22112dac5269500aafbcb92bfa621e74a57efca34a55b6f"
+      },
+      "variable": "t2m",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/era5/malta_temperature/malta_2m_temp_daily_2023_07.nc",
+        "sha256": "1e7ae5fa648b718aa22112dac5269500aafbcb92bfa621e74a57efca34a55b6f"
+      },
+      "month": "2023-07",
+      "original_samples": 31,
+      "input_variable_attributes": {
+        "GRIB_paramId": 167,
+        "GRIB_dataType": "an",
+        "GRIB_numberOfPoints": 2,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "instant",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 2,
+        "GRIB_Ny": 1,
+        "GRIB_cfName": "unknown",
+        "GRIB_cfVarName": "t2m",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 36.0,
+        "GRIB_latitudeOfLastGridPointInDegrees": 36.0,
+        "GRIB_longitudeOfFirstGridPointInDegrees": 14.25,
+        "GRIB_longitudeOfLastGridPointInDegrees": 14.5,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "2 metre temperature",
+        "GRIB_shortName": "2t",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "K",
+        "long_name": "2 metre temperature",
+        "units": "K",
+        "standard_name": "unknown",
+        "GRIB_surface": 0.0
+      },
+      "operation": "monthly_daily_mean",
+      "selected_grid_cell_centres": {
+        "west": 14.25,
+        "south": 36.0,
+        "east": 14.5,
+        "north": 36.0
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000068_600068": {
+    "daily_values": {
+      "2023-01-01": 102353.8046875,
+      "2023-01-02": 102575.1875,
+      "2023-01-03": 102711.7109375,
+      "2023-01-04": 102552.796875,
+      "2023-01-05": 102447.0078125,
+      "2023-01-06": 102103.546875,
+      "2023-01-07": 102103.2421875,
+      "2023-01-08": 102317.7109375,
+      "2023-01-09": 102275.515625,
+      "2023-01-10": 102637.5234375,
+      "2023-01-11": 103251.609375,
+      "2023-01-12": 102997.3984375,
+      "2023-01-13": 102610.703125,
+      "2023-01-14": 102783.0703125,
+      "2023-01-15": 104070.5546875,
+      "2023-01-16": 103895.46875,
+      "2023-01-17": 103529.65625,
+      "2023-01-18": 103607.4765625,
+      "2023-01-19": 103537.0,
+      "2023-01-20": 103096.2265625,
+      "2023-01-21": 102897.46875,
+      "2023-01-22": 102920.640625,
+      "2023-01-23": 102425.703125,
+      "2023-01-24": 102544.453125,
+      "2023-01-25": 102917.078125,
+      "2023-01-26": 103216.7265625,
+      "2023-01-27": 103642.578125,
+      "2023-01-28": 103622.3125,
+      "2023-01-29": 103258.5234375,
+      "2023-01-30": 103049.7265625,
+      "2023-01-31": 103136.828125
+    },
+    "task_ID": "TASK_260713_000068_600068",
+    "units": "Pa",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:19:59.243864+00:00",
+      "source": {
+        "path": "output/era5/mslp_6hourly_azores_2023_01.nc",
+        "sha256": "d7b6d1b762b022d1dd6db370c88a3a7f9c4c3b3f7b4cf5fcf7cdeb03c4f196ea"
+      },
+      "variable": "msl",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/era5/mslp_6hourly_azores_2023_01.nc",
+        "sha256": "d7b6d1b762b022d1dd6db370c88a3a7f9c4c3b3f7b4cf5fcf7cdeb03c4f196ea"
+      },
+      "month": "2023-01",
+      "original_samples": 124,
+      "input_variable_attributes": {
+        "GRIB_paramId": 151,
+        "GRIB_dataType": "an",
+        "GRIB_numberOfPoints": 275,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "instant",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 25,
+        "GRIB_Ny": 11,
+        "GRIB_cfName": "air_pressure_at_mean_sea_level",
+        "GRIB_cfVarName": "msl",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 39.5,
+        "GRIB_latitudeOfLastGridPointInDegrees": 37.0,
+        "GRIB_longitudeOfFirstGridPointInDegrees": -31.25,
+        "GRIB_longitudeOfLastGridPointInDegrees": -25.25,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "Mean sea level pressure",
+        "GRIB_shortName": "msl",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "Pa",
+        "long_name": "Mean sea level pressure",
+        "units": "Pa",
+        "standard_name": "air_pressure_at_mean_sea_level",
+        "GRIB_surface": 0.0
+      },
+      "operation": "daily_mean",
+      "selected_grid_cell_centres": {
+        "west": -31.25,
+        "south": 37.0,
+        "east": -25.25,
+        "north": 39.5
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000070_600070": {
+    "task_ID": "TASK_260713_000070_600070",
+    "task_text": "Download hourly ERA5 total precipitation for January 2022 over the Mediterranean, then aggregate the hourly values to a monthly total precipitation. Report the unweighted mean of the per-cell monthly precipitation totals across valid grid cells in the downloaded Mediterranean region, with units.",
+    "recorded_at_utc": "2026-10-12T16:12:43.474431+00:00",
+    "regional_mean": 0.04973940923810005,
+    "units": "m",
+    "source": {
+      "region": {
+        "region_name": "mediterranean",
+        "bbox": "-6.0,30.0,37.0,46.0",
+        "bbox_array": [
+          -6.0,
+          30.0,
+          37.0,
+          46.0
+        ]
+      },
+      "cells": 11245,
+      "time_steps": 744,
+      "grid_cell_centres": {
+        "west": -6.0,
+        "east": 37.0,
+        "south": 30.0,
+        "north": 46.0
+      },
+      "units": "m",
+      "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000070_600070/tp_600070.nc",
+      "sha256": "c4e03c8d9a08d333676573ea344b79df64a9e8cc8cd032f8c7af91e97cf370b3"
+    },
+    "aggregation": "per-cell temporal sum, then unweighted mean over finite cells",
+    "correction": "Previous reference came from an older file whose region did not match resolve_named_region(\"Mediterranean\").",
+    "reference_type": "replayed_reference_workflow",
+    "evaluation_policy": "Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000070_600070_tool_calls.json"
+  },
+  "TASK_260713_000073_600073": {
+    "task_ID": "TASK_260713_000073_600073",
+    "task_text": "Download ERA5 monthly mean 2 m temperature for July 2023 over Death Valley, USA, then convert the temperature values from Kelvin to Celsius. Report the unweighted mean temperature across valid grid cells in the clipped Death Valley region, in degrees Celsius.",
+    "recorded_at_utc": "2026-10-12T16:12:49.259620+00:00",
+    "regional_mean": 33.5117126464844,
+    "units": "degC",
+    "source": {
+      "geocode": {
+        "display_name": "Death Valley, California, 92328, United States",
+        "bbox": "-117.6510,35.5515,-116.2576,37.2960",
+        "bbox_array": [
+          -117.651,
+          35.5515,
+          -116.2576,
+          37.296
+        ],
+        "lat": 36.4228722,
+        "lon": -116.913718,
+        "osm_type": "relation",
+        "class": "natural",
+        "type": "desert"
+      },
+      "cells": 35,
+      "time_steps": 1,
+      "grid_cell_centres": {
+        "west": -117.5,
+        "east": -116.5,
+        "south": 35.75,
+        "north": 37.25
+      },
+      "units": "K",
+      "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000073_600073/t2m_death_valley_2023_07.nc",
+      "sha256": "37f2296f7c5ef3b4c52877f828adfe5df342a61d958f36dfe05a995b8bbd92f3"
+    },
+    "correction": "Previous clipped region (-118..-116.5, 35.5..37.25) was not derivable from the geocoder bbox used by the reference workflow.",
+    "reference_type": "replayed_reference_workflow",
+    "evaluation_policy": "Value holds for the region the reference workflow resolves. Candidates that downloaded a different defensible region must be recomputed on their own file.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000073_600073_tool_calls.json"
+  },
+  "TASK_260713_000082_600082": {
+    "extent": {
+      "west": 24.0,
+      "south": -5.0,
+      "east": 40.0,
+      "north": 32.0
+    },
+    "task_ID": "TASK_260713_000082_600082",
+    "units": "degrees",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:20:00.129058+00:00",
+      "source": {
+        "path": "output/era5/global_2m_temp_2022_07.nc",
+        "sha256": "5a581b73e4a9943f7965b03044217455efc63745de71196ac721b96b9a082f44"
+      },
+      "variable": "t2m",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/era5/global_2m_temp_2022_07.nc",
+        "sha256": "5a581b73e4a9943f7965b03044217455efc63745de71196ac721b96b9a082f44"
+      },
+      "month": "2022-07",
+      "original_samples": 1,
+      "input_variable_attributes": {
+        "GRIB_paramId": 167,
+        "GRIB_dataType": "an",
+        "GRIB_numberOfPoints": 1038240,
+        "GRIB_typeOfLevel": "surface",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "avgua",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 1440,
+        "GRIB_Ny": 721,
+        "GRIB_cfName": "unknown",
+        "GRIB_cfVarName": "t2m",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 90.0,
+        "GRIB_latitudeOfLastGridPointInDegrees": -90.0,
+        "GRIB_longitudeOfFirstGridPointInDegrees": 0.0,
+        "GRIB_longitudeOfLastGridPointInDegrees": 359.75,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "2 metre temperature",
+        "GRIB_shortName": "2t",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "K",
+        "long_name": "2 metre temperature",
+        "units": "K",
+        "standard_name": "unknown",
+        "GRIB_surface": 0.0
+      },
+      "operation": "extent",
+      "selected_grid_cell_centres": {
+        "west": 24.0,
+        "south": -5.0,
+        "east": 40.0,
+        "north": 32.0
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000083_600083": {
+    "extent": {
+      "west": 60.0,
+      "south": 5.0,
+      "east": 100.0,
+      "north": 35.0
+    },
+    "task_ID": "TASK_260713_000083_600083",
+    "units": "degrees",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "recorded_at_utc": "2026-10-02T10:20:00.229084+00:00",
+      "source": {
+        "path": "output/era5/data/500hPa_geopotential_2023_01.nc",
+        "sha256": "90a6e834d0205c8ba0e938400f59a0bcd166702c1c44da6251d1fc7b81d6c8dc"
+      },
+      "variable": "z",
+      "archive_member": null,
+      "dataset_source": {
+        "path": "output/era5/data/500hPa_geopotential_2023_01.nc",
+        "sha256": "90a6e834d0205c8ba0e938400f59a0bcd166702c1c44da6251d1fc7b81d6c8dc"
+      },
+      "month": "2023-01",
+      "original_samples": 1,
+      "input_variable_attributes": {
+        "GRIB_paramId": 129,
+        "GRIB_dataType": "an",
+        "GRIB_numberOfPoints": 1038240,
+        "GRIB_typeOfLevel": "isobaricInhPa",
+        "GRIB_stepUnits": 1,
+        "GRIB_stepType": "avgua",
+        "GRIB_gridType": "regular_ll",
+        "GRIB_uvRelativeToGrid": 0,
+        "GRIB_NV": 0,
+        "GRIB_Nx": 1440,
+        "GRIB_Ny": 721,
+        "GRIB_cfName": "geopotential",
+        "GRIB_cfVarName": "z",
+        "GRIB_gridDefinitionDescription": "Latitude/Longitude Grid",
+        "GRIB_iDirectionIncrementInDegrees": 0.25,
+        "GRIB_iScansNegatively": 0,
+        "GRIB_jDirectionIncrementInDegrees": 0.25,
+        "GRIB_jPointsAreConsecutive": 0,
+        "GRIB_jScansPositively": 0,
+        "GRIB_latitudeOfFirstGridPointInDegrees": 90.0,
+        "GRIB_latitudeOfLastGridPointInDegrees": -90.0,
+        "GRIB_longitudeOfFirstGridPointInDegrees": 0.0,
+        "GRIB_longitudeOfLastGridPointInDegrees": 359.75,
+        "GRIB_missingValue": 3.4028234663852886e+38,
+        "GRIB_name": "Geopotential",
+        "GRIB_shortName": "z",
+        "GRIB_totalNumber": 0,
+        "GRIB_units": "m**2 s**-2",
+        "long_name": "Geopotential",
+        "units": "m**2 s**-2",
+        "standard_name": "geopotential"
+      },
+      "operation": "extent",
+      "selected_grid_cell_centres": {
+        "west": 60.0,
+        "south": 5.0,
+        "east": 100.0,
+        "north": 35.0
+      },
+      "aggregation": "temporal reduction per cell, followed by unweighted mean over finite cells"
+    },
+    "evaluation_policy": "Use only for matching verified source, spatial support, units and mask. Recompute from candidate-owned task-valid inputs for other permitted choices; do not impose this reference bbox as a question requirement."
+  },
+  "TASK_260713_000081_600081": {
+    "task_ID": "TASK_260713_000081_600081",
+    "task_text": "Download ERA5 monthly mean total precipitation for January 2023, then clip the result to Africa. Report the clipped grid-cell-centre extent as [west, south, east, north] in WGS84 degrees, using longitudes between -180° and 180°.",
+    "recorded_at_utc": "2026-10-12T16:12:58.068369+00:00",
+    "extent": {
+      "west": -17.5,
+      "east": 51.25,
+      "south": -34.75,
+      "north": 37.25
+    },
+    "units": "degrees",
+    "source": {
+      "region_definition": "Mainland Africa + Madagascar extreme points: Cap-Vert (17.54W), Cape Agulhas (34.84S), Ras Hafun (51.42E), Ras ben Sakka (37.35N)",
+      "clip_bbox": {
+        "west": -17.54,
+        "south": -34.84,
+        "east": 51.42,
+        "north": 37.35
+      },
+      "cells": 79764,
+      "time_steps": 1,
+      "grid_cell_centres": {
+        "west": -17.5,
+        "east": 51.25,
+        "south": -34.75,
+        "north": 37.25
+      },
+      "units": "m",
+      "path": "data/reference_corrections_20261012/artifacts/era5/TASK_260713_000081_600081/tp_africa_2023_01.nc",
+      "sha256": "168f518351af02ef66d921bb4a7cb8b816b4056aca3443d8269f713bbcae0abf"
+    },
+    "correction": "Previous padded bbox (-20/-35/55/38) was not derivable from the workflow; geocode_place(\"Africa\") returns an unusable centroid box.",
+    "reference_type": "documented_region_definition",
+    "evaluation_policy": "Region convention: accept extents within the configured tolerance of the continental extreme-point extent.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000081_600081_tool_calls.json"
+  },
+  "TASK_260713_000032_500011": {
+    "task_ID": "TASK_260713_000032_500011",
+    "node_counts": {
+      "Acronym": 148,
+      "AreaOfAction": 4,
+      "Chunk": 129,
+      "EnablingTool": 5,
+      "KnowledgeAdvancementObjective": 167,
+      "NationalPolicy": 6,
+      "ScienceQuestion": 23,
+      "ScienceTheme": 6,
+      "StrategicObjective": 16,
+      "TippingPoint": 18,
+      "Treaty": 5
+    },
+    "reference_type": "captured_graph_snapshot",
+    "provenance": {
+      "path": "output/ground_truth/numerical_snapshot/TASK_260713_000032_500011_mcp.json",
+      "sha256": "b7b5348168cd0b313a9311a353d43a8770cb8ee0cc32762d629ab389028de7a8",
+      "query": "MATCH (n) UNWIND labels(n) AS label RETURN label, count(*) AS count ORDER BY label",
+      "captured_at_utc": "2026-10-02T10:11:33.823428+00:00"
+    },
+    "evaluation_policy": "Reference applies to this captured source snapshot only. Independently recompute for other task-valid source selections; require verified matching region, time, channels, units, calibration and mask before comparison."
+  },
+  "TASK_260713_000034_500013": {
+    "task_ID": "TASK_260713_000034_500013",
+    "task_text": "List all ScienceQuestion nodes in the EOSS graph, then run a Cypher query to count how many knowledge advancement objectives each science question has (HAS_KAO relationships).",
+    "recorded_at_utc": "2026-10-12T16:04:20.633970+00:00",
+    "kaos_per_question": {
+      "Climate sensitivity": 3,
+      "Coastal carbon cycle": 4,
+      "Coastal process mediation of exchanges": 3,
+      "Coastal sea level": 2,
+      "Coupled energy, water and carbon cycles": 4,
+      "Coupled litho-, atmo-, iono- and mesosphere": 4,
+      "Drivers of sea-ice state and variability": 2,
+      "Earth energy imbalance": 3,
+      "Earth's crust dynamics": 1,
+      "Ecosystems transitions": 2,
+      "Erosional processes of drainage basins": 3,
+      "Global carbon cycle": 3,
+      "Ice mass balance": 2,
+      "Land biosphere responses": 4,
+      "Ocean carbon cycle": 4,
+      "Planetary heat exchange": 3,
+      "Polar and high-mountain climate relationship": 1,
+      "Polar ecosystem impacts": 2,
+      "Seismic deformation processes": 5,
+      "Solid Earth deformation": 4,
+      "State of land ecosystems": 3,
+      "Volcanic processes and their impact": 2,
+      "Water cycle": 4
+    },
+    "total_kaos": 68,
+    "reference_type": "source_snapshot",
+    "evaluation_policy": "Explicit HAS_KAO edges in this snapshot; every ScienceQuestion node must be listed.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000034_500013_tool_calls.json"
+  },
+  "TASK_260713_000049_500028": {
+    "task_ID": "TASK_260713_000049_500028",
+    "slot_count": 24,
+    "reference_type": "captured_catalogue_snapshot",
+    "provenance": {
+      "path": "output/ground_truth/numerical_snapshot/TASK_260713_000049_500028.json",
+      "sha256": "5ed4fd5d6f27d5be84a5852c779e4ece550ad5a6ba968e4863326b4677897f98",
+      "task_ID": "TASK_260713_000049_500028",
+      "retrieved_at_utc": "2026-10-02T09:45:29.253598+00:00",
+      "collection": "EO:EUM:DAT:MSG:MSG15-RSS",
+      "interval": [
+        "2023-05-15T08:00:00Z",
+        "2023-05-15T10:00:00Z"
+      ],
+      "count": 24,
+      "identifiers": [
+        "MSG4-SEVI-MSG15-0100-NA-20230515095917.451000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515095417.720000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515094919.195000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515094419.465000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515093919.734000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515093420.004000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515092918.465000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515092416.926000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515091915.387000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515091415.658000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515090915.929000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515090416.200000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515085916.471000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515085416.742000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515084915.204000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515084415.476000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515083915.747000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515083416.019000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515082916.291000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515082416.563000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515081916.835000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515081417.108000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515080917.380000000Z-NA",
+        "MSG4-SEVI-MSG15-0100-NA-20230515080417.653000000Z-NA"
+      ]
+    },
+    "evaluation_policy": "Reference applies to this captured source snapshot only. Independently recompute for other task-valid source selections; require verified matching region, time, channels, units, calibration and mask before comparison."
+  },
+  "TASK_260716_000005_700017": {
+    "task_ID": "TASK_260716_000005_700017",
+    "task_text": "Search for MSG SEVIRI Rapid Scan imagery over the Canary Islands on 5 July 2024, download the first match, and then read the downloaded file to check the HRV channel's reflectance range.",
+    "recorded_at_utc": "2026-10-12T16:14:36.060845+00:00",
+    "band_statistics": {
+      "HRV": {
+        "shape": [
+          199,
+          498
+        ],
+        "min": 3.4519882202148438,
+        "max": 58.2335319519043,
+        "mean": 23.019020080566406
+      }
+    },
+    "units": "percent reflectance",
+    "reference_type": "corrected_reference_observation",
+    "selection_scope": {
+      "search_window": "2024-07-05T11:00/13:00 UTC",
+      "search_count": 24,
+      "search_listing_truncated": true,
+      "selected": {
+        "identifier": "MSG4-SEVI-MSG15-0100-NA-20240705110416.599000000Z-NA",
+        "date": "2024-07-05T11:00:09.356Z/2024-07-05T11:04:16.599Z"
+      },
+      "rule": "chronologically first slot in the search window (confirmed by an 11:00-11:05 search)",
+      "crop": "read_eumetsat_product bbox crop (tool-consistent)"
+    },
+    "source": {
+      "paths": [
+        "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/reference_corrections_20261012/artifacts/eumetsat/MSG4-SEVI-MSG15-0100-NA-20240705110416.599000000Z-NA.nat"
+      ]
+    },
+    "correction": "Previous reference downloaded 13:00/13:05 slots outside the searched window (solar-noon default) and mixed identifiers.",
+    "evaluation_policy": "Candidates that read the first item of the search listing (descending, 12:55 slot) made a defensible choice; recompute on their own file.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260716_000005_700017_tool_calls.json"
+  },
+  "TASK_260716_000006_700018": {
+    "task_ID": "TASK_260716_000006_700018",
+    "band_statistics": {
+      "IR_108": {
+        "min": 264.9661865234375,
+        "max": 314.90802001953125,
+        "mean": 305.85345458984375
+      },
+      "IR_120": {
+        "min": 264.7958984375,
+        "max": 312.5369567871094,
+        "mean": 304.1470642089844
+      }
+    },
+    "units": "K",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "path": "output/ground_truth/eum_numeric/700018.json",
+      "sha256": "fd771083066605d06021244b67dea59d36cfeaebecf4ab8ca2e08dd3307acaa9",
+      "reader": "seviri_l1b_native",
+      "product": "MSG-SEVIRI-L1-IODC",
+      "date": "2022-06-01",
+      "bbox": [
+        76.5,
+        28,
+        77.5,
+        29
+      ],
+      "channel_shapes": {
+        "IR_108": [
+          31,
+          35
+        ],
+        "IR_120": [
+          31,
+          35
+        ]
+      },
+      "source_artifacts": [
+        {
+          "path": "output/eumetsat/MSG1-SEVI-MSG15-0100-NA-20220601071242.701000000Z-NA.nat",
+          "sha256": "17677fbc89a963cc1f259d7e3ebb8a7dbea819706b99d79104d40f4d2c538cff"
+        }
+      ]
+    },
+    "selection_scope": "One identified reference observation. No assertion that a local filename sort reproduces the live catalogue ordering.",
+    "evaluation_policy": "Reference applies to this captured source snapshot only. Independently recompute for other task-valid source selections; require verified matching region, time, channels, units, calibration and mask before comparison."
+  },
+  "TASK_260716_000007_700019": {
+    "task_ID": "TASK_260716_000007_700019",
+    "band_statistics": {
+      "VIS006": {
+        "min": 7.7380781173706055,
+        "max": 24.25992202758789,
+        "mean": 12.853068351745605
+      },
+      "VIS008": {
+        "min": 20.449222564697266,
+        "max": 35.32138442993164,
+        "mean": 25.969951629638672
+      }
+    },
+    "units": "percent reflectance",
+    "reference_type": "observed_valid_input_snapshot",
+    "provenance": {
+      "path": "output/ground_truth/eum_numeric/700019.json",
+      "sha256": "7d98559aff22d1928484a4f22bcdec34d18f91c3e262a83c5b62cb081812272d",
+      "reader": "seviri_l1b_native",
+      "product": "MSG-SEVIRI-L1-HRY",
+      "date": "2024-02-20",
+      "bbox": [
+        36.6,
+        -1.5,
+        37,
+        -1.1
+      ],
+      "channel_shapes": {
+        "VIS006": [
+          15,
+          11
+        ],
+        "VIS008": [
+          15,
+          11
+        ]
+      },
+      "source_artifacts": [
+        {
+          "path": "output/eumetsat/MSG3-SEVI-MSG15-0100-NA-20240220121242.700000000Z-NA.nat",
+          "sha256": "f8891220ddbb3307ed25373d6d3a1354df0fec4d9ada299672a91c7771169d16"
+        }
+      ]
+    },
+    "selection_scope": "One identified reference observation. No assertion that a local filename sort reproduces the live catalogue ordering.",
+    "evaluation_policy": "Reference applies to this captured source snapshot only. Independently recompute for other task-valid source selections; require verified matching region, time, channels, units, calibration and mask before comparison."
+  },
+  "TASK_260716_000004_700016": {
+    "task_ID": "TASK_260716_000004_700016",
+    "band_statistics": {
+      "vis_04": {
+        "min": 14.917317390441895,
+        "max": 74.17880249023438,
+        "mean": 43.718746185302734
+      },
+      "vis_05": {
+        "min": 10.737741470336914,
+        "max": 72.85353088378906,
+        "mean": 41.10996627807617
+      },
+      "vis_06": {
+        "min": 7.067887306213379,
+        "max": 72.819580078125,
+        "mean": 38.736854553222656
+      },
+      "vis_08": {
+        "min": 7.645544528961182,
+        "max": 81.51847076416016,
+        "mean": 45.14681625366211
+      },
+      "vis_09": {
+        "min": 6.275003910064697,
+        "max": 66.01214599609375,
+        "mean": 37.534423828125
+      }
+    },
+    "units": "percent reflectance",
+    "reference_type": "observed_valid_input_snapshot",
+    "recorded_at_utc": "2026-10-02T13:58:06.152474+00:00",
+    "provenance": {
+      "path": "output/ground_truth/eum_numeric/700016.json",
+      "sha256": "14200e3cc2ad85d9bbec43cfd6dd5521edb7909f4f3dec101efc85e36f18283e",
+      "download_manifest": "output/ground_truth/eum_numeric/700016_download.json",
+      "download_manifest_sha256": "3cc5d502e53b00f809e20d8e2ac57eb1e847061770d8e497df37ede093cfdbef",
+      "product": "MTG-FCI-L1C-FDHSI",
+      "identifier": "W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--x-x---x_C_EUMT_20241001110232_IDPFI_OPE_20241001110007_20241001110924_N__C_0067_0000",
+      "date": "2024-10-01T11:00:07Z/2024-10-01T11:09:24Z",
+      "bbox": [
+        5,
+        45,
+        15,
+        48
+      ],
+      "reader": "fci_l1c_nc",
+      "channel_shapes": {
+        "vis_04": [
+          203,
+          748
+        ],
+        "vis_05": [
+          203,
+          748
+        ],
+        "vis_06": [
+          203,
+          748
+        ],
+        "vis_08": [
+          203,
+          748
+        ],
+        "vis_09": [
+          203,
+          748
+        ]
+      },
+      "source_artifacts": [
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110342_IDPFI_OPE_20241001110007_20241001110023_N__C_0067_0001.nc",
+          "size_bytes": 4617103
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110354_IDPFI_OPE_20241001110007_20241001110036_N__C_0067_0002.nc",
+          "size_bytes": 12534868
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110406_IDPFI_OPE_20241001110012_20241001110050_N__C_0067_0003.nc",
+          "size_bytes": 18186288
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110411_IDPFI_OPE_20241001110023_20241001110057_N__C_0067_0004.nc",
+          "size_bytes": 20707350
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110424_IDPFI_OPE_20241001110029_20241001110112_N__C_0067_0005.nc",
+          "size_bytes": 23874806
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110433_IDPFI_OPE_20241001110042_20241001110129_N__C_0067_0006.nc",
+          "size_bytes": 25554728
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110440_IDPFI_OPE_20241001110050_20241001110146_N__C_0067_0007.nc",
+          "size_bytes": 27378691
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110445_IDPFI_OPE_20241001110105_20241001110154_N__C_0067_0008.nc",
+          "size_bytes": 29270947
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110454_IDPFI_OPE_20241001110112_20241001110212_N__C_0067_0009.nc",
+          "size_bytes": 31039510
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110459_IDPFI_OPE_20241001110129_20241001110221_N__C_0067_0010.nc",
+          "size_bytes": 31977448
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110516_IDPFI_OPE_20241001110146_20241001110240_N__C_0067_0011.nc",
+          "size_bytes": 32506409
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110527_IDPFI_OPE_20241001110154_20241001110258_N__C_0067_0012.nc",
+          "size_bytes": 33499839
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110528_IDPFI_OPE_20241001110212_20241001110308_N__C_0067_0013.nc",
+          "size_bytes": 34948646
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110545_IDPFI_OPE_20241001110230_20241001110327_N__C_0067_0014.nc",
+          "size_bytes": 35610166
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110545_IDPFI_OPE_20241001110249_20241001110337_N__C_0067_0015.nc",
+          "size_bytes": 36366313
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110559_IDPFI_OPE_20241001110308_20241001110357_N__C_0067_0016.nc",
+          "size_bytes": 36347111
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110604_IDPFI_OPE_20241001110317_20241001110406_N__C_0067_0017.nc",
+          "size_bytes": 36711818
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110619_IDPFI_OPE_20241001110337_20241001110426_N__C_0067_0018.nc",
+          "size_bytes": 37325810
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110631_IDPFI_OPE_20241001110357_20241001110446_N__C_0067_0019.nc",
+          "size_bytes": 37051747
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110647_IDPFI_OPE_20241001110416_20241001110456_N__C_0067_0020.nc",
+          "size_bytes": 36794209
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110715_IDPFI_OPE_20241001110436_20241001110515_N__C_0067_0021.nc",
+          "size_bytes": 37170623
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110733_IDPFI_OPE_20241001110456_20241001110525_N__C_0067_0022.nc",
+          "size_bytes": 37914255
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110742_IDPFI_OPE_20241001110506_20241001110545_N__C_0067_0023.nc",
+          "size_bytes": 38451044
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110811_IDPFI_OPE_20241001110525_20241001110604_N__C_0067_0024.nc",
+          "size_bytes": 38139547
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110817_IDPFI_OPE_20241001110545_20241001110614_N__C_0067_0025.nc",
+          "size_bytes": 36675664
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110824_IDPFI_OPE_20241001110604_20241001110633_N__C_0067_0026.nc",
+          "size_bytes": 37700001
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110835_IDPFI_OPE_20241001110614_20241001110652_N__C_0067_0027.nc",
+          "size_bytes": 35872145
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110902_IDPFI_OPE_20241001110633_20241001110711_N__C_0067_0028.nc",
+          "size_bytes": 34841236
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110926_IDPFI_OPE_20241001110652_20241001110729_N__C_0067_0029.nc",
+          "size_bytes": 31016484
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110934_IDPFI_OPE_20241001110701_20241001110746_N__C_0067_0030.nc",
+          "size_bytes": 28914235
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110934_IDPFI_OPE_20241001110720_20241001110755_N__C_0067_0031.nc",
+          "size_bytes": 28156358
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110952_IDPFI_OPE_20241001110729_20241001110811_N__C_0067_0032.nc",
+          "size_bytes": 27361191
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001110958_IDPFI_OPE_20241001110746_20241001110827_N__C_0067_0033.nc",
+          "size_bytes": 28020316
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111005_IDPFI_OPE_20241001110755_20241001110835_N__C_0067_0034.nc",
+          "size_bytes": 26514585
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111023_IDPFI_OPE_20241001110811_20241001110849_N__C_0067_0035.nc",
+          "size_bytes": 26008636
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111027_IDPFI_OPE_20241001110827_20241001110902_N__C_0067_0036.nc",
+          "size_bytes": 23816874
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111031_IDPFI_OPE_20241001110835_20241001110908_N__C_0067_0037.nc",
+          "size_bytes": 21266350
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111041_IDPFI_OPE_20241001110849_20241001110919_N__C_0067_0038.nc",
+          "size_bytes": 17800362
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111041_IDPFI_OPE_20241001110914_20241001110924_N__C_0067_0040.nc",
+          "size_bytes": 4662558
+        },
+        {
+          "path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/output/eumetsat/W_XX-EUMETSAT-Darmstadt,IMG+SAT,MTI1+FCI-1C-RRAD-FDHSI-FD--CHK-BODY---NC4E_C_EUMT_20241001111042_IDPFI_OPE_20241001110902_20241001110924_N__C_0067_0039.nc",
+          "size_bytes": 13024641
+        }
+      ]
+    },
+    "selection_scope": "The one captured observation selected by the download tool at 11:00 UTC local solar noon; not a claim of earliest catalogue acquisition.",
+    "evaluation_policy": "Compare only matching verified observation, crop, channels, units, calibration and mask. Independently recompute for other task-valid observations."
+  },
+  "TASK_260419_000001_100001": {
+    "task_ID": "TASK_260419_000001_100001",
+    "task_text": "List all available themes in the EO Dashboard.",
+    "reference_set": [
+      "agriculture",
+      "atmosphere",
+      "biomass",
+      "covid-19",
+      "cryosphere",
+      "economy",
+      "extreme-events",
+      "oceans"
+    ],
+    "reference_count": 8,
+    "provenance": {
+      "source_type": "current_source_snapshot",
+      "url": "https://esa-eodashboards.github.io/eodashboard-narratives/narratives.json",
+      "historical_comparability": "Not established; validate against the candidate execution snapshot",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/dashboard_narratives.json",
+      "snapshot_sha256": "f32f02fb71c10f7c6d12bcd415cbe36136262ef86d06fc945cd5f0e99ebce8c1",
+      "retrieved_at_utc": "2026-10-12T11:21:52.209994+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260419_000011_100011": {
+    "task_ID": "TASK_260419_000011_100011",
+    "task_text": "Get an overview of all thematic areas covered by the EO Dashboard.",
+    "reference_set": [
+      "agriculture",
+      "atmosphere",
+      "biomass",
+      "covid-19",
+      "cryosphere",
+      "economy",
+      "extreme-events",
+      "oceans"
+    ],
+    "reference_count": 8,
+    "provenance": {
+      "source_type": "current_source_snapshot",
+      "url": "https://esa-eodashboards.github.io/eodashboard-narratives/narratives.json",
+      "historical_comparability": "Not established; validate against the candidate execution snapshot",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/dashboard_narratives.json",
+      "snapshot_sha256": "f32f02fb71c10f7c6d12bcd415cbe36136262ef86d06fc945cd5f0e99ebce8c1",
+      "retrieved_at_utc": "2026-10-12T11:21:52.209994+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260619_000009_300009": {
+    "task_ID": "TASK_260619_000009_300009",
+    "task_text": "List all available narratives in the EO Dashboard.",
+    "reference_set": [
+      "    Air pollution in India, China and the U.S. have changed significantly over the past two decades",
+      "   Pine Island Glacier and Thwaites Glacier",
+      "   Understanding climate change effects on water temperature and ocean currents is vital to managing these resources",
+      "  A view from space monitors land cover and tree to track aboveground biomass and carbon content",
+      "  Algal blooms in lake waters",
+      "  Measuring Thickness of Sea Ice in the Polar Oceans",
+      "  Satellite images reveal a view of the ocean that is as rich and complex as that of land",
+      "  The sea ice extent has been rapidly decreasing in recent years as global temperatures have risen",
+      " Australian bushfires in 2019-2020 emitted 700 million metric tons of CO2 into the atmosphere",
+      " Changes in temperature, precipitation patterns and extremes impacting surface water hydrology",
+      " Collaboration on Glaciers and Ice Sheets Research",
+      " During COVID-19 related lockdowns, air travel decreased",
+      " El Niño 2023–2024 (Part 4): Floods and Cyclone impacts in East Africa",
+      " Global warming and environmental pollution have led to a rise in the number and severity of HAB outbreaks",
+      " One of the most important processes in nature is primary productivity",
+      " Recent melting and darkening of the Greenland Ice Sheet",
+      " The Arctic region shows changes most characteristic of global warming",
+      " Travel restrictions interrupted Global Supply chains dependent on cargo shipping",
+      " Troubled Waters: Unraveling the Impacts of Climate Change on Inland Waters",
+      "Antarctic Ice lows",
+      "Changing lakes due to human activity",
+      "Clustering Ocean Water Types Using Spectral EO Data",
+      "Covid-19 Impact on the Automotive Industry",
+      "Covid-19 Impacts on Air Quality",
+      "Covid-19 Impacts on Greenhouse Gases",
+      "Covid-19 Impacts on Rice Planting",
+      "During COVID-19 lockdowns night lights in central business districts decreased",
+      "El Niño 2023-2024 (Part 1): Record-breaking temperatures",
+      "El Niño 2023-2024 (Part 2): Rising Global Sea Surface Temperatures",
+      "El Niño 2023-2024: Impacts on food security",
+      "Evaluating time series interpolation techniques for vegetation monitoring using remote sensing data",
+      "Exploring our atmosphere with EarthCARE",
+      "Extreme air pollution episodes in Northern India and Pakistan",
+      "Farmlands North of Cairo absorb so much atmospheric CO2 it can be measured from space",
+      "Forests on the Brink: Satellite Imagery unveiling Loss and Shifting Forest Landscapes",
+      "Glacier monitoring under global warming trends through remote sensing – An example from The Third Pole",
+      "NASA, ESA and JAXA, Working Together to Monitor our Atmosphere",
+      "Observing Nighlights from Space",
+      "Rapid Retreat of the Thwaites Glacier",
+      "Satellites are providing insights into agricultural production, crop conditions, and food supply",
+      "Tracking aerosol plumes from Hunga eruption of 2022",
+      "Urban Health and Megacities: the case of New Delhi",
+      "Wet snow mapping with multimodal foundation models - can we drop the reference?"
+    ],
+    "reference_count": 43,
+    "provenance": {
+      "source_type": "current_source_snapshot",
+      "url": "https://esa-eodashboards.github.io/eodashboard-narratives/narratives.json",
+      "historical_comparability": "Not established; validate against the candidate execution snapshot",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/dashboard_narratives.json",
+      "snapshot_sha256": "f32f02fb71c10f7c6d12bcd415cbe36136262ef86d06fc945cd5f0e99ebce8c1",
+      "retrieved_at_utc": "2026-10-12T11:21:52.209994+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000022_500001": {
+    "task_ID": "TASK_260713_000022_500001",
+    "task_text": "Using the EOSS knowledge graph, find all science questions that are directly linked to the Paris Agreement treaty.",
+    "reference_set": [
+      {
+        "id": "SQ-01",
+        "aliases": [
+          "Global carbon cycle"
+        ]
+      },
+      {
+        "id": "SQ-02",
+        "aliases": [
+          "Land biosphere responses"
+        ]
+      },
+      {
+        "id": "SQ-03",
+        "aliases": [
+          "Ocean carbon cycle"
+        ]
+      },
+      {
+        "id": "SQ-05",
+        "aliases": [
+          "Coastal sea level"
+        ]
+      },
+      {
+        "id": "SQ-07",
+        "aliases": [
+          "Coastal process mediation of exchanges"
+        ]
+      },
+      {
+        "id": "SQ-08",
+        "aliases": [
+          "Coastal carbon cycle"
+        ]
+      },
+      {
+        "id": "SQ-20",
+        "aliases": [
+          "Ice mass balance"
+        ]
+      },
+      {
+        "id": "SQ-21",
+        "aliases": [
+          "Drivers of sea-ice state and variability"
+        ]
+      },
+      {
+        "id": "SQ-24",
+        "aliases": [
+          "Polar and high-mountain climate relationship"
+        ]
+      },
+      {
+        "id": "SQ-25",
+        "aliases": [
+          "Polar ecosystem impacts"
+        ]
+      },
+      {
+        "id": "SQ-43",
+        "aliases": [
+          "Coupled energy, water and carbon cycles"
+        ]
+      },
+      {
+        "id": "SQ-44",
+        "aliases": [
+          "Water cycle"
+        ]
+      },
+      {
+        "id": "SQ-45",
+        "aliases": [
+          "Climate sensitivity"
+        ]
+      },
+      {
+        "id": "SQ-46",
+        "aliases": [
+          "Earth energy imbalance"
+        ]
+      },
+      {
+        "id": "SQ-48",
+        "aliases": [
+          "Planetary heat exchange"
+        ]
+      },
+      {
+        "id": "SQ-52",
+        "aliases": [
+          "Volcanic processes and their impact"
+        ]
+      },
+      {
+        "id": "SQ-55",
+        "aliases": [
+          "State of land ecosystems"
+        ]
+      },
+      {
+        "id": "SQ-56",
+        "aliases": [
+          "Ecosystems transitions"
+        ]
+      }
+    ],
+    "reference_count": 18,
+    "source_rows": [
+      {
+        "id": "SQ-01",
+        "name": "Global carbon cycle",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-02",
+        "name": "Land biosphere responses",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-03",
+        "name": "Ocean carbon cycle",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-05",
+        "name": "Coastal sea level",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-07",
+        "name": "Coastal process mediation of exchanges",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-08",
+        "name": "Coastal carbon cycle",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-20",
+        "name": "Ice mass balance",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-21",
+        "name": "Drivers of sea-ice state and variability",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-24",
+        "name": "Polar and high-mountain climate relationship",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-25",
+        "name": "Polar ecosystem impacts",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-43",
+        "name": "Coupled energy, water and carbon cycles",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-44",
+        "name": "Water cycle",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-45",
+        "name": "Climate sensitivity",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-46",
+        "name": "Earth energy imbalance",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-48",
+        "name": "Planetary heat exchange",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-52",
+        "name": "Volcanic processes and their impact",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-55",
+        "name": "State of land ecosystems",
+        "rel": "INFORMS"
+      },
+      {
+        "id": "SQ-56",
+        "name": "Ecosystems transitions",
+        "rel": "INFORMS"
+      }
+    ],
+    "completeness_status": "Review service truncation and query scope before scoring",
+    "provenance": {
+      "source_type": "current_ontology_snapshot",
+      "tool": "query_ontology",
+      "arguments": {
+        "cypher": "MATCH (sq:ScienceQuestion)-[r]->(t:Treaty) WHERE t.name CONTAINS 'Paris Agreement' RETURN sq.id AS id, sq.name AS name, type(r) AS rel ORDER BY sq.id"
+      },
+      "historical_comparability": "Not established",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/TASK_260713_000022_500001.json",
+      "snapshot_sha256": "b36d1e056f892261cd532437d80ab27d0a6bf5d4f33d4c5d5bc70d7f27630a64",
+      "retrieved_at_utc": "2026-10-12T11:21:55.004829+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000024_500003": {
+    "task_ID": "TASK_260713_000024_500003",
+    "task_text": "Query the EOSS ontology to retrieve all tipping points that are associated with ice-related science themes.",
+    "reference_set": [
+      {
+        "id": "TP-01",
+        "aliases": [
+          "Ice Sheets (collapse)"
+        ]
+      },
+      {
+        "id": "TP-02",
+        "aliases": [
+          "Sea Ice (loss)"
+        ]
+      },
+      {
+        "id": "TP-03",
+        "aliases": [
+          "Glaciers (retreat)"
+        ]
+      },
+      {
+        "id": "TP-04",
+        "aliases": [
+          "Permafrost (thaw)"
+        ]
+      },
+      {
+        "id": "TP-14",
+        "aliases": [
+          "Ocean overturning (collapse)"
+        ]
+      }
+    ],
+    "reference_count": 5,
+    "source_rows": [
+      {
+        "id": "TP-01",
+        "tipping_point": "Ice Sheets (collapse)",
+        "related_question": "Ice mass balance"
+      },
+      {
+        "id": "TP-01",
+        "tipping_point": "Ice Sheets (collapse)",
+        "related_question": "Drivers of sea-ice state and variability"
+      },
+      {
+        "id": "TP-02",
+        "tipping_point": "Sea Ice (loss)",
+        "related_question": "Ice mass balance"
+      },
+      {
+        "id": "TP-02",
+        "tipping_point": "Sea Ice (loss)",
+        "related_question": "Drivers of sea-ice state and variability"
+      },
+      {
+        "id": "TP-03",
+        "tipping_point": "Glaciers (retreat)",
+        "related_question": "Ice mass balance"
+      },
+      {
+        "id": "TP-04",
+        "tipping_point": "Permafrost (thaw)",
+        "related_question": "Ice mass balance"
+      },
+      {
+        "id": "TP-14",
+        "tipping_point": "Ocean overturning (collapse)",
+        "related_question": "Drivers of sea-ice state and variability"
+      }
+    ],
+    "completeness_status": "Review service truncation and query scope before scoring",
+    "provenance": {
+      "source_type": "current_ontology_snapshot",
+      "tool": "query_ontology",
+      "arguments": {
+        "cypher": "MATCH (tp:TippingPoint)-[r]-(sq:ScienceQuestion) WHERE toLower(sq.name) CONTAINS 'ice' OR toLower(sq.name) CONTAINS 'cryo' RETURN DISTINCT tp.id AS id, tp.name AS tipping_point, sq.name AS related_question"
+      },
+      "historical_comparability": "Not established",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/TASK_260713_000024_500003.json",
+      "snapshot_sha256": "ba4d43795bb5d6e1bcdad2155dbe7db6b520165648bf31fba2fa786700ef9dc9",
+      "retrieved_at_utc": "2026-10-12T11:21:55.650259+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000030_500009": {
+    "task_ID": "TASK_260713_000030_500009",
+    "task_text": "List all ScienceTheme nodes in the EOSS knowledge graph.",
+    "reference_set": [
+      {
+        "id": "ST-I",
+        "aliases": [
+          "The water cycle"
+        ]
+      },
+      {
+        "id": "ST-II",
+        "aliases": [
+          "The carbon cycle and chemistry"
+        ]
+      },
+      {
+        "id": "ST-III",
+        "aliases": [
+          "Energy fluxes"
+        ]
+      },
+      {
+        "id": "ST-IV",
+        "aliases": [
+          "Ecosystem health"
+        ]
+      },
+      {
+        "id": "ST-V",
+        "aliases": [
+          "Extremes and hazards"
+        ]
+      },
+      {
+        "id": "ST-VI",
+        "aliases": [
+          "Interfaces and coupling in the Earth system"
+        ]
+      }
+    ],
+    "reference_count": 6,
+    "source_rows": [
+      {
+        "id": "ST-I",
+        "name": "The water cycle",
+        "description": "Distribution, fluxes, and states of water (ice, liquid or vapour) within the Earth System. Includes drivers of changes in water reservoirs, interactions between water in different phases and compartments, and the impact of human-driven water management.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ST-II",
+        "name": "The carbon cycle and chemistry",
+        "description": "Role of long-lived greenhouse gases in driving climate change. Reduce uncertainties in carbon, methane, and nitrogen stocks and flows. Understand processes controlling gas exchanges between atmosphere, oceans, and land.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ST-III",
+        "name": "Energy fluxes",
+        "description": "Energy fluxes between and within Earth System compartments. Quantify fluxes at global and regional scales, focusing on Earth Energy Imbalance caused by greenhouse gases and resulting adjustments and feedbacks.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ST-IV",
+        "name": "Ecosystem health",
+        "description": "Ability of ecosystems to provide services for humans sustainably while preserving natural functions, intrinsic well-being and biodiversity. Includes all aspects of complex interactions between organisms and their physical environment.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ST-V",
+        "name": "Extremes and hazards",
+        "description": "Extreme weather and climate events, and geophysical hazards such as earthquakes, volcanic eruptions, landslides and tsunamis. Monitor and understand underlying processes and feedbacks, better predict events, build resilience.",
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "ST-VI",
+        "name": "Interfaces and coupling in the Earth system",
+        "description": "Study of interfaces between different Earth System components. Crucial for understanding exchanges of water, gases, heat, and momentum that drive weather and climate dynamics.",
+        "meaning": null,
+        "selected_for_observables": null
+      }
+    ],
+    "completeness_status": "Review service truncation and query scope before scoring",
+    "provenance": {
+      "source_type": "current_ontology_snapshot",
+      "tool": "list_ontology_nodes",
+      "arguments": {
+        "label": "ScienceTheme"
+      },
+      "historical_comparability": "Not established",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/TASK_260713_000030_500009.json",
+      "snapshot_sha256": "107498e077fb296c1d15cbf2a0f87e9accc83a9c9d78ada59d215a1be3eeacad",
+      "retrieved_at_utc": "2026-10-12T11:21:57.472451+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000031_500010": {
+    "task_ID": "TASK_260713_000031_500010",
+    "task_text": "Enumerate all TippingPoint nodes registered in the EOSS knowledge graph to understand which Earth system tipping points are covered by the ESA science strategy.",
+    "reference_set": [
+      {
+        "id": "TP-01",
+        "aliases": [
+          "Ice Sheets (collapse)"
+        ]
+      },
+      {
+        "id": "TP-02",
+        "aliases": [
+          "Sea Ice (loss)"
+        ]
+      },
+      {
+        "id": "TP-03",
+        "aliases": [
+          "Glaciers (retreat)"
+        ]
+      },
+      {
+        "id": "TP-04",
+        "aliases": [
+          "Permafrost (thaw)"
+        ]
+      },
+      {
+        "id": "TP-05",
+        "aliases": [
+          "Tropical Forests (dieback)"
+        ]
+      },
+      {
+        "id": "TP-06",
+        "aliases": [
+          "Boreal Forests (dieback/expansion)"
+        ]
+      },
+      {
+        "id": "TP-07",
+        "aliases": [
+          "Temperate Forests (dieback)"
+        ]
+      },
+      {
+        "id": "TP-08",
+        "aliases": [
+          "Savannas and Grasslands (regime shifts)"
+        ]
+      },
+      {
+        "id": "TP-09",
+        "aliases": [
+          "Drylands (regime shifts)"
+        ]
+      },
+      {
+        "id": "TP-10",
+        "aliases": [
+          "Freshwater/Lakes (regime shifts)"
+        ]
+      },
+      {
+        "id": "TP-11",
+        "aliases": [
+          "Coastal - warm-water coral reefs (die-off)"
+        ]
+      },
+      {
+        "id": "TP-12",
+        "aliases": [
+          "Coastal - mangroves and seagrass meadows (die-off)"
+        ]
+      },
+      {
+        "id": "TP-13",
+        "aliases": [
+          "Marine ecosystems and environment (regime shifts)"
+        ]
+      },
+      {
+        "id": "TP-14",
+        "aliases": [
+          "Ocean overturning (collapse)"
+        ]
+      },
+      {
+        "id": "TP-15",
+        "aliases": [
+          "Monsoons (collapse/abrupt strengthening)"
+        ]
+      },
+      {
+        "id": "TP-16",
+        "aliases": [
+          "Tropical clouds and circulation (reorganisation)"
+        ]
+      },
+      {
+        "id": "TP-17",
+        "aliases": [
+          "ENSO (more extreme or permanent)"
+        ]
+      },
+      {
+        "id": "TP-18",
+        "aliases": [
+          "Mid-latitude (shift to wavy-jet)"
+        ]
+      }
+    ],
+    "reference_count": 18,
+    "source_rows": [
+      {
+        "id": "TP-01",
+        "name": "Ice Sheets (collapse)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-02",
+        "name": "Sea Ice (loss)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-03",
+        "name": "Glaciers (retreat)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-04",
+        "name": "Permafrost (thaw)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-05",
+        "name": "Tropical Forests (dieback)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-06",
+        "name": "Boreal Forests (dieback/expansion)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-07",
+        "name": "Temperate Forests (dieback)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-08",
+        "name": "Savannas and Grasslands (regime shifts)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-09",
+        "name": "Drylands (regime shifts)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-10",
+        "name": "Freshwater/Lakes (regime shifts)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-11",
+        "name": "Coastal - warm-water coral reefs (die-off)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-12",
+        "name": "Coastal - mangroves and seagrass meadows (die-off)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-13",
+        "name": "Marine ecosystems and environment (regime shifts)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-14",
+        "name": "Ocean overturning (collapse)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-15",
+        "name": "Monsoons (collapse/abrupt strengthening)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-16",
+        "name": "Tropical clouds and circulation (reorganisation)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-17",
+        "name": "ENSO (more extreme or permanent)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      },
+      {
+        "id": "TP-18",
+        "name": "Mid-latitude (shift to wavy-jet)",
+        "description": null,
+        "meaning": null,
+        "selected_for_observables": null
+      }
+    ],
+    "completeness_status": "Review service truncation and query scope before scoring",
+    "provenance": {
+      "source_type": "current_ontology_snapshot",
+      "tool": "list_ontology_nodes",
+      "arguments": {
+        "label": "TippingPoint"
+      },
+      "historical_comparability": "Not established",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/TASK_260713_000031_500010.json",
+      "snapshot_sha256": "8bc2b1ba7c95370da494fe18d40b4f300761daab29d907ea2d749cbdc0409f14",
+      "retrieved_at_utc": "2026-10-12T11:21:58.097344+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000038_500017": {
+    "task_ID": "TASK_260713_000038_500017",
+    "task_text": "List all EUMETSAT geostationary products that can be searched and downloaded.",
+    "reference_set": [
+      {
+        "id": "MTG-FCI-L1C-FDHSI",
+        "aliases": [
+          "EO:EUM:DAT:0662"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L1C-HRFI",
+        "aliases": [
+          "EO:EUM:DAT:0665"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-CLM",
+        "aliases": [
+          "EO:EUM:DAT:0678"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-AFM",
+        "aliases": [
+          "EO:EUM:DAT:0682"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-OCA",
+        "aliases": [
+          "EO:EUM:DAT:0668"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-GII",
+        "aliases": [
+          "EO:EUM:DAT:0683"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-AMV",
+        "aliases": [
+          "EO:EUM:DAT:0676"
+        ]
+      },
+      {
+        "id": "MSG-SEVIRI-L1-HRY",
+        "aliases": [
+          "EO:EUM:DAT:MSG:HRSEVIRI"
+        ]
+      },
+      {
+        "id": "MSG-SEVIRI-L1-IODC",
+        "aliases": [
+          "EO:EUM:DAT:MSG:HRSEVIRI-IODC"
+        ]
+      },
+      {
+        "id": "MSG-SEVIRI-RSS",
+        "aliases": [
+          "EO:EUM:DAT:MSG:MSG15-RSS"
+        ]
+      }
+    ],
+    "reference_count": 10,
+    "product_metadata": {
+      "MTG-FCI-L1C-FDHSI": {
+        "product_id": "EO:EUM:DAT:0662",
+        "satpy_reader": "fci_l1c_nc",
+        "bands": [
+          "vis_04",
+          "vis_05",
+          "vis_06",
+          "vis_08",
+          "vis_09",
+          "nir_13",
+          "nir_16",
+          "nir_22",
+          "ir_38",
+          "wv_63",
+          "wv_73",
+          "ir_87",
+          "ir_97",
+          "ir_105",
+          "ir_123",
+          "ir_133"
+        ]
+      },
+      "MTG-FCI-L1C-HRFI": {
+        "product_id": "EO:EUM:DAT:0665",
+        "satpy_reader": "fci_l1c_nc",
+        "bands": [
+          "vis_06_hr",
+          "vis_08_hr"
+        ]
+      },
+      "MTG-FCI-L2-CLM": {
+        "product_id": "EO:EUM:DAT:0678",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "cloud_state"
+        ]
+      },
+      "MTG-FCI-L2-AFM": {
+        "product_id": "EO:EUM:DAT:0682",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "fire_probability"
+        ]
+      },
+      "MTG-FCI-L2-OCA": {
+        "product_id": "EO:EUM:DAT:0668",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "retrieved_cloud_optical_thickness",
+          "retrieved_cloud_top_pressure_upper_layer",
+          "retrieved_cloud_top_pressure_lower_layer"
+        ]
+      },
+      "MTG-FCI-L2-GII": {
+        "product_id": "EO:EUM:DAT:0683",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "k_index",
+          "lifted_index",
+          "prec_water_high",
+          "prec_water_low",
+          "prec_water_mid",
+          "prec_water_total"
+        ]
+      },
+      "MTG-FCI-L2-AMV": {
+        "product_id": "EO:EUM:DAT:0676",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "speed",
+          "direction",
+          "pressure",
+          "temperature",
+          "wind_method",
+          "qi"
+        ]
+      },
+      "MSG-SEVIRI-L1-HRY": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134",
+          "HRV"
+        ]
+      },
+      "MSG-SEVIRI-L1-IODC": {
+        "product_id": "EO:EUM:DAT:MSG:HRSEVIRI-IODC",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134",
+          "HRV"
+        ]
+      },
+      "MSG-SEVIRI-RSS": {
+        "product_id": "EO:EUM:DAT:MSG:MSG15-RSS",
+        "satpy_reader": "seviri_l1b_hrit",
+        "bands": [
+          "VIS006",
+          "VIS008",
+          "IR_016",
+          "IR_039",
+          "WV_062",
+          "WV_073",
+          "IR_087",
+          "IR_097",
+          "IR_108",
+          "IR_120",
+          "IR_134"
+        ]
+      }
+    },
+    "provenance": {
+      "source_type": "versioned_local_catalogue",
+      "module": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/.venv/lib/python3.12/site-packages/eumetsearch/data_collection/downloader.py",
+      "module_sha256": "c63636b335a0a541e44624e7df28b98d13027da416c3a5f1661e7b54d2094a88",
+      "constant": "products_list",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/products_list.json",
+      "snapshot_sha256": "ed74096c00e3451b468793b27a602ba6704a3eda0669f3d94c8a076e39643682",
+      "retrieved_at_utc": "2026-10-12T11:21:58.135087+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000040_500019": {
+    "task_ID": "TASK_260713_000040_500019",
+    "task_text": "Check which MTG FCI Level 2 products (cloud mask, fire, OCA) are available on the EUMETSAT server and note their product IDs.",
+    "reference_set": [
+      {
+        "id": "MTG-FCI-L2-CLM",
+        "aliases": [
+          "EO:EUM:DAT:0678"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-AFM",
+        "aliases": [
+          "EO:EUM:DAT:0682"
+        ]
+      },
+      {
+        "id": "MTG-FCI-L2-OCA",
+        "aliases": [
+          "EO:EUM:DAT:0668"
+        ]
+      }
+    ],
+    "reference_count": 3,
+    "product_metadata": {
+      "MTG-FCI-L2-CLM": {
+        "product_id": "EO:EUM:DAT:0678",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "cloud_state"
+        ]
+      },
+      "MTG-FCI-L2-AFM": {
+        "product_id": "EO:EUM:DAT:0682",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "fire_probability"
+        ]
+      },
+      "MTG-FCI-L2-OCA": {
+        "product_id": "EO:EUM:DAT:0668",
+        "satpy_reader": "fci_l2_nc",
+        "bands": [
+          "retrieved_cloud_optical_thickness",
+          "retrieved_cloud_top_pressure_upper_layer",
+          "retrieved_cloud_top_pressure_lower_layer"
+        ]
+      }
+    },
+    "provenance": {
+      "source_type": "versioned_local_catalogue",
+      "module": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/.venv/lib/python3.12/site-packages/eumetsearch/data_collection/downloader.py",
+      "module_sha256": "c63636b335a0a541e44624e7df28b98d13027da416c3a5f1661e7b54d2094a88",
+      "constant": "products_list",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/products_list.json",
+      "snapshot_sha256": "ed74096c00e3451b468793b27a602ba6704a3eda0669f3d94c8a076e39643682",
+      "retrieved_at_utc": "2026-10-12T11:21:58.135087+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000001_600001": {
+    "task_ID": "TASK_260713_000001_600001",
+    "task_text": "What ERA5 surface variables related to precipitation and hydrology are available through the CDS API?",
+    "reference_set": [
+      "total_precipitation",
+      "large_scale_precipitation",
+      "convective_precipitation",
+      "snowfall",
+      "evaporation",
+      "potential_evaporation",
+      "runoff",
+      "surface_runoff",
+      "sub_surface_runoff",
+      "snow_evaporation",
+      "snowmelt",
+      "large_scale_precipitation_fraction"
+    ],
+    "reference_count": 12,
+    "provenance": {
+      "source_type": "versioned_local_catalogue",
+      "module": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/src/agenticeoecosystem/servers/climate/server.py",
+      "module_sha256": "097157a4adb7621c70e1cbf7e5bf15511c567fe2c9627267fc78d64f2a2f4959",
+      "constant": "_ERA5_SINGLE_LEVEL_VARIABLES",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/_ERA5_SINGLE_LEVEL_VARIABLES.json",
+      "snapshot_sha256": "c098356bea33578445c53aba93183f7bb8e14d53445ab6f2b2683c7f71cbc135",
+      "retrieved_at_utc": "2026-10-12T11:21:58.292250+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000006_600006": {
+    "task_ID": "TASK_260713_000006_600006",
+    "task_text": "What atmospheric variables are available at ERA5 pressure levels through the CDS API?",
+    "reference_set": [
+      "divergence",
+      "fraction_of_cloud_cover",
+      "geopotential",
+      "ozone_mass_mixing_ratio",
+      "potential_vorticity",
+      "relative_humidity",
+      "specific_cloud_ice_water_content",
+      "specific_cloud_liquid_water_content",
+      "specific_humidity",
+      "specific_rain_water_content",
+      "specific_snow_water_content",
+      "temperature",
+      "u_component_of_wind",
+      "v_component_of_wind",
+      "vertical_velocity",
+      "vorticity"
+    ],
+    "reference_count": 16,
+    "provenance": {
+      "source_type": "versioned_local_catalogue",
+      "module": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/src/agenticeoecosystem/servers/climate/server.py",
+      "module_sha256": "097157a4adb7621c70e1cbf7e5bf15511c567fe2c9627267fc78d64f2a2f4959",
+      "constant": "_ERA5_PRESSURE_LEVEL_VARIABLES",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/_ERA5_PRESSURE_LEVEL_VARIABLES.json",
+      "snapshot_sha256": "a56a3bfaca951ec17ac3847d5794cc326eef70a1a06636fc4e7f261ce6af97ed",
+      "retrieved_at_utc": "2026-10-12T11:21:58.323850+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000007_600007": {
+    "task_ID": "TASK_260713_000007_600007",
+    "task_text": "What pressure levels (in hPa) are available in ERA5 for pressure-level downloads?",
+    "reference_set": [
+      "1",
+      "2",
+      "3",
+      "5",
+      "7",
+      "10",
+      "20",
+      "30",
+      "50",
+      "70",
+      "100",
+      "125",
+      "150",
+      "175",
+      "200",
+      "225",
+      "250",
+      "300",
+      "350",
+      "400",
+      "450",
+      "500",
+      "550",
+      "600",
+      "650",
+      "700",
+      "750",
+      "775",
+      "800",
+      "825",
+      "850",
+      "875",
+      "900",
+      "925",
+      "950",
+      "975",
+      "1000"
+    ],
+    "reference_count": 37,
+    "provenance": {
+      "source_type": "versioned_local_catalogue",
+      "module": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/src/agenticeoecosystem/servers/climate/server.py",
+      "module_sha256": "097157a4adb7621c70e1cbf7e5bf15511c567fe2c9627267fc78d64f2a2f4959",
+      "constant": "_ERA5_PRESSURE_LEVELS",
+      "snapshot_path": "/shared/home/rdercole/Riccardo/projects/agenticeoecosystem/data/ground_truth_discovery_20261012_1011/sources/_ERA5_PRESSURE_LEVELS.json",
+      "snapshot_sha256": "f9c84b1daa07f7afe5a6e20dd7db7c4f6e6607136552b5ca294da57267b0bd55",
+      "retrieved_at_utc": "2026-10-12T11:21:58.342621+00:00"
+    },
+    "status": "proposed_requires_review",
+    "evaluation_policy": "Validate temporal/source and candidate-input comparability before scoring."
+  },
+  "TASK_260713_000011_600011": {
+    "task_ID": "TASK_260713_000011_600011",
+    "task_text": "What CDS datasets are available for accessing ERA5 reanalysis data?",
+    "recorded_at_utc": "2026-10-12T16:04:25.877091+00:00",
+    "reference_set": [
+      "reanalysis-era5-single-levels",
+      "reanalysis-era5-single-levels-monthly-means",
+      "reanalysis-era5-pressure-levels",
+      "reanalysis-era5-pressure-levels-monthly-means",
+      "reanalysis-era5-land",
+      "reanalysis-era5-land-monthly-means",
+      "derived-era5-single-levels-daily-statistics",
+      "derived-era5-pressure-levels-daily-statistics"
+    ],
+    "reference_count": 8,
+    "accepted_optional": [
+      "sis-agrometeorological-indicators"
+    ],
+    "reference_type": "source_snapshot",
+    "correction": "Previous set omitted the two derived ERA5 daily-statistics datasets.",
+    "evaluation_policy": "Optional item is ERA5-derived (AgERA5); do not penalise it either way.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000011_600011_tool_calls.json"
+  },
+  "TASK_260419_000006_100006": {
+    "task_ID": "TASK_260419_000006_100006",
+    "task_text": "Which narratives in the EO Dashboard reference the indicator collection FNF_Palsar (ALOS PALSAR forest/non-forest map)?",
+    "recorded_at_utc": "2026-10-12T16:04:18.583311+00:00",
+    "reference_set": [
+      "A view from space monitors land cover and tree to track aboveground biomass and carbon content",
+      "Forests on the Brink: Satellite Imagery unveiling Loss and Shifting Forest Landscapes"
+    ],
+    "reference_count": 2,
+    "indicator_code": "FNF_Palsar",
+    "reference_type": "source_snapshot",
+    "evaluation_policy": "Compare trimmed narrative titles against this snapshot.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260419_000006_100006_tool_calls.json"
+  },
+  "TASK_260419_000010_100010": {
+    "task_ID": "TASK_260419_000010_100010",
+    "task_text": "Which EO Dashboard narratives reference the CryoSat-2 sea ice thickness dataset with indicator code SIC_sea_ice_thickness_cryosat?",
+    "recorded_at_utc": "2026-10-12T16:04:18.587119+00:00",
+    "reference_set": [
+      "The sea ice extent has been rapidly decreasing in recent years as global temperatures have risen",
+      "Measuring Thickness of Sea Ice in the Polar Oceans",
+      "The Arctic region shows changes most characteristic of global warming"
+    ],
+    "reference_count": 3,
+    "indicator_code": "SIC_sea_ice_thickness_cryosat",
+    "reference_type": "source_snapshot",
+    "evaluation_policy": "Compare trimmed narrative titles against this snapshot.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260419_000010_100010_tool_calls.json"
+  },
+  "TASK_260713_000029_500008": {
+    "task_ID": "TASK_260713_000029_500008",
+    "task_text": "Use the EOSS knowledge graph to find all science questions whose knowledge advancement objectives mention temperature.",
+    "recorded_at_utc": "2026-10-12T16:04:20.564309+00:00",
+    "reference_set": [
+      {
+        "id": "SQ-43",
+        "aliases": [
+          "Coupled energy, water and carbon cycles"
+        ]
+      },
+      {
+        "id": "SQ-46",
+        "aliases": [
+          "Earth energy imbalance"
+        ]
+      }
+    ],
+    "reference_count": 2,
+    "reference_type": "source_snapshot",
+    "evaluation_policy": "Explicit HAS_KAO edges in this snapshot.",
+    "provenance_log": "data/reference_corrections_20261012/sources/TASK_260713_000029_500008_tool_calls.json"
+  }
+}

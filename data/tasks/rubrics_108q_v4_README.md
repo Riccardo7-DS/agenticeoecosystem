@@ -1,7 +1,7 @@
 # Rubric version 4.0
 
 These profiles keep the 108 task IDs, original questions, three criterion types,
-and 0.5/0.3/0.2 weights. Version 3 remains unchanged.
+and 0.5/0.3/0.2 weights. Version 3 remains unchanged in `../archive/tasks_20261013/rubrics_108q_v3.json`.
 
 ## Historical runs: trace profile
 

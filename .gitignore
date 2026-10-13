@@ -4,6 +4,7 @@ data/eodashboard-catalog/
 models/
 # data/
 data/ImpactMesh-Fire/
+/data/archive/
 
 .env
 script.sh
@@ -137,7 +138,9 @@ scripts/local/
 data/candidate_numeric_evidence_*/
 data/provisional_scores_*/
 data/evaluation_prepared_*/
-figs/
+figs/*
+!figs/eva_fig.png
+!figs/size_vs_score.png
 
 # Intermediate reference-construction runs and audit leftovers.
 data/budget_resume_*/
@@ -156,6 +159,11 @@ tests/test_numeric_recovery.py
 
 # Stray local snapshot kept out of the repo.
 data/tasks/4096/
+data/tasks/4096
+
+# Retired local artifacts moved out of the current task configuration.
+data/archive/tasks_20261013/4096/
+data/archive/tasks_20261013/rubric_rerun_audit/
 
 # Wildfire analysis local inputs and outputs.
 scripts/vlm.sh

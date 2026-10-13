@@ -1,5 +1,8 @@
 # Documentation
 
+For MCP server setup, interactive usage, wildfire workflows and adding agents,
+see the [detailed setup and development guide](project_guide.md).
+
 ## Evaluation and judge status
 
 Start with [judge run organization](evaluation/judge_run_organization.md) to
@@ -20,7 +23,7 @@ evaluation. Strategy mappings describe required checks, not completed runs.
 ## Benchmark operations
 
 - [Candidate reruns](benchmarking/candidate_reruns.md): setup, model-specific inputs, checkpoints and evidence archiving.
-- [Questions requiring reruns](../data/tasks/benchmark_rerun_required.md): revised question contracts.
+- [Questions requiring reruns](../data/archive/tasks_20261013/benchmark_rerun_required.md): revised question contracts.
 
 Task definitions, strategies, rubrics and ground truths stay under `data/tasks/`.
 Executable entry points are grouped in the [script index](../scripts/README.md).

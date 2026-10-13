@@ -22,7 +22,10 @@
           "description": "The answer's suitability rationale and conclusions follow from the data it says it retrieved, with no contradictions between the selected area, dataset capabilities, observed evidence, and claims about the bushfires.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -48,7 +51,10 @@
           "description": "The answer's visibility conclusion, directional description, and any qualifications are mutually consistent and follow from the visual evidence it describes.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -74,7 +80,10 @@
           "description": "Ensure the stated comparison and conclusions follow from the observations described and do not contradict the answer’s account of the study area, images, or visible changes.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -100,7 +109,10 @@
           "description": "The suitability conclusion follows logically from the visual evidence described, and the answer does not make contradictory claims about feature visibility or mapping capability.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -126,7 +138,10 @@
           "description": "Presents a coherent account in which the stated visual evidence supports the stronger-versus-weaker vegetation comparisons and any interpretation of those comparisons.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -152,7 +167,10 @@
           "description": "The answer's judgment about whether the image supports the narrative follows logically from the visible evidence it reports and is consistent with the spatial and temporal relationship it describes between the image and narrative.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -178,7 +196,10 @@
           "description": "The answer’s conclusion about whether forest habitat appears present follows logically from the visual evidence it describes, with no contradictions between its image observations and interpretation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -204,7 +225,10 @@
           "description": "The answer's descriptions of the image, its dates, bands, resolution, and the relevance of the identified narrative(s) are mutually consistent, and its conclusions follow from the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -230,7 +254,10 @@
           "description": "Keeps the priority-to-domain mappings, reported MOOC coverage, and conclusions about how the lectures support the objectives logically consistent with the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -256,7 +283,10 @@
           "description": "Ensure the conclusions about cryosphere conditions or ice extent follow from the evidence and reasoning presented and are consistent with the stated study area, data, and narrative context.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -282,7 +312,10 @@
           "description": "Presents conclusions about each study area and its emissions consistently with the dataset characteristics and evidence described, without making unsupported claims about what the observations establish.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -308,7 +341,10 @@
           "description": "The answer’s explanation of the observation’s relevance and limitations follows from the evidence it presents and is consistent with its account of the narrative and policy context.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -334,7 +370,10 @@
           "description": "The answer's explanation of how the retrieved observations relate to the narrative's industrial emissions issue follows from the evidence it presents and is consistent with its stated limitations and conclusions.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -360,7 +399,10 @@
           "description": "Draws a conclusion about visible landscape change that follows consistently from the evidence and comparison described in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -386,7 +428,10 @@
           "description": "The answer's explanation of how the NDVI observations and supporting strategy and educational resources serve the narrative's crop-monitoring objectives follows coherently from the evidence and qualifications it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -412,7 +457,10 @@
           "description": "Ensure that the reported spatial pattern, its interpretation, and the stated relationship to the narrative are logically compatible with one another and with the observation’s temporal and spatial scope.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -438,7 +486,10 @@
           "description": "Keeps the stated region, land-cover summary, and explanation of biomass monitoring mutually consistent, with conclusions that follow from the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -464,7 +515,10 @@
           "description": "Keeps its conclusions about the chokepoint, maritime activity, and surrounding infrastructure logically aligned with the evidence it describes, and distinguishes image-based observations from any broader claims about global shipping disruption.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -490,7 +544,10 @@
           "description": "Presents conclusions about the scene and lockdown-related inferences that follow logically from the visual evidence and limitations stated, without contradicting its own description.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -516,7 +573,10 @@
           "description": "Keeps its description of the visible vegetation patterns, its interpretation of the false-colour evidence, and any conclusions about pre-harvest conditions logically consistent with one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -542,7 +602,10 @@
           "description": "Keeps the estimated land-cover proportions, the description of green-space distribution, and the overall interpretation mutually consistent and supported by the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -568,7 +631,10 @@
           "description": "Keeps the stated location, observation period, measured quantity, described spatial pattern, and connection to the narrative mutually consistent, with conclusions proportionate to the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -594,7 +660,10 @@
           "description": "Ensure that the stated SST patterns, dates, comparisons, and conclusions are mutually consistent and that the interpretation follows from the observations and limitations described in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -620,7 +689,10 @@
           "description": "Draws a conclusion about whether the image provides supporting context that follows from the visible evidence it describes and is consistent with the narrative’s stated impacts.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -646,7 +718,10 @@
           "description": "Presents a conclusion about whether the image is consistent with the narrative that logically follows from the described image evidence and does not contradict its own account of the data or limitations.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -672,7 +747,10 @@
           "description": "Ensures the described land-cover changes and conclusions are consistent with the stated before-and-after evidence and do not contradict the answer's own account of the images.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -698,7 +776,10 @@
           "description": "Ensures that the stated changes and conclusions follow from the comparison presented and are consistent with the images’ pre-fire and post-fire ordering.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -724,7 +805,10 @@
           "description": "Ensure that the stated support-or-challenge conclusion follows from the described image evidence and narrative findings, with any differences in spatial or temporal scope handled consistently.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -750,7 +834,10 @@
           "description": "Presents conclusions that follow from the described image evidence and appropriately distinguishes what a single summer image can show from longer-term change or causal claims it cannot establish on its own.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -776,7 +863,10 @@
           "description": "Ensures that the stated alignments, gaps, and overall conclusions follow from the strategy priorities and paper approaches the answer describes, without contradicting its own evidence.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -802,7 +892,10 @@
           "description": "Draws conclusions about commonalities and research gaps that follow from the strategy priorities and paper evidence presented, without treating limited search results as proof that a topic is absent from the broader literature.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -828,7 +921,10 @@
           "description": "Draws conclusions about convergence and gaps that follow from the evidence presented and remains consistent in describing the strategy’s priorities and the paper’s scope.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -854,7 +950,10 @@
           "description": "Presents conclusions about how the paper and citation graph address the strategy that follow logically from the evidence and reasoning given, with no material contradictions among its descriptions, comparisons, and conclusions.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -880,7 +979,10 @@
           "description": "Draws conclusions that follow from the evidence presented, distinguishes strategic objectives from the topics represented in the searched paper sample, and does not treat that sample as a complete measure of all community research.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -906,7 +1008,10 @@
           "description": "Clearly states whether the reported statistics support dense, dry vegetation or a wetter, water-influenced landscape, and makes that judgment consistent with the reported NDVI and NDWI values and their spatial summaries.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -932,7 +1037,10 @@
           "description": "Ensures that the vegetation and moisture-stress conclusions follow from the histogram or raster evidence presented and that claims about the observation, indices, and drought interpretation do not contradict one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -958,7 +1066,10 @@
           "description": "Presents conclusions that follow from the spatial evidence and reasoning given, with no contradictions among the selected region, described NDVI patterns, and agricultural interpretation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -984,7 +1095,10 @@
           "description": "Keeps the stated study area, the patterns described in the imagery, and the interpretation of forest change logically consistent, distinguishing any inferred representative region from a location explicitly named by the narrative.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1010,7 +1124,10 @@
           "description": "The answer's claims about the location, image evidence, and interpretation are mutually consistent, and its conclusions follow from the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1036,7 +1153,10 @@
           "description": "Keeps conclusions proportional to the evidence presented, distinguishing visible land-water patterns from inferred historical retreat and ensuring that claims about retreat follow logically from the stated comparison.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1062,7 +1182,10 @@
           "description": "Presents conclusions about flood extent that follow from the stated image evidence and are consistent with the described location, observation, and limitations.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1088,7 +1211,10 @@
           "description": "The reported sea ice conditions, the interpretation of what the observation supports, and the cited ESA objectives are mutually consistent, with conclusions following from the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1114,7 +1240,10 @@
           "description": "Keeps its description of the histogram, assessment of vegetation stress, and stated limitations logically consistent with the evidence it reports.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1140,7 +1269,10 @@
           "description": "Present conclusions that follow from the spatial evidence described and use the NDVI and NDMI interpretations consistently, without contradicting the reported map patterns.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1166,7 +1298,10 @@
           "description": "Draws conclusions about how the cited research relates to the ESA priorities that follow logically from the findings it describes, without contradictions between its evidence and claims.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1192,7 +1327,10 @@
           "description": "Presents an internally coherent account in which the narrative details support the stated connection to the selected objective and the conclusion follows from the evidence given.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1218,7 +1356,10 @@
           "description": "Presents connections between the cited research and policy priorities that follow logically from the evidence it describes, with conclusions consistent across the answer and with any limitations it acknowledges.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1244,7 +1385,10 @@
           "description": "Its descriptions of the acquisition, coverage, channel, observed features, and any conclusions are mutually consistent and follow logically from the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1270,7 +1414,10 @@
           "description": "Ensures the stated conclusion about visible fire activity is consistent with the described map evidence and with any qualifications about what the observation can establish.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1296,7 +1443,10 @@
           "description": "Presents conclusions about the cloud observations and their scientific relevance that follow from the stated evidence, and does not contradict its own account of the data, geographic crop, or limitations.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1322,7 +1472,10 @@
           "description": "Presents mutually consistent descriptions of the file’s variables, dimensions, coordinates, and coordinate system, with conclusions supported by the metadata it reports.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1348,7 +1501,10 @@
           "description": "Presents circulation descriptions and conclusions that are mutually consistent and follow from the spatial patterns and evidence described in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1374,7 +1530,10 @@
           "description": "Keeps its reported height patterns and circulation interpretation consistent with one another and with the fact that the data represent a monthly mean rather than daily variability.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1400,7 +1559,10 @@
           "description": "Ensures that the reported warmest areas and month-to-month conclusions follow from the evidence presented and do not contradict one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1426,7 +1588,10 @@
           "description": "Presents conclusions about jet location, orientation, strength, and circulation that follow from the evidence it describes and do not conflict with its own account of the wind field.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1452,7 +1617,10 @@
           "description": "The event description, ERA5 evidence, atmospheric interpretation, and connection to ESA objectives form a logically consistent account without contradictions.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1478,7 +1646,10 @@
           "description": "Presents conclusions about the warmest regions and overall pattern that follow from the evidence it reports and do not contradict its own description of the temperature field.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1504,7 +1675,10 @@
           "description": "Presents a coherent account in which the stated precipitation pattern, identified high-precipitation regions, and any interpretation agree with one another and with the evidence described.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1530,7 +1704,10 @@
           "description": "Presents warmer and cooler regional assessments and any broader conclusions that are logically consistent with the spatial evidence and reasoning stated in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1556,7 +1733,10 @@
           "description": "Keeps the stated time period, rainfall patterns, and conclusions mutually consistent with the three-day aggregate and the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1582,7 +1762,10 @@
           "description": "Presents a spatial and temporal interpretation whose warmest and coldest regions, comparisons, and conclusions are logically consistent with the evidence and with one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1608,7 +1791,10 @@
           "description": "Ensure that the stated comparison and conclusions are consistent with the reported evidence and with monthly summaries of daily 00:00 UTC samples, rather than presenting them as an all-hour monthly mean or attributing causes or long-term trends that the data do not establish.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1634,7 +1820,10 @@
           "description": "Ensure the stated region, drought period, runoff evidence, and conclusion about whether that evidence supports or contradicts the narrative align logically with one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1660,7 +1849,10 @@
           "description": "Logically explains how the precipitation comparison can inform ESA hydrological monitoring objectives while keeping conclusions proportional to the evidence and not treating precipitation alone as proof of broader hydrological conditions or causes.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1686,7 +1878,10 @@
           "description": "Keeps the stated seasonal pattern, spatial scope, and conclusions logically consistent with the evidence and aggregation presented in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1712,7 +1907,10 @@
           "description": "Ensure that the stated seasonal conclusions follow from the evidence presented and that descriptions of the data, spatial patterns, and interpretation do not contradict one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1738,7 +1936,10 @@
           "description": "Keeps the stated range, data scope, and conclusions logically consistent with one another and with the described daily-minimum observations.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1764,7 +1965,10 @@
           "description": "Presents temperature findings, their interpretation, and their relevance to climate monitoring in a logically consistent way, without conclusions that conflict with the evidence or with one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1790,7 +1994,10 @@
           "description": "Makes wettest-day conclusions that follow from the reported daily totals and keeps its descriptions of the hourly data, daily aggregation, and resulting ranking mutually consistent.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1816,7 +2023,10 @@
           "description": "Keeps the described mean field and interpretation consistent with the stated location, month, years, units and common-valid-cell sampling, without unsupported trends or contradictions between inputs and conclusions.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1842,7 +2052,10 @@
           "description": "Ensure that the stated rainfall pattern, its interpretation, and the explanation of how it supports the cited ESA objectives are mutually consistent and that the conclusions follow from the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1868,7 +2081,10 @@
           "description": "Ensures that the stated conclusions about crop greenness follow from the NDVI evidence presented and are consistent with any qualifications or limitations the answer acknowledges.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1894,7 +2110,10 @@
           "description": "Keeps the stated bloom assessment, description of image features, and approximate location mutually consistent, with the conclusion supported by the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1920,7 +2139,10 @@
           "description": "Presents mutually consistent warmer-versus-cooler comparisons, with its stated conclusions following from the visual evidence and reasoning it describes.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1946,7 +2168,10 @@
           "description": "Ensure the description's relative-elevation and terrain-form claims agree with one another and support the conclusions drawn from the visualization.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1972,7 +2197,10 @@
           "description": "Draws conclusions about wetland extent, open water, and soil-moisture conditions that are logically consistent with the backscatter evidence and qualifications presented in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -1998,7 +2226,10 @@
           "description": "The answer's land-cover descriptions, product-level claims, and conclusions about the combined imagery are logically consistent with one another and with the evidence it presents.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2024,7 +2255,10 @@
           "description": "Ensures that the agricultural interpretation and any conclusions follow from the visual evidence and stated capabilities of the selected image, without presenting unsupported inferences as observations.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2050,7 +2284,10 @@
           "description": "Ensure that the stated high- and low-NO₂ areas, their geographic descriptions, and the overall interpretation agree with one another and with the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2076,7 +2313,10 @@
           "description": "Keeps its mapped or described flood extent, backscatter interpretation, and conclusions consistent with the evidence it presents from the selected area and observation dates.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2102,7 +2342,10 @@
           "description": "The reported ranges, descriptions of the raw netCDF structure, and any conclusions drawn from them are mutually consistent and follow from the evidence presented.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2128,7 +2371,10 @@
           "description": "Ensures that the stated conclusion about observable landscape change follows logically from the visual evidence described and does not contradict other claims in the answer.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2154,7 +2400,10 @@
           "description": "Ensure the stated conclusion about visible change or no visible change follows from the observations described and that claims about different features or periods do not contradict one another.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2180,7 +2429,10 @@
           "description": "The narrative identity, delivered content and any retrieval-status statements agree with each other and with the evidence available to the judge. Additional interpretation is not required, and no particular narrative from the reference is mandatory when another valid source satisfies the task.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2206,7 +2458,10 @@
           "description": "The narrative identity, delivered content and any retrieval-status statements agree with each other and with the evidence available to the judge. Additional interpretation is not required, and no particular narrative from the reference is mandatory when another valid source satisfies the task.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2232,7 +2487,10 @@
           "description": "The narrative identity, delivered content and any retrieval-status statements agree with each other and with the evidence available to the judge. Additional interpretation is not required, and no particular narrative from the reference is mandatory when another valid source satisfies the task.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2258,7 +2516,10 @@
           "description": "The narrative identity, delivered content and any retrieval-status statements agree with each other and with the evidence available to the judge. Additional interpretation is not required, and no particular narrative from the reference is mandatory when another valid source satisfies the task.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2284,7 +2545,10 @@
           "description": "The narrative identity, delivered content and any retrieval-status statements agree with each other and with the evidence available to the judge. Additional interpretation is not required, and no particular narrative from the reference is mandatory when another valid source satisfies the task.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2310,7 +2574,10 @@
           "description": "The claimed contribution of satellite observations to carbon accounting follows from the capabilities and limitations described, and the answer consistently distinguishes strategy priorities from established observational results.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2336,7 +2603,10 @@
           "description": "The stated strategy priorities, observational capabilities and expected response benefits are mutually consistent, and any conclusion about operational usefulness follows from the supporting explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2362,7 +2632,10 @@
           "description": "The monitoring objectives and climate implications follow coherently from the observables and limitations described, without contradictory claims about what the selected observations establish.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2388,7 +2661,10 @@
           "description": "The stated alignments, gaps and conclusions follow from the objectives and paper evidence presented, consistently distinguishing the paper's demonstrated results from potential applications or unaddressed objectives.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2414,7 +2690,10 @@
           "description": "The conclusions about literature coverage, scientific relevance and remaining gaps follow from the cited priorities and paper evidence, with consistent distinctions between demonstrated findings and proposed future work.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2440,7 +2719,10 @@
           "description": "The claimed narrative-to-objective alignment follows from the thematic or graph evidence presented, and the answer does not describe an indirect connection as an explicitly retrieved direct relationship.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2466,7 +2748,10 @@
           "description": "The described vertical-motion signs, regional comparison and relationship to the narrative follow consistently from the evidence presented. A supported finding of agreement, partial agreement or disagreement is valid.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2492,7 +2777,10 @@
           "description": "The temporal sequence and circulation conclusions follow from the evidence described, without contradictory claims about feature movement, strengthening or weakening, observation times or variable units.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2518,7 +2806,10 @@
           "description": "The lecture-to-topic associations and any reasoning are mutually consistent and supported by the evidence presented. Do not require additional explanations absent from the task or penalize valid selections differing from the reference.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2544,7 +2835,10 @@
           "description": "The lecture-to-topic associations and any reasoning are mutually consistent and supported by the evidence presented. Do not require additional explanations absent from the task or penalize valid selections differing from the reference.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2570,7 +2864,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2596,7 +2893,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2622,7 +2922,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2648,7 +2951,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2674,7 +2980,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2700,7 +3009,10 @@
           "description": "The strategy/source-to-lecture associations and any explanation are mutually consistent with the evidence presented. Do not penalize a valid selection for differing from the reference or for omitting an unrequested narrative explanation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2726,7 +3038,10 @@
           "description": "City, narrative, selected lecture and any reasoning are mutually consistent. Do not penalize omission of unrequested explanation or a valid source choice differing from the reference.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2752,7 +3067,10 @@
           "description": "The stated vegetation assessment follows from the reported NDVI statistics and their limitations without contradictory classifications or unsupported spatial conclusions.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2778,7 +3096,10 @@
           "description": "The chosen download scope follows logically from the stated count and practical rationale, with no contradictions between claimed constraints and recommendation.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   },
   {
@@ -2804,7 +3125,10 @@
           "description": "The interpretation follows from the reported monthly values or patterns and the stated regional and temporal support, without contradictory comparisons, units or conclusions. Accept different conclusions when supported by the candidate’s evidence.",
           "weight": 0.2
         }
-      ]
+      ],
+      "protocol_version": "4.0",
+      "evidence_mode": "evidence",
+      "scoring_instructions": "Evaluate the original task, candidate trace, final answer, and candidate-bound source/artifact evidence. Keep the task-specific descriptions unchanged. Empty answers and explicit failures with no requested result receive zero on all criteria; a clearly wrong target with no valid requested result also receives zero. Score partial requested results on what was delivered. Tool calls and candidate prose do not prove execution or observed content. Verify material source claims against captured responses or accessible source content, and material visual/numerical claims against the appropriate candidate artifacts or recorded inspections. Missing or materially truncated evidence is unverified, not automatic candidate failure; use null for evidence-dependent criteria that cannot be decided, and null for the weighted total if any criterion is unverified. Proven contradictions can score zero. Do not add unrequested outputs or require the reference workflow. Scores otherwise use 0/1/2 and the original weights. Report evidence coverage and never combine this profile's totals with trace-profile or historical-v3 totals as one methodology."
     }
   }
 ]

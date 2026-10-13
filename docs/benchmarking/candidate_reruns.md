@@ -50,7 +50,7 @@ Mistral Small 3.2 multi-agent: 80 selected questions.
 python scripts/generation/run_generate.py \
   --model Mistral-Small-3.2-24B-Instruct-2506 --provider eve \
   --pipeline multi --label Mistral-Small-multi-rerun \
-  --tasks-folder data/tasks/candidate_rerun_inputs_20261003 \
+  --tasks-folder data/archive/tasks_20261013/candidate_rerun_inputs_20261003 \
   --tasks-file tasks_Mistral-Small-2506.json \
   --output-dir data/candidate_reruns/colleague_mistral_multi \
   --archive-evidence --task-timeout 1800
@@ -79,7 +79,7 @@ The queue helper handles that checkpoint loading for you:
 
 ```bash
 python scripts/generation/prepare_missing_candidate_reruns.py \
-  --prepared-inputs data/tasks/candidate_rerun_inputs_20261003 \
+  --prepared-inputs data/archive/tasks_20261013/candidate_rerun_inputs_20261003 \
   --output-dir data/candidate_reruns/colleague_queue \
   --execute-mistral --model Mistral-Small-3.2-24B-Instruct-2506 \
   --execute-openrouter

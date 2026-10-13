@@ -130,7 +130,7 @@ class RubricProfileTests(unittest.TestCase):
         self.assertNotEqual(before["scoring_protocol"], after["scoring_protocol"])
 
     def test_profiles_preserve_questions_weights_and_evidence_descriptions(self) -> None:
-        source = json.loads((ROOT / "data/tasks/rubrics_108q_v3.json").read_text())
+        source = json.loads((ROOT / "data/archive/tasks_20261013/rubrics_108q_v3.json").read_text())
         for mode in ("trace", "evidence"):
             versioned = json.loads((ROOT / f"data/tasks/rubrics_108q_v4_{mode}.json").read_text())
             self.assertEqual(len(versioned), 108)

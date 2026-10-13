@@ -1,0 +1,944 @@
+{
+  "schema_version": 1,
+  "semantics": "Tool ownership; consecutive identical owners collapse into segments. Does not infer supervisor handoffs.",
+  "tools": {
+    "adbscan": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "append_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "area": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "bounds": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "buffer": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "build_and_transform_weights": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "build_transform_and_save_weights": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "calculate_geodetic_area": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "calculate_geodetic_distance": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "calculate_geodetic_point": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "centroid": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "check_alerts": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "citation_graph": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "clip_raster_with_bbox": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "clip_raster_with_shapefile": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "clip_to_bbox": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "clip_vector": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_evi": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_nbr": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_ndmi": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_ndvi": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_ndwi": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "compute_wind_speed": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "concat_bands": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "convert_daily_to_monthly": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "convert_hourly_to_daily": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "convert_units": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "convex_hull": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "coordinates": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "create_map": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "create_web_map": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "difference": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "dissolve_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "distance_band_weights": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "download_eumetsat_product": {
+      "agents": [
+        "eumetsat_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/eumetsat/server.py"
+    },
+    "download_gee_product": {
+      "agents": [
+        "gee_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/gee/server.py"
+    },
+    "download_paper": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "dynamic_lisa": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "envelope": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "explode_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "extract_band": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "fetch_cds_dataset": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_dem": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_era5_daily_statistics": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_era5_hourly_pressure_levels": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_era5_hourly_single_levels": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_era5_land": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_era5_pressure_levels": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_era5_single_levels": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "fetch_landsat_ot_l1": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel1_grd": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel2": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel3_olci": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel3_slstr": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel3_syn_l2": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "fetch_sentinel5p_l2": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "find_narratives_for_indicator": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "focal_statistics": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "gamma_statistic": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "gearys_c": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "geocode_place": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "geojson_to_geometry": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "geometry_to_geojson": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "geometry_type": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_abstract": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "get_available_crs": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_collection_items": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "get_crs_info": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_geocentric_crs": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_geod_info": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_lat_lon": {
+      "agents": [
+        "gee_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/gee/server.py"
+    },
+    "get_narrative_content": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "get_narrative_indicators": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "get_raster_crs": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_utm_crs": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "get_utm_zone": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "getis_ord_g": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "getis_ord_g_local": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "gm_lag": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "hillshade": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "inspect_netcdf": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "intersection": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "is_valid": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "join_counts_local": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "knn_weights": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "length": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "list_cds_datasets": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "list_era5_pressure_level_variables": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "list_era5_single_level_variables": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "list_eumetsat_products": {
+      "agents": [
+        "eumetsat_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/eumetsat/server.py"
+    },
+    "list_narratives": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "list_ontology_nodes": {
+      "agents": [
+        "graph_rag_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_graph_rag.py"
+    },
+    "list_papers": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "list_themes": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "load_images": {
+      "agents": [
+        "vlm_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/vlm_tools/server.py"
+    },
+    "make_valid": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "mean_netcdf_fields": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "merge_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "metadata_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "minimum_rotated_rectangle": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "moran_local": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "morans_i": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "nearest_point": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "netcdf_to_geotiff": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "normalize": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "ols_with_spatial_diagnostics_safe": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "overlay_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "point_in_polygon": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "project_geometry": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "query_ontology": {
+      "agents": [
+        "graph_rag_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_graph_rag.py"
+    },
+    "raster_algebra": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "raster_band_statistics": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "raster_histogram": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "read_eumetsat_product": {
+      "agents": [
+        "eumetsat_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/eumetsat/server.py"
+    },
+    "read_file_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "read_paper": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "reclassify_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "reindex": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "reproject_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "resample_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "resample_temporal": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "resolve_images": {
+      "agents": [
+        "vlm_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/vlm_tools/server.py"
+    },
+    "resolve_named_region": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "reverse_geocode_place": {
+      "agents": [
+        "cdse_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/cdse_geocode/server.py"
+    },
+    "rotate": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "scale": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "search_collections": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "search_eoss": {
+      "agents": [
+        "graph_rag_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_graph_rag.py"
+    },
+    "search_eumetsat_products": {
+      "agents": [
+        "eumetsat_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/eumetsat/server.py"
+    },
+    "search_gee_catalog": {
+      "agents": [
+        "gee_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/gee/server.py"
+    },
+    "search_moocs": {
+      "agents": [
+        "mooc_rag_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/esa_moocs/server.py"
+    },
+    "search_narratives": {
+      "agents": [
+        "eo_stac_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/EOdashboard/eodashboard_server.py"
+    },
+    "search_papers": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "semantic_search": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "simplify": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "sjoin_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "sjoin_nearest_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "snap": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "spatial_markov": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "summarize_regional_timeseries": {
+      "agents": [
+        "climate_agent"
+      ],
+      "source": "src/agenticeoecosystem/servers/climate/server.py"
+    },
+    "symmetric_difference": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "tile_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "transform_coordinates": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "translate": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "triangulate": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "unary_union": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "union": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "voronoi": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "watch_topic": {
+      "agents": [
+        "arxiv_rag_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/arxiv-mcp-server/lib/python3.12/site-packages/arxiv_mcp_server/server.py"
+    },
+    "weighted_band_sum": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "weights_from_shapefile": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "write_file_gpd": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "write_raster": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "zonal_statistics": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "src/agenticeoecosystem/agents/subagents/sub_agent_gis.py"
+    },
+    "retrieve": {
+      "agents": [
+        "eve_retrieval_agent"
+      ],
+      "source": "src/agenticeoecosystem/client/client.py",
+      "availability": "legacy EVE retrieval capability; distinct from current graph_rag_agent"
+    },
+    "get_area": {
+      "agents": [
+        "gis_agent"
+      ],
+      "source": "/shared/home/rdercole/.local/share/uv/tools/gis-mcp/lib/python3.12/site-packages/gis_mcp/shapely_functions.py",
+      "availability": "installed GIS tool; excluded from current restricted GIS tool filter"
+    }
+  }
+}

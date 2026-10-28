@@ -566,11 +566,22 @@ You will be given {n_items} questions, and for each question you see every anony
 WHAT YOU DO
 (About {target_minutes:.0f} minutes for this form -- your progress is saved in this browser, so it's fine to do this over more than one sitting.) The form will guide you through it, but for every question you will
 1. Rate how relevant and realistic the question is for EO users.
-2. Score the accuracy of each answer shown.
-3. If there's more than one answer, rank them all from best to worst (skip this step when only one answer is shown -- there's nothing to compare it to).
+2. Score the quality of each answer shown on three metrics: coverage (does it contains all the content necessary?), relevance (is the content present relevant?), and correctness (is the content present right?).
+3. If there's more than one answer, rank them all from best to worst quality-wise. Your ranking can be independet of the scores given in 2. Skip this step when only one answer is shown -- there's nothing to compare it to.
 
-HOW TO JUDGE ACCURACY
-Judge scientific and domain correctness, and whether the answer addresses every part of the question. A minority of answers (marked "▣ image" next to the answer letter) include the actual image the assistant looked at -- check the description against it directly. For every other answer you cannot open the files or images it says it produced: treat claims that you find implausible or unsupported as errors. Do not reward length or formatting. If you cannot judge a question, say so in the comment field and give your best estimate.
+HOW TO JUDGE COVERAGE, RELEVANCE and CORRECTNESS
+All three of these will be ranked from 1 to 5, with 1 being the worst and 5 the best.
+1. Coverage: the extent the answer addreesses the question and has the content needed to addreess the question. An answer lacking coverage does addresses only part of the question or misses steps needed for the answer.
+2. Focus: the extent the content in the reply is appropriate for the given question. An answer lacking focus contains information or reasoning that are not relevant for the answer.
+3. Correctness: the extent the content in the reply is correct, such as having sound reasoning and factually accurate information. An answer lacking correctness contains falsehhoods, misinterprets literature or data, or display faulty reasoning.
+
+For clarity, given the question, "How old is the president of the USA?":
+A. "I am a chatbot" lacks both coverage and focus;
+B. "He is the president of the USA, so he must be at least 35 ccording to the USA constitution" lacks coverage;
+C. "I have checked WikiPedia and major newspapers outlets, and he is 77. I have also found this video of him that I would like to show you" lacks focus;
+D. A, B and C are still all correct.
+
+A minority of answers (marked "▣ image" next to the answer letter) include the actual image the assistant looked at -- check the description against it directly. For every other answer you cannot open the files or images it says it produced: treat claims that you find implausible or unsupported as errors. Do not reward length or formatting. If you cannot judge a question, say so in the comment field and give your best estimate.
 
 Answers were produced automatically and may contain errors. Local file paths were removed from the answers. Long answers are collapsed by default — click an answer to expand it.
 
@@ -591,9 +602,15 @@ PROFILE_FIELDS = [
 
 RELEVANCE_TITLE = "How relevant and realistic is this question for EO users (researchers, analysts, practitioners)?"
 RELEVANCE_HELP = "1 = not relevant or unrealistic; 3 = plausible but marginal or somewhat artificial; 5 = highly relevant and realistic."
-ACCURACY_TITLE = "Accuracy: how correct and complete is each answer?"
-ACCURACY_HELP = ("1 = incorrect or unusable; 2 = mostly incorrect or major omissions; 3 = partially correct or incomplete; "
-                 "4 = mostly correct, minor issues; 5 = correct and complete. Equal scores are allowed.")
+COVERAGE_TITLE = "Coverage: does the answer have the content needed to addreess the question?"
+COVERAGE_HELP = ("1 = missing all or fundamental parts of the content; 2 = major omissions; 3 = partially incomplete; "
+                 "4 = minor omissions; 5 = the answer contains everything needed to addresses the question. Equal scores are allowed.")
+FOCUS_TITLE = "Focus: is the content of the answer appropriate for the question?"
+FOCUS_HELP = ("1 = the content of the answer is irrelevant to the question; 2 = mostly irrelevant; 3 = partially relevant; "
+                 "4 = mostly appropiate; 5 = the content of the answer is completly appropriate for the question. Equal scores are allowed.")
+CORRECTNESS_TITLE = "Correctness: is the content of the answer correct?"
+CORRECTNESS_HELP = ("1 = the content of the answer is false and/or the reasoning is deeply flawed; 2 = mostly incorrect; 3 = partially incorrect; "
+                 "4 = mostly correct; 5 = the content of the answer is completly true and the reasoning is sound. Equal scores are allowed.")
 RANK_TITLE = "Ranking: order all answers from best to worst."
 RANK_HELP = "Drag, or use the arrows, to put the best answer at the top and the worst at the bottom. Ties are not allowed."
 FAMILIARITY_TITLE = "How familiar are you with the topic of this question?"
@@ -642,7 +659,9 @@ def build_form_spec(index, group, form_items, key_rows, rng):
         "profile_fields": PROFILE_FIELDS,
         "item_fields": {
             "relevance": {"title": RELEVANCE_TITLE, "help": RELEVANCE_HELP, "low": "Not relevant", "high": "Highly relevant"},
-            "accuracy": {"title": ACCURACY_TITLE, "help": ACCURACY_HELP},
+            "coverage": {"title": COVERAGE_TITLE, "help": COVERAGE_HELP},
+            "focus": {"title": FOCUS_TITLE, "help": FOCUS_HELP},
+            "correctness": {"title": CORRECTNESS_TITLE, "help": CORRECTNESS_HELP},
             "ranking": {"title": RANK_TITLE, "help": RANK_HELP},
             "familiarity": {"title": FAMILIARITY_TITLE, "low": "Unfamiliar", "high": "Expert"},
             "comment": {"title": COMMENT_TITLE, "help": COMMENT_HELP},

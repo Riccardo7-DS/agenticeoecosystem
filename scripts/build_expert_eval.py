@@ -578,7 +578,7 @@ All three of these will be ranked from 1 to 5, with 1 being the worst and 5 the 
 For clarity, given the question, "How old is the president of the USA?":
 A. "I am a chatbot" lacks both coverage and focus;
 B. "He is the president of the USA, so he must be at least 35 ccording to the USA constitution" lacks coverage;
-C. "I have checked WikiPedia and major newspapers outlets, and he is 77. I have also found this video of him that I would like to show you" lacks focus;
+C. "I have checked WikiPedia and major newspapers outlets, and he is 80. I have also found this video of him that I would like to show you" lacks focus;
 D. A, B and C are still all correct.
 
 A minority of answers (marked "▣ image" next to the answer letter) include the actual image the assistant looked at -- check the description against it directly. For every other answer you cannot open the files or images it says it produced: treat claims that you find implausible or unsupported as errors. Do not reward length or formatting. If you cannot judge a question, say so in the comment field and give your best estimate.

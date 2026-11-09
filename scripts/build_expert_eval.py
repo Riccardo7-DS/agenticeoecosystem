@@ -561,29 +561,29 @@ INTRO_TEXT = """Thank you for helping us evaluate the performance of different L
 WHAT THIS IS
 We built a benchmark to test the performance of different LLMs in agentic settings. This evaluation form is to compare the answers given by these LLMs when answering a question using different tools related to the agentic framework that we built - including different EO endpoints (Copernicus/Sentinel, Landsat), ERA5 climate data, EO Dashboard narratives, ESA science strategy documents, GIS analysis and scientific literature search.
 
-You will be given {n_items} questions, and for each question you see every anonymous answer that assistant actually produced for it -- usually several, occasionally just one if only one assistant answered that particular question.
+You will be given {n_items} questions, and for each question you see every anonymous answer that the assistant actually produced for it -- usually several, occasionally just one if only one assistant answered that particular question.
 
 WHAT YOU DO
 (About {target_minutes:.0f} minutes for this form -- your progress is saved in this browser, so it's fine to do this over more than one sitting.) The form will guide you through it, but for every question you will
 1. Rate how relevant and realistic the question is for EO users.
-2. Score the quality of each answer shown on three metrics: coverage (does it contains all the content necessary?), relevance (is the content present relevant?), and correctness (is the content present right?).
-3. If there's more than one answer, rank them all from best to worst quality-wise. Your ranking can be independet of the scores given in 2. Skip this step when only one answer is shown -- there's nothing to compare it to.
+2. Score the quality of each answer shown on three metrics: coverage (does it contain all the content necessary?), focus (is the content present relevant?), and correctness (is the content present right?).
+3. If there's more than one answer, rank them all from best to worst quality-wise. Your ranking can be independent of the scores given in 2. Skip this step when only one answer is shown -- there's nothing to compare it to.
 
-HOW TO JUDGE COVERAGE, RELEVANCE and CORRECTNESS
-All three of these will be ranked from 1 to 5, with 1 being the worst and 5 the best.
-1. Coverage: the extent the answer addreesses the question and has the content needed to addreess the question. An answer lacking coverage does addresses only part of the question or misses steps needed for the answer.
-2. Focus: the extent the content in the reply is appropriate for the given question. An answer lacking focus contains information or reasoning that are not relevant for the answer.
-3. Correctness: the extent the content in the reply is correct, such as having sound reasoning and factually accurate information. An answer lacking correctness contains falsehhoods, misinterprets literature or data, or display faulty reasoning.
+HOW TO JUDGE COVERAGE, FOCUS and CORRECTNESS
+All three of these will be scored from 1 to 5, with 1 being the worst and 5 the best.
+1. Coverage: the extent to which the answer addresses the question and has the content needed to addreess the question. An answer lacking coverage addresses only part of the question or misses steps needed for the answer.
+2. Focus: the extent to witch the content in the reply is appropriate for the given question. An answer lacking focus contains information or reasoning that is not relevant for the answer.
+3. Correctness: the extent to witch the content in the reply is correct, such as having sound reasoning and factually accurate information. An answer lacking correctness contains falsehoods, misinterprets literature or data, or displays faulty reasoning.
 
 For clarity, given the question, "How old is the president of the USA?":
 A. "I am a chatbot" lacks both coverage and focus;
-B. "He is the president of the USA, so he must be at least 35 ccording to the USA constitution" lacks coverage;
-C. "I have checked WikiPedia and major newspapers outlets, and he is 80. I have also found this video of him that I would like to show you" lacks focus;
+B. "He is the president of the USA, so he must be at least 35 according to the US constitution" lacks coverage;
+C. "I have checked Wikipedia and major newspaper outlets, and he is 80. I have also found this video of him that I would like to show you" lacks focus;
 D. A, B and C are still all correct.
 
 A minority of answers (marked "▣ image" next to the answer letter) include the actual image the assistant looked at -- check the description against it directly. For every other answer you cannot open the files or images it says it produced: treat claims that you find implausible or unsupported as errors. Do not reward length or formatting. If you cannot judge a question, say so in the comment field and give your best estimate.
 
-Answers were produced automatically and may contain errors. Local file paths were removed from the answers. Long answers are collapsed by default — click an answer to expand it.
+Answers were produced automatically and may contain errors. Local file paths were removed from the answers. Long answers are collapsed by default -- click an answer to expand it.
 
 PRIVACY
 Your name is recorded so we can follow up if needed, and is not shown to other experts. Responses are used only for the research evaluation of this benchmark and are reported in aggregate. Participation is voluntary; you can stop at any time by closing the page."""

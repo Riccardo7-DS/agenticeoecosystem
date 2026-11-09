@@ -1,13 +1,13 @@
-from google.adk.models.lite_llm import LiteLlm
 import base64
 import logging
 import os
 
 from dotenv import load_dotenv
-
+from google.adk.models.lite_llm import LiteLlm
 
 load_dotenv()
 logger = logging.getLogger(__name__)
+
 
 def mask_secret(value: str, visible: int = 4) -> str:
     """Return a masked version of a secret safe for logging (e.g. 'abcd****')."""
@@ -15,63 +15,64 @@ def mask_secret(value: str, visible: int = 4) -> str:
         return "<not set>"
     return value[:visible] + "*" * max(0, len(value) - visible)
 
+
 def _basic_auth_header(username_env: str = "EVE_USERNAME",
                        password_env: str = "EVE_PASSWORD") -> dict:
     """Build an Authorization: Basic header from env vars. Never logs the values."""
     username = os.getenv(username_env, "")
     password = os.getenv(password_env, "")
     if not username or not password:
-        logger.warning(
-            "Credentials not found: %s=%s, %s=%s",
-            username_env, mask_secret(username),
-            password_env, mask_secret(password),
-        )
+        logger.warning("Credentials not found: %s=%s, %s=%s",
+                       username_env, mask_secret(username), password_env, mask_secret(password))
     token = base64.b64encode(f"{username}:{password}".encode()).decode()
     return {"Authorization": f"Basic {token}"}
 
 
+def _default_max_tokens(model_name: str) -> int:
+    # Reasoning models (e.g. DeepSeek-R1 distillations) spend much of their budget on
+    # chain-of-thought; 4096 risks truncating them mid-thought.
+    return 8192 if "deepseek" in model_name.lower() else 4096
+
+
+def make_llm_config(provider: str, model_name: str, max_tokens: int,
+                    vllm_port: str | None = None) -> tuple[dict, str | None, dict | None]:
+    """Returns (kwargs, base_url, auth_headers).
+    kwargs work both as LiteLlm(**kwargs) and as litellm.acompletion(**kwargs)."""
+    common = dict(temperature=0, max_tokens=max_tokens)
+
+    if provider == "vllm":
+        from agenticeoecosystem.utils.registry import MODEL_REGISTRY
+        host = os.getenv("VLLM_HOST", "127.0.0.1")
+        port = vllm_port or os.getenv("VLLM_PORT", "8000")
+        model_id = MODEL_REGISTRY[model_name].model_id if model_name in MODEL_REGISTRY else model_name
+        base = f"http://{host}:{port}/v1"
+        return dict(model=f"openai/{model_id}", base_url=base, api_key="EMPTY", **common), base, None
+
+    if provider == "openai":
+        key = os.getenv("OPENAI_API_KEY", "")
+        return (dict(model=f"openai/{model_name}", api_key=key, **common),
+                "https://api.openai.com/v1", {"Authorization": f"Bearer {key}"})
+
+    if provider == "openrouter":
+        key = os.getenv("OPENROUTER_API_KEY", "")
+        return (dict(model=f"openrouter/{model_name}", api_key=key, **common),
+                "https://openrouter.ai/api/v1", {"Authorization": f"Bearer {key}"})
+
+    if provider == "mistral":
+        key = os.getenv("MISTRAL_API_KEY", "")
+        return (dict(model=f"mistral/{model_name}", api_key=key, **common),
+                os.getenv("MISTRAL_API_BASE", "https://api.mistral.ai/v1"),
+                {"Authorization": f"Bearer {key}"})
+
+    # Default: self-hosted vLLM behind the EVE gateway (Basic Auth).
+    base, headers = os.getenv("EVE_ENDPOINT"), _basic_auth_header()
+    return (dict(model=f"openai/{model_name}", base_url=base, headers=headers,
+                 api_key="EMPTY", **common), base, headers)
+
+
 _MODEL_NAME = os.getenv("MULTI_AGENT_MODEL", "EVE-Instruct")
 _PROVIDER = os.getenv("MULTI_AGENT_PROVIDER", "eve")
+_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", str(_default_max_tokens(_MODEL_NAME))))
 
-# Reasoning models (e.g. DeepSeek-R1 distillations) spend a large chunk of
-# their output budget on chain-of-thought before ever reaching a tool call
-# or final answer, on every turn — the 4096 default that's fine for
-# non-reasoning models risks truncating mid-thought for these. Bump the
-# default for any model with "deepseek" in its name; an operator-set
-# MULTI_AGENT_MAX_TOKENS always wins over either default.
-_DEFAULT_MAX_TOKENS = 8192 if "deepseek" in _MODEL_NAME.lower() else 4096
-_MAX_TOKENS = int(os.getenv("MULTI_AGENT_MAX_TOKENS", str(_DEFAULT_MAX_TOKENS)))
-
-if _PROVIDER == "vllm":
-    # Local vLLM server (see utils.registry.launch_vllm) — same OpenAI-compatible
-    # endpoint the "single" and "multi_legacy" pipelines use, no EVE auth needed.
-    from agenticeoecosystem.utils.registry import MODEL_REGISTRY
-    _host = os.getenv("VLLM_HOST", "127.0.0.1")
-    _port = os.getenv("VLLM_PORT", "8000")
-    _model_id = MODEL_REGISTRY[_MODEL_NAME].model_id if _MODEL_NAME in MODEL_REGISTRY else _MODEL_NAME
-    LLM_BASE_URL = f"http://{_host}:{_port}/v1"
-    LLM_AUTH_HEADERS: dict | None = None
-    llm = LiteLlm(model=f'openai/{_model_id}', base_url=LLM_BASE_URL, api_key="EMPTY", temperature=0, max_tokens=_MAX_TOKENS)
-elif _PROVIDER == "openai":
-    # Real OpenAI API — no gateway, no Basic Auth, real billing.
-    LLM_BASE_URL = "https://api.openai.com/v1"
-    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY', '')}"}
-    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', api_key=os.getenv("OPENAI_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
-elif _PROVIDER == "openrouter":
-    # OpenRouter — _MODEL_NAME must include the vendor prefix it expects,
-    # e.g. "openai/gpt-5.4". Real billing.
-    LLM_BASE_URL = "https://openrouter.ai/api/v1"
-    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY', '')}"}
-    llm = LiteLlm(model=f'openrouter/{_MODEL_NAME}', api_key=os.getenv("OPENROUTER_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
-elif _PROVIDER == "mistral":
-    # Real Mistral La Plateforme API via LiteLLM's native "mistral/" provider —
-    # _MODEL_NAME is the bare Mistral model slug, e.g. "mistral-large-latest".
-    # Real billing. Override MISTRAL_API_BASE in .env for a non-default endpoint.
-    LLM_BASE_URL = os.getenv("MISTRAL_API_BASE", "https://api.mistral.ai/v1")
-    LLM_AUTH_HEADERS = {"Authorization": f"Bearer {os.getenv('MISTRAL_API_KEY', '')}"}
-    llm = LiteLlm(model=f'mistral/{_MODEL_NAME}', api_key=os.getenv("MISTRAL_API_KEY"), temperature=0, max_tokens=_MAX_TOKENS)
-else:
-    # Self-hosted vLLM behind the EVE gateway (Basic Auth), e.g. EVE-Instruct or Mistral.
-    LLM_BASE_URL = os.getenv("EVE_ENDPOINT")
-    LLM_AUTH_HEADERS = _basic_auth_header()
-    llm = LiteLlm(model=f'openai/{_MODEL_NAME}', base_url=LLM_BASE_URL, headers=LLM_AUTH_HEADERS, api_key="EMPTY", temperature=0, max_tokens=_MAX_TOKENS)
+llm_kwargs, LLM_BASE_URL, LLM_AUTH_HEADERS = make_llm_config(_PROVIDER, _MODEL_NAME, _MAX_TOKENS)
+llm = LiteLlm(**llm_kwargs)

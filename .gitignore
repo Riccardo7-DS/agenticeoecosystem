@@ -55,7 +55,10 @@ test_eve_retrieval_mcp.py
 test_eve.py
 test_eve_auth.py    
 
-# logs/
+# Run outputs (benchmark logs, Virtual Lab results .json/.md/.out, perturbation runs)
+logs/
+/perturb/
+/perturb_*/
 *.sif
 container.def
 .claude/*

@@ -58,6 +58,11 @@ from geopy.geocoders import Nominatim
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent, TextContent
 
+from agenticeoecosystem.servers.cdse_geocode.catalog import (
+    list_openeo_collections as list_openeo_collections_impl,
+    normalise_collection as _normalise_collection,
+    search_scenes,
+)
 from agenticeoecosystem.servers.cdse_geocode.helper import (
     fetch_sentinel1_grd,
     fectch_sentinel2,
@@ -94,7 +99,10 @@ mcp = FastMCP(
         "Always pass bbox as [west, south, east, north] in WGS-84 decimal degrees. "
         "Dates are ISO-8601 strings: YYYY-MM-DD. "
         "Use geocode_place to turn a place name into a bbox before calling a "
-        "fetch_* tool, or reverse_geocode_place to turn lat/lon into a place name."
+        "fetch_* tool, or reverse_geocode_place to turn lat/lon into a place name. "
+        "Use search_cdse_catalog to list which products exist (metadata only) "
+        "before fetching, and list_openeo_collections to see which collections "
+        "(including Copernicus Land Monitoring products) exist at all."
     ),
     host="0.0.0.0", port=8000, stateless_http=True
 )
@@ -988,6 +996,55 @@ def resolve_named_region(region_name: str) -> str:
             "bbox_array": [west, south, east, north],
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Catalogue search (metadata only, no download)
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def search_cdse_catalog(
+    collection: Annotated[str, "SENTINEL-1, SENTINEL-2, SENTINEL-3, SENTINEL-5P or LANDSAT-8/9 "
+                          "(short forms such as 'S1_GRD' or 'SENTINEL2_L2A' also work)"],
+    bbox: Annotated[list[float], "[west, south, east, north] in WGS-84"],
+    start_date: Annotated[str, "YYYY-MM-DD"],
+    end_date: Annotated[str, "YYYY-MM-DD (inclusive)"],
+    product_type: Annotated[Optional[str], "substring of the product name, e.g. 'MSIL2A', "
+                            "'GRD', 'SLC', 'SL_2_FRP', 'SL_1_RBT', 'OL_1_EFR'"] = None,
+    max_cloud_cover: Annotated[Optional[float], "maximum cloud cover in percent (optical only)"] = None,
+    limit: Annotated[int, "maximum number of products listed (1-50)"] = 20,
+) -> str:
+    """
+    List the products in the Copernicus Data Space catalogue that intersect a bbox
+    in a date range. Metadata only: nothing is downloaded or processed.
+
+    Use it to check which acquisitions exist (dates, product types, cloud cover,
+    orbit direction and relative orbit) before planning or fetching data.
+
+    Returns:
+        JSON with `total` (all matching products), `listed`, and `products`
+        sorted by acquisition time.
+    """
+    return json.dumps(await search_scenes(collection, bbox, start_date, end_date, product_type,
+                                          max_cloud_cover, max(1, min(int(limit), 50))))
+
+
+@mcp.tool()
+async def list_openeo_collections(
+    bbox: Annotated[Optional[list[float]], "[west, south, east, north]: keep only collections "
+                    "whose extent overlaps it"] = None,
+    start_date: Annotated[Optional[str], "YYYY-MM-DD: keep only collections covering this period"] = None,
+    end_date: Annotated[Optional[str], "YYYY-MM-DD (inclusive)"] = None,
+) -> str:
+    """
+    List the data collections the Copernicus Data Space openEO back-end offers (Sentinel,
+    Landsat mosaics, Copernicus Land Monitoring Service products such as burned area, LST,
+    NDVI), with their temporal extent. Free metadata: no login and no processing credits.
+
+    It says which collections exist, not which dates were acquired over an area: use
+    search_cdse_catalog for that.
+    """
+    return json.dumps(await list_openeo_collections_impl(bbox, start_date, end_date))
 
 
 # ---------------------------------------------------------------------------

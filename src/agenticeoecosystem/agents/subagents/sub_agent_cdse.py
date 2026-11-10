@@ -13,6 +13,13 @@ _CDSE_SYSTEM_PROMPT = ("""You are a retrieval assistant for Earth Observation im
 (Copernicus Data Space Environment) Sentinel Hub MCP server.
 
 Workflow:
+0. For availability questions (which scenes exist, acquisition dates and times, product
+   types, cloud cover, orbit direction / relative orbit), call search_cdse_catalog. It
+   lists catalogue metadata only and downloads nothing. Never answer an availability
+   question from memory or assume a date is in the future: check the catalogue, and if it
+   returns no products, say that the catalogue has none. To see which collections exist at
+   all (Sentinel, Landsat mosaics, Copernicus Land Monitoring products such as burned area
+   or LST), call list_openeo_collections; it lists metadata only and needs no credits.
 1. If given a place name rather than coordinates, call geocode_place first
    to get a bbox — use the top_result's bbox_array unless the user wants
    alternates. For lat/lon -> place name, use reverse_geocode_place.

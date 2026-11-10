@@ -48,6 +48,7 @@ def run_pipeline(
         task_text: The natural-language task prompt.
         pipeline : "multi" (google-adk orchestrator + native sub-agents — the
                    current multi-agent system, see agents/multi_agent.py),
+                   "virtual_lab" (Virtual Lab deliberation, see agents/virtual_lab/),
                    "single" (one LangGraph agent, all tools), or
                    "multi_legacy" (older LangGraph supervisor + sub-agents in
                    client.py — superseded by "multi"; missing cdse, eumetsat,
@@ -61,9 +62,14 @@ def run_pipeline(
     import nest_asyncio
     nest_asyncio.apply()
 
-    if pipeline == "multi":
+    if pipeline in ("multi", "virtual_lab"):
+        # Both return the same get_ans_tool_path JSON contract, so they are
+        # scored identically; "virtual_lab" adds a lab_record that is ignored here.
         import json as _json
-        import agenticeoecosystem.agents.multi_agent as _adk
+        if pipeline == "multi":
+            import agenticeoecosystem.agents.multi_agent as _adk
+        else:
+            import agenticeoecosystem.agents.virtual_lab.runner as _adk
 
         loop = asyncio.get_event_loop()
         coro = _adk.get_ans_tool_path(task_text)
@@ -218,7 +224,10 @@ def generate_solutions(
                            the EVE gateway, "vllm" routes to a local vLLM
                            server, "openai"/"openrouter"/"mistral" route to the
                            real, billed API, any other value falls back to
-                           "eve"), "single" (one LangGraph agent, all tools), or
+                           "eve"), "single" (one LangGraph agent, all tools),
+                           "virtual_lab" (structured scientific deliberation
+                           over the same sub-agents, EVE only — see
+                           agents/virtual_lab/), or
                            "multi_legacy" (older LangGraph supervisor +
                            sub-agents in client.py — superseded by "multi").
         agent_models     : Per-agent model overrides for pipeline="multi_legacy",
@@ -274,6 +283,18 @@ def generate_solutions(
         os.environ["MULTI_AGENT_PROVIDER"] = model_provider
         import agenticeoecosystem.agents.multi_agent  # noqa: F401 (import triggers setup)
 
+        from agenticeoecosystem.utils.healthcheck import run_preflight_healthcheck, require_healthy_services
+        healthcheck_results = asyncio.get_event_loop().run_until_complete(run_preflight_healthcheck())
+        require_healthy_services(healthcheck_results)
+    elif pipeline == "virtual_lab":
+        # The lab always runs on the EVE gateway (EVE_ENDPOINT); see virtual_lab/config.py.
+        if agent_models or model_provider != "eve":
+            logger.warning("pipeline='virtual_lab' runs on EVE only — ignoring agent_models/provider=%s",
+                           model_provider)
+        # The grounding sub-agents read these at import; keep them on EVE too.
+        os.environ["VIRTUAL_LAB_MODEL"] = model
+        os.environ["MULTI_AGENT_MODEL"] = model
+        os.environ["MULTI_AGENT_PROVIDER"] = "eve"
         from agenticeoecosystem.utils.healthcheck import run_preflight_healthcheck, require_healthy_services
         healthcheck_results = asyncio.get_event_loop().run_until_complete(run_preflight_healthcheck())
         require_healthy_services(healthcheck_results)

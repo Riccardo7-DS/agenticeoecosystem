@@ -64,12 +64,18 @@ def run_pipeline(
     if pipeline == "multi":
         import json as _json
         import agenticeoecosystem.agents.multi_agent as _adk
+        from agenticeoecosystem.agents import helper as _helper
 
         loop = asyncio.get_event_loop()
         coro = _adk.get_ans_tool_path(task_text)
         if task_timeout:
             coro = asyncio.wait_for(coro, timeout=task_timeout)
-        raw = loop.run_until_complete(coro)
+        try:
+            raw = loop.run_until_complete(coro)
+        finally:
+            # Pending helper reviews finish here, OUTSIDE task_timeout, so the helper can
+            # never push a task into a timeout. No-op when AGENTICEO_HELPER is off.
+            _helper.finish_task(loop)
         data = _json.loads(raw)
         steps = [
             Step(

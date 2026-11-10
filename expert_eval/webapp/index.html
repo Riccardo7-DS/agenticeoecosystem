@@ -230,7 +230,9 @@
   .answer-body p { margin: 0 0 0.85em; }
   .answer-body p:last-child { margin-bottom: 0; }
   .answer-score { padding: 0 16px 16px 50px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .answer-score .field-title { font-size: 0.86rem; margin: 0; }
+  .answer-score .field-title { font-size: 0.86rem; margin: 0; min-width: 6.5em; }
+  .answer-score + .answer-score { padding-block-start: 0; margin-block-start: -6px; }
+  .metric-help { display: grid; gap: 8px; margin-block-end: 14px; }
 
   .expand-toggle {
     background: none;
@@ -436,8 +438,36 @@
   var spec = null;
   var state = null;
 
+  // Per-answer score metrics, in display order. Taken from the form spec so
+  // the page follows whatever the build script defines: current forms carry
+  // coverage/focus/correctness, older builds a single "accuracy" scale.
+  var METRIC_KEYS = ['coverage', 'focus', 'correctness', 'accuracy'];
+  function answerMetrics() {
+    return METRIC_KEYS.filter(function (k) { return spec.item_fields[k]; });
+  }
+  // "Coverage: does the answer ...?" -> "Coverage"
+  function metricLabel(key) {
+    var title = spec.item_fields[key].title || key;
+    var i = title.indexOf(':');
+    return i > 0 ? title.slice(0, i) : title;
+  }
+
   function freshResponse() {
-    return { relevance: null, accuracy: {}, rank: null, familiarity: null, comment: '' };
+    var r = { relevance: null, rank: null, familiarity: null, comment: '' };
+    answerMetrics().forEach(function (k) { r[k] = {}; });
+    return r;
+  }
+
+  // Progress saved by an older version of the page may lack some metric
+  // objects (e.g. scored "accuracy" before the switch to coverage/focus/
+  // correctness). Add the missing ones so those answers get asked again.
+  function normaliseResponses(responses) {
+    responses.forEach(function (r) {
+      answerMetrics().forEach(function (k) {
+        if (!r[k] || typeof r[k] !== 'object') r[k] = {};
+      });
+    });
+    return responses;
   }
 
   function loadState() {
@@ -447,6 +477,7 @@
         var saved = JSON.parse(raw);
         if (saved && saved.formCode === formCode && Array.isArray(saved.responses) &&
             saved.responses.length === spec.items.length) {
+          normaliseResponses(saved.responses);
           return saved;
         }
       }
@@ -698,7 +729,15 @@
     var toggleBtn = h('button', { type: 'button', class: 'expand-toggle', text: 'Expand all', style: 'margin:0;' });
     ansHead.appendChild(toggleBtn);
     ansCard.appendChild(ansHead);
-    ansCard.appendChild(h('div', { class: 'field-help', text: spec.item_fields.accuracy.help, style: 'margin-block-end:14px;' }));
+    var metrics = answerMetrics();
+    var metricHelp = h('div', { class: 'metric-help' });
+    metrics.forEach(function (k) {
+      metricHelp.appendChild(h('div', { class: 'field-help' }, [
+        h('strong', { text: spec.item_fields[k].title }), h('br'),
+        h('span', { text: spec.item_fields[k].help || '' })
+      ]));
+    });
+    ansCard.appendChild(metricHelp);
 
     var detailsEls = [];
     item.answers.forEach(function (answer) {
@@ -741,13 +780,15 @@
       body.appendChild(paragraphs(answer.text));
       details.appendChild(body);
 
-      var scoreRow = h('div', { class: 'answer-score' });
-      scoreRow.appendChild(h('span', { class: 'field-title', text: 'Accuracy' }));
-      var accPicker = scalePicker('accuracy-' + idx + '-' + answer.letter, resp.accuracy[answer.letter] || null, function (n) {
-        resp.accuracy[answer.letter] = n; refreshScalePicker(accPicker, n); saveState(); validateItem();
+      metrics.forEach(function (k) {
+        var scoreRow = h('div', { class: 'answer-score' });
+        scoreRow.appendChild(h('span', { class: 'field-title', text: metricLabel(k) }));
+        var picker = scalePicker(k + '-' + idx + '-' + answer.letter, resp[k][answer.letter] || null, function (n) {
+          resp[k][answer.letter] = n; refreshScalePicker(picker, n); saveState(); validateItem();
+        });
+        scoreRow.appendChild(picker);
+        details.appendChild(scoreRow);
       });
-      scoreRow.appendChild(accPicker);
-      details.appendChild(scoreRow);
 
       detailsEls.push(details);
       ansCard.appendChild(details);
@@ -869,8 +910,12 @@
 
     function itemProblem() {
       if (resp.relevance === null) return 'Rate how relevant the question is before continuing.';
-      var missing = item.answers.filter(function (a) { return !resp.accuracy[a.letter]; });
-      if (missing.length) return 'Score accuracy for every answer (missing: ' + missing.map(function (a) { return a.letter; }).join(', ') + ').';
+      var gaps = [];
+      metrics.forEach(function (k) {
+        var missing = item.answers.filter(function (a) { return !resp[k][a.letter]; });
+        if (missing.length) gaps.push(metricLabel(k) + ' for ' + missing.map(function (a) { return a.letter; }).join(', '));
+      });
+      if (gaps.length) return 'Score every answer on ' + metrics.map(metricLabel).join(', ') + ' (missing: ' + gaps.join('; ') + ').';
       if (resp.familiarity === null) return 'Rate how familiar you are with this topic before continuing.';
       return null;
     }
@@ -889,14 +934,12 @@
       experience_areas: state.profile.experience.concat(state.profile.experienceOther ? [state.profile.experienceOther] : []),
       items: spec.items.map(function (item, idx) {
         var r = state.responses[idx];
-        return {
-          position: item.position,
-          relevance: r.relevance,
-          accuracy: r.accuracy,
-          rank_best_to_worst: r.rank,
-          familiarity: r.familiarity,
-          comment: r.comment || ''
-        };
+        var out = { position: item.position, relevance: r.relevance };
+        answerMetrics().forEach(function (k) { out[k] = r[k]; });
+        out.rank_best_to_worst = r.rank;
+        out.familiarity = r.familiarity;
+        out.comment = r.comment || '';
+        return out;
       })
     };
   }

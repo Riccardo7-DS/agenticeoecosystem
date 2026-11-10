@@ -1,6 +1,6 @@
 # Expert evaluation
 
-Human evaluation of the benchmark's final answers — relevance, accuracy, and a
+Human evaluation of the benchmark's final answers — relevance, answer coverage / focus / correctness, and a
 ranking of the candidate models per question. This is separate from (and
 answers a different question than) the LLM-judge pipeline elsewhere in this
 repo, which only checks tool-call sequences, not whether an answer is
@@ -84,7 +84,7 @@ re-send links after such a rebuild.
 
 - **Study size / form length**: `--experts GROUP=N ...` and `--items-per-form` (minimum per form, default 8; a group's forms get longer if it has more questions than `N × 8`).
 - **Expert groups**: `EXPERT_GROUPS` / `DEFAULT_GROUP_EXPERTS` near the top of the build script.
-- **Wording, fields, scoring scales**: the constants near the top of `build_expert_eval.py` (`INTRO_TEXT`, `PROFILE_FIELDS`, `RELEVANCE_*`, `ACCURACY_*`, `RANK_*`, `FAMILIARITY_*`) — then rebuild and republish.
+- **Wording, fields, scoring scales**: the constants near the top of `build_expert_eval.py` (`INTRO_TEXT`, `PROFILE_FIELDS`, `RELEVANCE_*`, `COVERAGE_*`, `FOCUS_*`, `CORRECTNESS_*`, `RANK_*`, `FAMILIARITY_*`) — then rebuild and republish.
 - **Which models / tasks are eligible**: `MODEL_RUNS` and `MIN_ANSWERS_TO_INCLUDE` near the top of the same file.
 - **Look and feel**: `webapp/index.html` directly.
 

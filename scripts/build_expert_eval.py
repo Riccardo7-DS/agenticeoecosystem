@@ -561,7 +561,7 @@ INTRO_TEXT = """Thank you for helping us evaluate the performance of different L
 WHAT THIS IS
 We built a benchmark to test the performance of different LLMs in agentic settings. This evaluation form is to compare the answers given by these LLMs when answering a question using different tools related to the agentic framework that we built - including different EO endpoints (Copernicus/Sentinel, Landsat), ERA5 climate data, EO Dashboard narratives, ESA science strategy documents, GIS analysis and scientific literature search.
 
-You will be given {n_items} questions, and for each question you see every anonymous answer that the assistant actually produced for it -- usually several, occasionally just one if only one assistant answered that particular question.
+You will be given {n_items} questions, and for each question you see every anonymous answer that an assistant actually produced for it -- usually several, occasionally just one if only one assistant answered that particular question.
 
 WHAT YOU DO
 (About {target_minutes:.0f} minutes for this form -- your progress is saved in this browser, so it's fine to do this over more than one sitting.) The form will guide you through it, but for every question you will
@@ -571,9 +571,9 @@ WHAT YOU DO
 
 HOW TO JUDGE COVERAGE, FOCUS and CORRECTNESS
 All three of these will be scored from 1 to 5, with 1 being the worst and 5 the best.
-1. Coverage: the extent to which the answer addresses the question and has the content needed to addreess the question. An answer lacking coverage addresses only part of the question or misses steps needed for the answer.
-2. Focus: the extent to witch the content in the reply is appropriate for the given question. An answer lacking focus contains information or reasoning that is not relevant for the answer.
-3. Correctness: the extent to witch the content in the reply is correct, such as having sound reasoning and factually accurate information. An answer lacking correctness contains falsehoods, misinterprets literature or data, or displays faulty reasoning.
+1. Coverage: the extent to which the answer addresses the question and has the content needed to address the question. An answer lacking coverage addresses only part of the question or misses steps needed for the answer.
+2. Focus: the extent to which the content in the reply is appropriate for the given question. An answer lacking focus contains information or reasoning that is not relevant for the answer.
+3. Correctness: the extent to which the content in the reply is correct, such as having sound reasoning and factually accurate information. An answer lacking correctness contains falsehoods, misinterprets literature or data, or displays faulty reasoning.
 
 For clarity, given the question, "How old is the president of the USA?":
 A. "I am a chatbot" lacks both coverage and focus;
@@ -602,15 +602,15 @@ PROFILE_FIELDS = [
 
 RELEVANCE_TITLE = "How relevant and realistic is this question for EO users (researchers, analysts, practitioners)?"
 RELEVANCE_HELP = "1 = not relevant or unrealistic; 3 = plausible but marginal or somewhat artificial; 5 = highly relevant and realistic."
-COVERAGE_TITLE = "Coverage: does the answer have the content needed to addreess the question?"
+COVERAGE_TITLE = "Coverage: does the answer have the content needed to address the question?"
 COVERAGE_HELP = ("1 = missing all or fundamental parts of the content; 2 = major omissions; 3 = partially incomplete; "
-                 "4 = minor omissions; 5 = the answer contains everything needed to addresses the question. Equal scores are allowed.")
+                 "4 = minor omissions; 5 = the answer contains everything needed to address the question. Equal scores are allowed.")
 FOCUS_TITLE = "Focus: is the content of the answer appropriate for the question?"
 FOCUS_HELP = ("1 = the content of the answer is irrelevant to the question; 2 = mostly irrelevant; 3 = partially relevant; "
-                 "4 = mostly appropiate; 5 = the content of the answer is completly appropriate for the question. Equal scores are allowed.")
+                 "4 = mostly appropriate; 5 = the content of the answer is completely appropriate for the question. Equal scores are allowed.")
 CORRECTNESS_TITLE = "Correctness: is the content of the answer correct?"
 CORRECTNESS_HELP = ("1 = the content of the answer is false and/or the reasoning is deeply flawed; 2 = mostly incorrect; 3 = partially incorrect; "
-                 "4 = mostly correct; 5 = the content of the answer is completly true and the reasoning is sound. Equal scores are allowed.")
+                 "4 = mostly correct; 5 = the content of the answer is completely true and the reasoning is sound. Equal scores are allowed.")
 RANK_TITLE = "Ranking: order all answers from best to worst."
 RANK_HELP = "Drag, or use the arrows, to put the best answer at the top and the worst at the bottom. Ties are not allowed."
 FAMILIARITY_TITLE = "How familiar are you with the topic of this question?"

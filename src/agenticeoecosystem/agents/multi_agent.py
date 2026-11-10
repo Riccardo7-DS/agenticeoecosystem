@@ -54,6 +54,7 @@ from agenticeoecosystem.agents.orchestrator_common import (
     strip_leaked_think_block as _strip_leaked_think_block,
 )
 
+# AGENTICEO_HELPER: off (default) or review. See agents/helper/config.py.
 _HELPER_MODE = os.getenv("AGENTICEO_HELPER", "off")
 if _HELPER_MODE == "research":
     raise ValueError("AGENTICEO_HELPER=research is only for multi_agent_research.py")

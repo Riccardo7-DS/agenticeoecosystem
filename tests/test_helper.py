@@ -1,4 +1,6 @@
-# Run with: AGENTICEO_SUBAGENTS=none uv run pytest tests/test_helper.py -q
+# Run with: AGENTICEO_SUBAGENTS=none PYTHONPATH=src uv run --with pytest python -m pytest tests/test_helper.py -q
+from types import SimpleNamespace
+
 import pytest
 
 from agenticeoecosystem.agents import helper
@@ -25,6 +27,68 @@ def test_off_mode_passes_only_on_tool_error():
     helper.configure("off")
     f = lambda **kw: None
     assert helper.root_callbacks(f) == {"on_tool_error_callback": f}
+
+
+def test_review_mode_is_valid_and_unknown_modes_fail():
+    try:
+        helper.configure("review")
+        assert helper.config.MODE == "review"
+        with pytest.raises(ValueError):
+            helper.configure("reveiw")
+    finally:
+        helper.configure("off")
+
+
+@pytest.fixture
+def review_hooks(monkeypatch):
+    """hooks in review mode, with reviews captured instead of run."""
+    from agenticeoecosystem.agents.helper import hooks
+    helper.configure("review")
+    spawned = []
+    monkeypatch.setattr(hooks, "evaluate_and_dispatch", lambda it, *a: it)
+    monkeypatch.setattr(hooks, "spawn", spawned.append)
+    monkeypatch.setattr(hooks, "run", hooks.RunState())
+    yield hooks, spawned
+    helper.configure("off")
+
+
+def _call_subagent(hooks, name, response):
+    """What ADK does for a mode='single_turn' sub-agent: a root tool named after the agent."""
+    tool = SimpleNamespace(name=name)
+    hooks.root_before_tool(tool, {"request": "Mean t2m over Paris in July 2023?"}, None)
+    hooks.sub_before_agent(SimpleNamespace(agent_name=name, user_content=None))
+    hooks.root_after_tool(tool, {"request": "..."}, None, response)
+
+
+def test_subagent_call_is_recognised_by_agent_name(review_hooks):
+    hooks, spawned = review_hooks
+    _call_subagent(hooks, "climate_agent", "Mean t2m was 293 K.")
+    assert len(spawned) == 1
+    it = spawned[0]
+    assert it.question == "Mean t2m over Paris in July 2023?"
+    assert it.question_source == "task_tool_args"
+    assert it.answer == "Mean t2m was 293 K."
+
+
+def test_other_root_tools_are_ignored(review_hooks):
+    hooks, spawned = review_hooks
+    hooks.root_before_tool(SimpleNamespace(name="get_hypothesis_summary"), {}, None)
+    assert hooks.run.pending_questions == {}
+
+
+def test_failed_subagent_call_is_not_reviewed(review_hooks):
+    hooks, spawned = review_hooks
+    _call_subagent(hooks, "climate_agent", "Error running sub-agent: CDS request failed")
+    assert spawned == []
+    assert not hooks.run.open["climate_agent"]   # discarded, not left open
+
+
+def test_subagent_with_no_answer_is_not_reviewed(review_hooks):
+    """What the root gets when the sub-agent's own model call fails (seen with ADK 2.2)."""
+    hooks, spawned = review_hooks
+    _call_subagent(hooks, "climate_agent", {"result": None})
+    assert spawned == []
+    assert not hooks.run.open["climate_agent"]
 
 
 def test_chain_keeps_existing_result():

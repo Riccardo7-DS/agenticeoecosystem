@@ -15,7 +15,12 @@ from agenticeoecosystem.agents.orchestrator_common import clean_text
 
 logger = logging.getLogger(__name__)
 
-TASK_TOOL_PREFIX = "request_task_"   # ASSUMPTION: verify with the probe
+# Sub-agents with mode="single_turn" are exposed to the root as tools named after the agent
+# itself (ADK 2.x _SingleTurnAgentTool, tool name == agent.name), called with one string
+# argument, `request`. A failing sub-agent never reaches on_tool_error: ADK either returns
+# one of these strings as the tool result, or (if the sub-agent's model call itself fails)
+# ends the sub-agent with no answer, which reaches the root as {"result": None}.
+_SUBAGENT_ERROR_PREFIXES = ("Error running sub-agent:", "Error validating input:")
 
 
 class RunState:
@@ -33,7 +38,20 @@ run = RunState()
 
 
 def _agent_from_tool(tool) -> Optional[str]:
-    return tool.name[len(TASK_TOOL_PREFIX):] if tool.name.startswith(TASK_TOOL_PREFIX) else None
+    """The evaluated sub-agent a root tool call goes to, or None for any other tool."""
+    name = getattr(tool, "name", None)
+    return name if name in config.EVALUATED_AGENTS else None
+
+
+def _is_subagent_error(tool_response) -> bool:
+    return isinstance(tool_response, str) and tool_response.lstrip().startswith(_SUBAGENT_ERROR_PREFIXES)
+
+
+def _response_text(tool_response) -> str:
+    """Text of a sub-agent tool result; unwraps ADK's {"result": ...} wrapper."""
+    if isinstance(tool_response, dict) and set(tool_response) == {"result"}:
+        tool_response = tool_response["result"]
+    return to_text(tool_response, limit=20000) if tool_response else ""
 
 
 def _append_index(r: RunState) -> None:
@@ -60,7 +78,8 @@ def root_before_agent(callback_context):
 def root_before_tool(tool, args, tool_context):
     agent = _agent_from_tool(tool)
     if agent in config.EVALUATED_AGENTS:
-        # ASSUMPTION: one string arg is the question; otherwise keep all args.
+        # ADK passes the coordinator's question as the single string arg `request`;
+        # anything else (e.g. a sub-agent with an input_schema) is kept as JSON.
         strings = [v for v in args.values() if isinstance(v, str)]
         run.pending_questions[agent] = strings[0] if len(strings) == 1 else json.dumps(args, default=str)
     return None
@@ -76,7 +95,9 @@ def root_after_tool(tool, args, tool_context, tool_response):
         return None
     it = stack.pop()
     # Prefer what actually crossed the boundary to the coordinator.
-    it.answer = to_text(tool_response, limit=20000) if tool_response else it.last_model_text
+    it.answer = _response_text(tool_response) or it.last_model_text
+    if _is_subagent_error(tool_response) or not it.answer.strip():
+        return None   # DECISION: failed interactions are discarded, not reviewed (as in on_tool_error)
     spawn(evaluate_and_dispatch(it, run.research_question, run.run_id, run.run_dir))
     return None
 

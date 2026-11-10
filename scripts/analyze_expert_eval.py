@@ -11,10 +11,10 @@ Reads every *.json file dropped into --responses-dir (the files experts
 download from the web app and email back), unblinds letter -> model using
 PRIVATE_key.csv, and reports:
 
-    * per-model accuracy / rank summary,
+    * per-model coverage / focus / correctness / rank summary,
     * a full 6-model ranking via Plackett-Luce (MM algorithm) with a
       percentile bootstrap CI, resampled over (question, rater) rankings,
-    * Krippendorff's alpha (ordinal) for accuracy and for relevance,
+    * Krippendorff's alpha (ordinal) for each answer metric and for relevance,
     * Kendall's W (and mean pairwise Kendall tau) for agreement on ranking,
     * questions whose mean relevance is below 3, for the organiser to review.
 
@@ -39,8 +39,15 @@ DEFAULT_RESPONSES_DIR = ROOT_DIR / "expert_eval" / "responses"
 DEFAULT_KEY = ROOT_DIR / "expert_eval" / "PRIVATE_key.csv"
 DEFAULT_OUT_DIR = ROOT_DIR / "expert_eval" / "out" / "analysis"
 
-ACCURACY_CATEGORIES = [1, 2, 3, 4, 5]
+SCORE_CATEGORIES = [1, 2, 3, 4, 5]
 RELEVANCE_CATEGORIES = [1, 2, 3, 4, 5]
+
+# Per-answer score metrics, each on SCORE_CATEGORIES. Current forms ask for
+# coverage/focus/correctness (see COVERAGE_*/FOCUS_*/CORRECTNESS_* in
+# build_expert_eval.py). "accuracy" is the single scale older builds used;
+# it's analysed too if any response file still carries it.
+CURRENT_METRICS = ["coverage", "focus", "correctness"]
+LEGACY_METRICS = ["accuracy"]
 
 
 # --------------------------------------------------------------------------
@@ -73,13 +80,21 @@ def load_responses(responses_dir):
     return responses
 
 
+def detect_metrics(responses):
+    """The answer metrics to analyse: the current ones, plus any legacy metric
+    that appears in at least one response."""
+    seen = {k for resp in responses for item in resp.get("items", []) for k in item}
+    return CURRENT_METRICS + [m for m in LEGACY_METRICS if m in seen]
+
+
 # --------------------------------------------------------------------------
 # Unblinding + validation
 # --------------------------------------------------------------------------
-def unblind(responses, key):
+def unblind(responses, key, metrics):
     """Return (answer_ratings, question_ratings, problems).
 
-    answer_ratings: one row per (response, item, model) -- accuracy + rank.
+    answer_ratings: one row per (response, item, model) -- one column per
+    metric + rank.
     question_ratings: one row per (response, item) -- relevance/familiarity/comment.
     """
     answer_ratings, question_ratings, problems = [], [], []
@@ -106,10 +121,14 @@ def unblind(responses, key):
                 problems.append(f"{src}: form={form} item={position} ranking isn't a permutation of {sorted(letters)} (skipped)")
                 rank = None
 
-            accuracy = item.get("accuracy") or {}
-            missing_acc = letters - set(accuracy)
-            if missing_acc:
-                problems.append(f"{src}: form={form} item={position} missing accuracy for {sorted(missing_acc)}")
+            # A response is from either the current or the legacy form
+            # version: only expect the metrics it actually used.
+            item_metrics = [m for m in metrics if m in item] or CURRENT_METRICS
+            scores = {m: item.get(m) or {} for m in item_metrics}
+            for m in item_metrics:
+                missing = letters - set(scores[m])
+                if missing:
+                    problems.append(f"{src}: form={form} item={position} missing {m} for {sorted(missing)}")
 
             question_ratings.append({
                 "task_id": task_id, "label": label, "form": form, "rater": rater,
@@ -119,43 +138,53 @@ def unblind(responses, key):
             })
 
             for letter, model in letter_to_model.items():
-                acc = accuracy.get(letter)
-                if acc is not None and acc not in ACCURACY_CATEGORIES:
-                    problems.append(f"{src}: form={form} item={position} accuracy[{letter}]={acc!r} out of range (dropped)")
-                    acc = None
-                r = (rank.index(letter) + 1) if rank else None
-                if acc is None and r is None:
+                row = {"task_id": task_id, "label": label, "form": form, "rater": rater,
+                       "model": model, "letter": letter}
+                for m in metrics:
+                    v = scores.get(m, {}).get(letter)
+                    if v is not None and v not in SCORE_CATEGORIES:
+                        problems.append(f"{src}: form={form} item={position} {m}[{letter}]={v!r} out of range (dropped)")
+                        v = None
+                    row[m] = v
+                row["rank"] = (rank.index(letter) + 1) if rank else None
+                if all(row[k] is None for k in metrics + ["rank"]):
                     continue
-                answer_ratings.append({
-                    "task_id": task_id, "label": label, "form": form, "rater": rater,
-                    "model": model, "letter": letter, "accuracy": acc, "rank": r,
-                })
+                answer_ratings.append(row)
     return answer_ratings, question_ratings, problems
 
 
 # --------------------------------------------------------------------------
 # Per-model summary
 # --------------------------------------------------------------------------
-def model_summary(answer_ratings, models):
-    by_model = collections.defaultdict(lambda: {"acc": [], "rank": []})
+def summary_fields(metrics):
+    fields = ["model"]
+    for m in metrics:
+        fields += [f"n_{m}", f"mean_{m}", f"sd_{m}"]
+    return fields + ["n_ranked", "mean_rank", "top1_rate"]
+
+
+def model_summary(answer_ratings, models, metrics):
+    by_model = collections.defaultdict(lambda: collections.defaultdict(list))
     for row in answer_ratings:
-        if row["accuracy"] is not None:
-            by_model[row["model"]]["acc"].append(row["accuracy"])
-        if row["rank"] is not None:
-            by_model[row["model"]]["rank"].append(row["rank"])
+        for k in metrics + ["rank"]:
+            if row[k] is not None:
+                by_model[row["model"]][k].append(row[k])
 
     rows = []
     for model in models:
-        acc, rank = by_model[model]["acc"], by_model[model]["rank"]
-        rows.append({
-            "model": model,
-            "n_accuracy": len(acc),
-            "mean_accuracy": round(statistics.mean(acc), 3) if acc else None,
-            "sd_accuracy": round(statistics.pstdev(acc), 3) if len(acc) > 1 else None,
+        out = {"model": model}
+        for m in metrics:
+            vals = by_model[model][m]
+            out[f"n_{m}"] = len(vals)
+            out[f"mean_{m}"] = round(statistics.mean(vals), 3) if vals else None
+            out[f"sd_{m}"] = round(statistics.pstdev(vals), 3) if len(vals) > 1 else None
+        rank = by_model[model]["rank"]
+        out.update({
             "n_ranked": len(rank),
             "mean_rank": round(statistics.mean(rank), 3) if rank else None,
             "top1_rate": round(sum(r == 1 for r in rank) / len(rank), 3) if rank else None,
         })
+        rows.append(out)
     return rows
 
 
@@ -408,7 +437,8 @@ def main():
         print("Nothing to analyse yet. Drop the .json files experts email you into that folder and re-run.")
         return
 
-    answer_ratings, question_ratings, problems = unblind(responses, key)
+    metrics = detect_metrics(responses)
+    answer_ratings, question_ratings, problems = unblind(responses, key, metrics)
     if problems:
         print(f"\n{len(problems)} issue(s) while unblinding (rows involved were skipped/partial):")
         for p in problems[:30]:
@@ -420,13 +450,16 @@ def main():
     print(f"\n{len(raters)} rater(s): {', '.join(raters)}")
 
     # --- per-model summary -------------------------------------------------
-    summary = model_summary(answer_ratings, models)
-    print("\nPer-model summary (accuracy 1-5, rank 1=best..%d=worst)" % len(models))
-    print(f"{'model':<22}{'n_acc':>7}{'mean_acc':>10}{'n_rank':>8}{'mean_rank':>11}{'top1_rate':>11}")
+    summary = model_summary(answer_ratings, models, metrics)
+    fmt = lambda v: "" if v is None else v
+    print("\nPer-model summary (%s 1-5 = mean score over n ratings; rank 1=best..%d=worst)"
+          % ("/".join(metrics), len(models)))
+    header = f"{'model':<22}" + "".join(f"{m[:11]:>12}{'n':>5}" for m in metrics)
+    print(header + f"{'mean_rank':>11}{'n':>5}{'top1_rate':>11}")
     for row in summary:
-        print(f"{row['model']:<22}{row['n_accuracy']:>7}{('' if row['mean_accuracy'] is None else row['mean_accuracy']):>10}"
-              f"{row['n_ranked']:>8}{('' if row['mean_rank'] is None else row['mean_rank']):>11}"
-              f"{('' if row['top1_rate'] is None else row['top1_rate']):>11}")
+        line = f"{row['model']:<22}" + "".join(
+            f"{fmt(row[f'mean_{m}']):>12}{row[f'n_{m}']:>5}" for m in metrics)
+        print(line + f"{fmt(row['mean_rank']):>11}{row['n_ranked']:>5}{fmt(row['top1_rate']):>11}")
 
     # --- Plackett-Luce full ranking -----------------------------------------
     rankings = collect_rankings(answer_ratings, models)
@@ -449,20 +482,22 @@ def main():
     # three DIFFERENT forms, one per round, so including "form" in the key
     # would put each rating in its own singleton unit and agreement would
     # always come out undefined.
-    acc_units = collections.defaultdict(list)
-    for row in answer_ratings:
-        acc_units[(row["task_id"], row["model"])].append(row["accuracy"])
+    alphas = {}
+    for m in metrics:
+        units = collections.defaultdict(list)
+        for row in answer_ratings:
+            units[(row["task_id"], row["model"])].append(row[m])
+        alphas[m] = krippendorff_alpha_ordinal(units.values(), SCORE_CATEGORIES)
     rel_units = collections.defaultdict(list)
     for row in question_ratings:
         rel_units[row["task_id"]].append(row["relevance"])
-
-    alpha_acc = krippendorff_alpha_ordinal(acc_units.values(), ACCURACY_CATEGORIES)
     alpha_rel = krippendorff_alpha_ordinal(rel_units.values(), RELEVANCE_CATEGORIES)
     mean_w, n_w, mean_tau, n_tau = ranking_agreement(answer_ratings, models)
 
     print("\nAgreement")
-    print(f"  Krippendorff's alpha, accuracy:  {alpha_acc}")
-    print(f"  Krippendorff's alpha, relevance: {alpha_rel}")
+    for m in metrics:
+        print(f"  Krippendorff's alpha, {m + ':':<13} {alphas[m]}")
+    print(f"  Krippendorff's alpha, {'relevance:':<13} {alpha_rel}")
     print(f"  Mean Kendall's W across {n_w} question(s) with >=2 raters: {mean_w}")
     print(f"  Mean pairwise Kendall's tau across {n_tau} rater pair(s): {mean_tau}")
     print("  (alpha/W/tau near 0 = chance agreement, 1 = perfect agreement; alpha below ~0.67 "
@@ -479,12 +514,11 @@ def main():
         print("\nNo questions flagged with mean relevance < 3.")
 
     # --- write CSVs --------------------------------------------------------
-    write_csv(answer_ratings, ["task_id", "label", "form", "rater", "model", "letter", "accuracy", "rank"],
+    write_csv(answer_ratings, ["task_id", "label", "form", "rater", "model", "letter"] + metrics + ["rank"],
               out_dir / "answer_ratings.csv")
     write_csv(question_ratings, ["task_id", "label", "form", "rater", "relevance", "familiarity", "comment"],
               out_dir / "question_ratings.csv")
-    write_csv(summary, ["model", "n_accuracy", "mean_accuracy", "sd_accuracy", "n_ranked", "mean_rank", "top1_rate"],
-              out_dir / "model_summary.csv")
+    write_csv(summary, summary_fields(metrics), out_dir / "model_summary.csv")
     write_csv(pl_rows, ["model", "strength", "ci_low", "ci_high"], out_dir / "model_ranking_plackett_luce.csv")
     write_csv(rel_rows, ["task_id", "label", "n", "mean_relevance"], out_dir / "relevance_by_question.csv")
     print(f"\nCSVs written to {out_dir}")

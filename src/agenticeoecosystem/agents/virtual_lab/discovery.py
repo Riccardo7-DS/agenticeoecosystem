@@ -396,6 +396,25 @@ async def verify(hits: list[Hit], catalogs: Catalogs, bbox: list[float], start: 
     return [(h, *next(results)) if spec else (h, None, None) for h, spec in planned]
 
 
+DataStatus = str   # "verified" | "partial" | "absent" | "unknown"
+
+
+def data_status(result: Any) -> DataStatus:
+    """Machine-readable verdict of a data lookup over the study area and period:
+    verified (data found), partial (a global dataset not covering the whole period), absent
+    (searched, none found) or unknown (failed, or no lookup). Missing metadata is unknown,
+    never absent."""
+    if not isinstance(result, dict) or result.get("error"):
+        return "unknown"
+    if "covers_period" in result:
+        covers = result.get("covers_period")
+        return "verified" if covers else "partial" if covers is not None else "unknown"
+    if not any(k in result for k in ("total", "listed", "days", "products")):
+        return "unknown"
+    found = result.get("total") or result.get("listed") or result.get("days") or result.get("products")
+    return "verified" if found else "absent"
+
+
 def availability(result: Any) -> str:
     """One-phrase summary of a verification result (days lists, or a CDS catalogue entry)."""
     if result is None:
@@ -486,5 +505,5 @@ def as_tool_result(found: Discovery) -> dict[str, Any]:
     return {"ranking": found.method, "listings": found.listings,
             "collections": [{"provider": PROVIDER_LABELS[h.candidate.provider], "id": h.candidate.id,
                              "title": h.candidate.title, "match": h.score,
-                             "availability": availability(r)}
+                             "status": data_status(r), "availability": availability(r)}
                             for h, _, r in found.checks]}

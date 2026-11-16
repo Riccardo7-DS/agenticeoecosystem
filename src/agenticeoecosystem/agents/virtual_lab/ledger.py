@@ -32,9 +32,13 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
 
-from agenticeoecosystem.servers.cdse_geocode.catalog import PRODUCT_ALIASES, normalise_collection
+from agenticeoecosystem.servers.cdse_geocode.catalog import (
+    PRODUCT_ALIASES,
+    normalise_collection,
+)
 
 from .config import VirtualLabConfig
+from .discovery import PROVIDER_LABELS, availability, data_status
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +151,51 @@ def catalog_summary(result: Any) -> dict[str, Any] | None:
             "start": body.get("start_date"), "end": body.get("end_date"),
             "complete": body.get("listed") == body.get("total"),
             "dates": sorted({(p.get("start") or "")[:10] for p in body["products"] if p.get("start")})}
+
+
+# Catalogue lookups whose result says whether one collection has data in the bbox and period:
+# tool -> (provider, argument naming the collection). search_catalogues answers for many.
+DATA_TOOLS: dict[str, tuple[str, str]] = {
+    "search_cdse_catalog": ("cdse", "collection"),
+    "search_stac_items": ("cdse", "collection"),
+    "count_eumetsat_products": ("eumetsat", "collection_id"),
+    "search_earthdata_granules": ("earthdata", "short_name"),
+    "cds_dataset_info": ("cds", "dataset_id"),
+}
+MULTI_DATA_TOOL = "search_catalogues"
+
+
+def data_records(tool: str, args: dict, result: Any) -> list[dict[str, Any]]:
+    """Dataset-registry rows of one catalogue call (see inventory.data_registry): one per
+    collection, with "key" "" for a single-collection lookup, else the collection id."""
+    body = result if isinstance(result, dict) and not result.get("content") else _result_json(result)
+    if tool == MULTI_DATA_TOOL:
+        return [{"key": c["id"], "provider": c.get("provider", ""), "collection": c["id"],
+                 "title": c.get("title", ""), "status": c.get("status") or "unknown",
+                 "availability": c.get("availability", "")}
+                for c in (body or {}).get("collections") or [] if isinstance(c, dict) and c.get("id")]
+    if tool not in DATA_TOOLS:
+        return []
+    provider, arg = DATA_TOOLS[tool]
+    collection = str(args.get(arg) or (body or {}).get(arg) or "?")
+    if args.get("product_type"):
+        collection += f" ({args['product_type']})"
+    return [{"key": "", "provider": PROVIDER_LABELS.get(provider, provider), "collection": collection,
+             "title": "", "status": data_status(body if body is not None else result),
+             "availability": availability(body if body is not None else result)}]
+
+
+def with_registry_ids(tool: str, result: Any, call_id: str) -> Any:
+    """The result as the agent sees it, carrying the registry id(s) to cite in source_ids."""
+    if not isinstance(result, dict) or result.get("content"):
+        return result
+    if tool == MULTI_DATA_TOOL and isinstance(result.get("collections"), list):
+        return {**result, "collections": [{"registry_id": f"{call_id}/{c['id']}", **c}
+                                          if isinstance(c, dict) and c.get("id") else c
+                                          for c in result["collections"]]}
+    if tool in DATA_TOOLS:
+        return {"registry_id": call_id, **result}
+    return result
 
 
 def reports_error(result: Any) -> bool:
@@ -349,7 +398,10 @@ class LabGuardPlugin(BasePlugin):
             status="ok", cached_from=source_id, result_preview=str(result)[:_RESULT_PREVIEW_CHARS])
         if tool.name == CATALOG_TOOL and (summary := catalog_summary(result)):
             entry["catalog"] = summary
+        if records := data_records(tool.name, tool_args, result):
+            entry["data"] = records
         logger.info("Tool '%s' answered from cache (%s)", tool.name, source_id)
+        result = with_registry_ids(tool.name, result, entry["id"])
         return result if isinstance(result, dict) else {"result": result}
 
     async def before_tool_callback(self, *, tool, tool_args, tool_context) -> dict | None:
@@ -444,6 +496,9 @@ class LabGuardPlugin(BasePlugin):
             return {"result": result, "lab_note": NO_ANSWER_NOTE}
         if entry["status"] == "ok" and self.config.cache_tool_calls:
             self.ledger.remember(entry, result)
+        if entry["status"] == "ok" and (records := data_records(tool.name, tool_args, result)):
+            entry["data"] = records
+            return with_registry_ids(tool.name, result, entry["id"])
         return None
 
     async def on_tool_error_callback(self, *, tool, tool_args, tool_context, error) -> dict | None:

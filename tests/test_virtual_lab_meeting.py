@@ -973,3 +973,43 @@ def test_lab_agents_stay_read_only_in_execute_mode(tmp_path):
 
     _, _, ledger, _, _ = _run_execute(tmp_path, FakeSentinelHub(), script)
     assert not any(c["tool"] == "fetch_sentinel2" and c["status"] == "ok" for c in ledger.tool_calls)
+
+
+def test_dataset_choices_are_checked_against_the_registry_and_reported(tmp_path):
+    """A specialist that cites the inventory row of a discovered collection is grounded; one
+    that names data no catalogue result shows is flagged. The final answer lists the data
+    decision with its registry ids, and the record carries the grounding metrics."""
+    import re
+
+    from _virtual_lab_fakes import THERMAL_V0
+
+    _FakeCatalog.calls, _FakeEarthdata.keywords = [], []
+
+    def script(role, phase, req):
+        if role == "lab_pi" and phase == "formulate":
+            return _text({**PROBLEM, "data_needs": FIRE_NEEDS})
+        if role == "thermal_specialist" and phase == "propose":
+            text = _request_text(req)
+            viirs = re.search(r"\[(tc-\d{4})\] NASA Earthdata \(CMR\) · VNP14IMG", text).group(1)
+            return _text({**THERMAL_V0, "datasets": [
+                {"name": "VIIRS VNP14IMG", "role": "primary", "observable": "active fire detection",
+                 "decision": "selected", "source_ids": [viirs]},
+                {"name": "Imaginary Fire Product", "role": "reference", "observable": "fire perimeter"},
+                {"name": "MTG FCI", "role": "baseline", "decision": "rejected",
+                 "justification": "unusable geometry over Chile"}]})
+        return default_script(role, phase, req)
+    llm = ScriptedLlm(script=script, seen=[])
+    config = VirtualLabConfig(participants=["thermal_specialist", "optical_specialist"],
+                              literature_enabled=False, max_rounds=0, max_tool_calls=3)
+    answer, record, ledger, _ = asyncio.run(run_virtual_lab(
+        QUERY, config, llm=llm, existing_agents=fake_existing_agents(llm), artifact_dir=tmp_path,
+        catalogs=_all_catalogs()))
+    assert "DATASET GROUNDING" in "\n".join(_requests(llm, "thermal_specialist", "propose"))
+    check = next(e["critique"] for e in ledger.entries
+                 if e["kind"] == "validation" and e["step"] == "r0.propose.thermal_specialist")
+    flagged = {i["claim"] for i in check["issues"] if "catalogue result" in i["rationale"]}
+    assert "Imaginary Fire Product" in flagged and "VIIRS VNP14IMG" not in flagged
+    assert "MTG FCI" not in {i["claim"] for i in check["issues"]}   # rejected with a reason
+    assert "## Data" in answer
+    assert record.data_grounding["registry_entries"] > 0
+    assert record.data_grounding["shortlisted_with_data"] >= 1

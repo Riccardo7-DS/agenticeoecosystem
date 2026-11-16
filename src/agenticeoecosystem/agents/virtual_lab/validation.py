@@ -15,6 +15,8 @@ from datetime import date
 from enum import StrEnum
 from typing import Any
 
+from .inventory import STATUS_RANK, RegistryEntry, best_status, resolve
+from .literature import arxiv_ids_in
 from .schemas import (
     CritiqueIssue,
     DatasetChoice,
@@ -28,7 +30,6 @@ from .schemas import (
     ScientificProblem,
     ScientificProposal,
 )
-from .literature import arxiv_ids_in
 from .sensor_catalog import (
     GEO_VZA_DEGRADED_DEG,
     GEO_VZA_UNUSABLE_DEG,
@@ -88,6 +89,8 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
     """Availability, coverage and physical-suitability checks for one dataset choice."""
     sensor = lookup(ds.name)
     if sensor is None:
+        if ds.source_ids:   # check_grounding judges it against the catalogue results
+            return []
         return [_issue("dataset_availability", "minor", ds.name,
                        "Not in the sensor catalog; availability, coverage and access are unverified.",
                        "Name a catalogued sensor or cite a tool result confirming availability.")]
@@ -140,6 +143,84 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
                                      "knowledge.tex capability matrix)."))
             break
     return issues
+
+
+GROUNDING_FIX = ("Cite in source_ids the DATA INVENTORY / DATA REGISTRY id showing the data (tool "
+                 "results give their 'registry_id'); else search for it with search_catalogues or "
+                 "search_cdse_catalog, or mark it decision 'unverified' (an option, not an input).")
+
+
+def check_grounding(ds: DatasetChoice, registry: dict[str, RegistryEntry]) -> list[CritiqueIssue]:
+    """Is a dataset choice tied to this run's catalogue results? Deterministic: ids exist, the
+    data were found for the area and period, and decisions are explained. Missing metadata
+    (a failed lookup) is reported as unknown, never as absence."""
+    if ds.decision == "rejected":
+        if not ds.justification.strip():
+            return [_issue("dataset_suitability", "minor", ds.name,
+                           "Rejected without a reason.", "Say why in 'justification'.")]
+        return []
+    key_input = ds.role in ("primary", "baseline", "reference")
+    unknown = [i for i in ds.source_ids if not resolve(registry, i)]
+    issues = []
+    if unknown:
+        issues.append(_issue("unsupported_claim", "major" if ds.decision == "selected" else "minor",
+                             ds.name, f"Cites {', '.join(unknown)}, which no catalogue lookup of "
+                             "this run produced.", GROUNDING_FIX))
+    entries = [e for i in ds.source_ids for e in resolve(registry, i)]
+    if ds.decision == "unverified":
+        if key_input:
+            issues.append(_issue("dataset_availability", "minor", ds.name,
+                                 f"Unverified {ds.role} dataset: the approach depends on data not "
+                                 "shown to exist for this area and period.", GROUNDING_FIX))
+        return issues
+    if not entries:
+        if not unknown:
+            issues.append(_issue("dataset_availability", "major" if key_input else "minor", ds.name,
+                                 "Selected as an input but not tied to any catalogue result of this "
+                                 "run: it is not shown to exist for the study area and period.",
+                                 GROUNDING_FIX))
+        return issues
+    status = best_status(entries)
+    found = "; ".join(f"[{e.id}] {e.availability}" for e in entries[:3])
+    if status == "absent":
+        issues.append(_issue("dataset_availability", "blocking" if ds.role == "primary" else "major",
+                             ds.name, f"The cited catalogue results found NO data in the bbox and "
+                             f"period: {found}.", "Use data that exist here, or explain the gap."))
+    elif status == "unknown":
+        issues.append(_issue("dataset_availability", "minor", ds.name,
+                             f"Availability unknown (the lookup failed or could not check): {found}.",
+                             "Treat it as unverified or retry the search."))
+    elif status == "partial":
+        issues.append(_issue("coverage", "minor", ds.name,
+                             f"Covers only part of the study period: {found}.",
+                             "State the gap in 'limitations'."))
+    return issues
+
+
+def grounding_metrics(datasets: list[DatasetChoice], registry: dict[str, RegistryEntry],
+                      shortlisted: list[str] = ()) -> dict[str, Any]:
+    """Lightweight measures of how a plan's data choices rest on catalogue evidence.
+    grounding_rate: selected datasets citing data found here / selected datasets.
+    considered: shortlisted discovery ids that some dataset choice cites (selected, rejected
+    or unverified) / shortlisted ids found with data."""
+    selected = [d for d in datasets if d.decision == "selected"]
+    grounded = [d for d in selected
+                if STATUS_RANK.get(best_status([e for i in d.source_ids for e in resolve(registry, i)])
+                                   or "absent", 0) >= STATUS_RANK["partial"]]
+    cited = {e.id for d in datasets for i in d.source_ids for e in resolve(registry, i)}
+    found = [i for i in shortlisted if i in registry and registry[i].status in ("verified", "partial")]
+    return {
+        "selected": len(selected), "grounded": len(grounded),
+        "grounding_rate": round(len(grounded) / len(selected), 2) if selected else None,
+        "rejected": sum(d.decision == "rejected" for d in datasets),
+        "rejected_with_reason": sum(d.decision == "rejected" and bool(d.justification.strip())
+                                    for d in datasets),
+        "unverified": sum(d.decision == "unverified" for d in datasets),
+        "shortlisted_with_data": len(found),
+        "shortlisted_considered": sum(i in cited for i in found),
+        "registry_entries": len(registry),
+        "searched_by_agents": sum(e.found_by != "inventory" for e in registry.values()),
+    }
 
 
 _CALL_ID = re.compile(r"tc-\d{4}")
@@ -268,10 +349,16 @@ def validate_proposal(
     grounding_available: bool,
     round_: int = 0,
     extra_issues: list[CritiqueIssue] | None = None,
+    registry: dict[str, RegistryEntry] | None = None,
 ) -> ScientificCritique:
+    """registry: this run's dataset registry (inventory.data_registry); None when the lab has
+    no catalogue access, which skips the grounding checks."""
     issues = list(extra_issues or [])
     for ds in proposal.datasets:
-        issues.extend(check_dataset(ds, problem))
+        if ds.in_use:
+            issues.extend(check_dataset(ds, problem))
+        if registry is not None:
+            issues.extend(check_grounding(ds, registry))
     if not proposal.hypotheses:
         issues.append(_issue("methodology", "blocking", proposal.summary,
                              "The proposal states no testable hypothesis."))
@@ -290,11 +377,16 @@ def validate_proposal(
 def validate_plan(
     plan: ExperimentPlan, problem: ScientificProblem, available_agents: set[str],
     catalog: list[dict] = (),
+    registry: dict[str, RegistryEntry] | None = None,
 ) -> ScientificCritique:
-    """catalog: summaries of this run's CDSE catalogue searches (LabLedger.catalog_results)."""
+    """catalog: summaries of this run's CDSE catalogue searches (LabLedger.catalog_results).
+    registry: the dataset registry (inventory.data_registry); None skips grounding checks."""
     issues: list[CritiqueIssue] = []
     for ds in plan.datasets:
-        issues.extend(check_dataset(ds, problem))
+        if ds.in_use:
+            issues.extend(check_dataset(ds, problem))
+        if registry is not None:
+            issues.extend(check_grounding(ds, registry))
     issues += _step_sensor_checks(plan, problem)
     if not plan.hypotheses:
         issues.append(_issue("methodology", "blocking", plan.research_question,
@@ -385,7 +477,7 @@ def sensors_used(step) -> list:
 def _step_sensor_checks(plan: ExperimentPlan, problem: ScientificProblem) -> list[CritiqueIssue]:
     """Coverage and availability for sensors a step uses but `plan.datasets` doesn't list
     (a plan can drop a sensor from its datasets and still schedule it in the workflow)."""
-    listed = {s.key for ds in plan.datasets for s in sensors_in_text(ds.name)}
+    listed = {s.key for ds in plan.datasets if ds.in_use for s in sensors_in_text(ds.name)}
     issues, seen = [], set()
     for step in plan.workflow:
         for sensor in sensors_used(step):
@@ -404,10 +496,10 @@ def _step_text(step) -> str:
 
 def _reference_independence(plan: ExperimentPlan) -> list[CritiqueIssue]:
     """A dataset under evaluation cannot also be the reference that validates it."""
-    evaluated = {s.key for ds in plan.datasets if ds.role in ("primary", "baseline")
+    evaluated = {s.key for ds in plan.datasets if ds.in_use and ds.role in ("primary", "baseline")
                  for s in sensors_in_text(ds.name)}
-    refs = list(dict.fromkeys([*plan.reference_data,
-                               *(ds.name for ds in plan.datasets if ds.role == "reference")]))
+    refs = list(dict.fromkeys([*plan.reference_data, *(ds.name for ds in plan.datasets
+                                                       if ds.in_use and ds.role == "reference")]))
     overlapping = {ref: sorted({s.key for s in sensors_in_text(ref)} & evaluated) for ref in refs}
     overlapping = {ref: keys for ref, keys in overlapping.items() if keys}
     if not overlapping:

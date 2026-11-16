@@ -21,12 +21,12 @@ from __future__ import annotations
 
 import asyncio
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from itertools import pairwise
 from statistics import median
 from typing import TYPE_CHECKING, Any
-from collections.abc import Awaitable, Callable
 
 from agenticeoecosystem.servers.cdse_geocode.catalog import ELSEWHERE
 
@@ -353,3 +353,70 @@ async def _core_lookups(eum, cds, bbox, start, end, searchable: bool, call: Call
         sections.append("COPERNICUS CLIMATE DATA STORE (core reanalyses):")
         sections.extend(cds_rows)
     return sections
+
+
+# ------------------------------------------------------------------------- dataset registry
+
+STATUS_RANK = {"verified": 3, "partial": 2, "unknown": 1, "absent": 0}
+
+
+@dataclass(frozen=True)
+class RegistryEntry:
+    """One collection a catalogue lookup of this run reported on (a view of the ledger:
+    LabLedger.tool_calls entries carry "data" rows, see ledger.data_records)."""
+    id: str                 # "tc-0037", or "tc-0052/NISAR_L2_GSLC_V1" for one of many
+    provider: str
+    collection: str
+    title: str
+    status: str             # verified | partial | absent | unknown
+    availability: str
+    found_by: str           # "inventory" or the agent that searched
+    step: str
+
+
+def data_registry(tool_calls: list[dict[str, Any]]) -> dict[str, RegistryEntry]:
+    """Every dataset this run's catalogue lookups reported on, by registry id. Built from
+    the ledger on demand, so it always reflects the searches made so far."""
+    registry: dict[str, RegistryEntry] = {}
+    for call in tool_calls:
+        if call.get("status") != "ok":
+            continue
+        for row in call.get("data") or []:
+            rid = f"{call['id']}/{row['key']}" if row.get("key") else call["id"]
+            registry[rid] = RegistryEntry(
+                id=rid, provider=row.get("provider", ""), collection=row.get("collection", ""),
+                title=row.get("title", ""), status=row.get("status", "unknown"),
+                availability=row.get("availability", ""),
+                found_by="inventory" if call.get("inventory") else str(call.get("agent") or ""),
+                step=str(call.get("step") or ""))
+    return registry
+
+
+def resolve(registry: dict[str, RegistryEntry], source_id: str) -> list[RegistryEntry]:
+    """Entries a cited id refers to: the exact id, or every collection of a cited
+    multi-collection call ("tc-0052" for "tc-0052/<id>" rows)."""
+    if source_id in registry:
+        return [registry[source_id]]
+    return [e for rid, e in registry.items() if rid.startswith(f"{source_id}/")]
+
+
+def best_status(entries: list[RegistryEntry]) -> str | None:
+    return max((e.status for e in entries), key=STATUS_RANK.get, default=None)
+
+
+def format_registry(registry: dict[str, RegistryEntry], max_rows: int = 60) -> str:
+    """DATA REGISTRY section: datasets found by the agents' own searches (the DATA INVENTORY
+    rows are registry entries too and are not repeated). Absent ones are listed by id only."""
+    extra = [e for e in registry.values() if e.found_by != "inventory"]
+    if not extra:
+        return ""
+    shown = sorted((e for e in extra if e.status != "absent"),
+                   key=lambda e: -STATUS_RANK.get(e.status, 0))[:max_rows]
+    lines = [f"- [{e.id}] {e.provider} · {e.collection}" + (f" — {e.title}" if e.title else "")
+             + f": {e.status.upper()}; {e.availability} (searched by {e.found_by})" for e in shown]
+    absent = [e.id for e in extra if e.status == "absent"]
+    if absent:
+        lines.append("- NONE found in the bbox and period: " + ", ".join(absent))
+    if len(extra) - len(absent) > len(shown):
+        lines.append(f"- ... {len(extra) - len(absent) - len(shown)} more")
+    return "\n".join(lines)

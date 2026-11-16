@@ -30,6 +30,7 @@ STATE_PLAN = "vl_plan"
 STATE_INVENTORY = "vl_inventory"     # data inventory text, built once after formulation
 STATE_SUB_AGENTS = "vl_sub_agents"   # sub-agents the PI chose; others are not offered
 STATE_RESULTS = "vl_results"         # execute mode: results of the lab's fixed analyses
+STATE_REGISTRY = "vl_registry"       # datasets found by the agents' own catalogue searches
 # The lab's direct metadata tools (participants.catalog_tools), named in the tool guidance.
 DIRECT_TOOLS = ("search_catalogues", "search_cdse_catalog")
 
@@ -101,7 +102,8 @@ PROPOSAL_SCHEMA = """\
 {"summary": str,
  "hypotheses": [{"id": "H1", "statement": str, "prediction": str, "falsification": str}],
  "datasets": [{"name": str, "role": "primary" | "reference" | "baseline" | "ancillary",
-               "observable": str, "justification": str}],
+               "observable": str, "justification": str,
+               "decision": "selected" | "rejected" | "unverified", "source_ids": [registry ids]}],
  "methods": [str], "assumptions": [str], "limitations": [str],
  "evidence": [{"claim": str, "kind": "retrieved" | "assumption" | "hypothesis", "source": str | null}],
  "confidence": "low" | "medium" | "high", "changes_from_previous": str | null}"""
@@ -131,7 +133,8 @@ PLAN_SCHEMA = """\
 {"research_question": str,
  "hypotheses": [{"id": str, "statement": str, "prediction": str, "falsification": str}],
  "datasets": [{"name": str, "role": "primary" | "reference" | "baseline" | "ancillary",
-               "observable": str, "justification": str}],
+               "observable": str, "justification": str,
+               "decision": "selected" | "rejected" | "unverified", "source_ids": [registry ids]}],
  "workflow": [{"order": int, "description": str, "agent": <existing sub-agent name>,
                "inputs": [str], "outputs": [str], "hypotheses": [ids of hypotheses this step tests]}],
  "reference_data": [str], "baselines": [str], "metrics": [str], "statistical_tests": [str],
@@ -161,12 +164,35 @@ def _literature_section(state: dict) -> str:
             "papers are retrieved evidence, not proof for this event):\n" + _dump(checks) + "\n")
 
 
+# How every dataset choice is tied to the catalogue evidence (validation.check_grounding).
+DATA_GROUNDING_RULE = """\
+DATASET GROUNDING (checked by the lab's validator):
+- Registry ids: each DATA INVENTORY row id ("tc-0037") and each catalogue tool result of this
+  run (its "registry_id"; one collection of a search_catalogues result is "tc-0052/<id>") is a
+  dataset-registry entry. The DATA REGISTRY lists the ones found by the agents' own searches.
+- In "datasets", "decision" "selected" means a confirmed input: cite in "source_ids" the
+  registry id(s) showing it has data for the study area and period.
+- Data you need that no entry shows: search for it first (search_catalogues or
+  search_cdse_catalog). If it still cannot be shown, list it with decision "unverified": an
+  option needing verification, never a confirmed input.
+- Discovered collections relevant to the question that you decide NOT to use: list them with
+  decision "rejected", their source_ids and the reason in "justification" (e.g. archive
+  starts after the needed baseline, resolution too coarse for the feature, wrong
+  measurement). Judge each from its availability (dates, item counts, revisit), not its name.
+  Do not list irrelevant collections.
+"""
+
+
 def _inventory_section(state: dict) -> str:
     text = state.get(STATE_INVENTORY)
     if not text:
         return ""
-    return ("\nDATA INVENTORY (retrieved by the lab from the public Copernicus Data Space catalogue "
-            "before the meeting; the same for every participant):\n" + text + "\n")
+    registry = state.get(STATE_REGISTRY)
+    return ("\nDATA INVENTORY (retrieved by the lab from the public data catalogues before the "
+            "meeting; the same for every participant):\n" + text + "\n"
+            + (f"\nDATA REGISTRY (further datasets found by the agents' searches in this run):\n"
+               f"{registry}\n" if registry else "")
+            + "\n" + DATA_GROUNDING_RULE)
 
 
 def _results_section(state: dict) -> str:
@@ -324,6 +350,8 @@ Check the plan against this list and raise an issue (target "experiment_plan") f
 5. Statistical tests: do they fit the sample (one event or site is n=1 unless pixels,
    scenes, regions or seeds are the replicated unit)?
 6. Feasibility: can each step's sub-agent actually provide what the step asks for?
+7. Data: does each selected dataset's registry entry (dates, coverage, revisit) suit its use,
+   e.g. does the archive reach back far enough for the baseline the method needs?
 Use "blocking" only if the plan cannot answer the research question at all.
 For every issue, "claim" must QUOTE the plan text you are criticising (a hypothesis, step,
 dataset or metric), never a line of this checklist. Raise an issue only for a real failure.
@@ -352,6 +380,9 @@ def critic(state: dict, agent: str, tool_names: list[str], executors: dict[str, 
         "evidence, physical or observational inconsistencies (night/cloud/smoke, viewing geometry, "
         "resolution, revisit vs. timing), unsuitable or unavailable datasets, methodological gaps "
         "(no reference data, no baseline, unfalsifiable hypotheses), and unresolved limitations. "
+        "For each SELECTED dataset judge whether its registry entry (coverage, dates, revisit, "
+        "what it measures) suits its stated use, and flag a relevant discovered collection a "
+        "proposal ignores without a reason. "
         "Use 'blocking' only when the approach cannot answer the question as stated.\n\n"
         + SCIENTIFIC_NORMS + "\n" + tools_txt
         + f"\nSENSOR CATALOG:\n{format_catalog()}\n"
@@ -463,6 +494,9 @@ def designer(state: dict, agent: str, executors: dict[str, str], lab_members: li
         "available, baselines/alternatives, metrics, statistical comparisons, confounders and "
         "stopping criteria. Do not invent sub-agents or datasets the catalog marks as inaccessible "
         "without flagging them as external dependencies.\n"
+        "- 'datasets' is the lab's data decision: keep the proposals' grounded selections (with "
+        "their source_ids), list the relevant rejected and unverified collections with the reason, "
+        "and add no concrete dataset that no registry entry shows.\n"
         "- List in each step's 'hypotheses' the ids of the hypotheses it helps test.\n"
         "- Reference data must be INDEPENDENT of the datasets under evaluation (a sensor cannot "
         "validate itself): e.g. Copernicus EMS delineations, GNSS or levelling, very high "

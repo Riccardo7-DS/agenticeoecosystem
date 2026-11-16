@@ -42,7 +42,7 @@ from . import prompts
 from .analyses import ANALYSES, RUNNERS, AnalysisContext, with_dependencies
 from .config import VirtualLabConfig
 from . import inventory as inv
-from .ledger import LabLedger, catalog_summary, current_step
+from .ledger import LabLedger, catalog_summary, current_step, data_records
 from .literature import (broaden_query, is_duplicate_claim, is_relevant, limit_and,
                          normalise_arxiv_id, query_terms)
 from .participants import CRITIC, LabParticipants
@@ -72,6 +72,7 @@ from .validation import (
     link_results,
     normalise_conclusion,
     link_evidence,
+    grounding_metrics,
     link_items,
     literature_uptake,
     open_issues,
@@ -226,8 +227,10 @@ class VirtualLabCoordinator(BaseAgent):
         current_step.set(step)
         repair = initial_repair
         for attempt in range(self.lab_config.max_repair_attempts + 1):
+            registry = self._registry()
             delta = {**(state or {}), prompts.raw_key(agent.name): None,
-                     prompts.repair_key(agent.name): repair}
+                     prompts.repair_key(agent.name): repair,
+                     prompts.STATE_REGISTRY: inv.format_registry(registry) if registry else ""}
             yield self._state_event(ctx, delta)
             # Own branch per call: the participant can't see any other participant's events.
             sub_ctx = ctx.model_copy(update={"branch": f"{self.name}.{step}.a{attempt}"})
@@ -300,7 +303,8 @@ class VirtualLabCoordinator(BaseAgent):
         grounded = bool(self._participants.grounding.get(name))
         link_issues += literature_uptake(proposal, self._record.literature)
         link_issues += off_area_calls(self._ledger.calls_for(step), self._record.problem)
-        check = validate_proposal(proposal, self._record.problem, grounded, round_, link_issues)
+        check = validate_proposal(proposal, self._record.problem, grounded, round_, link_issues,
+                                  registry=self._registry())
         self._record.proposal_history.append(proposal)
         self._ledger.log("proposal" if round_ == 0 else "revision", step, agent=name,
                          proposal=proposal.model_dump(mode="json"))
@@ -501,7 +505,8 @@ class VirtualLabCoordinator(BaseAgent):
             available = set(parts.executors)
             if plan is not None:
                 catalog = self._ledger.catalog_results()
-                plan_check = validate_plan(plan, record.problem, available, catalog)
+                plan_check = validate_plan(plan, record.problem, available, catalog,
+                                                   registry=self._registry())
                 review = None
                 async for event in self._review_plan(ctx, plan, plan_check, out):
                     yield event
@@ -524,7 +529,8 @@ class VirtualLabCoordinator(BaseAgent):
                         yield event
                     if (redesigned := out.get("final.redesign")) is not None:
                         plan = redesigned
-                        plan_check = validate_plan(plan, record.problem, available, catalog)
+                        plan_check = validate_plan(plan, record.problem, available, catalog,
+                                                   registry=self._registry())
                 record.plan_validation = plan_check
                 self._ledger.log("plan", "final.design", plan=plan.model_dump(mode="json"),
                                  validation=plan_check.model_dump(mode="json"))
@@ -558,6 +564,9 @@ class VirtualLabCoordinator(BaseAgent):
                     decision_step = "final.conclude"
 
         record.decision, record.plan = decision, plan
+        if (registry := self._registry()) is not None:
+            chosen = plan.datasets if plan else [d for p in proposals.values() for d in p.datasets]
+            record.data_grounding = grounding_metrics(chosen, registry, self._shortlisted_ids())
         self._ledger.log("decision", decision_step, decision=decision.model_dump(mode="json"),
                          termination=termination.value)
         current_step.set(None)
@@ -720,6 +729,18 @@ class VirtualLabCoordinator(BaseAgent):
         logger.info("Study area %r: %s", area.name, entry["note"])
         return problem.model_copy(update={"study_area": area.model_copy(update={"bbox": found})})
 
+    def _registry(self) -> dict[str, inv.RegistryEntry] | None:
+        """This run's dataset registry, rebuilt from the ledger (so it includes every search made
+        so far); None when the lab has no catalogue access, which turns grounding checks off."""
+        if not self._catalogs or not self.lab_config.inventory_enabled:
+            return None
+        return inv.data_registry(self._ledger.tool_calls)
+
+    def _shortlisted_ids(self) -> list[str]:
+        """Registry ids of the data discovery's shortlist (the inventory's per-collection checks)."""
+        return [c["id"] for c in self._ledger.tool_calls
+                if c.get("inventory") and c.get("data") and c["tool"] != "search_cdse_catalog"]
+
     async def _build_inventory(self, problem: ScientificProblem) -> str:
         """Query every provider's public metadata API for the study area and period (see
         inventory.py), each call through the ledger. Returns the DATA INVENTORY text."""
@@ -734,6 +755,8 @@ class VirtualLabCoordinator(BaseAgent):
             else:
                 if tool == "search_cdse_catalog":
                     entry["catalog"] = catalog_summary(result)
+                if records := data_records(tool, args, result):
+                    entry["data"] = records
                 if self.lab_config.cache_tool_calls:
                     self._ledger.remember(entry, result)   # specialists' repeats are free
             return entry["id"], result
@@ -903,6 +926,37 @@ class VirtualLabCoordinator(BaseAgent):
         return RECORD_ARTIFACT
 
 
+def _data_section(record: LabRecord, ledger: LabLedger) -> list[str]:
+    """The lab's data decision, traceable to the catalogue results: selected inputs with their
+    registry ids and availability, alternatives considered and why not, unverified options."""
+    chosen = record.plan.datasets if record.plan else [d for p in record.final_proposals.values()
+                                                       for d in p.datasets]
+    if not chosen:
+        return []
+    registry = inv.data_registry(ledger.tool_calls)
+    seen: set[tuple[str, str]] = set()
+
+    def line(ds) -> str:
+        entries = [e for i in ds.source_ids for e in inv.resolve(registry, i)]
+        refs = f" [{', '.join(ds.source_ids)}]" if ds.source_ids else ""
+        found = f" — {entries[0].availability}" if entries and ds.decision != "rejected" else ""
+        why = f" — {ds.justification}" if ds.justification else ""
+        return f"- **{ds.name}** ({ds.role}){refs}{found}{why}"
+
+    lines = ["", "## Data"]
+    for decision, title in (("selected", "Selected"), ("rejected", "Considered, not selected"),
+                            ("unverified", "Unverified options (availability not shown)")):
+        rows = []
+        for ds in chosen:
+            key = (ds.decision, ds.name.lower())
+            if ds.decision == decision and key not in seen:
+                seen.add(key)
+                rows.append(line(ds))
+        if rows:
+            lines += ["", f"**{title}**", *rows]
+    return lines
+
+
 def render_report(record: LabRecord, ledger: LabLedger) -> str:
     """Human-readable final answer; the structured record is the source of truth."""
     d, plan = record.decision, record.plan
@@ -916,6 +970,7 @@ def render_report(record: LabRecord, ledger: LabLedger) -> str:
         for dis in d.disagreements:
             lines.append(f"- **{dis.topic}**: " + "; ".join(f"{a}: {p}" for a, p in dis.positions.items())
                          + (f" — evidence needed: {dis.evidence_needed}" if dis.evidence_needed else ""))
+    lines += _data_section(record, ledger)
     if plan:
         lines += ["", "## Experiment plan", f"**Question:** {plan.research_question}", "", "**Hypotheses**"]
         lines += [f"- {h.id}: {h.statement} — predicts: {h.prediction}; refuted if: {h.falsification}"
@@ -953,6 +1008,10 @@ def render_report(record: LabRecord, ledger: LabLedger) -> str:
                "No experiment was executed (plan-only mode): conclusions rest on retrieved metadata/"
                "literature and stated assumptions, not on verified results."),
               f"- Retrieved claims linked to tool calls: {linked}",
+              *([f"- Data grounding: {g['grounded']}/{g['selected']} selected datasets cite data "
+                 f"found here; {g['shortlisted_considered']}/{g['shortlisted_with_data']} discovered "
+                 f"collections with data were assessed; {g['rejected']} rejected, "
+                 f"{g['unverified']} unverified"] if (g := record.data_grounding) else []),
               f"- Termination: {record.termination}; deliberation rounds: {record.rounds_run}",
               f"- Tool calls: {usage['tool_calls']} ({usage['blocked_tool_calls']} blocked); "
               f"participant LLM calls: {usage['lab_llm_calls']}; tokens in/out: "

@@ -10,6 +10,7 @@ an ExperimentResult can back a VERIFIED claim.
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -121,11 +122,54 @@ _DATASET_ROLE_SYNONYMS = {
 }
 
 
+_DATASET_DECISION_SYNONYMS = {
+    "use": "selected", "used": "selected", "select": "selected", "chosen": "selected",
+    "reject": "rejected", "not_selected": "rejected", "not selected": "rejected",
+    "excluded": "rejected", "discarded": "rejected",
+}
+# Registry ids: a ledger call id, optionally "/<collection id>" for one collection of a
+# search_catalogues result (e.g. "tc-0052/NISAR_L2_GSLC_V1").
+_REGISTRY_ID = re.compile(r"tc-\d{4}(?:/[^\s,;\]\)\"']+)?")
+
+
 class DatasetChoice(BaseModel):
     name: str = Field(description="Sensor/product name, ideally a sensor catalog key.")
     role: Literal["primary", "reference", "baseline", "ancillary"] = "primary"
     observable: str = Field(default="", description="What this dataset is used to observe.")
     justification: str = ""
+    decision: Literal["selected", "rejected", "unverified"] = Field(
+        default="selected",
+        description="selected: a confirmed input; rejected: considered and not used (say why in "
+                    "justification); unverified: a possible option not shown to exist here.")
+    source_ids: list[str] = Field(
+        default_factory=list,
+        description="Dataset-registry ids (DATA INVENTORY rows or catalogue tool results of this "
+                    "run) showing the data exist for the study area and period.")
+
+    @field_validator("decision", mode="before")
+    @classmethod
+    def _normalise_decision(cls, v):
+        if isinstance(v, str):
+            key = v.strip().lower()
+            key = _DATASET_DECISION_SYNONYMS.get(key, key)
+            # An unrecognised word must not turn into a confirmed input.
+            return key if key in ("selected", "rejected", "unverified") else "unverified"
+        return v
+
+    @field_validator("source_ids", mode="before")
+    @classmethod
+    def _normalise_source_ids(cls, v):
+        """Accept a string or list, with or without an "inventory:" prefix."""
+        if v is None:
+            return []
+        items = [v] if isinstance(v, str) else v if isinstance(v, list) else []
+        return list(dict.fromkeys(m for item in items if isinstance(item, str)
+                                  for m in _REGISTRY_ID.findall(item)))
+
+    @property
+    def in_use(self) -> bool:
+        """Selected or unverified: part of the approach (rejected ones are not)."""
+        return self.decision != "rejected"
 
     @field_validator("role", mode="before")
     @classmethod
@@ -340,3 +384,5 @@ class LabRecord(BaseModel):
     termination: str = ""
     rounds_run: int = 0
     invalid_outputs: list[dict] = Field(default_factory=list)
+    data_grounding: dict[str, Any] = Field(
+        default_factory=dict, description="Dataset-grounding metrics (validation.grounding_metrics).")

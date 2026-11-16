@@ -141,7 +141,7 @@ async def search_scenes(collection: str, bbox: list[float], start_date: str, end
     try:
         data = await get(CDSE_ODATA_URL, params)
     except Exception as exc:
-        return {"error": f"CDSE catalogue search failed: {exc}"}
+        return {"error": f"CDSE catalogue search failed: {type(exc).__name__}: {exc}"}
     products = []
     for p in data.get("value", []):
         attrs = {a["Name"]: a["Value"] for a in p.get("Attributes", [])

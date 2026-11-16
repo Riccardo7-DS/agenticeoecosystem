@@ -530,7 +530,7 @@ def test_data_inventory_is_built_once_and_shown_to_everyone(tmp_path):
     inventory = [c for c in ledger.tool_calls if c.get("inventory")]
     # 6 scene searches + STAC listing + item search of the one relevant collection
     assert len(inventory) == 8 and sorted(_FakeCatalog.calls).count("stac_items") == 1
-    assert len(_FakeCatalog.calls) == 8
+    assert len(_FakeCatalog.calls) == 10                 # the two failing searches are retried once
     assert {c["step"] for c in inventory} == {"r0.inventory"}
     s2 = next(c for c in inventory if c["args"].get("collection") == "SENTINEL-2")
     assert s2["status"] == "ok" and s2["catalog"]["dates"] == ["2026-01-17"]
@@ -677,7 +677,7 @@ def test_specialists_search_the_catalogue_directly_and_hit_the_inventory_cache(t
                         if c.get("inventory") and c["args"].get("collection") == "SENTINEL-2")
     assert call["cached_from"] == inventory_s2["id"]                  # narrower window, from cache
     assert call["catalog"]["dates"] == ["2026-01-17"]
-    assert len(_FakeCatalog.calls) == 8                               # no extra network call
+    assert len(_FakeCatalog.calls) == 10      # no extra network call (8 + 2 Sentinel-3 retries)
 
 
 def test_round_two_runs_only_while_issues_stay_open():

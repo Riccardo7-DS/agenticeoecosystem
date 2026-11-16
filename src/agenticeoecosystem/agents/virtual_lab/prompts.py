@@ -79,11 +79,31 @@ OUTPUT_RULE = ("Return ONLY one JSON object matching the schema below — no mar
                "you have.")
 
 PROBLEM_SCHEMA = """\
-{"question": str, "objectives": [str], "study_area": {"name": str, "bbox": [west, south, east, north] | null},
- "time_period": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}, "constraints": [str], "expected_outputs": [str],
+{"question": str, "objectives": [str], "scope": "site" | "generic",
+ "study_area": {"name": str, "bbox": [west, south, east, north] | null, "rationale": str},
+ "time_period": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"},
+ "target": {"feature": str, "min_m": number, "max_m": number} | null,
+ "constraints": [str], "expected_outputs": [str],
  "data_needs": [str],
  "task_types": ["dataset_selection" | "scientific_reasoning" | "hypothesis_testing" | "experimental_execution"],
  "participants": [specialist names], "sub_agents": [sub-agent names], "rationale": str}"""
+
+# How the PI scopes a question and sizes its target (ScientificProblem.scope / study_area /
+# target). A generic question names no place: the site is a design choice, made on criteria.
+SCOPE_RULE = (
+    "- 'scope': 'site' if the question names a place, coordinates or a dated event; 'generic' if "
+    "it asks how to do something in general, naming only a KIND of place ('an agricultural "
+    "field', 'a city'). Never geocode a kind of place: that returns an arbitrary feature.\n"
+    "- For a generic question the study area is YOUR design choice, a test site where the "
+    "method can be demonstrated AND checked: a real, named area, a few km across, with "
+    "documented ground truth for the target where possible (published studies, surveys, known "
+    "sites) and conditions typical of the question. Give its name and bbox, the period (1-3 "
+    "years, covering the seasons that matter) and, in study_area.rationale, why it suits the "
+    "question. For a site question, rationale may stay empty.\n"
+    "- 'target': the size of what must be detected or measured, in metres (min_m-max_m), e.g. "
+    "buried walls or ditches 1-10 m, a tunnelling settlement trough 20-50 m, burned areas "
+    "100-10000 m. Use the size the user states; otherwise estimate it. null only if nothing "
+    "has a size (e.g. a regional climate variable).\n")
 
 # How the PI writes ScientificProblem.data_needs (the federated data discovery's queries).
 # Shared with scripts/eval_discovery.py so the benchmark tests the production wording.
@@ -259,7 +279,7 @@ def pi_formulate(state: dict, roster: dict[str, str], agent: str,
            if geocoder else "- Make no tool call. ")
         + "Do NOT ask about data availability: right after this step the lab builds a DATA "
         "INVENTORY of what exists for the area and period, and the specialists use it.\n"
-        + DATA_NEEDS_RULE +
+        + SCOPE_RULE + DATA_NEEDS_RULE +
         "- Select 2-4 specialists from the roster whose expertise is needed.\n"
         + ("- In 'sub_agents', list only the sub-agents (data and literature services) this problem "
            "needs; the lab offers no others during the meeting. Leave out services unrelated to the "
@@ -359,9 +379,35 @@ Independent references include Copernicus EMS delineations, GNSS or levelling, v
 resolution imagery, agency or field reports and held-out benchmark labels. Only the EXECUTING SUB-AGENTS below can run workflow steps."""
 
 
+# Extra checks when the question is generic and the study area is the PI's test site.
+GENERIC_CHECKLIST = """\
+8. Test site: does the study area's rationale hold, and are its conditions (land cover, soils,
+   climate, cloud) typical of what the question implies, or a special case?
+9. Ground truth: is there something known at the site (published features, surveys) to check
+   detections against? A method shown only where nothing is known cannot be verified.
+10. Timing: do the dates fall in the season when the signal appears (the DATA INVENTORY gives
+   usable images per calendar month)?
+11. Transfer: does the plan say under which conditions its conclusion would NOT hold elsewhere?"""
+
+
+def _generic(state: dict) -> bool:
+    """True when the formulated problem is a generic question (the site is the PI's choice)."""
+    return (state.get(STATE_PROBLEM) or {}).get("scope") == "generic"
+
+
+def _scope_note(state: dict) -> str:
+    """For the decision and the plan: a generic question's site is illustrative."""
+    if not _generic(state):
+        return ""
+    return ("- The question is GENERIC: the study area is a test site the PI chose. Answer the "
+            "general question; present the site as the demonstration and validation case, say "
+            "why it was chosen, and state which of its conditions the recommendation depends on.\n")
+
+
 def plan_review_checklist_lines() -> list[str]:
     """Checklist items without their numbering, for filtering echoed 'claims'."""
-    return [line.split(". ", 1)[1] for line in PLAN_REVIEW_CHECKLIST.splitlines()
+    return [line.split(". ", 1)[1]
+            for line in (PLAN_REVIEW_CHECKLIST + "\n" + GENERIC_CHECKLIST).splitlines()
             if line[:1].isdigit() and ". " in line]
 
 
@@ -383,7 +429,10 @@ def critic(state: dict, agent: str, tool_names: list[str], executors: dict[str, 
         "For each SELECTED dataset judge whether its registry entry (coverage, dates, revisit, "
         "what it measures) suits its stated use, and flag a relevant discovered collection a "
         "proposal ignores without a reason. "
-        "Use 'blocking' only when the approach cannot answer the question as stated.\n\n"
+        "Use 'blocking' only when the approach cannot answer the question as stated.\n"
+        + ("The question is GENERIC and the study area is the PI's test site. Also judge:\n"
+           + GENERIC_CHECKLIST + "\n" if _generic(state) else "")
+        + "\n"
         + SCIENTIFIC_NORMS + "\n" + tools_txt
         + f"\nSENSOR CATALOG:\n{format_catalog()}\n"
         + f"\nSCIENTIFIC PROBLEM:\n{_dump(state.get(STATE_PROBLEM, {}))}\n"
@@ -403,6 +452,7 @@ def critic_plan_review(state: dict, agent: str, executors: dict[str, str]) -> st
         + "You are the Scientific Critic reviewing the Experiment Designer's plan before the lab "
         "accepts it. Find what would make the experiment fail to answer the question.\n\n"
         + PLAN_REVIEW_CHECKLIST + "\n"
+        + (GENERIC_CHECKLIST + "\n" if _generic(state) else "")
         + f"\nEXECUTING SUB-AGENTS:\n{exec_txt}\n"
         + f"\nSCIENTIFIC PROBLEM:\n{_dump(state.get(STATE_PROBLEM, {}))}\n"
         + _inventory_section(state)
@@ -465,7 +515,8 @@ def pi_decide(state: dict, agent: str, tool_names: list[str] = (), max_calls: in
         "- 'needs_experiment': competing hypotheses remain that only an experiment can separate.\n"
         "- 'insufficient_evidence': no reliable conclusion is possible with the available data.\n"
         "Preserve genuine disagreements in 'disagreements' instead of averaging them away. "
-        "Consensus among specialists is NOT evidence of correctness.\n\n"
+        "Consensus among specialists is NOT evidence of correctness.\n"
+        + _scope_note(state) + "\n"
         + SCIENTIFIC_NORMS
         + f"\nSCIENTIFIC PROBLEM:\n{_dump(state.get(STATE_PROBLEM, {}))}\n"
         + _inventory_section(state)
@@ -498,6 +549,7 @@ def designer(state: dict, agent: str, executors: dict[str, str], lab_members: li
         "their source_ids), list the relevant rejected and unverified collections with the reason, "
         "and add no concrete dataset that no registry entry shows.\n"
         "- List in each step's 'hypotheses' the ids of the hypotheses it helps test.\n"
+        + _scope_note(state) +
         "- Reference data must be INDEPENDENT of the datasets under evaluation (a sensor cannot "
         "validate itself): e.g. Copernicus EMS delineations, GNSS or levelling, very high "
         "resolution imagery, agency or field reports, held-out benchmark labels, or a sensor "

@@ -10,6 +10,7 @@ the caps on the final decision status. Keyword heuristics over free-text
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import date
 from enum import StrEnum
@@ -33,6 +34,7 @@ from .schemas import (
 from .sensor_catalog import (
     GEO_VZA_DEGRADED_DEG,
     GEO_VZA_UNUSABLE_DEG,
+    SensorInfo,
     geostationary_vza_deg,
     lookup,
     sensors_in_text,
@@ -52,6 +54,13 @@ _CAPABILITY_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("REC", ("recovery", "regrowth", "revegetation")),
 )
 _NIGHT_KEYWORDS = ("night", "nocturnal")
+# Thermal bands are coarser than the headline pixel the sensor catalog gives (its finest band).
+_THERMAL_PIXEL_M = {"Landsat 8/9 OLI-TIRS": 100.0, "MODIS": 1000.0}
+_THERMAL_KEYWORDS = ("thermal", "temperature", "lst", "tirs", "emissiv")
+# Arguments that a feature smaller than a pixel can still be seen; the size finding drops to minor.
+_SUBPIXEL_KEYWORDS = ("sub-pixel", "subpixel", "unmixing", "point scatterer", "persistent scatter",
+                      "hotspot", "hot spot", "linear feature", "many pixels")
+_METRES_PER_DEGREE = 111_320.0
 # Sub-agents that process local files rather than fetch from a provider: any sensor is fine.
 _PROCESSING_AGENTS = {"gis_agent", "vlm_agent"}
 # Tests whose validity depends on replicated samples, and words that name the replication unit.
@@ -126,6 +135,8 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
                                  f"Viewing zenith ~{vza:.0f} deg from {sensor.key}: DEGRADED GEOMETRY, "
                                  "large pixels and long slant paths degrade detection and timing."))
 
+    issues += check_scale(ds, sensor, problem)
+
     observable = ds.observable.lower()
     if sensor.day_only and any(k in observable for k in _NIGHT_KEYWORDS):
         issues.append(_issue("physical_inconsistency", "blocking", ds.name,
@@ -142,6 +153,64 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
                                      f"{sensor.key} has low capability for {cls} ({score}/100 in the "
                                      "knowledge.tex capability matrix)."))
             break
+    return issues
+
+
+def area_extent_m(problem: ScientificProblem) -> float | None:
+    """Shorter side of the study-area bbox in metres (None without a bbox)."""
+    bbox = problem.study_area.bbox
+    if not bbox:
+        return None
+    west, south, east, north = bbox
+    if west > east:  # crosses the antimeridian
+        east += 360
+    mid_lat = math.radians((south + north) / 2)
+    return min((north - south) * _METRES_PER_DEGREE,
+               (east - west) * _METRES_PER_DEGREE * math.cos(mid_lat))
+
+
+def pixel_size_m(sensor: SensorInfo, text: str) -> float | None:
+    """The sensor's pixel size for this use: its thermal band's when the use is thermal."""
+    if sensor.key in _THERMAL_PIXEL_M and any(k in text for k in _THERMAL_KEYWORDS):
+        return _THERMAL_PIXEL_M[sensor.key]
+    return sensor.resolution_m
+
+
+def check_scale(ds: DatasetChoice, sensor: SensorInfo, problem: ScientificProblem) -> list[CritiqueIssue]:
+    """Pixel size against the target's size and the study area's extent. Ancillary context
+    (weather, reanalysis) is exempt: it is not meant to resolve the target."""
+    if ds.role == "ancillary" or sensor.orbit == "reanalysis":
+        return []
+    text = f"{ds.observable} {ds.justification}".lower()
+    pixel = pixel_size_m(sensor, text)
+    if not pixel:
+        return []
+    issues: list[CritiqueIssue] = []
+    target = problem.target
+    if target and target.max_m:
+        what = target.feature or "the target"
+        size = f"{target.min_m:g}-{target.max_m:g} m" if target.min_m else f"up to {target.max_m:g} m"
+        if pixel > target.max_m:
+            explained = any(k in text for k in _SUBPIXEL_KEYWORDS)
+            severity = "minor" if explained or ds.role == "baseline" else "major"
+            issues.append(_issue(
+                "dataset_suitability", severity, ds.name,
+                f"{sensor.key} pixels (~{pixel:g} m) are larger than {what} ({size}): each pixel "
+                "mixes the feature with its surroundings.",
+                "Use a finer sensor, or say in 'observable' why the feature still shows (strong "
+                "sub-pixel contrast, a linear feature spanning many pixels, point scatterers)."))
+        elif pixel * 2 > target.max_m:
+            issues.append(_issue(
+                "dataset_suitability", "minor", ds.name,
+                f"{what} ({size}) spans fewer than 2 {sensor.key} pixels (~{pixel:g} m): detectable "
+                "only with strong contrast, and its shape is not resolved."))
+    extent = area_extent_m(problem)
+    if extent is not None and extent < 2 * pixel:
+        issues.append(_issue(
+            "coverage", "minor", ds.name,
+            f"The study area is ~{extent:.0f} m across, under 2 {sensor.key} pixels (~{pixel:g} m): "
+            "there is no background around the target to compare with.",
+            "Widen the study area to include surroundings unaffected by the target."))
     return issues
 
 
@@ -227,7 +296,7 @@ _CALL_ID = re.compile(r"tc-\d{4}")
 
 
 def link_items(
-    items: list[EvidenceItem], tool_calls: list[dict]
+    items: list[EvidenceItem], tool_calls: list[dict], failed: frozenset[str] = frozenset()
 ) -> tuple[list[EvidenceItem], list[CritiqueIssue]]:
     """Attach ledger tool-call ids to RETRIEVED evidence; downgrade claims no call backs.
 
@@ -237,6 +306,8 @@ def link_items(
     that DATA INVENTORY call (bare 'inventory' to all of them). Calls the lab made itself
     (`lab_call`) are matched only by arXiv id: naming 'arxiv_rag_agent' does not
     show the agent read what the lab retrieved. Otherwise it becomes an ASSUMPTION.
+    `failed`: ids of this run's lookups that returned an error; citing one is reported as
+    citing an unknown, not as a missing call.
     """
     issues: list[CritiqueIssue] = []
     linked: list[EvidenceItem] = []
@@ -258,6 +329,13 @@ def link_items(
                         or (c.get("via") and c["via"].lower() in src))]
         if ids:
             linked.append(item.model_copy(update={"tool_call_ids": ids}))
+        elif "inventory" in src and (dead := sorted(set(_CALL_ID.findall(src)) & failed)):
+            linked.append(item.model_copy(update={"kind": EvidenceKind.ASSUMPTION}))
+            issues.append(_issue("unsupported_claim", "minor", item.claim,
+                                 f"Cites {', '.join(dead)}, a lookup that FAILED: availability is "
+                                 "unknown (neither confirmed nor absent); downgraded to assumption.",
+                                 "Search again (search_catalogues or search_cdse_catalog) or treat "
+                                 "the data as unverified, never as unavailable."))
         else:
             linked.append(item.model_copy(update={"kind": EvidenceKind.ASSUMPTION}))
             issues.append(_issue("unsupported_claim", "major", item.claim,
@@ -267,10 +345,10 @@ def link_items(
 
 
 def link_evidence(
-    proposal: ScientificProposal, tool_calls: list[dict]
+    proposal: ScientificProposal, tool_calls: list[dict], failed: frozenset[str] = frozenset()
 ) -> tuple[ScientificProposal, list[CritiqueIssue]]:
     """link_items over a proposal, using the calls made while that proposal was written."""
-    linked, issues = link_items(proposal.evidence, tool_calls)
+    linked, issues = link_items(proposal.evidence, tool_calls, failed)
     return proposal.model_copy(update={"evidence": linked}), issues
 
 

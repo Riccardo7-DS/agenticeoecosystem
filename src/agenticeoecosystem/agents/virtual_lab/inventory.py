@@ -86,6 +86,10 @@ SCENE_LIMIT = 500   # scenes listed per search; the summary needs every one to b
 # Product types that are not science data (auxiliary, raw) or duplicate another (cloud-optimised
 # copies): left out of the per-day summary.
 _HIDDEN_TYPES = ("_ETA_", "_RAW_", "-COG", "AUX_")
+# Periods longer than this are summarised per calendar month instead of listed per day.
+SEASONAL_AFTER_DAYS = 366
+CLEAR_CLOUD_PCT = 20   # a day counts as clear at or below this scene cloud cover
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 def valid_period(start: str | None, end: str | None) -> bool:
     try:
         return date.fromisoformat((start or "")[:10]) <= date.fromisoformat((end or "")[:10])
@@ -142,10 +146,44 @@ def _event_groups(days: dict[str, Any], event: tuple[str, str] | None) -> list[t
             ("AFTER the event", [d for d in days if d > event[1]])]
 
 
+def seasonal_view(problem: ScientificProblem, start: str | None, end: str | None) -> bool:
+    """Summarise scenes per calendar month when there is no event to frame them around: a
+    generic question, or a period too long to list per day (run of 2026-11-16: a generic
+    archaeology question got 'BEFORE / DURING the event' over seven years of daily rows)."""
+    if problem.generic:
+        return True
+    if not (start and end):
+        return False
+    return (date.fromisoformat(end) - date.fromisoformat(start)).days > SEASONAL_AFTER_DAYS
+
+
+def _season_text(days: dict[str, dict[str, Any]]) -> str:
+    """Per calendar month over all years: days with scenes, median cloud, clear days."""
+    by_month: dict[int, list[dict[str, Any]]] = {}
+    for day, info in days.items():
+        by_month.setdefault(int(day[5:7]), []).append(info)
+    parts = []
+    for month, name in enumerate(_MONTHS, 1):
+        infos = by_month.get(month, [])
+        clouds = [median(i["cloud"]) for i in infos if i["cloud"]]
+        text = f"{name} {len(infos)}d"
+        if clouds:
+            clear = sum(c <= CLEAR_CLOUD_PCT for c in clouds)
+            text += f" cloud~{median(clouds):.0f}% ({clear} clear)"
+        parts.append(text)
+    years = sorted({d[:4] for d in days})
+    span = years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"
+    return (f"per calendar month over {span} (days with scenes"
+            + (f", median cloud, days <={CLEAR_CLOUD_PCT}% cloud" if any(i["cloud"] for i in days.values())
+               else "") + "): " + " | ".join(parts))
+
+
 def format_scene_row(call_id: str, search: SceneSearch, result: dict[str, Any] | None,
-                     window: tuple[str, str], event: tuple[str, str] | None = None) -> str:
+                     window: tuple[str, str], event: tuple[str, str] | None = None,
+                     seasonal: bool = False) -> str:
     """One catalogue search; with `event` (start, end) the days are split into
-    before / during / after it, so pre- and post-event images are explicit."""
+    before / during / after it, so pre- and post-event images are explicit; `seasonal`
+    summarises them per calendar month instead."""
     head = f"- [{call_id}] {search.label}, {window[0]}..{window[1]}"
     if not result or result.get("error"):
         error = (result or {}).get("error", "no result")
@@ -155,6 +193,10 @@ def format_scene_row(call_id: str, search: SceneSearch, result: dict[str, Any] |
         return f"{head}: no scenes in the catalogue."
     days = summarise_scenes(result)
     note = "" if listed == total else f" (first {listed} of {total} listed; later days not shown)"
+    if seasonal:
+        first, last = next(iter(days)), next(reversed(days))
+        return (f"{head}: {total} scenes on {len(days)} days{note}, {first} to {last}\n    "
+                + _season_text(days))
     lines = []
     for label, group in _event_groups(days, event):
         body = " | ".join(_day_text(d, days[d]) for d in group) if group else "none"
@@ -163,12 +205,14 @@ def format_scene_row(call_id: str, search: SceneSearch, result: dict[str, Any] |
 
 
 def format_inventory(problem_area: str, bbox: list[float] | None, scene_rows: list[str],
-                     other_sections: list[str] = ()) -> str:
+                     other_sections: list[str] = (), seasonal: bool = False) -> str:
     lines = [f"Study area: {problem_area} bbox {bbox}" if bbox else
              "No study-area bbox, so no scene or product searches were run."]
     if scene_rows:
-        lines.append("COPERNICUS DATA SPACE: catalogue scenes intersecting the bbox, per acquisition "
-                     "day (count, product types, cloud cover, start times):")
+        lines.append("COPERNICUS DATA SPACE: catalogue scenes intersecting the bbox, "
+                     + ("summarised per calendar month (when in the year usable images exist):"
+                        if seasonal else "per acquisition day (count, product types, cloud cover, "
+                                         "start times):"))
         lines.extend(scene_rows)
     lines.extend(other_sections)
     if other_sections:
@@ -319,12 +363,14 @@ async def build_inventory(problem: ScientificProblem, catalogs: Catalogs, call: 
     sections = [discovery.render(found, geometry)]
     if not found.hits:
         sections += await _core_lookups(eum, cds, bbox, start, end, searchable, call)
-    scene_rows = [format_scene_row(cid, search, result, window, (start, end))
+    seasonal = seasonal_view(problem, start, end)
+    scene_rows = [format_scene_row(cid, search, result, window, None if seasonal else (start, end),
+                                   seasonal)
                   for search, window, (cid, result)
                   in zip(SCENE_SEARCHES, scene_windows, scene_results, strict=False)
                   if cid is not None]
     area = problem.study_area.name if problem.study_area else ""
-    return format_inventory(area, bbox, scene_rows, sections)
+    return format_inventory(area, bbox, scene_rows, sections, seasonal)
 
 
 async def _core_lookups(eum, cds, bbox, start, end, searchable: bool, call: Call) -> list[str]:

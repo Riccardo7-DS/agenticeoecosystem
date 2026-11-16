@@ -37,6 +37,7 @@ from .analyses import ANALYSES
 from .config import VirtualLabConfig
 from .discovery import PROVIDER_LABELS, as_tool_result, direct_call, discover_for
 from .literature import rank_papers_by_citations
+from .schemas import is_named_place
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +194,13 @@ def catalog_tools(catalogs, embedder=None) -> dict[str, list[BaseTool]]:
         tools["cdse"] = [FunctionTool(search_cdse_catalog)]
     if cdse is not None and hasattr(cdse, "geocode"):
         async def geocode_place(place_name: str) -> dict:
-            """Bounding box [west, south, east, north] of a named place (OpenStreetMap)."""
+            """Bounding box [west, south, east, north] of a named place (OpenStreetMap), e.g.
+            'Kypseli, Athens'. Not for a kind of place such as 'agricultural field'."""
+            if not is_named_place(place_name):
+                return {"error": f"'{place_name}' is a kind of place, not a named place: geocoding it "
+                                 "returns an arbitrary feature with that label. If the question names "
+                                 "no place it is generic: set scope 'generic' and choose a named test "
+                                 "site yourself (with its bbox and rationale)."}
             return await cdse.geocode(place_name)
 
         tools[GEOCODER] = [FunctionTool(geocode_place)]

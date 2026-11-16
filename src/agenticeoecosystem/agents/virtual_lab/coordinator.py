@@ -24,10 +24,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from collections.abc import AsyncGenerator, Callable
 
 import json5
 from google.adk.agents.base_agent import BaseAgent
@@ -38,13 +38,19 @@ from google.adk.events.event_actions import EventActions
 from google.genai import types
 from pydantic import BaseModel, PrivateAttr
 
+from . import inventory as inv
 from . import prompts
 from .analyses import ANALYSES, RUNNERS, AnalysisContext, with_dependencies
 from .config import VirtualLabConfig
-from . import inventory as inv
 from .ledger import LabLedger, catalog_summary, current_step, data_records
-from .literature import (broaden_query, is_duplicate_claim, is_relevant, limit_and,
-                         normalise_arxiv_id, query_terms)
+from .literature import (
+    broaden_query,
+    is_duplicate_claim,
+    is_relevant,
+    limit_and,
+    normalise_arxiv_id,
+    query_terms,
+)
 from .participants import CRITIC, LabParticipants
 from .schemas import (
     CritiqueBatch,
@@ -62,19 +68,20 @@ from .schemas import (
     ScientificDecision,
     ScientificProblem,
     ScientificProposal,
+    is_named_place,
 )
 from .validation import (
     TerminationReason,
     bboxes_overlap,
-    off_area_calls,
     finalize_conclusion,
     finalize_status,
-    link_results,
-    normalise_conclusion,
-    link_evidence,
     grounding_metrics,
+    link_evidence,
     link_items,
+    link_results,
     literature_uptake,
+    normalise_conclusion,
+    off_area_calls,
     open_issues,
     tool_call_evidence,
     validate_plan,
@@ -85,6 +92,7 @@ logger = logging.getLogger(__name__)
 
 RECORD_ARTIFACT = "virtual_lab_record.json"
 _PREVIEW_CHARS = 1500
+INVENTORY_RETRY_DELAY_S = 2.0   # one retry of a failed inventory lookup
 _ABSTRACT_CHARS = 1200
 # Critique categories that dispute a claim (rather than, say, a missing control), and are
 # therefore worth checking against the literature.
@@ -296,7 +304,8 @@ class VirtualLabCoordinator(BaseAgent):
         shared = [c for c in self._ledger.tool_calls
                   if c["status"] == "ok" and (c.get("paper_ids") or c.get("inventory"))]
         calls = list({c["id"]: c for c in current + earlier + shared}.values())
-        proposal, link_issues = link_evidence(proposal, calls)
+        failed = frozenset(c["id"] for c in self._ledger.tool_calls if c["status"] == "error")
+        proposal, link_issues = link_evidence(proposal, calls, failed)
         proposal = proposal.model_copy(update={"evidence": proposal.evidence + tool_call_evidence(
             name, self._ledger.calls_for(step), proposal.evidence)})
         proposal = self._carry_linked_evidence(name, proposal)
@@ -710,6 +719,9 @@ class VirtualLabCoordinator(BaseAgent):
         cdse = getattr(self._catalogs, "cdse", None) if self._catalogs else None
         if area is None or not area.name.strip() or cdse is None or not hasattr(cdse, "geocode"):
             return problem
+        if not is_named_place(area.name):   # 'agricultural field' geocodes to a random field
+            logger.warning("Study area %r is not a named place: not geocoded", area.name)
+            return problem
         entry, result = await self._direct_tool_call(
             "r0.geocode", "geocode_place", {"place_name": area.name},
             lambda: cdse.geocode(area.name), budget=None)
@@ -746,9 +758,19 @@ class VirtualLabCoordinator(BaseAgent):
         inventory.py), each call through the ledger. Returns the DATA INVENTORY text."""
         step = "r0.inventory"
 
+        async def retried(run: Callable[[], Awaitable[Any]]) -> Any:
+            # Catalogue searches fail transiently (timeouts on large listings, run of 2026-11-16:
+            # Sentinel-2 and SLSTR failed, and the plan then treated Sentinel-2 as unavailable).
+            result = await run()
+            if isinstance(result, dict) and result.get("error"):
+                await asyncio.sleep(INVENTORY_RETRY_DELAY_S)
+                result = await run()
+            return result
+
         async def call(tool: str, args: dict, run) -> tuple[str | None, Any]:
             # The inventory is the lab's own bookkeeping: it does not use the agents' budget.
-            entry, result = await self._direct_tool_call(step, tool, args, run, budget=None)
+            entry, result = await self._direct_tool_call(step, tool, args, lambda: retried(run),
+                                                         budget=None)
             entry["inventory"] = True
             if result is None or (isinstance(result, dict) and result.get("error")):
                 entry["status"] = "error"
@@ -957,10 +979,33 @@ def _data_section(record: LabRecord, ledger: LabLedger) -> list[str]:
     return lines
 
 
+def _study_area_lines(problem: ScientificProblem | None) -> list[str]:
+    """Where the lab looked. For a generic question the site is the PI's choice, so the reader
+    is told it is a test site and why it was chosen (run of 2026-11-16: an unmentioned field in
+    Kerala drove every search)."""
+    if problem is None or problem.study_area is None:
+        return []
+    area, period = problem.study_area, problem.time_period
+    where = area.name + (f" (bbox {list(area.bbox)})" if area.bbox else "")
+    when = f", {period.start} to {period.end}" if period else ""
+    if problem.generic:
+        lines = ["", f"**Test site** (the question names no place; chosen by the PI): {where}{when}."]
+        lines += [f"_Why this site:_ {area.rationale}"] if area.rationale else [
+            "_No reason was given for this site: treat it as illustrative only._"]
+    else:
+        lines = ["", f"**Study area:** {where}{when}."]
+    if problem.target and problem.target.max_m:
+        t = problem.target
+        size = f"{t.min_m:g}-{t.max_m:g} m" if t.min_m else f"up to {t.max_m:g} m"
+        lines.append(f"**Target size:** {t.feature or 'target'}, {size}.")
+    return lines
+
+
 def render_report(record: LabRecord, ledger: LabLedger) -> str:
     """Human-readable final answer; the structured record is the source of truth."""
     d, plan = record.decision, record.plan
     lines = [f"# Virtual Lab decision: {d.status.value if d else 'none'}", "", d.summary if d else ""]
+    lines += _study_area_lines(record.problem)
     if d and d.status_note:
         lines += ["", f"_Status adjusted by the coordinator: {d.status_note}_"]
     if d and d.recommended_workflow:

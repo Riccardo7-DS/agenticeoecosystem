@@ -48,11 +48,23 @@ class EvidenceItem(BaseModel):
         return self
 
 
+def is_named_place(text: str) -> bool:
+    """True if `text` names a place (a proper noun, a code or a non-Latin name) rather than a
+    kind of place: 'Kypseli, Athens' or 'Αθήνα' yes, 'agricultural field' no. Geocoding a kind of
+    place returns an arbitrary feature with that label (run of 2026-11-16: 'agricultural field'
+    became one 33 x 66 m field in Kerala)."""
+    words = re.findall(r"\w+", text or "")
+    return any(w[0].isupper() or w[0].isdigit() or not w.isascii() for w in words)
+
+
 class StudyArea(BaseModel):
     name: str
     bbox: list[float] | None = Field(
         default=None, description="[west, south, east, north] in WGS-84 degrees."
     )
+    rationale: str = Field(
+        default="", description="Why this area suits the question; required when the PI chose it "
+                                "(a generic question names no place).")
 
     @field_validator("bbox")
     @classmethod
@@ -79,11 +91,33 @@ TaskType = Literal[
 ]
 
 
+class TargetScale(BaseModel):
+    """Size of what must be detected or measured, checked against sensor pixel sizes."""
+
+    feature: str = ""
+    min_m: float | None = Field(default=None, gt=0)
+    max_m: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> TargetScale:
+        if self.min_m and self.max_m and self.min_m > self.max_m:
+            self.min_m, self.max_m = self.max_m, self.min_m
+        return self
+
+
+_GENERIC_SCOPES = ("generic", "general", "exploratory", "methodological", "any")
+
+
 class ScientificProblem(BaseModel):
     question: str
     objectives: list[str]
+    scope: Literal["site", "generic"] = Field(
+        default="site", description="site: the question names a place or event; generic: it asks "
+                                    "how to do something anywhere, so the study area is a test "
+                                    "site the PI chose.")
     study_area: StudyArea
     time_period: TimePeriod
+    target: TargetScale | None = None
     constraints: list[str] = Field(default_factory=list)
     expected_outputs: list[str] = Field(default_factory=list)
     data_needs: list[str] = Field(
@@ -101,6 +135,28 @@ class ScientificProblem(BaseModel):
                                           "(empty: all offered)."
     )
     rationale: str = ""
+
+    @field_validator("scope", mode="before")
+    @classmethod
+    def _normalise_scope(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return "generic" if v.strip().lower() in _GENERIC_SCOPES else "site"
+        return "site" if v is None else v
+
+    @field_validator("target", mode="before")
+    @classmethod
+    def _loose_target(cls, v: Any) -> TargetScale | None:
+        """A target the model could not size (no numbers, wrong shape) is dropped, not fatal."""
+        if not isinstance(v, dict):
+            return None
+        try:
+            return TargetScale.model_validate(v)
+        except ValueError:
+            return None
+
+    @property
+    def generic(self) -> bool:
+        return self.scope == "generic"
 
 
 class Hypothesis(BaseModel):

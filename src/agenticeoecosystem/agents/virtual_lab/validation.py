@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from enum import StrEnum
+from typing import Any
 
 from .schemas import (
     CritiqueIssue,
@@ -193,6 +194,38 @@ def link_evidence(
 
 
 _TOOL_EVIDENCE_CHARS = 300
+
+
+def bboxes_overlap(a: list[float], b: list[float]) -> bool:
+    """[west, south, east, north] boxes intersect (touching counts)."""
+    return a[0] <= b[2] and b[0] <= a[2] and a[1] <= b[3] and b[1] <= a[3]
+
+
+def _as_bbox(value: Any) -> list[float] | None:
+    try:
+        box = [float(x) for x in value]
+    except (TypeError, ValueError):
+        return None
+    return box if len(box) == 4 else None
+
+
+def off_area_calls(calls: list[dict], problem: ScientificProblem) -> list[CritiqueIssue]:
+    """Tool calls whose bbox misses the study area: their results say nothing about it.
+    (Run of 2026-11-13: with no study bbox, agents invented coordinates ~70 km and ~220 km
+    from Kypseli, Athens, and the decision cited those searches as availability evidence.)"""
+    area = problem.study_area.bbox if problem.study_area else None
+    if not area:
+        return []
+    issues = []
+    for c in calls:
+        box = _as_bbox((c.get("args") or {}).get("bbox"))
+        if box and not bboxes_overlap(box, area):
+            issues.append(_issue(
+                "coverage", "major", f"{c['tool']} ({c['id']}) bbox {box}",
+                f"This search's bbox does not overlap the study area {list(area)}, so its result "
+                "is not evidence about the study area.",
+                "Repeat the search with the study-area bbox from the problem, and do not cite this call."))
+    return issues
 
 
 def tool_call_evidence(agent: str, calls: list[dict], items: list[EvidenceItem]) -> list[EvidenceItem]:

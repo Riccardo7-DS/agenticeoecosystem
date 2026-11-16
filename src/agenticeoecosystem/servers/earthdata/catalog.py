@@ -55,7 +55,8 @@ async def search_collections(keyword: str, bbox: list[float] | None = None,
         meta, umm = item.get("meta") or {}, item.get("umm") or {}
         out.append({"short_name": umm.get("ShortName"), "version": umm.get("Version"),
                     "title": umm.get("EntryTitle"), "provider": meta.get("provider-id"),
-                    "concept_id": meta.get("concept-id")})
+                    "concept_id": meta.get("concept-id"),
+                    "abstract": " ".join(str(umm.get("Abstract") or "").split())[:600]})
     return {"total": data.get("hits", len(out)), "listed": len(out), "collections": out}
 
 

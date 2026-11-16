@@ -19,7 +19,8 @@ READ_ONLY_TOOLS: frozenset[str] = frozenset({
     # cdse_agent
     "geocode_place", "reverse_geocode_place", "resolve_named_region", "search_cdse_catalog",
     "list_openeo_collections",
-    # lab direct metadata tools (participants.catalog_tools)
+    # lab direct metadata tools (participants.catalog_tools) and the inventory's discovery
+    "search_catalogues", "list_stac_collections", "search_stac_items", "list_cds_datasets",
     "list_eumetsat_collections", "count_eumetsat_products", "search_earthdata_collections",
     "search_earthdata_granules", "cds_dataset_info",
     # eumetsat_agent

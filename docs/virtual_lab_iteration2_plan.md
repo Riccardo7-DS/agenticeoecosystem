@@ -311,3 +311,78 @@ New problems for iteration 3:
   data do not exist. All three exist.
 - Fix candidates: a sub-agent reply whose leaf calls were all blocked is no_answer; a deterministic
   check of "X unavailable" claims against catalog results; phase-level tool budgets.
+
+## Kypseli subsidence run and federated data discovery (2026-11-13)
+
+`logs/virtual_lab_app_result_20261113_134514.json` (EVETADP_Orchestrator, 1 round, plan only):
+"Athens Metro Line 4 under Kypseli: how can InSAR detect construction-induced settlement?"
+- **Study area never located.** The PI skipped `geocode_place`; `study_area.bbox` was null, the
+  inventory skipped every scene search, and agents invented bboxes (`[22.98, 38.35, 23.02, 38.40]`,
+  ~70 km NW of Athens; `[22.95, 39.95, ...]`, near Olympus). The decision cites 20 of these
+  searches as "S1 SLC available". Kypseli is `[23.72, 37.98, 23.76, 38.02]`.
+- **No NASA data considered.** Earthdata was never called: no bbox, the inventory's NASA
+  products are fire/LST only (`NASA_PRODUCTS`), and the Earthdata tool docstrings give fire examples.
+- 15 of 21 CDSE searches used `SENTINEL1_GRD` (amplitude, useless for InSAR); the critic sent
+  the same query 7 times. The PI picked only SAR + foundation-model specialists (no atmosphere,
+  so no tropospheric correction). Hypotheses restate the question; InSAR steps are assigned to
+  `gis_agent`, which cannot do them; EGMS is called "independent" validation.
+
+### Implemented (2026-11-13)
+- `coordinator._locate`: when the problem names a study area without a bbox, the lab geocodes it
+  in code (`r0.geocode`, free, citable). A PI bbox is kept (it may come from the question; an
+  ambiguous name can geocode elsewhere); a mismatch is logged on the call.
+- `validation.off_area_calls`: a successful tool call whose bbox misses the study area is a
+  major `coverage` issue on that proposal ("not evidence about the study area").
+
+### Problem: the inventory is vocabulary-driven
+`inventory.py` selects data by a fixed core list, hard-coded NASA fire/LST products and 4-letter
+stem overlap between the question and collection titles (`wanted_stems`, `_FIRE`). It was tuned
+on EMSR859 and returns nothing relevant for problems outside that vocabulary (subsidence here).
+The provider clients are already federated (CDSE, EUMETSAT, NASA CMR, CDS: metadata only, no
+login, bbox + period); the selection on top of them is not.
+
+### Design: discover, rank, verify (no vocabulary in code)
+1. **Locate** (done): deterministic geocoding.
+2. **Observables** (1 LLM call): the problem becomes a short needs spec: what must be observed
+   (e.g. "mm-scale surface deformation, building scale, weekly-monthly, 2023-now"), constraints
+   (resolution, revisit, latency, phase/amplitude, record length) and 2-3 search phrases per
+   provider. This is where domain knowledge enters, from the model, not from a word list.
+3. **Federated collection search**: run every provider's free-text collection search
+   concurrently, filtered by bbox and period: CMR `collections.umm_json?keyword=` (exists);
+   CDSE STAC / openEO collections; EUMETSAT Data Store collection browse; CDS catalogue.
+   (CDSE, EUMETSAT and CDS text-search endpoints: to verify; where a provider has no text
+   search, list its collections once per day, cache, and rank locally.) Normalise to one record:
+   provider, id, title, abstract, platform/instrument, level, resolution, temporal/spatial extent.
+4. **Rank by meaning**: rerank the union (~50-150 candidates) against the needs spec. First
+   version: one EVE call over titles + abstract snippets (no new dependency); embeddings (small
+   local model) if latency or cost demands it. Keep a per-provider quota so one provider with rich
+   metadata cannot crowd out the others.
+5. **Verify the shortlist**: granule/scene counts, dates and revisit in bbox + period for the top
+   K collections only. This is the availability evidence specialists cite.
+6. **One tool for everyone**: `search_catalogues(query, bbox, start, end, providers="all")` runs
+   steps 3-5 on demand and replaces the six provider-specific tools, so no specialist-to-catalogue
+   routing (`SpecialistSpec.catalogs`) is needed.
+7. The fixed core list remains only as a fallback when discovery fails.
+
+### Evaluation (needed to know it generalises)
+A small discovery benchmark: ~20 questions across problem types the inventory was not tuned on
+(subsidence, landslides, floods, crop monitoring, urban heat, air quality, glaciers, coastal
+erosion, methane, drought), each with expert-expected collections per provider. Metric: recall@K
+of expected collections in the shortlist, per provider and overall; report separately for fire
+(seen) and non-fire (unseen) questions. Run offline against cached catalogue responses so it is
+deterministic.
+
+### Files (for approval before implementation)
+| File | Change |
+|---|---|
+| `agents/virtual_lab/discovery.py` (new) | needs spec, federated search, normalise, rank, verify |
+| `servers/{cdse_geocode,eumetsat,climate}/catalog.py` | collection text search where missing |
+| `agents/virtual_lab/inventory.py` | use the discovery shortlist; drop stems/hard-coded products |
+| `agents/virtual_lab/participants.py` | single `search_catalogues` tool; remove per-spec catalogs |
+| `agents/virtual_lab/prompts.py` | inventory/tool wording |
+| `agents/virtual_lab/coordinator.py` | discovery after `_locate` |
+| `tests/test_virtual_lab_discovery.py` (new) + fakes | offline tests per provider |
+| `data/virtual_lab/discovery_benchmark.json`, `scripts/eval_discovery.py` (new) | benchmark |
+
+Open questions: does the EVE gateway serve an embedding model (it lists only
+`EVETADP_Orchestrator`)? Should GEE and Planetary Computer STAC be providers too?

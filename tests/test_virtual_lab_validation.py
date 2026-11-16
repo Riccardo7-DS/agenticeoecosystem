@@ -548,17 +548,13 @@ def test_inventory_rows_summarise_days_and_never_turn_failures_into_absence():
 
 def test_inventory_text_names_what_it_does_not_cover():
     from agenticeoecosystem.agents.virtual_lab import inventory as inv
-    collections = [{"id": "SENTINEL2_L2A", "title": "Sentinel-2 L2A"},
-                   {"id": "CLMS_BA_GLOBAL_300M_DAILY_V4", "title": "CLMS Burnt Area (BA) Global 300m daily V4",
-                    "keywords": ["Burnt Area", "fire disturbance"]},
-                   {"id": "CLMS_SCE_GLOBAL_1KM_DAILY_V1", "title": "CLMS Snow Cover Extent (SCE) Global 1km daily V1",
-                    "keywords": ["cryosphere"]}]
-    text = inv.format_inventory("EMSR859", [-72.73, -37.41, -72.59, -37.22], ["- [tc-0002] row"],
-                                {"total": 130, "matching": 3, "collections": collections},
-                                "tc-0001", "Map the final burned area of the wildfire")
+    bbox = [-72.73, -37.41, -72.59, -37.22]
+    text = inv.format_inventory("EMSR859", bbox, ["- [tc-0002] row"])
     assert "MTG, FCI, MSG, SEVIRI -> ask eumetsat_agent" in text and "VIIRS, MODIS -> ask gee_agent" in text
-    assert "[tc-0001]" in text and "CLMS_BA_GLOBAL_300M_DAILY_V4" in text and "needs credits" in text
-    assert "CLMS_SCE" not in text and "+1 more not related" in text
+    assert "[tc-0002] row" in text
+    text = inv.format_inventory("EMSR859", bbox, [], ["DATA DISCOVERY: ..."])
+    assert "DATA DISCOVERY" in text and "providers other than those listed above" in text
+    assert "No study-area bbox" in inv.format_inventory("EMSR859", None, [])
 
 
 def _catalog_entry(call_id, args, products):
@@ -629,21 +625,6 @@ def test_inventory_citations_link_to_inventory_calls():
     # Naming the tool does not show the agent read what the lab retrieved.
     assert linked[2].kind == EvidenceKind.ASSUMPTION and len(issues) == 1
 
-
-
-def test_eumetsat_extras_are_domain_related_products_not_word_overlaps():
-    from agenticeoecosystem.agents.virtual_lab import inventory as inv
-    collections = [
-        {"id": "EO:EUM:DAT:0737", "title": "IRS Level 1 reduced sub-set of 300 Principal Components - MTG"},
-        {"id": "EO:EUM:DAT:0682", "title": "Active Fire Monitoring (netCDF) - MTG - 0 degree"},
-        {"id": "EO:EUM:DAT:0801", "title": "Active Fire Monitoring (CAP) - MTG - 0 degree"},
-        {"id": "EO:EUM:DAT:0962", "title": "SEVIRI Rapid Scan Fire Climate Data Record Release 1"},
-        {"id": "EO:EUM:DAT:0417", "title": "SLSTR Level 2 Fire Radiative Power - Sentinel-3"},
-        {"id": "EO:EUM:DAT:0662", "title": "FCI Level 1c Normal Resolution Image Data - MTG - 0 degree"},
-    ]
-    extras = inv.eumetsat_extras(collections, "Compare the components that constrain ignition time "
-                                              "and burned area of the wildfire")
-    assert [e.key for e in extras] == ["EO:EUM:DAT:0682", "EO:EUM:DAT:0417"]
 
 
 def test_days_rows_summarise_cadence_and_overpasses():

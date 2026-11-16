@@ -35,6 +35,7 @@ from google.adk.tools.function_tool import FunctionTool
 from . import prompts
 from .analyses import ANALYSES
 from .config import VirtualLabConfig
+from .discovery import PROVIDER_LABELS, as_tool_result, direct_call, discover_for
 from .literature import rank_papers_by_citations
 
 logger = logging.getLogger(__name__)
@@ -57,9 +58,6 @@ class SpecialistSpec:
     name: str
     expertise: str                    # one line: what the PI sees when picking specialists
     grounding_agents: tuple[str, ...]
-    # Metadata providers this specialist queries directly (inventory.Catalogs fields), so it
-    # reaches its own domain's archives first instead of the one every prompt shows.
-    catalogs: tuple[str, ...] = ("cdse",)
 
     @property
     def card(self) -> str:
@@ -80,7 +78,6 @@ SPECIALISTS: dict[str, SpecialistSpec] = {s.name: s for s in (
         "Optical/multispectral remote sensing: Sentinel-2 MSI, Landsat OLI/TIRS, Sentinel-3 OLCI; "
         "burned-area mapping with NBR/dNBR/RdNBR, spectral change detection, cloud and smoke screening.",
         ("cdse_agent", "gee_agent", "eo_stac_agent"),
-        ("cdse",),
     ),
     SpecialistSpec(
         "thermal_specialist",
@@ -88,7 +85,6 @@ SPECIALISTS: dict[str, SpecialistSpec] = {s.name: s for s in (
         "polar (VIIRS, MODIS, Sentinel-3 SLSTR) fire detection, FRP, detection-time uncertainty, "
         "overpass timing.",
         ("eumetsat_agent", "gee_agent", "tle_agent"),
-        ("eumetsat", "earthdata", "cdse"),
     ),
     SpecialistSpec(
         "sar_specialist",
@@ -96,14 +92,13 @@ SPECIALISTS: dict[str, SpecialistSpec] = {s.name: s for s in (
         "burned area, disturbance under cloud/smoke), DInSAR and PS/SBAS time series for ground "
         "deformation, GNSS validation.",
         ("cdse_agent", "tle_agent"),
-        ("cdse",),
     ),
     SpecialistSpec(
         "atmosphere_specialist",
-        "Fire weather and atmosphere: ERA5 reanalysis (wind, humidity, temperature), fire-weather "
-        "indices, smoke transport, Sentinel-5P trace gases.",
+        "Weather, precipitation and atmosphere: ERA5 reanalysis (wind, humidity, temperature, "
+        "precipitation), satellite precipitation (GPM IMERG, EUMETSAT H SAF / MSG-MTG rain "
+        "rates), fire-weather and drought indices, smoke transport, Sentinel-5P trace gases.",
         ("climate_agent", "cdse_agent"),
-        ("cds", "cdse", "eumetsat"),
     ),
     SpecialistSpec(
         "foundation_model_specialist",
@@ -111,7 +106,6 @@ SPECIALISTS: dict[str, SpecialistSpec] = {s.name: s for s in (
         "TerraMind, ...): pretraining modalities, fine-tuning protocols, benchmarks (PANGAEA, "
         "GEO-Bench), fair model comparison.",
         ("gee_agent", "eo_stac_agent"),
-        ("cdse", "earthdata"),
     ),
 )}
 
@@ -155,75 +149,48 @@ def selected_tool_names(state, names: list[str], sub_agent_names: set[str]) -> l
 
 
 GEOCODER = "geocode"   # catalog_tools key of the PI's geocoding tool (not a data catalogue)
+DISCOVERY = "discovery"   # catalog_tools key of search_catalogues (every provider)
 
 
-def catalog_tools(catalogs) -> dict[str, list[BaseTool]]:
-    """Direct metadata tools per provider (plain HTTP to public APIs, no sub-agent LLM loop),
-    backed by the same functions as the MCP servers and the lab's data inventory."""
+def catalog_tools(catalogs, embedder=None) -> dict[str, list[BaseTool]]:
+    """The lab's direct metadata tools (plain HTTP to public APIs, no sub-agent LLM loop), the
+    same functions as the MCP servers and the data inventory use:
+      - search_catalogues: federated discovery over every provider (discovery.py), ranked by
+        meaning, with availability in the bbox and period;
+      - search_cdse_catalog: Copernicus scene lists per day (the plan's date check reads them);
+      - geocode_place (the PI's, while formulating)."""
     tools: dict[str, list[BaseTool]] = {}
-    if (cdse := getattr(catalogs, "cdse", None)) is not None:
+    cdse = getattr(catalogs, "cdse", None)
+    if catalogs:
+        async def search_catalogues(query: str, bbox: list[float] | None = None,
+                                    start_date: str | None = None, end_date: str | None = None,
+                                    providers: list[str] | None = None) -> dict:
+            """Search every data catalogue at once (Copernicus Data Space, EUMETSAT, NASA
+            Earthdata, Copernicus Climate Data Store) for collections matching `query`, ranked by
+            meaning, and check which have data in bbox [west, south, east, north] between
+            start_date and end_date (YYYY-MM-DD). Write `query` the way a catalogue describes
+            data (instrument or technique, product form, quantity), e.g. 'synthetic aperture
+            radar single look complex images with phase' or 'gridded satellite precipitation
+            estimates, daily'. providers: optional subset of cdse, eumetsat, earthdata, cds."""
+            found = await discover_for([query], catalogs, bbox, start_date, end_date, direct_call,
+                                       embedder, [p for p in (providers or []) if p in PROVIDER_LABELS])
+            return as_tool_result(found)
+
+        tools[DISCOVERY] = [FunctionTool(search_catalogues)]
+    if cdse is not None and hasattr(cdse, "search_scenes"):
         async def search_cdse_catalog(collection: str, bbox: list[float], start_date: str, end_date: str,
                                       product_type: str | None = None,
                                       max_cloud_cover: float | None = None) -> dict:
             """List the Copernicus Data Space catalogue scenes intersecting bbox [west, south, east,
-            north] between start_date and end_date (YYYY-MM-DD, inclusive). collection: SENTINEL-1,
-            SENTINEL-2, SENTINEL-3, SENTINEL-5P, LANDSAT-8 or LANDSAT-9. product_type: substring of
-            the product name, e.g. MSIL2A, GRD, SLC, SL_2_FRP, SL_1_RBT. max_cloud_cover in percent.
-            Metadata only: dates, product types, cloud cover, orbit."""
+            north] between start_date and end_date (YYYY-MM-DD, inclusive), per acquisition day.
+            collection: SENTINEL-1, SENTINEL-2, SENTINEL-3, SENTINEL-5P, LANDSAT-8 or LANDSAT-9.
+            product_type: substring of the product name, e.g. SLC (Sentinel-1 with phase, needed
+            for interferometry), GRD (amplitude only), MSIL2A, SL_2_FRP, SL_1_RBT. max_cloud_cover
+            in percent. Metadata only: dates, product types, cloud cover, orbit."""
             return await cdse.search_scenes(collection, bbox, start_date, end_date, product_type,
                                             max_cloud_cover, limit=50)
 
-        async def list_openeo_collections(bbox: list[float] | None = None, start_date: str | None = None,
-                                          end_date: str | None = None) -> dict:
-            """List the collections the Copernicus Data Space openEO back-end offers (Sentinel,
-            Landsat mosaics, Copernicus Land Monitoring products such as burned area and LST),
-            keeping those whose extent overlaps bbox and the period. Free metadata; says which
-            collections exist, not which dates were acquired."""
-            return await cdse.list_openeo_collections(bbox, start_date, end_date)
-
-        tools["cdse"] = [FunctionTool(search_cdse_catalog), FunctionTool(list_openeo_collections)]
-    if (eum := getattr(catalogs, "eumetsat", None)) is not None:
-        async def list_eumetsat_collections(query: str | None = None) -> dict:
-            """List EUMETSAT Data Store collections (MTG FCI, MSG SEVIRI, Metop, Sentinel-3 marine
-            and fire products, ...) whose title contains every word of `query`, e.g. 'fire',
-            'FCI', 'land surface temperature'. Returns collection ids such as EO:EUM:DAT:0662."""
-            return await eum.list_collections(query)
-
-        async def count_eumetsat_products(collection_id: str, bbox: list[float], start_date: str,
-                                          end_date: str) -> dict:
-            """Count the products of a EUMETSAT collection (id e.g. EO:EUM:DAT:0662) whose
-            footprint includes bbox [west, south, east, north] between start_date and end_date
-            (YYYY-MM-DD, inclusive), with their times per day. Metadata only."""
-            return await eum.search_products(collection_id, bbox, start_date, end_date)
-
-        tools["eumetsat"] = [FunctionTool(list_eumetsat_collections), FunctionTool(count_eumetsat_products)]
-    if (nasa := getattr(catalogs, "earthdata", None)) is not None:
-        async def search_earthdata_collections(keyword: str, bbox: list[float] | None = None,
-                                               start_date: str | None = None,
-                                               end_date: str | None = None) -> dict:
-            """Find NASA Earthdata collections (VIIRS, MODIS, Landsat, ...) matching a keyword such
-            as 'active fire' or 'land surface temperature' whose extent overlaps bbox and the
-            period. Returns short names (e.g. VNP14IMG) for search_earthdata_granules."""
-            return await nasa.search_collections(keyword, bbox, start_date, end_date)
-
-        async def search_earthdata_granules(short_name: str, bbox: list[float], start_date: str,
-                                            end_date: str) -> dict:
-            """List the granules of a NASA collection (short name e.g. VNP14IMG, VJ114IMG, MOD14,
-            MYD14) intersecting bbox [west, south, east, north] between start_date and end_date
-            (YYYY-MM-DD, inclusive), with their start times per day, i.e. the overpass times."""
-            return await nasa.search_granules(short_name, bbox, start_date, end_date)
-
-        tools["earthdata"] = [FunctionTool(search_earthdata_collections),
-                              FunctionTool(search_earthdata_granules)]
-    if (cds := getattr(catalogs, "cds", None)) is not None:
-        async def cds_dataset_info(dataset_id: str, start_date: str | None = None,
-                                   end_date: str | None = None) -> dict:
-            """Catalogue entry of a Copernicus Climate Data Store dataset (e.g.
-            reanalysis-era5-single-levels, reanalysis-era5-land): temporal coverage, update
-            frequency, availability, and whether it covers start_date..end_date."""
-            return await cds.dataset_info(dataset_id, start_date, end_date)
-
-        tools["cds"] = [FunctionTool(cds_dataset_info)]
+        tools["cdse"] = [FunctionTool(search_cdse_catalog)]
     if cdse is not None and hasattr(cdse, "geocode"):
         async def geocode_place(place_name: str) -> dict:
             """Bounding box [west, south, east, north] of a named place (OpenStreetMap)."""
@@ -284,13 +251,14 @@ def build_participants(
     existing_agents: dict[str, BaseAgent],
     extra_tools: dict[str, list[BaseTool]] | None = None,
     catalogs=None,
+    embedder=None,
 ) -> LabParticipants:
     """Build lab agents. `extra_tools` (agent name -> tools) lets tests inject fakes.
-    With `catalogs` (inventory.Catalogs), each specialist queries its own domain's metadata
-    APIs directly (SpecialistSpec.catalogs) and the critic all of them; with CDSE available,
-    cdse_agent is left to the PI for geocoding."""
+    With `catalogs` (inventory.Catalogs), every specialist, the critic and the deciding PI get
+    the same direct metadata tools (search_catalogues over all providers, plus Copernicus scene
+    lists); with CDSE available, cdse_agent is left to the PI for geocoding."""
     extra_tools = extra_tools or {}
-    direct_by_provider = catalog_tools(catalogs) if catalogs else {}
+    direct_by_provider = catalog_tools(catalogs, embedder) if catalogs else {}
     all_direct = [t for p, group in direct_by_provider.items() if p != GEOCODER for t in group]
 
     wrapped: dict[str, AgentTool] = {}
@@ -317,7 +285,7 @@ def build_participants(
         if spec is None:
             logger.warning("Unknown specialist '%s' ignored (known: %s)", name, list(SPECIALISTS))
             continue
-        direct = [t for p in spec.catalogs for t in direct_by_provider.get(p, [])]
+        direct = list(all_direct)
         agents = tuple(a for a in spec.grounding_agents
                        if not ("cdse" in direct_by_provider and a == "cdse_agent"))
         tools = direct + tools_for(agents + literature) + citation_tool + extra_tools.get(name, [])

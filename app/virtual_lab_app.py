@@ -26,7 +26,9 @@ import json
 import logging
 import re
 import time
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from types import ModuleType
 from typing import Any
 
 from dotenv import load_dotenv
@@ -36,7 +38,7 @@ load_dotenv()
 from agenticeoecosystem.definitions import ROOT_DIR  # noqa: E402
 
 
-def _load_example():
+def _load_example() -> ModuleType:
     """The EMSR859 query and force_eve() from the example script (no package import path)."""
     path = ROOT_DIR / "scripts" / "run_virtual_lab_example.py"
     spec = importlib.util.spec_from_file_location("run_virtual_lab_example", path)
@@ -436,6 +438,78 @@ def final_md(ledger: dict, answer: str | None = None) -> str:
 
 
 # ---------------------------------------------------------------------------
+# PDF report
+# ---------------------------------------------------------------------------
+
+def _pdf_fonts(pdf) -> None:
+    """DejaVu (shipped with matplotlib) so Greek letters, degrees, micro signs and dashes render;
+    the PDF core fonts are Latin-1 only."""
+    from pathlib import Path
+
+    import matplotlib
+
+    ttf = Path(matplotlib.get_data_path()) / "fonts" / "ttf"
+    for style, suffix in (("", ""), ("B", "-Bold"), ("I", "-Oblique"), ("BI", "-BoldOblique")):
+        pdf.add_font("DejaVu", style, str(ttf / f"DejaVuSans{suffix}.ttf"))
+        pdf.add_font("DejaVuMono", style, str(ttf / f"DejaVuSansMono{suffix}.ttf"))
+
+
+def build_pdf_report(report: dict) -> str:
+    """Render the question, run metadata and the final answer (Markdown) to a PDF in logs/.
+    Model text is escaped first (raw HTML in it is never rendered), as in the app itself."""
+    from fpdf import FPDF
+
+    pdf = FPDF(format="A4")
+    pdf.set_margins(18, 18, 18)
+    pdf.set_auto_page_break(True, margin=18)
+    _pdf_fonts(pdf)
+    pdf.set_title("EO Virtual Lab report")
+    pdf.set_creator("EO Virtual Scientific Lab")
+    pdf.add_page()
+
+    pdf.set_font("DejaVu", "B", 18)
+    pdf.cell(0, 10, "EO Virtual Lab report", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("DejaVu", "", 9)
+    pdf.set_text_color(90, 90, 90)
+    meta = [f"Generated {datetime.now():%Y-%m-%d %H:%M}"]
+    if report.get("model"):
+        meta.append(f"Model: {report['model']}")
+    if report.get("rounds") is not None:
+        meta.append(f"Deliberation rounds (max): {report['rounds']}")
+    if report.get("source"):
+        meta.append(f"Run: {report['source']}")
+    pdf.multi_cell(0, 5, " · ".join(meta), new_x="LMARGIN", new_y="NEXT")
+    if report.get("participants"):
+        pdf.multi_cell(0, 5, "Lab members: " + ", ".join(
+            _ROLES.get(p, ("", p, ""))[1] for p in report["participants"]), new_x="LMARGIN", new_y="NEXT")
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(4)
+
+    body = (f"<h2>Question</h2>{_MD.render(report.get('query') or '')}"
+            f"<h2>Final answer</h2>{_MD.render(report.get('answer') or '')}")
+    try:
+        pdf.write_html(body, font_family="DejaVu", pre_code_font="DejaVuMono")
+    except Exception:   # an exotic Markdown construct fpdf2 cannot lay out: fall back to text
+        logger.warning("PDF HTML layout failed; writing plain text", exc_info=True)
+        pdf.set_font("DejaVu", "", 10)
+        pdf.multi_cell(0, 5, f"Question\n\n{report.get('query') or ''}\n\n"
+                             f"Final answer\n\n{report.get('answer') or ''}")
+
+    out = LOGS_DIR / f"virtual_lab_report_{datetime.now():%Y%m%d_%H%M%S}.pdf"
+    pdf.output(str(out))
+    logger.info("PDF report written to %s", out)
+    return str(out)
+
+
+def download_report(report: dict | None) -> Any:
+    """Path of the PDF for the shown run, or gr.skip() (with a warning) when there is no answer."""
+    if not report or not report.get("answer"):
+        gr.Warning("No final answer yet: run a meeting or load a finished run first.")
+        return gr.skip()
+    return build_pdf_report(report)
+
+
+# ---------------------------------------------------------------------------
 # Live run and replay
 # ---------------------------------------------------------------------------
 
@@ -459,13 +533,17 @@ def _empty_ledger() -> dict:
     return {"entries": [], "tool_calls": [], "llm_calls": [], "usage": {}, "budget_exhausted": None}
 
 
-def _view(ledger: dict, live: dict, query: str, rounds: int, answer: str | None) -> tuple:
+def _view(ledger: dict, live: dict, query: str, rounds: int, answer: str | None,
+          meta: dict | None = None) -> tuple:
+    """The five panels plus the report state (what the PDF download renders; None until the
+    final answer exists)."""
+    report = {"query": query, "answer": answer, "rounds": rounds, **(meta or {})} if answer else None
     return (tracker_html(ledger, live, rounds), transcript_html(ledger, query), side_html(ledger, live),
-            inventory_md(ledger), final_md(ledger, answer))
+            inventory_md(ledger), final_md(ledger, answer), report)
 
 
-async def run_lab(query: str, rounds: int, execute: bool = False):
-    """Gradio streaming handler. Yields the five views every REFRESH_S, skipping unchanged ones
+async def run_lab(query: str, rounds: int, execute: bool = False) -> AsyncGenerator[tuple, None]:
+    """Gradio streaming handler. Yields the six views every REFRESH_S, skipping unchanged ones
     so the transcript only re-renders (and scrolls) when a member has spoken."""
     from agenticeoecosystem.agents.virtual_lab.config import VirtualLabConfig
     from agenticeoecosystem.agents.virtual_lab.runner import stream_virtual_lab
@@ -492,7 +570,8 @@ async def run_lab(query: str, rounds: int, execute: bool = False):
                     and (text := "".join(p.text or "" for p in event.content.parts))):
                 holder["answer"] = text
 
-    last: list = [None] * 5
+    last: list = [None] * 6
+    meta = {"model": config.model, "participants": list(config.participants), "source": "live"}
 
     def changed(views: tuple) -> list:
         out = [gr.skip() if v == last[i] else v for i, v in enumerate(views)]
@@ -502,7 +581,7 @@ async def run_lab(query: str, rounds: int, execute: bool = False):
     def snapshot(final: bool = False) -> tuple:
         ledger = holder["ledger"].to_dict() if holder["ledger"] else _empty_ledger()
         live["elapsed"] = _elapsed(t0)
-        return _view(ledger, live, query, rounds, holder["answer"] if final else None)
+        return _view(ledger, live, query, rounds, holder["answer"] if final else None, meta)
 
     task = asyncio.create_task(consume())
     try:
@@ -539,16 +618,19 @@ def result_files() -> list[str]:
     return [p.name for p in files]
 
 
-def replay(name: str):
+def replay(name: str) -> tuple | list:
+    """The six views of a saved result file, as if its meeting had just finished."""
     if not name:
         gr.Warning("Pick a result file first.")
-        return [gr.skip()] * 5
+        return [gr.skip()] * 6
     data = json.loads((LOGS_DIR / name).read_text())
     ledger = data.get("ledger") or _empty_ledger()
-    rounds = int((data.get("config") or {}).get("max_rounds", 2))
+    config = data.get("config") or {}
+    rounds = int(config.get("max_rounds", 2))
     live = {"state": f"Replay · {name}", "finished": True,
-            "participants": (data.get("config") or {}).get("participants", [])}
-    return _view(ledger, live, data.get("query", ""), rounds, data.get("final_answer"))
+            "participants": config.get("participants", [])}
+    meta = {"model": config.get("model"), "participants": config.get("participants", []), "source": name}
+    return _view(ledger, live, data.get("query", ""), rounds, data.get("final_answer"), meta)
 
 
 # ---------------------------------------------------------------------------
@@ -693,6 +775,10 @@ def build_app() -> gr.Blocks:
                     with gr.Tab("Data inventory"):
                         inventory = gr.Markdown(inventory_md(_empty_ledger()), elem_id="vl-inventory")
                     with gr.Tab("Final answer"):
+                        with gr.Row():
+                            pdf_btn = gr.Button("Create PDF report", size="sm", variant="secondary",
+                                                scale=0, min_width=180)
+                            pdf_file = gr.File(show_label=False, interactive=False, height=60, scale=1)
                         final = gr.Markdown(final_md(_empty_ledger()))
             with gr.Column(scale=1, min_width=330):
                 side = gr.HTML(side_html(_empty_ledger(), None), elem_id="vl-side",
@@ -703,7 +789,9 @@ def build_app() -> gr.Blocks:
                         load_btn = gr.Button("Load", size="sm", variant="secondary")
                         refresh_btn = gr.Button("Refresh list", size="sm")
 
-        outputs = [tracker, transcript, side, inventory, final]
+        report = gr.State(None)
+        outputs = [tracker, transcript, side, inventory, final, report]
+        pdf_btn.click(download_report, inputs=[report], outputs=[pdf_file])
         run_event = run_btn.click(run_lab, inputs=[query, rounds, execute], outputs=outputs)
         stop_btn.click(None, cancels=[run_event])
         load_btn.click(replay, inputs=[files], outputs=outputs)

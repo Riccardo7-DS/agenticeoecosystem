@@ -25,6 +25,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from collections.abc import AsyncGenerator, Callable
 
@@ -64,6 +65,8 @@ from .schemas import (
 )
 from .validation import (
     TerminationReason,
+    bboxes_overlap,
+    off_area_calls,
     finalize_conclusion,
     finalize_status,
     link_results,
@@ -111,7 +114,7 @@ async def _merge(gens: list[AsyncGenerator[Event, None]]) -> AsyncGenerator[Even
     sentinel = object()
     queue: asyncio.Queue = asyncio.Queue()
 
-    async def drain(gen):
+    async def drain(gen: AsyncGenerator[Event, None]) -> None:
         try:
             async for event in gen:
                 resume = asyncio.Event()
@@ -150,7 +153,7 @@ def _year(published: str | None) -> int | None:
         return None
 
 
-def _results_dir():
+def _results_dir() -> Path:
     """Quicklooks of one execute-mode run: output/virtual_lab/run_<timestamp>/."""
     from agenticeoecosystem.definitions import ROOT_DIR
     return ROOT_DIR / "output" / "virtual_lab" / f"run_{datetime.now():%Y%m%d_%H%M%S}"
@@ -176,12 +179,13 @@ class VirtualLabCoordinator(BaseAgent):
     _lit_check_start: int = PrivateAttr(default=0)
     _arxiv_unresponsive: bool = PrivateAttr(default=False)    # a search timed out in this check
     _analysis_client: Any = PrivateAttr(default=None)         # execute mode: Sentinel Hub client
+    _embedder: Any = PrivateAttr(default=None)                # data discovery ranking (discovery.py)
 
     def __init__(self, *, lab_config: VirtualLabConfig, participants: LabParticipants,
                  ledger: LabLedger, name: str = "virtual_lab",
                  literature_search: Callable | None = None,
                  citation_ranker: Callable | None = None, catalogs: Any = None,
-                 analysis_client: Any = None) -> None:
+                 analysis_client: Any = None, embedder: Any = None) -> None:
         super().__init__(
             name=name,
             description="Scientific Coordinator running a structured EO virtual-lab meeting.",
@@ -194,6 +198,7 @@ class VirtualLabCoordinator(BaseAgent):
         self._rank = citation_ranker
         self._catalogs = catalogs
         self._analysis_client = analysis_client
+        self._embedder = embedder
 
     @property
     def record(self) -> LabRecord | None:
@@ -230,7 +235,7 @@ class VirtualLabCoordinator(BaseAgent):
                 async for event in agent.run_async(sub_ctx):
                     yield event
             except Exception as exc:  # a failed participant must not sink the meeting
-                logger.warning("Lab step %s (%s) raised: %s", step, agent.name, exc)
+                logger.warning("Lab step %s (%s) raised: %s", step, agent.name, exc, exc_info=True)
                 self._record.invalid_outputs.append(
                     {"step": step, "agent": agent.name, "attempt": attempt, "error": repr(exc)[:_PREVIEW_CHARS]})
                 break
@@ -294,6 +299,7 @@ class VirtualLabCoordinator(BaseAgent):
         proposal = self._carry_linked_evidence(name, proposal)
         grounded = bool(self._participants.grounding.get(name))
         link_issues += literature_uptake(proposal, self._record.literature)
+        link_issues += off_area_calls(self._ledger.calls_for(step), self._record.problem)
         check = validate_proposal(proposal, self._record.problem, grounded, round_, link_issues)
         self._record.proposal_history.append(proposal)
         self._ledger.log("proposal" if round_ == 0 else "revision", step, agent=name,
@@ -351,6 +357,7 @@ class VirtualLabCoordinator(BaseAgent):
         offered = list(parts.sub_agents)
         chosen = [n for n in problem.sub_agents if n in offered] or offered
         problem = problem.model_copy(update={"sub_agents": chosen})
+        problem = await self._locate(problem)
         record.problem = problem
         self._ledger.log("problem", "r0.formulate", problem=problem.model_dump(mode="json"))
         # Specialists and the critic only see the sub-agents the PI chose (participants.py).
@@ -684,6 +691,35 @@ class VirtualLabCoordinator(BaseAgent):
         entry.update(status="ok", result_preview=json.dumps(result, default=str)[:_PREVIEW_CHARS])
         return entry, result
 
+    async def _locate(self, problem: ScientificProblem) -> ScientificProblem:
+        """Geocode the study area in code when the PI named it but gave no bbox. The PI is
+        offered the geocoder but may skip it, and agents then invent coordinates (run of
+        2026-11-13: 'Kypseli, Athens' had no bbox; searches ran ~70 km away and the inventory
+        skipped every scene search). A bbox the PI did give is kept: it may come from the
+        question, and an ambiguous place name can geocode elsewhere; a mismatch is logged."""
+        area = problem.study_area
+        cdse = getattr(self._catalogs, "cdse", None) if self._catalogs else None
+        if area is None or not area.name.strip() or cdse is None or not hasattr(cdse, "geocode"):
+            return problem
+        entry, result = await self._direct_tool_call(
+            "r0.geocode", "geocode_place", {"place_name": area.name},
+            lambda: cdse.geocode(area.name), budget=None)
+        entry["inventory"] = True   # lab bookkeeping, free, and citable like the inventory
+        hits = (result.get("results") or []) if isinstance(result, dict) else []
+        found = hits[0].get("bbox") if hits else None
+        if not found or not (found[0] <= found[2] and found[1] < found[3]):
+            entry["status"] = "error"
+            logger.warning("Could not geocode study area %r: %s", area.name, result)
+            return problem
+        if area.bbox:
+            if not bboxes_overlap(list(area.bbox), found):
+                entry["note"] = f"PI bbox {list(area.bbox)} does not overlap the geocoded {found}; kept the PI's"
+                logger.warning("Study area %r: %s", area.name, entry["note"])
+            return problem
+        entry["note"] = f"study-area bbox set from geocoding: {found} ({hits[0].get('display_name', '')})"
+        logger.info("Study area %r: %s", area.name, entry["note"])
+        return problem.model_copy(update={"study_area": area.model_copy(update={"bbox": found})})
+
     async def _build_inventory(self, problem: ScientificProblem) -> str:
         """Query every provider's public metadata API for the study area and period (see
         inventory.py), each call through the ledger. Returns the DATA INVENTORY text."""
@@ -703,7 +739,7 @@ class VirtualLabCoordinator(BaseAgent):
             return entry["id"], result
 
         return await inv.build_inventory(problem, self._catalogs, call,
-                                         self.lab_config.inventory_pad_days)
+                                         self.lab_config.inventory_pad_days, self._embedder)
 
     async def _search_papers(self, ctx, step: str, query: str) -> tuple[str | None, list[dict]]:
         """search_papers through the ledger, reusing the result of an identical earlier query.

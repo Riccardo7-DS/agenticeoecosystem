@@ -28,6 +28,7 @@ from _virtual_lab_fakes import (
     default_script,
     fake_existing_agents,
 )
+from agenticeoecosystem.agents.virtual_lab import discovery
 from agenticeoecosystem.agents.virtual_lab.config import VirtualLabConfig
 from agenticeoecosystem.agents.virtual_lab.inventory import Catalogs
 from agenticeoecosystem.agents.virtual_lab.literature import rank_from_payload
@@ -493,6 +494,21 @@ class _FakeCatalog:
                 "products": [{"name": f"{collection}_X", "start": "2026-01-17T14:37:29Z"}]}
 
     @classmethod
+    async def list_stac_collections(cls, bbox=None, start_date=None, end_date=None):
+        cls.calls.append("stac")
+        return {"total": 2, "matching": 2, "collections": [
+            {"id": "clms_burntarea_global_300m_daily_v4", "title": "CLMS Burnt Area Global 300m daily V4",
+             "description": "Burned area detected from satellite observations", "keywords": ["fire disturbance"]},
+            {"id": "clms_swe_northernhemisphere_5km_daily_v2", "title": "CLMS Snow Water Equivalent",
+             "description": "Snow water equivalent", "keywords": ["cryosphere"]}]}
+
+    @classmethod
+    async def search_stac_items(cls, collection, bbox, start_date, end_date, **_):
+        cls.calls.append("stac_items")
+        return {"collection": collection, "start_date": start_date, "end_date": end_date, "total": None,
+                "listed": 2, "days": {"2026-01-17": ["14:00"], "2026-01-18": ["14:00"]}}
+
+    @classmethod
     async def list_openeo_collections(cls, bbox=None, start_date=None, end_date=None):
         cls.calls.append("openeo")
         return {"total": 3, "matching": 2, "collections": [
@@ -512,7 +528,9 @@ def test_data_inventory_is_built_once_and_shown_to_everyone(tmp_path):
         catalogs=Catalogs(cdse=_FakeCatalog)))
 
     inventory = [c for c in ledger.tool_calls if c.get("inventory")]
-    assert len(inventory) == 7 and len(_FakeCatalog.calls) == 7          # openEO + 6 scene searches
+    # 6 scene searches + STAC listing + item search of the one relevant collection
+    assert len(inventory) == 8 and sorted(_FakeCatalog.calls).count("stac_items") == 1
+    assert len(_FakeCatalog.calls) == 8
     assert {c["step"] for c in inventory} == {"r0.inventory"}
     s2 = next(c for c in inventory if c["args"].get("collection") == "SENTINEL-2")
     assert s2["status"] == "ok" and s2["catalog"]["dates"] == ["2026-01-17"]
@@ -521,9 +539,10 @@ def test_data_inventory_is_built_once_and_shown_to_everyone(tmp_path):
     for role, phase in [("thermal_specialist", "propose"), ("scientific_critic", "critique"),
                         ("lab_pi", "decide"), ("experiment_designer", "design")]:
         text = "\n".join(_requests(llm, role, phase))
-        assert "DATA INVENTORY" in text and "CLMS_BA_GLOBAL_300M_DAILY_V4" in text, (role, phase)
+        assert "DATA INVENTORY" in text and "clms_burntarea_global_300m_daily_v4" in text, (role, phase)
     propose = "\n".join(_requests(llm, "thermal_specialist", "propose"))
-    assert "NOT absent" in propose and "CLMS_SWE" not in propose       # unrelated collection hidden
+    assert "NOT absent" in propose and "clms_swe" not in propose       # unrelated collection left out
+    assert "DATA DISCOVERY" in propose and "word overlap" in propose     # tests rank without embeddings
     assert "DATA INVENTORY (" not in "\n".join(_requests(llm, "lab_pi", "formulate"))
 
 
@@ -531,6 +550,14 @@ def test_no_inventory_without_a_catalog(tmp_path):
     *_, ledger, _, llm = _run(tmp_path, max_rounds=0)
     assert not any(c.get("inventory") for c in ledger.tool_calls)
     assert "DATA INVENTORY (" not in "\n".join(_requests(llm, "thermal_specialist", "propose"))
+
+
+@pytest.fixture(autouse=True)
+def _fresh_discovery_cache():
+    """discovery caches catalogue listings per process: each test lists its own fakes."""
+    discovery._LIST_CACHE.clear()
+    yield
+    discovery._LIST_CACHE.clear()
 
 
 def _tool_names(req) -> set[str]:
@@ -650,7 +677,7 @@ def test_specialists_search_the_catalogue_directly_and_hit_the_inventory_cache(t
                         if c.get("inventory") and c["args"].get("collection") == "SENTINEL-2")
     assert call["cached_from"] == inventory_s2["id"]                  # narrower window, from cache
     assert call["catalog"]["dates"] == ["2026-01-17"]
-    assert len(_FakeCatalog.calls) == 7                               # no extra network call
+    assert len(_FakeCatalog.calls) == 8                               # no extra network call
 
 
 def test_round_two_runs_only_while_issues_stay_open():
@@ -698,9 +725,16 @@ class _FakeEarthdata:
         return {"short_name": short_name, "start_date": start_date, "end_date": end_date, "total": 3,
                 "listed": 3, "days": {"2026-01-17": ["04:54", "18:54"], "2026-01-18": ["04:36"]}}
 
-    @staticmethod
-    async def search_collections(keyword, bbox=None, start_date=None, end_date=None):
-        return {"total": 0, "listed": 0, "collections": []}
+    keywords: list = []
+
+    @classmethod
+    async def search_collections(cls, keyword, bbox=None, start_date=None, end_date=None, limit=20):
+        cls.keywords.append(keyword)
+        if "fire" not in keyword.lower():
+            return {"total": 0, "listed": 0, "collections": []}
+        return {"total": 1, "listed": 1, "collections": [
+            {"short_name": "VNP14IMG", "version": "2", "title": "VIIRS active fire detections 375 m",
+             "abstract": "Thermal infrared active fire detections and fire radiative power"}]}
 
 
 class _FakeCds:
@@ -710,16 +744,29 @@ class _FakeCds:
                 "end": "2026-11-03", "update_frequency": "Daily", "status": "available",
                 "covers_period": True}
 
+    @staticmethod
+    async def list_datasets(start_date=None, end_date=None):
+        return {"total": 1, "matching": 1, "collections": [
+            {"id": "reanalysis-era5-land", "title": "ERA5-Land hourly data",
+             "description": "Reanalysis of land variables: temperature, wind, soil moisture",
+             "keywords": ["Product type: Reanalysis"], "start": "1950-01-01", "end": "2026-11-03"}]}
+
 
 def _all_catalogs():
     return Catalogs(cdse=_FakeCatalog, eumetsat=_FakeEumetsat, earthdata=_FakeEarthdata, cds=_FakeCds)
 
 
-def test_inventory_covers_every_provider_without_using_the_budget(tmp_path):
-    _FakeCatalog.calls = []
+FIRE_NEEDS = ["thermal infrared active fire detections with fire radiative power",
+              "burned area from satellite observations"]
+
+
+def test_inventory_discovers_data_in_every_provider_without_using_the_budget(tmp_path):
+    _FakeCatalog.calls, _FakeEarthdata.keywords = [], []
     tools_seen = {}
 
     def script(role, phase, req):
+        if role == "lab_pi" and phase == "formulate":
+            return _text({**PROBLEM, "data_needs": FIRE_NEEDS})
         if role in ("thermal_specialist", "optical_specialist") and phase == "propose":
             tools_seen[role] = _tool_names(req)
         return default_script(role, phase, req)
@@ -729,24 +776,51 @@ def test_inventory_covers_every_provider_without_using_the_budget(tmp_path):
     _, record, ledger, _ = asyncio.run(run_virtual_lab(
         QUERY, config, llm=llm, existing_agents=fake_existing_agents(llm), artifact_dir=tmp_path,
         catalogs=_all_catalogs()))
+    assert record.problem.data_needs == FIRE_NEEDS
     inventory = [c for c in ledger.tool_calls if c.get("inventory")]
     tools = [c["tool"] for c in inventory]
-    # openEO + 6 scene searches, EUMETSAT list + 3 core + 1 fire extra (netCDF/CAP merged,
-    # data record skipped), 5 fire granule searches (VIIRS x3, MODIS x2, MCD64A1 for 'burned'), 2 CDS
-    assert tools.count("count_eumetsat_products") == 4
-    eum_ids = [c["args"]["collection_id"] for c in inventory if c["tool"] == "count_eumetsat_products"]
-    assert "EO:EUM:DAT:0682" in eum_ids and "EO:EUM:DAT:0801" not in eum_ids and "EO:EUM:DAT:0962" not in eum_ids
-    assert tools.count("search_earthdata_granules") == 6 and tools.count("cds_dataset_info") == 2
-    assert ledger.used_tool_calls() <= 3                            # inventory is free
+    # Every provider listed, then the shortlist verified in the bbox and period.
+    for listing in ("list_stac_collections", "list_eumetsat_collections", "list_cds_datasets",
+                    "search_earthdata_collections"):
+        assert listing in tools, listing
+    assert _FakeEarthdata.keywords[:1] == [FIRE_NEEDS[0]]
+    verified = {c["args"].get("collection_id") or c["args"].get("short_name") or c["args"].get("collection")
+                for c in inventory if c["tool"] in ("count_eumetsat_products", "search_earthdata_granules",
+                                                    "search_stac_items")}
+    assert {"EO:EUM:DAT:0682", "VNP14IMG", "clms_burntarea_global_300m_daily_v4"} <= verified
+    assert "EO:EUM:DAT:0801" not in verified              # format variant of 0682, counted once
+    assert ledger.used_tool_calls() <= 3                   # inventory is free
     text = "\n".join(_requests(llm, "thermal_specialist", "propose"))
-    assert "EUMETSAT DATA STORE" in text and "00:00-23:50 UTC, every ~10 min" in text
-    assert "NASA EARTHDATA" in text and "04:54 18:54 UTC" in text
-    assert "ERA5 reanalysis-era5-land" in text and "covers the study period" in text
-    # Direct tools follow the specialist's domain.
-    assert {"count_eumetsat_products", "search_earthdata_granules"} <= tools_seen["thermal_specialist"]
-    assert "cds_dataset_info" not in tools_seen["thermal_specialist"]
-    assert not {"count_eumetsat_products", "search_earthdata_granules"} & tools_seen["optical_specialist"]
-    assert "search_cdse_catalog" in tools_seen["optical_specialist"]
+    assert "DATA DISCOVERY" in text and "VNP14IMG" in text and "288 items on 2 days" in text
+    assert "UNUSABLE GEOMETRY" in text                     # MTG at 0 deg seen from Chile
+    # One federated tool for every specialist: no per-provider routing.
+    for role in ("thermal_specialist", "optical_specialist"):
+        assert {"search_catalogues", "search_cdse_catalog"} <= tools_seen[role]
+        assert not {"count_eumetsat_products", "search_earthdata_granules", "cds_dataset_info"} & tools_seen[role]
+
+
+class _FailingEumetsat(_FakeEumetsat):
+    @staticmethod
+    async def list_collections(query=None):
+        return {"error": "EUMETSAT collection listing failed: 503"}
+
+
+class _NoListCds:
+    """A CDS client without list_datasets: discovery cannot list it."""
+    dataset_info = _FakeCds.dataset_info
+
+
+def test_core_lookups_run_only_when_discovery_finds_nothing(tmp_path):
+    llm = ScriptedLlm(script=default_script, seen=[])
+    config = VirtualLabConfig(participants=["thermal_specialist", "optical_specialist"],
+                              literature_enabled=False, max_rounds=0)
+    _, _, ledger, _ = asyncio.run(run_virtual_lab(
+        QUERY, config, llm=llm, existing_agents=fake_existing_agents(llm), artifact_dir=tmp_path,
+        catalogs=Catalogs(eumetsat=_FailingEumetsat, cds=_NoListCds)))
+    tools = [c["tool"] for c in ledger.tool_calls if c.get("inventory")]
+    assert tools.count("count_eumetsat_products") == 3 and tools.count("cds_dataset_info") == 2
+    text = "\n".join(_requests(llm, "thermal_specialist", "propose"))
+    assert "listing FAILED" in text and "discovery found nothing" in text
 
 
 class _GeocodingCatalog(_FakeCatalog):
@@ -781,6 +855,66 @@ def test_pi_geocodes_and_decides_without_sub_agents(tmp_path):
     assert sum(c["status"] != "blocked" for c in step) == 1
     assert any(c["status"] == "blocked" and "Decision tool limit (1 calls)" in c["reason"] for c in step)
     assert "geocode_place" in "\n".join(_requests(llm, "lab_pi", "formulate"))
+
+
+_GEOCODED = [-72.7, -37.4, -72.6, -37.2]   # what _GeocodingCatalog returns
+_ELSEWHERE_BBOX = [10.0, 45.0, 10.1, 45.1]  # does not overlap the study area
+
+
+class _LocatingCatalog(_GeocodingCatalog):
+    """Accepts the agents' search_cdse_catalog call as well as the inventory's."""
+    @classmethod
+    async def search_scenes(cls, collection, bbox, start_date, end_date, *_, **__):
+        return {"collection": collection, "bbox": bbox, "total": 1, "listed": 1,
+                "products": [{"name": f"{collection}_X", "start": f"{start_date}T10:00:00Z"}]}
+
+
+def _geocode_run(tmp_path, pi_bbox):
+    """PI formulates with `pi_bbox`; the optical specialist searches somewhere else."""
+    def script(role, phase, req):
+        if role == "lab_pi" and phase == "formulate":
+            return _text({**PROBLEM, "study_area": {"name": "Biobio, Chile", "bbox": pi_bbox}})
+        if role == "optical_specialist" and phase == "propose" and not _has_tool_result(req):
+            return _call("search_cdse_catalog", {"collection": "SENTINEL-2", "bbox": _ELSEWHERE_BBOX,
+                                                 "start_date": "2026-01-17", "end_date": "2026-01-18"})
+        return default_script(role, phase, req)
+
+    _FakeCatalog.calls = []
+    llm = ScriptedLlm(script=script, seen=[])
+    config = VirtualLabConfig(participants=["thermal_specialist", "optical_specialist"],
+                              literature_enabled=False, max_rounds=0)
+    _, record, ledger, _ = asyncio.run(run_virtual_lab(
+        QUERY, config, llm=llm, existing_agents=fake_existing_agents(llm), artifact_dir=tmp_path,
+        catalogs=Catalogs(cdse=_LocatingCatalog)))
+    return record, ledger
+
+
+def _validator_issues(ledger, agent):
+    return [i for e in ledger.entries if e["kind"] == "validation"
+            and e["critique"]["target"] == agent for i in e["critique"]["issues"]]
+
+
+def test_unlocated_study_area_is_geocoded_by_the_lab(tmp_path):
+    record, ledger = _geocode_run(tmp_path, pi_bbox=None)
+
+    assert record.problem.study_area.bbox == _GEOCODED
+    geo = [c for c in ledger.tool_calls if c["tool"] == "geocode_place" and c["step"] == "r0.geocode"]
+    assert len(geo) == 1 and geo[0]["status"] == "ok" and geo[0]["inventory"]
+    assert "set from geocoding" in geo[0]["note"]
+    # The inventory now searches scenes in the geocoded area (it skipped them without a bbox).
+    scenes = [c for c in ledger.tool_calls if c["step"] == "r0.inventory" and c["tool"] == "search_cdse_catalog"]
+    assert scenes and all(c["args"]["bbox"] == _GEOCODED for c in scenes)
+
+
+def test_pi_bbox_is_kept_and_off_area_searches_are_flagged(tmp_path):
+    pi_bbox = [-72.73, -37.41, -72.59, -37.22]
+    record, ledger = _geocode_run(tmp_path, pi_bbox=pi_bbox)
+
+    assert record.problem.study_area.bbox == pi_bbox
+    issues = _validator_issues(ledger, "optical_specialist")
+    off = [i for i in issues if i["category"] == "coverage" and "does not overlap the study area" in i["rationale"]]
+    assert len(off) == 1 and off[0]["severity"] == "major" and str(_ELSEWHERE_BBOX) in off[0]["claim"]
+    assert not any("does not overlap" in i["rationale"] for i in _validator_issues(ledger, "thermal_specialist"))
 
 
 def _run_execute(tmp_path, client, script=default_script):

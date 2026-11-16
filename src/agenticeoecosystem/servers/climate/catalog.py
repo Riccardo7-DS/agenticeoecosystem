@@ -47,3 +47,33 @@ async def dataset_info(dataset_id: str, start_date: str | None = None, end_date:
         info["covers_period"] = bool((not first or first <= start_date[:10])
                                      and (not last or end_date[:10] <= last))
     return info
+
+
+async def list_datasets(start_date: str | None = None, end_date: str | None = None,
+                        get: GetJson = http_get_json) -> dict[str, Any]:
+    """Every dataset in the CDS catalogue (reanalyses, satellite records, projections, ...),
+    optionally only those whose temporal extent overlaps the period. Returns {"total",
+    "matching", "collections": [{id, title, description, keywords, start, end}]} or {"error": ...}.
+    The catalogue's `q` parameter is not honoured: callers rank the list themselves."""
+    collections: list[dict] = []
+    url: str | None = CDS_CATALOGUE
+    params: dict[str, Any] | None = {"limit": "500"}
+    try:
+        while url and len(collections) < 2000:
+            data = await get(url, params)
+            collections += data.get("collections", [])
+            url = next((l.get("href") for l in data.get("links", []) if l.get("rel") == "next"), None)
+            params = None
+    except Exception as exc:
+        return {"error": f"CDS catalogue listing failed: {str(exc) or type(exc).__name__}"}
+    out = []
+    for c in collections:
+        interval = (((c.get("extent") or {}).get("temporal") or {}).get("interval") or [[None, None]])[0]
+        first, last = ((interval[0] or "")[:10] or None), ((interval[1] or "")[:10] or None)
+        if (end_date and first and first > end_date[:10]) or (start_date and last and last < start_date[:10]):
+            continue
+        out.append({"id": c.get("id"), "title": c.get("title") or c.get("id"),
+                    "description": (c.get("description") or "")[:600],
+                    "keywords": [k for k in (c.get("keywords") or []) if isinstance(k, str)][:12],
+                    "start": first, "end": last})
+    return {"total": len(collections), "matching": len(out), "collections": out}

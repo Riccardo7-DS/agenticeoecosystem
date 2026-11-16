@@ -14,9 +14,12 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+from typing import Any
+from collections.abc import AsyncGenerator
 from pathlib import Path
 
 from google.adk.artifacts.file_artifact_service import FileArtifactService
+from google.adk.events.event import Event
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
@@ -59,7 +62,7 @@ def _default_artifact_dir() -> Path:
 def build_lab(config: VirtualLabConfig | None = None, *, llm=None, existing_agents=None,
               extra_tools=None, artifact_dir: Path | None = None,
               literature_search=None, citation_ranker=rank_papers_by_citations,
-              catalogs=None, analysis_client=None,
+              catalogs=None, analysis_client=None, embedder=None,
               ) -> tuple[Runner, VirtualLabCoordinator, LabLedger]:
     """Wire config, participants, coordinator, guard plugin and runner for one run.
     `llm`, `existing_agents`, `extra_tools`, `literature_search` and `citation_ranker`
@@ -68,13 +71,16 @@ def build_lab(config: VirtualLabConfig | None = None, *, llm=None, existing_agen
     literature_backend='scholar' it searches scholar-search-mcp instead. `catalogs`
     (inventory.Catalogs) feeds the data inventory and the specialists' direct metadata tools;
     with real sub-agents it defaults to the public CDSE, EUMETSAT, NASA Earthdata and CDS APIs,
-    with injected test agents to None, which skips both and keeps tests offline."""
+    with injected test agents to None, which skips both and keeps tests offline. `embedder`
+    ranks the data discovery: by default the EMBEDDING_ENDPOINT client, or, with injected test
+    agents, word overlap only (discovery.NO_EMBEDDINGS), so tests never depend on a service."""
     config = config or VirtualLabConfig.from_env()
     if llm is None or existing_agents is None:
         # Any real OpenAI-compatible endpoint or real sub-agent needs these.
         _apply_runtime_patches()
     if llm is None:
         llm = build_eve_llm(config)
+    real_agents = existing_agents is None
     if existing_agents is None:
         existing_agents = load_existing_agents()
         if catalogs is None:
@@ -83,8 +89,11 @@ def build_lab(config: VirtualLabConfig | None = None, *, llm=None, existing_agen
         if analysis_client is None and config.mode == "execute":
             from .analyses import SentinelHubClient
             analysis_client = SentinelHubClient.from_env()
+    if embedder is None:
+        from .discovery import NO_EMBEDDINGS, default_embedder
+        embedder = default_embedder() if real_agents else NO_EMBEDDINGS
     ledger = LabLedger()
-    participants = build_participants(config, llm, existing_agents, extra_tools, catalogs)
+    participants = build_participants(config, llm, existing_agents, extra_tools, catalogs, embedder)
     if literature_search is None and config.literature_check:
         if config.literature_backend == "scholar":
             literature_search = ScholarSearch()
@@ -95,7 +104,7 @@ def build_lab(config: VirtualLabConfig | None = None, *, llm=None, existing_agen
     coordinator = VirtualLabCoordinator(lab_config=config, participants=participants, ledger=ledger,
                                         literature_search=literature_search,
                                         citation_ranker=citation_ranker, catalogs=catalogs,
-                                        analysis_client=analysis_client)
+                                        analysis_client=analysis_client, embedder=embedder)
     runner = Runner(
         agent=coordinator,
         app_name=APP_NAME,
@@ -106,7 +115,9 @@ def build_lab(config: VirtualLabConfig | None = None, *, llm=None, existing_agen
     return runner, coordinator, ledger
 
 
-async def stream_virtual_lab(query: str, config: VirtualLabConfig | None = None, **build_kwargs):
+async def stream_virtual_lab(
+    query: str, config: VirtualLabConfig | None = None, **build_kwargs: Any,
+) -> AsyncGenerator[tuple[Event, VirtualLabCoordinator, LabLedger], None]:
     """Run one lab meeting, yielding (event, coordinator, ledger) for every ADK event, so a UI
     can render the ledger (proposals, critiques, tool calls) while the meeting runs."""
     from agenticeoecosystem.agents.subagents import orphaned_tool_call_guard

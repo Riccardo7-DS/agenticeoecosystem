@@ -192,3 +192,65 @@ async def list_openeo_collections(bbox: list[float] | None = None, start_date: s
                     "keywords": [k for k in (c.get("keywords") or []) if isinstance(k, str)][:8],
                     "start": (interval[0] or "")[:10] or None, "end": (interval[1] or "")[:10] or None})
     return {"total": len(data.get("collections", [])), "matching": len(out), "collections": out}
+
+
+STAC_URL = "https://stac.dataspace.copernicus.eu/v1"
+STAC_ITEM_LIMIT = 200   # items listed per search; enough to show dates and revisit
+
+
+async def list_stac_collections(bbox: list[float] | None = None, start_date: str | None = None,
+                                end_date: str | None = None,
+                                get: GetJson = http_get_json) -> dict[str, Any]:
+    """Every collection in the CDSE STAC catalogue (Sentinel, Landsat, MODIS, CLMS, CCM, ...),
+    optionally only those whose declared extent overlaps bbox and the period. Returns
+    {"total", "matching", "collections": [{id, title, description, keywords, start, end}]}
+    or {"error": ...}. The catalogue has no free-text search: callers rank the list themselves."""
+    collections: list[dict] = []
+    url: str | None = f"{STAC_URL}/collections"
+    params: dict[str, Any] | None = {"limit": "500"}
+    try:
+        while url and len(collections) < 5000:
+            data = await get(url, params)
+            collections += data.get("collections", [])
+            url = next((l.get("href") for l in data.get("links", []) if l.get("rel") == "next"), None)
+            params = None
+    except Exception as exc:
+        return {"error": f"CDSE STAC collection listing failed: {str(exc) or type(exc).__name__}"}
+    out = []
+    for c in collections:
+        extent = c.get("extent") or {}
+        interval = ((extent.get("temporal") or {}).get("interval") or [[None, None]])[0] or [None, None]
+        boxes = (extent.get("spatial") or {}).get("bbox") or [[]]
+        if not (_overlaps_time(list(interval), start_date and start_date[:10], end_date and end_date[:10])
+                and _overlaps_space(boxes[0], bbox)):
+            continue
+        out.append({"id": c.get("id"), "title": c.get("title") or c.get("id"),
+                    "description": (c.get("description") or "")[:600],
+                    "keywords": [k for k in (c.get("keywords") or []) if isinstance(k, str)][:12],
+                    "start": (interval[0] or "")[:10] or None, "end": (interval[1] or "")[:10] or None})
+    return {"total": len(collections), "matching": len(out), "collections": out}
+
+
+async def search_stac_items(collection: str, bbox: list[float], start_date: str, end_date: str,
+                            limit: int = STAC_ITEM_LIMIT, get: GetJson = http_get_json) -> dict[str, Any]:
+    """Items of CDSE STAC `collection` (e.g. 'sentinel-1-slc') intersecting bbox between
+    start_date and end_date (YYYY-MM-DD, inclusive). Returns {collection, start_date, end_date,
+    total (None: the API gives no count), listed, days: {day: [HH:MM, ...]}} or {"error": ...}.
+    Items come newest first, so when `listed == limit` older ones are not listed."""
+    start_date, end_date = start_date[:10], end_date[:10]
+    params = {"collections": collection, "bbox": ",".join(str(x) for x in bbox),
+              "datetime": f"{start_date}T00:00:00Z/{end_date}T23:59:59Z",
+              "limit": str(max(1, min(int(limit), 500))), "fields": "id,properties.datetime"}
+    try:
+        data = await get(f"{STAC_URL}/search", params)
+    except Exception as exc:
+        return {"error": f"CDSE STAC item search failed: {str(exc) or type(exc).__name__}"}
+    days: dict[str, list[str]] = {}
+    features = data.get("features", [])
+    for f in features:
+        when = str((f.get("properties") or {}).get("datetime") or "")
+        if len(when) >= 16:
+            days.setdefault(when[:10], []).append(when[11:16])
+    return {"collection": collection, "start_date": start_date, "end_date": end_date,
+            "total": data.get("numberMatched"), "listed": len(features),
+            "days": {d: sorted(set(t)) for d, t in sorted(days.items())}}

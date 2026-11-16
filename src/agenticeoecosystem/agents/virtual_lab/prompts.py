@@ -31,9 +31,7 @@ STATE_INVENTORY = "vl_inventory"     # data inventory text, built once after for
 STATE_SUB_AGENTS = "vl_sub_agents"   # sub-agents the PI chose; others are not offered
 STATE_RESULTS = "vl_results"         # execute mode: results of the lab's fixed analyses
 # The lab's direct metadata tools (participants.catalog_tools), named in the tool guidance.
-DIRECT_TOOLS = ("search_cdse_catalog", "list_openeo_collections", "list_eumetsat_collections",
-                "count_eumetsat_products", "search_earthdata_collections",
-                "search_earthdata_granules", "cds_dataset_info")
+DIRECT_TOOLS = ("search_catalogues", "search_cdse_catalog")
 
 
 def raw_key(agent: str) -> str:
@@ -82,8 +80,22 @@ OUTPUT_RULE = ("Return ONLY one JSON object matching the schema below — no mar
 PROBLEM_SCHEMA = """\
 {"question": str, "objectives": [str], "study_area": {"name": str, "bbox": [west, south, east, north] | null},
  "time_period": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}, "constraints": [str], "expected_outputs": [str],
+ "data_needs": [str],
  "task_types": ["dataset_selection" | "scientific_reasoning" | "hypothesis_testing" | "experimental_execution"],
  "participants": [specialist names], "sub_agents": [sub-agent names], "rationale": str}"""
+
+# How the PI writes ScientificProblem.data_needs (the federated data discovery's queries).
+# Shared with scripts/eval_discovery.py so the benchmark tests the production wording.
+DATA_NEEDS_RULE = (
+    "- In 'data_needs', give 2-6 entries, one per kind of data the problem needs. Write each "
+    "the way a data catalogue would describe that data (10-25 words): the kind of instrument "
+    "or measurement technique, the product level or form, and the quantity it gives, with "
+    "resolution or revisit where they matter. Do not name specific products or missions. "
+    "Catalogues describe instruments, not applications, so 'ground deformation' alone finds "
+    "nothing; e.g. 'synthetic aperture radar single look complex images with phase, for "
+    "interferometric ground deformation measurement', 'gridded satellite precipitation "
+    "estimates, half-hourly to daily', 'thermal infrared active fire detections with fire "
+    "radiative power'. The lab searches every data catalogue with them.\n")
 
 PROPOSAL_SCHEMA = """\
 {"summary": str,
@@ -221,6 +233,7 @@ def pi_formulate(state: dict, roster: dict[str, str], agent: str,
            if geocoder else "- Make no tool call. ")
         + "Do NOT ask about data availability: right after this step the lab builds a DATA "
         "INVENTORY of what exists for the area and period, and the specialists use it.\n"
+        + DATA_NEEDS_RULE +
         "- Select 2-4 specialists from the roster whose expertise is needed.\n"
         + ("- In 'sub_agents', list only the sub-agents (data and literature services) this problem "
            "needs; the lab offers no others during the meeting. Leave out services unrelated to the "
@@ -245,12 +258,15 @@ def specialist(state: dict, agent: str, expertise: str, tool_names: list[str],
         f"(sensor, bbox, dates). Make at most {max_calls} calls in this step; repeating a call "
         "already made in this run is free (answered from the lab's cache).\n"
         + (f"{', '.join(direct)} query public data catalogues directly (no login) and answer in "
-           "seconds: prefer them to a sub-agent for availability questions in your domain.\n"
+           "seconds: prefer them to a sub-agent for availability questions. search_catalogues "
+           "searches every catalogue at once for a catalogue-style description of the data you "
+           "need; search_cdse_catalog lists Copernicus scenes per day (use product_type, e.g. "
+           "SLC for interferometry). Always use the study-area bbox from the problem.\n"
            if direct else "")
         + ("The DATA INVENTORY below already answers which data exist for this area and period "
-           "(Copernicus Data Space, EUMETSAT, NASA Earthdata and Copernicus Climate Data Store "
-           "where listed): do NOT search for what it shows. Call a tool only for what it does "
-           "not cover, or make no call at all.\n"
+           "(its DATA DISCOVERY section searched every catalogue for the problem's data needs): "
+           "do NOT search for what it shows. Call a tool only for what it does not cover, or "
+           "make no call at all.\n"
            if state.get(STATE_INVENTORY) else "")
         if tool_names else "You have no grounding tools in this step.\n"
     )

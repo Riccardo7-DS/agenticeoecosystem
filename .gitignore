@@ -173,3 +173,6 @@ scripts/vlm.sh
 data/visual_tasks/context/knowledge.tex
 data/visual_tasks/labels/FireImages-Jul-Aug.json
 src/agenticeoecosystem/evaluation/confidence_evaluation.py
+
+# Virtual Lab: discovery benchmark data (local, not versioned); run outputs live in logs/
+data/virtual_lab/

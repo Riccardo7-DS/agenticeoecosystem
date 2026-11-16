@@ -85,6 +85,12 @@ class ScientificProblem(BaseModel):
     time_period: TimePeriod
     constraints: list[str] = Field(default_factory=list)
     expected_outputs: list[str] = Field(default_factory=list)
+    data_needs: list[str] = Field(
+        default_factory=list, description="2-6 catalogue-style descriptions of the data the "
+                                          "problem needs (instrument/technique, product form, "
+                                          "quantity, scale); the lab's data discovery searches "
+                                          "every catalogue with them."
+    )
     task_types: list[TaskType] = Field(default_factory=list)
     participants: list[str] = Field(
         default_factory=list, description="Specialist names selected for this problem."

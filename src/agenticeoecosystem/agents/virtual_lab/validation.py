@@ -32,9 +32,9 @@ from .schemas import (
     ScientificProposal,
 )
 from .sensor_catalog import (
-    GEO_VZA_DEGRADED_DEG,
-    GEO_VZA_UNUSABLE_DEG,
     SensorInfo,
+    bbox_centre,
+    geometry_verdict,
     geostationary_vza_deg,
     lookup,
     sensors_in_text,
@@ -76,22 +76,9 @@ def _issue(category, severity, claim, rationale, fix="") -> CritiqueIssue:
                          rationale=rationale, suggested_fix=fix)
 
 
-def _parse_date(text: str) -> date | None:
-    try:
-        return date.fromisoformat(text[:10])
-    except (TypeError, ValueError):
-        return None
-
-
 def _bbox_centre(problem: ScientificProblem) -> tuple[float, float] | None:
     bbox = problem.study_area.bbox
-    if not bbox:
-        return None
-    west, south, east, north = bbox
-    if west > east:  # crosses the antimeridian
-        east += 360
-    lon = (west + east) / 2
-    return (south + north) / 2, (lon - 360 if lon > 180 else lon)
+    return bbox_centre(bbox) if bbox else None
 
 
 def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[CritiqueIssue]:
@@ -104,17 +91,8 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
                        "Not in the sensor catalog; availability, coverage and access are unverified.",
                        "Name a catalogued sensor or cite a tool result confirming availability.")]
 
+    # Whether the sensor has data in the period is check_grounding's job (catalogue results).
     issues: list[CritiqueIssue] = []
-    start, end = _parse_date(problem.time_period.start), _parse_date(problem.time_period.end)
-    if start and end:
-        if end < sensor.start or (sensor.end and start > sensor.end):
-            issues.append(_issue("dataset_availability", "blocking", ds.name,
-                                 f"{sensor.key} was not operating during {start}..{end} "
-                                 f"(operational from {sensor.start})."))
-        elif start < sensor.start:
-            issues.append(_issue("dataset_availability", "major", ds.name,
-                                 f"{sensor.key} only covers part of the period (from {sensor.start})."))
-
     if not sensor.sub_agents:
         severity = "major" if ds.role in ("primary", "reference") else "minor"
         issues.append(_issue("dataset_availability", severity, ds.name,
@@ -125,12 +103,13 @@ def check_dataset(ds: DatasetChoice, problem: ScientificProblem) -> list[Critiqu
     centre = _bbox_centre(problem)
     if sensor.orbit == "geostationary" and centre is not None:
         vza = geostationary_vza_deg(*centre, sensor.sub_satellite_lon)
-        if vza > GEO_VZA_UNUSABLE_DEG:
+        verdict = geometry_verdict(vza)
+        if verdict == "unusable":
             issues.append(_issue("coverage", "blocking", ds.name,
                                  f"Study area is at viewing zenith ~{vza:.0f} deg from {sensor.key} "
                                  f"({sensor.sub_satellite_lon:+.1f} deg): UNUSABLE GEOMETRY. The data "
                                  "may exist, but the area is effectively outside the usable disk."))
-        elif vza > GEO_VZA_DEGRADED_DEG:
+        elif verdict == "degraded":
             issues.append(_issue("coverage", "major", ds.name,
                                  f"Viewing zenith ~{vza:.0f} deg from {sensor.key}: DEGRADED GEOMETRY, "
                                  "large pixels and long slant paths degrade detection and timing."))

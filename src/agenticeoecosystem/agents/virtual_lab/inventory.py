@@ -38,6 +38,8 @@ from .sensor_catalog import (
     GEO_VZA_DEGRADED_DEG,
     GEO_VZA_UNUSABLE_DEG,
     SENSORS,
+    bbox_centre,
+    geometry_verdict,
     geostationary_vza_deg,
     sensors_in_text,
 )
@@ -261,19 +263,21 @@ def geostationary_lon(title: str) -> float | None:
 
 
 def _centre(bbox: list[float]) -> tuple[float, float]:
-    return (bbox[1] + bbox[3]) / 2, (bbox[0] + bbox[2]) / 2
+    """Deprecated: use sensor_catalog.bbox_centre (antimeridian-aware). No callers remain."""
+    return bbox_centre(bbox)
 
 
 def geometry_note(bbox: list[float] | None, sub_satellite_lon: float | None) -> str:
     """Viewing-angle verdict for a geostationary product over the bbox centre ('' if n/a)."""
     if not bbox or sub_satellite_lon is None:
         return ""
-    vza = geostationary_vza_deg(*_centre(bbox), sub_satellite_lon)
+    vza = geostationary_vza_deg(*bbox_centre(bbox), sub_satellite_lon)
     where = f"viewing zenith angle {vza:.0f} deg from the satellite at {sub_satellite_lon:+.1f} deg"
-    if vza > GEO_VZA_UNUSABLE_DEG:
+    verdict = geometry_verdict(vza)
+    if verdict == "unusable":
         return (f"UNUSABLE GEOMETRY: {where} (> {GEO_VZA_UNUSABLE_DEG:.0f}): the data exist but "
                 "this area is at the disk edge; do not plan quantitative use.")
-    if vza > GEO_VZA_DEGRADED_DEG:
+    if verdict == "degraded":
         return (f"DEGRADED GEOMETRY: {where} (> {GEO_VZA_DEGRADED_DEG:.0f}): large pixels and long "
                 "slant paths; usable with caution.")
     return f"Geometry OK: {where}."
@@ -281,7 +285,7 @@ def geometry_note(bbox: list[float] | None, sub_satellite_lon: float | None) -> 
 
 def best_geostationary(bbox: list[float]) -> str:
     """The catalog's geostationary imager with the lowest viewing angle over the bbox."""
-    lat, lon = _centre(bbox)
+    lat, lon = bbox_centre(bbox)
     geo = [(geostationary_vza_deg(lat, lon, s.sub_satellite_lon), s) for s in SENSORS
            if s.orbit == "geostationary" and s.sub_satellite_lon is not None]
     vza, s = min(geo, key=lambda x: x[0])

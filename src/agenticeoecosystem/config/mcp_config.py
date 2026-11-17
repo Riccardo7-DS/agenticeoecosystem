@@ -159,5 +159,23 @@ def get_mcp_servers() -> dict:
         }
     ))
 
+    # The Virtual Lab's tools as MCP servers. Opt-in (ENABLE_LAB_MCP_SERVERS=1): this
+    # registry is the single-agent benchmark's toolset, and new tools would change it.
+    if os.getenv("ENABLE_LAB_MCP_SERVERS", "").lower() in ("1", "true", "yes"):
+        # Federated data discovery, citation ranking, geostationary geometry: public APIs.
+        _try_register(servers, "eo_research", lambda: {
+            "transport": "stdio",
+            "command": "python",
+            "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/eo_research/server.py"],
+        })
+        # Burned-area analyses on Sentinel Hub (CDSE processing quota).
+        _try_register(servers, "cdse_analysis", lambda: (
+            _check_cdse_env() or {
+                "transport": "stdio",
+                "command": "python",
+                "args": [f"{ROOT_DIR}/src/agenticeoecosystem/servers/cdse_analysis/server.py"],
+            }
+        ))
+
     logger.info("Final MCP servers: %s", list(servers.keys()))
     return servers

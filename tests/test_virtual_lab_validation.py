@@ -78,13 +78,6 @@ def test_polar_thermal_sensor_has_no_coverage_issue():
     assert not [i for i in issues if i.severity in ("blocking", "major")]
 
 
-def test_sensor_not_yet_operating_is_blocking():
-    old = ScientificProblem.model_validate(
-        {**PROBLEM, "time_period": {"start": "2010-01-01", "end": "2010-12-31"}})
-    issues = check_dataset(_proposal(OPTICAL_V0, "o").datasets[0], old)  # Sentinel-2, launched 2015
-    assert any(i.category == "dataset_availability" and i.severity == "blocking" for i in issues)
-
-
 def test_physical_constraints_night_and_smoke():
     s2 = _proposal(OPTICAL_V0, "o").datasets[0]
     night = check_dataset(s2.model_copy(update={"observable": "night-time fire front"}), problem)

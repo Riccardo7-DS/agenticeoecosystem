@@ -23,6 +23,7 @@ compared pixel by pixel. Network access goes through an injectable client with a
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import math
 import os
@@ -30,7 +31,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from collections.abc import Awaitable, Callable
 
 import httpx
@@ -74,6 +75,14 @@ DEPENDS = {"s2_dnbr_burned_area": ("optical_conditions",),
 # ---------------------------------------------------------------------------
 # Sentinel Hub client
 # ---------------------------------------------------------------------------
+
+class SceneClient(Protocol):
+    """What the analyses need from a data client (SentinelHubClient, or a test fake)."""
+
+    async def statistics(self, body: dict) -> dict: ...
+
+    async def process(self, body: dict) -> np.ndarray: ...
+
 
 class SentinelHubClient:
     """Minimal async client for the CDSE Sentinel Hub Statistical and Process APIs."""
@@ -451,3 +460,107 @@ def with_dependencies(selected: list[str]) -> list[str]:
     for name in selected:
         add(name)
     return [n for n in RUNNERS if n in wanted]
+
+
+# ---------------------------------------------------------------------------
+# Results on disk: analyses run as separate calls (the cdse_analysis MCP server)
+# ---------------------------------------------------------------------------
+# The lab runs its analyses in one process and shares maps through ctx.memo. A tool call
+# cannot hand an array to the next call, so each study (bbox, period, padding) gets a
+# directory holding the memo (maps.npz, memo.json) and every analysis result (results.json).
+# A later call loads them, so s1_s2_agreement reuses the maps the burned-area calls made.
+
+@dataclass(frozen=True)
+class AnalysisStore:
+    """Saved maps and results of analysis studies, one directory per study under `root`.
+
+    A study is an AnalysisContext's bbox, period and padding; its directory holds the memo
+    (maps.npz for arrays, memo.json for the rest) and every analysis result (results.json).
+
+    Args:
+        root: directory the study directories are created in.
+    """
+
+    root: Path
+    MAPS = "maps.npz"
+    MEMO = "memo.json"
+    RESULTS = "results.json"
+
+    @staticmethod
+    def study_key(bbox: list[float], start: str, end: str, pad_days: int) -> str:
+        """Directory name of one study: readable, and identical for the same inputs."""
+        box = "_".join(f"{v:.4f}" for v in bbox)
+        return f"{box}__{start[:10]}_{end[:10]}__pad{pad_days}"
+
+    def study_dir(self, ctx: AnalysisContext) -> Path:
+        return self.root / self.study_key(ctx.bbox, ctx.start, ctx.end, ctx.pad_days)
+
+    def load(self, ctx: AnalysisContext) -> dict[str, dict]:
+        """Fill ctx.memo from the study's directory; return the results saved so far. An
+        unreadable store (e.g. a write cut short) counts as empty, so its analyses run again."""
+        study = self.study_dir(ctx)
+        maps, memo, results = study / self.MAPS, study / self.MEMO, study / self.RESULTS
+        try:
+            if maps.exists():
+                with np.load(maps) as npz:
+                    ctx.memo.update({k: npz[k] for k in npz.files})
+            if memo.exists():
+                ctx.memo.update(json.loads(memo.read_text()))
+            return json.loads(results.read_text()) if results.exists() else {}
+        except (OSError, ValueError) as exc:   # JSONDecodeError and bad .npz are ValueErrors
+            logger.warning("Unreadable analysis store %s (%s): recomputing", study, exc)
+            ctx.memo.clear()
+            return {}
+
+    def save(self, ctx: AnalysisContext, results: dict[str, dict]) -> None:
+        """Write ctx.memo and the results to the study's directory."""
+        study = self.study_dir(ctx)
+        study.mkdir(parents=True, exist_ok=True)
+        arrays = {k: v for k, v in ctx.memo.items() if isinstance(v, np.ndarray)}
+        if arrays:
+            np.savez_compressed(study / self.MAPS, **arrays)
+        rest = {k: v for k, v in ctx.memo.items() if not isinstance(v, np.ndarray)}
+        (study / self.MEMO).write_text(json.dumps(rest))
+        (study / self.RESULTS).write_text(json.dumps(results, indent=1, default=str))
+
+    async def run(self, name: str, ctx: AnalysisContext, client: SceneClient,
+                  refresh: bool = False) -> dict:
+        """Run one analysis on ctx's study, first running the analyses it needs that have no
+        successful saved result; reuse the saved result unless refresh. Artifacts go to the
+        study directory unless ctx.out_dir is set. Adds 'reused' (a saved result was
+        returned), 'ran' (analyses run by this call) and 'study_dir'."""
+        if name not in RUNNERS:
+            raise ValueError(f"Unknown analysis {name!r}; one of {', '.join(RUNNERS)}.")
+        study = self.study_dir(ctx)
+        if ctx.out_dir is None:
+            ctx.out_dir = study
+        results = self.load(ctx)
+        if not refresh and results.get(name, {}).get("status") == "ok":
+            return {**results[name], "reused": True, "ran": [], "study_dir": str(study)}
+        ran: list[str] = []
+        for step in with_dependencies([name]):
+            if step != name and results.get(step, {}).get("status") == "ok":
+                continue
+            results[step] = await self._run_one(step, ctx, client)
+            ran.append(step)
+            if results[step]["status"] != "ok" and step != name:
+                break   # the requested analysis cannot run without it
+        self.save(ctx, results)
+        if name in ran:
+            result = results[name]
+        else:   # a dependency failed first
+            failed = ran[-1]
+            result = _failed(f"Not run: {failed}, which it needs, failed: {results[failed]['summary']}")
+        return {**result, "reused": False, "ran": ran, "study_dir": str(study)}
+
+    @staticmethod
+    async def _run_one(step: str, ctx: AnalysisContext, client: SceneClient) -> dict:
+        try:
+            return await RUNNERS[step](ctx, client)
+        except Exception as exc:  # network / API errors: report as a failed result
+            logger.warning("analysis %s failed: %s", step, exc)
+            return _failed(f"{step} failed: {exc}")
+
+
+def _failed(summary: str) -> dict:
+    return {"status": "failed", "summary": summary, "metrics": {}, "details": {}, "artifacts": []}
